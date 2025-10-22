@@ -46,10 +46,15 @@ const TripsScreen: React.FC = () => {
       try {
         console.log(`[Test] Trying ${url}`);
         const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
         const data = await response.json();
         Alert.alert(
           "API Test Success",
-          `URL: ${url}\nResponse: ${JSON.stringify(data)}`
+          `URL: ${url}\nResponse: ${JSON.stringify(data, null, 2)}`
         );
         return;
       } catch (error) {
@@ -66,18 +71,23 @@ const TripsScreen: React.FC = () => {
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return "N/A";
 
-    const dateObj = typeof date === "string" ? new Date(date) : date;
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
 
-    // Vérifier si la date est valide
-    if (isNaN(dateObj.getTime())) {
+      // Vérifier si la date est valide
+      if (isNaN(dateObj.getTime())) {
+        return "Invalid Date";
+      }
+
+      return dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
       return "Invalid Date";
     }
-
-    return dateObj.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
   };
 
   const renderTripCard = ({ item }: { item: Trip }) => (
@@ -115,8 +125,8 @@ const TripsScreen: React.FC = () => {
               color="rgba(255, 255, 255, 0.8)"
             />
             <Text style={styles.collaboratorsText}>
-              {item.collaborators.length + 1} member
-              {item.collaborators.length > 0 ? "s" : ""}
+              {(item.collaborators?.length || 0) + 1} member
+              {(item.collaborators?.length || 0) > 0 ? "s" : ""}
             </Text>
           </View>
           <Ionicons
@@ -169,7 +179,7 @@ const TripsScreen: React.FC = () => {
         <FlatList
           data={trips}
           renderItem={renderTripCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id || `trip-${index}`}
           contentContainerStyle={styles.tripsList}
           showsVerticalScrollIndicator={false}
         />

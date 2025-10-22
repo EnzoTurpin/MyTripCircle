@@ -112,8 +112,8 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
         ...address,
         id: address._id,
         _id: undefined,
-        createdAt: new Date(address.createdAt),
-        updatedAt: new Date(address.updatedAt),
+        createdAt: address.createdAt ? new Date(address.createdAt) : new Date(),
+        updatedAt: address.updatedAt ? new Date(address.updatedAt) : new Date(),
       }));
 
       setTrips(mappedTrips);

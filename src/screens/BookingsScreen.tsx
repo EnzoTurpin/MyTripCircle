@@ -90,18 +90,23 @@ const BookingsScreen: React.FC = () => {
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return "N/A";
 
-    const dateObj = typeof date === "string" ? new Date(date) : date;
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
 
-    // Vérifier si la date est valide
-    if (isNaN(dateObj.getTime())) {
+      // Vérifier si la date est valide
+      if (isNaN(dateObj.getTime())) {
+        return "Invalid Date";
+      }
+
+      return dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
       return "Invalid Date";
     }
-
-    return dateObj.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
   };
 
   const renderBookingCard = ({ item }: { item: Booking }) => (
@@ -139,7 +144,9 @@ const BookingsScreen: React.FC = () => {
           <Text
             style={[styles.statusText, { color: getStatusColor(item.status) }]}
           >
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            {item.status
+              ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
+              : "Unknown"}
           </Text>
         </View>
       </View>
@@ -237,7 +244,7 @@ const BookingsScreen: React.FC = () => {
         <FlatList
           data={filteredBookings}
           renderItem={renderBookingCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id || `booking-${index}`}
           contentContainerStyle={styles.bookingsList}
           showsVerticalScrollIndicator={false}
         />
