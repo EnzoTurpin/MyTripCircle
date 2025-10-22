@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 import { RootStackParamList, MainTabParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
@@ -22,6 +23,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabNavigator = () => {
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -56,22 +58,22 @@ const MainTabNavigator = () => {
       <Tab.Screen
         name="Trips"
         component={TripsScreen}
-        options={{ title: "My Trips" }}
+        options={{ title: t("tabs.myTrips") }}
       />
       <Tab.Screen
         name="Bookings"
         component={BookingsScreen}
-        options={{ title: "Bookings" }}
+        options={{ title: t("tabs.bookings") }}
       />
       <Tab.Screen
         name="Addresses"
         component={AddressesScreen}
-        options={{ title: "Addresses" }}
+        options={{ title: t("tabs.addresses") }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: "Profile" }}
+        options={{ title: t("tabs.profile") }}
       />
     </Tab.Navigator>
   );
@@ -79,9 +81,10 @@ const MainTabNavigator = () => {
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
 
   if (loading) {
-    return null; // You can add a loading screen here
+    return null;
   }
 
   return (
@@ -95,7 +98,7 @@ const AppNavigator = () => {
               component={TripDetailsScreen}
               options={{
                 headerShown: true,
-                title: "Trip Details",
+                title: t("stack.tripDetails"),
                 headerStyle: { backgroundColor: "#007AFF" },
                 headerTintColor: "#fff",
                 headerTitleStyle: {
@@ -108,7 +111,7 @@ const AppNavigator = () => {
               component={BookingDetailsScreen}
               options={{
                 headerShown: true,
-                title: "Booking Details",
+                title: t("stack.bookingDetails"),
                 headerStyle: { backgroundColor: "#007AFF" },
                 headerTintColor: "#fff",
                 headerTitleStyle: {
@@ -121,7 +124,7 @@ const AppNavigator = () => {
               component={AddressDetailsScreen}
               options={{
                 headerShown: true,
-                title: "Address Details",
+                title: t("stack.addressDetails"),
                 headerStyle: { backgroundColor: "#007AFF" },
                 headerTintColor: "#fff",
                 headerTitleStyle: {
@@ -134,7 +137,7 @@ const AppNavigator = () => {
               component={InviteFriendsScreen}
               options={{
                 headerShown: true,
-                title: "Invite Friends",
+                title: t("stack.inviteFriends"),
                 headerStyle: { backgroundColor: "#007AFF" },
                 headerTintColor: "#fff",
                 headerTitleStyle: {

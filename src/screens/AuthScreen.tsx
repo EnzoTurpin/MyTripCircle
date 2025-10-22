@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,10 +22,11 @@ const AuthScreen: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, register, loading } = useAuth();
+  const { t } = useTranslation();
 
   const handleSubmit = async () => {
     if (!email || !password || (!isLogin && !name)) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert(t("common.error"), t("common.fillAllFields"));
       return;
     }
 
@@ -38,10 +40,13 @@ const AuthScreen: React.FC = () => {
       }
 
       if (!success) {
-        Alert.alert("Error", isLogin ? "Login failed" : "Registration failed");
+        Alert.alert(
+          t("common.error"),
+          isLogin ? t("common.loginFailed") : t("common.registerFailed")
+        );
       }
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred");
+      Alert.alert(t("common.error"), t("common.unexpectedError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -56,10 +61,8 @@ const AuthScreen: React.FC = () => {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
             <Ionicons name="airplane" size={80} color="white" />
-            <Text style={styles.title}>MyTripCircle</Text>
-            <Text style={styles.subtitle}>
-              Plan your perfect trip with friends
-            </Text>
+            <Text style={styles.title}>{t("appName")}</Text>
+            <Text style={styles.subtitle}>{t("slogan")}</Text>
           </View>
 
           <View style={styles.form}>
@@ -73,7 +76,7 @@ const AuthScreen: React.FC = () => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Full Name"
+                  placeholder={t("common.fullName")}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -90,7 +93,7 @@ const AuthScreen: React.FC = () => {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder={t("common.email")}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -107,7 +110,7 @@ const AuthScreen: React.FC = () => {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder={t("common.password")}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={true}
@@ -124,10 +127,10 @@ const AuthScreen: React.FC = () => {
             >
               <Text style={styles.buttonText}>
                 {loading || isSubmitting
-                  ? "Please wait..."
+                  ? t("common.pleaseWait")
                   : isLogin
-                  ? "Sign In"
-                  : "Sign Up"}
+                  ? t("common.signIn")
+                  : t("common.signUp")}
               </Text>
             </TouchableOpacity>
 
@@ -136,9 +139,7 @@ const AuthScreen: React.FC = () => {
               onPress={() => setIsLogin(!isLogin)}
             >
               <Text style={styles.switchText}>
-                {isLogin
-                  ? "Don't have an account? Sign Up"
-                  : "Already have an account? Sign In"}
+                {isLogin ? t("common.noAccount") : t("common.haveAccount")}
               </Text>
             </TouchableOpacity>
           </View>
