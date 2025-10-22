@@ -18,6 +18,9 @@ import TripDetailsScreen from "../screens/TripDetailsScreen";
 import BookingDetailsScreen from "../screens/BookingDetailsScreen";
 import AddressDetailsScreen from "../screens/AddressDetailsScreen";
 import InviteFriendsScreen from "../screens/InviteFriendsScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import HelpSupportScreen from "../screens/HelpSupportScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -143,6 +146,36 @@ const AppNavigator = () => {
                 headerTitleStyle: {
                   fontWeight: "bold",
                 },
+              }}
+            />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{
+                headerShown: true,
+                title: "Edit Profile",
+                headerStyle: { backgroundColor: "#007AFF" },
+                headerTintColor: "#fff",
+              }}
+            />
+            <Stack.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{
+                headerShown: true,
+                title: "Settings",
+                headerStyle: { backgroundColor: "#007AFF" },
+                headerTintColor: "#fff",
+              }}
+            />
+            <Stack.Screen
+              name="HelpSupport"
+              component={HelpSupportScreen}
+              options={{
+                headerShown: true,
+                title: "Help & Support",
+                headerStyle: { backgroundColor: "#007AFF" },
+                headerTintColor: "#fff",
               }}
             />
           </>

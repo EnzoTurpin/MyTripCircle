@@ -10,9 +10,18 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../types";
+
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Profile"
+>;
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -22,21 +31,24 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleEditProfile = () => {
-    Alert.alert("Edit Profile", "This feature will be implemented soon!", [
-      { text: "OK" },
-    ]);
+    navigation.navigate("EditProfile");
+    // Alert.alert("Edit Profile", "This feature will be implemented soon!", [
+    //   { text: "OK" },
+    // ]);
   };
 
   const handleSettings = () => {
-    Alert.alert("Settings", "This feature will be implemented soon!", [
-      { text: "OK" },
-    ]);
+    navigation.navigate("Settings");
+    // Alert.alert("Settings", "This feature will be implemented soon!", [
+    //   { text: "OK" },
+    // ]);
   };
 
   const handleHelp = () => {
-    Alert.alert("Help & Support", "This feature will be implemented soon!", [
-      { text: "OK" },
-    ]);
+    navigation.navigate("HelpSupport");
+    // Alert.alert("Help & Support", "This feature will be implemented soon!", [
+    //   { text: "OK" },
+    // ]);
   };
 
   const handleAbout = () => {

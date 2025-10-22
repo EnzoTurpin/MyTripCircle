@@ -85,6 +85,9 @@ export type RootStackParamList = {
   AddressDetails: { addressId: string };
   InviteFriends: { tripId: string };
   Profile: undefined;
+  EditProfile: undefined;
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 export type MainTabParamList = {
