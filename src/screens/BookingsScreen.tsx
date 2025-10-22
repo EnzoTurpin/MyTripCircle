@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
+import { useTrips } from "../contexts/TripsContext";
 
 type BookingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -20,82 +21,10 @@ type BookingsScreenNavigationProp = StackNavigationProp<
 
 const BookingsScreen: React.FC = () => {
   const navigation = useNavigation<BookingsScreenNavigationProp>();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { bookings, loading } = useTrips();
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "flight" | "train" | "hotel" | "restaurant" | "activity"
   >("all");
-
-  useEffect(() => {
-    loadBookings();
-  }, []);
-
-  const loadBookings = async () => {
-    // Simulate loading bookings
-    setTimeout(() => {
-      const mockBookings: Booking[] = [
-        {
-          id: "1",
-          tripId: "1",
-          type: "flight",
-          title: "Paris Flight",
-          description: "Round trip to Paris",
-          date: new Date("2024-03-15"),
-          time: "14:30",
-          confirmationNumber: "ABC123",
-          price: 450,
-          currency: "EUR",
-          status: "confirmed",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2",
-          tripId: "1",
-          type: "hotel",
-          title: "Hotel Le Marais",
-          description: "3 nights in Paris",
-          date: new Date("2024-03-15"),
-          address: "123 Rue de Rivoli, Paris",
-          confirmationNumber: "HOT456",
-          price: 300,
-          currency: "EUR",
-          status: "confirmed",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3",
-          tripId: "1",
-          type: "restaurant",
-          title: "Le Comptoir du Relais",
-          description: "Dinner reservation",
-          date: new Date("2024-03-16"),
-          time: "20:00",
-          address: "9 Carrefour de l'Odéon, Paris",
-          status: "pending",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "4",
-          tripId: "2",
-          type: "activity",
-          title: "Tokyo Skytree Visit",
-          description: "Observation deck tickets",
-          date: new Date("2024-06-12"),
-          time: "10:00",
-          price: 25,
-          currency: "USD",
-          status: "confirmed",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      setBookings(mockBookings);
-      setLoading(false);
-    }, 1000);
-  };
 
   const getTypeIcon = (type: Booking["type"]) => {
     switch (type) {
@@ -158,8 +87,17 @@ const BookingsScreen: React.FC = () => {
     ]);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return "N/A";
+
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+
+    // Vérifier si la date est valide
+    if (isNaN(dateObj.getTime())) {
+      return "Invalid Date";
+    }
+
+    return dateObj.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",

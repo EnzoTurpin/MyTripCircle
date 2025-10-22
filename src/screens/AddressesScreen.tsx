@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Address } from "../types";
+import { useTrips } from "../contexts/TripsContext";
 
 type AddressesScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -20,97 +21,10 @@ type AddressesScreenNavigationProp = StackNavigationProp<
 
 const AddressesScreen: React.FC = () => {
   const navigation = useNavigation<AddressesScreenNavigationProp>();
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { addresses, loading } = useTrips();
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "hotel" | "restaurant" | "activity" | "transport" | "other"
   >("all");
-
-  useEffect(() => {
-    loadAddresses();
-  }, []);
-
-  const loadAddresses = async () => {
-    // Simulate loading addresses
-    setTimeout(() => {
-      const mockAddresses: Address[] = [
-        {
-          id: "1",
-          tripId: "1",
-          type: "hotel",
-          name: "Hotel Le Marais",
-          address: "123 Rue de Rivoli",
-          city: "Paris",
-          country: "France",
-          coordinates: { latitude: 48.8566, longitude: 2.3522 },
-          phone: "+33 1 42 36 78 90",
-          website: "https://hotelmarais.com",
-          notes: "Check-in at 3 PM, check-out at 11 AM",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2",
-          tripId: "1",
-          type: "restaurant",
-          name: "Le Comptoir du Relais",
-          address: "9 Carrefour de l'Odéon",
-          city: "Paris",
-          country: "France",
-          coordinates: { latitude: 48.8522, longitude: 2.3387 },
-          phone: "+33 1 44 27 07 50",
-          notes: "Reservation for 2 people at 8 PM",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3",
-          tripId: "1",
-          type: "activity",
-          name: "Louvre Museum",
-          address: "Rue de Rivoli",
-          city: "Paris",
-          country: "France",
-          coordinates: { latitude: 48.8606, longitude: 2.3376 },
-          website: "https://louvre.fr",
-          notes: "Skip-the-line tickets purchased",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "4",
-          tripId: "2",
-          type: "hotel",
-          name: "Park Hyatt Tokyo",
-          address: "3-7-1-2 Nishi-Shinjuku",
-          city: "Tokyo",
-          country: "Japan",
-          coordinates: { latitude: 35.6762, longitude: 139.6503 },
-          phone: "+81 3-5322-1234",
-          website: "https://tokyo.park.hyatt.com",
-          notes: "Luxury hotel with city views",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "5",
-          tripId: "2",
-          type: "activity",
-          name: "Tokyo Skytree",
-          address: "1-1-2 Oshiage",
-          city: "Tokyo",
-          country: "Japan",
-          coordinates: { latitude: 35.7101, longitude: 139.8107 },
-          website: "https://tokyo-skytree.jp",
-          notes: "Observation deck tickets for 10 AM",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      setAddresses(mockAddresses);
-      setLoading(false);
-    }, 1000);
-  };
 
   const getTypeIcon = (type: Address["type"]) => {
     switch (type) {

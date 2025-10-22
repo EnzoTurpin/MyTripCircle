@@ -13,6 +13,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip, Booking, Address } from "../types";
+import { useTrips } from "../contexts/TripsContext";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 type TripDetailsScreenNavigationProp = StackNavigationProp<
@@ -29,91 +30,27 @@ const TripDetailsScreen: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getTripById, getBookingsByTripId, getAddressesByTripId } = useTrips();
 
   useEffect(() => {
     loadTripData();
   }, [tripId]);
 
   const loadTripData = async () => {
-    // Simulate loading trip data
-    setTimeout(() => {
-      const mockTrip: Trip = {
-        id: tripId,
-        title: "Paris Adventure",
-        description: "A romantic getaway to the City of Light with friends",
-        startDate: new Date("2024-03-15"),
-        endDate: new Date("2024-03-22"),
-        destination: "Paris, France",
-        ownerId: "1",
-        collaborators: ["2", "3"],
-        isPublic: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    try {
+      setLoading(true);
+      const foundTrip = getTripById(tripId);
+      const tripBookings = getBookingsByTripId(tripId);
+      const tripAddresses = getAddressesByTripId(tripId);
 
-      const mockBookings: Booking[] = [
-        {
-          id: "1",
-          tripId: tripId,
-          type: "flight",
-          title: "Paris Flight",
-          description: "Round trip to Paris",
-          date: new Date("2024-03-15"),
-          time: "14:30",
-          confirmationNumber: "ABC123",
-          price: 450,
-          currency: "EUR",
-          status: "confirmed",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2",
-          tripId: tripId,
-          type: "hotel",
-          title: "Hotel Le Marais",
-          description: "3 nights in Paris",
-          date: new Date("2024-03-15"),
-          confirmationNumber: "HOT456",
-          price: 300,
-          currency: "EUR",
-          status: "confirmed",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-
-      const mockAddresses: Address[] = [
-        {
-          id: "1",
-          tripId: tripId,
-          type: "hotel",
-          name: "Hotel Le Marais",
-          address: "123 Rue de Rivoli",
-          city: "Paris",
-          country: "France",
-          phone: "+33 1 42 36 78 90",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2",
-          tripId: tripId,
-          type: "restaurant",
-          name: "Le Comptoir du Relais",
-          address: "9 Carrefour de l'Odéon",
-          city: "Paris",
-          country: "France",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-
-      setTrip(mockTrip);
-      setBookings(mockBookings);
-      setAddresses(mockAddresses);
+      setTrip(foundTrip);
+      setBookings(tripBookings);
+      setAddresses(tripAddresses);
+    } catch (error) {
+      console.error("Error loading trip data:", error);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const formatDate = (date: Date) => {

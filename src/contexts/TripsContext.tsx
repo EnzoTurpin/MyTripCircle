@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { Trip, Booking, Address } from "../types";
-import DataService from "../services/DataService";
+import ApiService from "../services/ApiService";
 
 interface TripsContextType {
   trips: Trip[];
@@ -60,7 +60,7 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const dataService = DataService.getInstance();
+  // Données via API backend
 
   useEffect(() => {
     loadData();
@@ -69,14 +69,56 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
   const loadData = async () => {
     try {
       setLoading(true);
+
+      // Petit délai pour s'assurer que le backend est prêt
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const [tripsData, bookingsData, addressesData] = await Promise.all([
-        dataService.getTrips(),
-        dataService.getBookings(),
-        dataService.getAddresses(),
+        ApiService.getTrips(),
+        ApiService.getBookings(),
+        ApiService.getAddresses(),
       ]);
-      setTrips(tripsData);
-      setBookings(bookingsData);
-      setAddresses(addressesData);
+
+      // Mapper _id vers id et convertir les dates
+      const mappedTrips = tripsData.map((trip) => {
+        console.log("[TripsContext] Raw trip data:", {
+          _id: trip._id,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          startDateType: typeof trip.startDate,
+          endDateType: typeof trip.endDate,
+        });
+
+        return {
+          ...trip,
+          id: trip._id,
+          _id: undefined,
+          startDate: trip.startDate ? new Date(trip.startDate) : new Date(),
+          endDate: trip.endDate ? new Date(trip.endDate) : new Date(),
+          createdAt: trip.createdAt ? new Date(trip.createdAt) : new Date(),
+          updatedAt: trip.updatedAt ? new Date(trip.updatedAt) : new Date(),
+        };
+      });
+
+      const mappedBookings = bookingsData.map((booking) => ({
+        ...booking,
+        id: booking._id,
+        _id: undefined,
+        date: booking.date ? new Date(booking.date) : new Date(),
+        createdAt: booking.createdAt ? new Date(booking.createdAt) : new Date(),
+        updatedAt: booking.updatedAt ? new Date(booking.updatedAt) : new Date(),
+      }));
+
+      const mappedAddresses = addressesData.map((address) => ({
+        ...address,
+        id: address._id,
+        _id: undefined,
+        createdAt: new Date(address.createdAt),
+        updatedAt: new Date(address.updatedAt),
+      }));
+
+      setTrips(mappedTrips);
+      setBookings(mappedBookings);
+      setAddresses(mappedAddresses);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -88,7 +130,13 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     trip: Omit<Trip, "id" | "createdAt" | "updatedAt">
   ): Promise<Trip> => {
     try {
-      const newTrip = await dataService.createTrip(trip);
+      // Backend POST non implémenté ici; on met à jour localement
+      const newTrip = {
+        ...(trip as any),
+        id: Date.now().toString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Trip;
       setTrips((prev) => [...prev, newTrip]);
       return newTrip;
     } catch (error) {
@@ -102,13 +150,13 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     updates: Partial<Trip>
   ): Promise<Trip | null> => {
     try {
-      const updatedTrip = await dataService.updateTrip(tripId, updates);
-      if (updatedTrip) {
-        setTrips((prev) =>
-          prev.map((trip) => (trip.id === tripId ? updatedTrip : trip))
-        );
-      }
-      return updatedTrip;
+      // TODO: appeler backend PUT /trips/:id
+      setTrips((prev) =>
+        prev.map((trip) =>
+          trip.id === tripId ? { ...trip, ...updates } : trip
+        )
+      );
+      return trips.find((t) => t.id === tripId) || null;
     } catch (error) {
       console.error("Error updating trip:", error);
       throw error;
@@ -117,17 +165,15 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
 
   const deleteTrip = async (tripId: string): Promise<boolean> => {
     try {
-      const success = await dataService.deleteTrip(tripId);
-      if (success) {
-        setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
-        setBookings((prev) =>
-          prev.filter((booking) => booking.tripId !== tripId)
-        );
-        setAddresses((prev) =>
-          prev.filter((address) => address.tripId !== tripId)
-        );
-      }
-      return success;
+      // TODO: appeler backend DELETE /trips/:id
+      setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
+      setBookings((prev) =>
+        prev.filter((booking) => booking.tripId !== tripId)
+      );
+      setAddresses((prev) =>
+        prev.filter((address) => address.tripId !== tripId)
+      );
+      return true;
     } catch (error) {
       console.error("Error deleting trip:", error);
       return false;
@@ -142,7 +188,13 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
   ): Promise<Booking> => {
     try {
-      const newBooking = await dataService.createBooking(booking);
+      // TODO: POST /bookings
+      const newBooking = {
+        ...(booking as any),
+        id: Date.now().toString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Booking;
       setBookings((prev) => [...prev, newBooking]);
       return newBooking;
     } catch (error) {
@@ -156,18 +208,13 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     updates: Partial<Booking>
   ): Promise<Booking | null> => {
     try {
-      const updatedBooking = await dataService.updateBooking(
-        bookingId,
-        updates
+      // TODO: PUT /bookings/:id
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking.id === bookingId ? { ...booking, ...updates } : booking
+        )
       );
-      if (updatedBooking) {
-        setBookings((prev) =>
-          prev.map((booking) =>
-            booking.id === bookingId ? updatedBooking : booking
-          )
-        );
-      }
-      return updatedBooking;
+      return bookings.find((b) => b.id === bookingId) || null;
     } catch (error) {
       console.error("Error updating booking:", error);
       throw error;
@@ -176,13 +223,9 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
 
   const deleteBooking = async (bookingId: string): Promise<boolean> => {
     try {
-      const success = await dataService.deleteBooking(bookingId);
-      if (success) {
-        setBookings((prev) =>
-          prev.filter((booking) => booking.id !== bookingId)
-        );
-      }
-      return success;
+      // TODO: DELETE /bookings/:id
+      setBookings((prev) => prev.filter((booking) => booking.id !== bookingId));
+      return true;
     } catch (error) {
       console.error("Error deleting booking:", error);
       return false;
@@ -197,7 +240,13 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     address: Omit<Address, "id" | "createdAt" | "updatedAt">
   ): Promise<Address> => {
     try {
-      const newAddress = await dataService.createAddress(address);
+      // TODO: POST /addresses
+      const newAddress = {
+        ...(address as any),
+        id: Date.now().toString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Address;
       setAddresses((prev) => [...prev, newAddress]);
       return newAddress;
     } catch (error) {
@@ -211,18 +260,13 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     updates: Partial<Address>
   ): Promise<Address | null> => {
     try {
-      const updatedAddress = await dataService.updateAddress(
-        addressId,
-        updates
+      // TODO: PUT /addresses/:id
+      setAddresses((prev) =>
+        prev.map((address) =>
+          address.id === addressId ? { ...address, ...updates } : address
+        )
       );
-      if (updatedAddress) {
-        setAddresses((prev) =>
-          prev.map((address) =>
-            address.id === addressId ? updatedAddress : address
-          )
-        );
-      }
-      return updatedAddress;
+      return addresses.find((a) => a.id === addressId) || null;
     } catch (error) {
       console.error("Error updating address:", error);
       throw error;
@@ -231,13 +275,11 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
 
   const deleteAddress = async (addressId: string): Promise<boolean> => {
     try {
-      const success = await dataService.deleteAddress(addressId);
-      if (success) {
-        setAddresses((prev) =>
-          prev.filter((address) => address.id !== addressId)
-        );
-      }
-      return success;
+      // TODO: DELETE /addresses/:id
+      setAddresses((prev) =>
+        prev.filter((address) => address.id !== addressId)
+      );
+      return true;
     } catch (error) {
       console.error("Error deleting address:", error);
       return false;

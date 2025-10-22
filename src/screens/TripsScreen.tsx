@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip } from "../types";
 import { useTrips } from "../contexts/TripsContext";
+import { API_URLS } from "../config/api";
 
 type TripsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -38,8 +39,41 @@ const TripsScreen: React.FC = () => {
     navigation.navigate("InviteFriends", { tripId: trip.id });
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
+  const testAPI = async () => {
+    const urls = API_URLS.map((url) => `${url}/test`);
+
+    for (const url of urls) {
+      try {
+        console.log(`[Test] Trying ${url}`);
+        const response = await fetch(url);
+        const data = await response.json();
+        Alert.alert(
+          "API Test Success",
+          `URL: ${url}\nResponse: ${JSON.stringify(data)}`
+        );
+        return;
+      } catch (error) {
+        console.log(`[Test] Failed ${url}: ${error.message}`);
+      }
+    }
+
+    Alert.alert(
+      "API Test Failed",
+      "Could not connect to any API URL. Check if backend is running."
+    );
+  };
+
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return "N/A";
+
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+
+    // Vérifier si la date est valide
+    if (isNaN(dateObj.getTime())) {
+      return "Invalid Date";
+    }
+
+    return dateObj.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -107,9 +141,14 @@ const TripsScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Trips</Text>
-        <TouchableOpacity style={styles.addButton} onPress={handleCreateTrip}>
-          <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.testButton} onPress={testAPI}>
+            <Ionicons name="bug" size={20} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addButton} onPress={handleCreateTrip}>
+            <Ionicons name="add" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {trips.length === 0 ? (
@@ -168,6 +207,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold" as const,
     color: "#333",
+  },
+  headerButtons: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
+  testButton: {
+    backgroundColor: "#FF9500",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
   addButton: {
     backgroundColor: "#007AFF",
