@@ -9,10 +9,11 @@
     "web": "expo start --web",
     "seed": "node database/seed.js",
     "test-db": "node database/test-connection.js",
-    "update-ip": "node update-ip.js",
+    "update-ip": "node scripts/update-ip.js",
     "server": "node server/index.js",
     "dev": "npm run update-ip && concurrently \"npm run server\" \"expo start\"",
-    "dev:clear": "npm run update-ip && concurrently \"npm run server\" \"npx expo start --clear\""
+    "dev:clear": "npm run update-ip && concurrently \"npm run server\" \"npx expo start --clear\"",
+    "start:clear": "npm run update-ip && node scripts/start-with-qr.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

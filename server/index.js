@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 4000;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
+const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME || "mytripcircle";
 
 // IP depuis .env ou détection automatique
