@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Address } from "../types";
 import { useTrips } from "../contexts/TripsContext";
+import { useTranslation } from "react-i18next";
 
 type AddressesScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -22,6 +23,7 @@ type AddressesScreenNavigationProp = StackNavigationProp<
 const AddressesScreen: React.FC = () => {
   const navigation = useNavigation<AddressesScreenNavigationProp>();
   const { addresses, loading } = useTrips();
+  const { t } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "hotel" | "restaurant" | "activity" | "transport" | "other"
   >("all");
@@ -69,15 +71,17 @@ const AddressesScreen: React.FC = () => {
   };
 
   const handleAddAddress = () => {
-    Alert.alert("Add Address", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("addresses.addAddress"), t("addresses.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   const handleDirections = (address: Address) => {
-    Alert.alert("Directions", `Opening directions to ${address.name}`, [
-      { text: "OK" },
-    ]);
+    Alert.alert(
+      t("addresses.directionsTitle"),
+      t("addresses.directionsOpening", { name: address.name }),
+      [{ text: t("common.ok") }]
+    );
   };
 
   const renderAddressCard = ({ item }: { item: Address }) => (
@@ -162,7 +166,7 @@ const AddressesScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading your addresses...</Text>
+        <Text style={styles.loadingText}>{t("addresses.loading")}</Text>
       </View>
     );
   }
@@ -170,7 +174,7 @@ const AddressesScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Addresses</Text>
+        <Text style={styles.headerTitle}>{t("addresses.header")}</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
           <Ionicons name="add" size={24} color="white" />
         </TouchableOpacity>
@@ -178,29 +182,33 @@ const AddressesScreen: React.FC = () => {
 
       <View style={styles.filtersContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {renderFilterButton("all", "All")}
-          {renderFilterButton("hotel", "Hotels")}
-          {renderFilterButton("restaurant", "Restaurants")}
-          {renderFilterButton("activity", "Activities")}
-          {renderFilterButton("transport", "Transport")}
-          {renderFilterButton("other", "Other")}
+          {renderFilterButton("all", t("addresses.filters.all"))}
+          {renderFilterButton("hotel", t("addresses.filters.hotel"))}
+          {renderFilterButton("restaurant", t("addresses.filters.restaurant"))}
+          {renderFilterButton("activity", t("addresses.filters.activity"))}
+          {renderFilterButton("transport", t("addresses.filters.transport"))}
+          {renderFilterButton("other", t("addresses.filters.other"))}
         </ScrollView>
       </View>
 
       {filteredAddresses.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="location-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyTitle}>No addresses found</Text>
+          <Text style={styles.emptyTitle}>{t("addresses.emptyTitle")}</Text>
           <Text style={styles.emptySubtitle}>
             {selectedFilter === "all"
-              ? "Add your first address to get started"
-              : `No ${selectedFilter} addresses found`}
+              ? t("addresses.emptyAll")
+              : t("addresses.emptyFiltered", {
+                  type: t(`addresses.filters.${selectedFilter}`),
+                })}
           </Text>
           <TouchableOpacity
             style={styles.createButton}
             onPress={handleAddAddress}
           >
-            <Text style={styles.createButtonText}>Add Address</Text>
+            <Text style={styles.createButtonText}>
+              {t("addresses.addAddress")}
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (

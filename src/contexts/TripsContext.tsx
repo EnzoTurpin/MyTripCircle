@@ -96,6 +96,12 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
           endDate: trip.endDate ? new Date(trip.endDate) : new Date(),
           createdAt: trip.createdAt ? new Date(trip.createdAt) : new Date(),
           updatedAt: trip.updatedAt ? new Date(trip.updatedAt) : new Date(),
+          // Extraire les userId des objets collaborateurs
+          collaborators: trip.collaborators
+            ? trip.collaborators.map((collab: any) =>
+                typeof collab === "string" ? collab : collab.userId || collab
+              )
+            : [],
         };
       });
 

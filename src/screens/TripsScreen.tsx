@@ -15,6 +15,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { API_URLS } from "../config/api";
+import { useTranslation } from "react-i18next";
 
 type TripsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -24,10 +25,11 @@ type TripsScreenNavigationProp = StackNavigationProp<
 const TripsScreen: React.FC = () => {
   const navigation = useNavigation<TripsScreenNavigationProp>();
   const { trips, loading } = useTrips();
+  const { t } = useTranslation();
 
   const handleCreateTrip = () => {
-    Alert.alert("Create New Trip", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("trips.createNewTripTitle"), t("trips.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
@@ -53,7 +55,7 @@ const TripsScreen: React.FC = () => {
 
         const data = await response.json();
         Alert.alert(
-          "API Test Success",
+          t("trips.apiTestSuccess"),
           `URL: ${url}\nResponse: ${JSON.stringify(data, null, 2)}`
         );
         return;
@@ -62,10 +64,7 @@ const TripsScreen: React.FC = () => {
       }
     }
 
-    Alert.alert(
-      "API Test Failed",
-      "Could not connect to any API URL. Check if backend is running."
-    );
+    Alert.alert(t("trips.apiTestFailed"), t("trips.apiTestError"));
   };
 
   const formatDate = (date: Date | string | null | undefined) => {
@@ -125,8 +124,10 @@ const TripsScreen: React.FC = () => {
               color="rgba(255, 255, 255, 0.8)"
             />
             <Text style={styles.collaboratorsText}>
-              {(item.collaborators?.length || 0) + 1} member
-              {(item.collaborators?.length || 0) > 0 ? "s" : ""}
+              {(item.collaborators?.length || 0) + 1}{" "}
+              {t("trips.membersSingular", {
+                count: (item.collaborators?.length || 0) + 1,
+              })}
             </Text>
           </View>
           <Ionicons
@@ -142,7 +143,7 @@ const TripsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading your trips...</Text>
+        <Text style={styles.loadingText}>{t("trips.loading")}</Text>
       </View>
     );
   }
@@ -150,7 +151,7 @@ const TripsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Trips</Text>
+        <Text style={styles.headerTitle}>{t("trips.header")}</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity style={styles.testButton} onPress={testAPI}>
             <Ionicons name="bug" size={20} color="white" />
@@ -164,15 +165,13 @@ const TripsScreen: React.FC = () => {
       {trips.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="airplane-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyTitle}>No trips yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Create your first trip to start planning your adventure
-          </Text>
+          <Text style={styles.emptyTitle}>{t("trips.emptyTitle")}</Text>
+          <Text style={styles.emptySubtitle}>{t("trips.emptySubtitle")}</Text>
           <TouchableOpacity
             style={styles.createButton}
             onPress={handleCreateTrip}
           >
-            <Text style={styles.createButtonText}>Create Trip</Text>
+            <Text style={styles.createButtonText}>{t("trips.createTrip")}</Text>
           </TouchableOpacity>
         </View>
       ) : (

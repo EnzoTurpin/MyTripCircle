@@ -14,6 +14,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
+import { useTranslation } from "react-i18next";
 
 type BookingDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -28,6 +29,7 @@ const BookingDetailsScreen: React.FC = () => {
   const route = useRoute<BookingDetailsScreenRouteProp>();
   const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
   const { bookingId } = route.params;
+  const { t } = useTranslation();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,24 +121,34 @@ const BookingDetailsScreen: React.FC = () => {
   };
 
   const handleEditBooking = () => {
-    Alert.alert("Edit Booking", "This feature will be implemented soon!", [
-      { text: "OK" },
-    ]);
+    Alert.alert(
+      t("bookings.details.editBooking"),
+      t("bookings.details.featureSoon"),
+      [{ text: t("common.ok") }]
+    );
   };
 
   const handleCancelBooking = () => {
     Alert.alert(
-      "Cancel Booking",
-      "Are you sure you want to cancel this booking?",
+      t("bookings.details.cancelBooking"),
+      t("bookings.details.cancelConfirm"),
       [
-        { text: "No", style: "cancel" },
-        { text: "Yes", style: "destructive", onPress: () => {} },
+        { text: t("bookings.details.no"), style: "cancel" },
+        {
+          text: t("bookings.details.yes"),
+          style: "destructive",
+          onPress: () => {},
+        },
       ]
     );
   };
 
   const handleViewAttachment = (attachment: string) => {
-    Alert.alert("View Attachment", `Opening ${attachment}`, [{ text: "OK" }]);
+    Alert.alert(
+      t("bookings.details.viewAttachment"),
+      `${t("bookings.details.opening")} ${attachment}`,
+      [{ text: t("common.ok") }]
+    );
   };
 
   const handleGetDirections = () => {
@@ -151,7 +163,7 @@ const BookingDetailsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading booking details...</Text>
+        <Text style={styles.loadingText}>{t("bookings.details.loading")}</Text>
       </View>
     );
   }
@@ -159,7 +171,7 @@ const BookingDetailsScreen: React.FC = () => {
   if (!booking) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Booking not found</Text>
+        <Text style={styles.errorText}>{t("bookings.details.notFound")}</Text>
       </View>
     );
   }
@@ -199,8 +211,9 @@ const BookingDetailsScreen: React.FC = () => {
                   { color: getStatusColor(booking.status) },
                 ]}
               >
-                {booking.status.charAt(0).toUpperCase() +
-                  booking.status.slice(1)}
+                {booking.status
+                  ? t(`bookings.status.${booking.status}`)
+                  : t("common.unknown")}
               </Text>
             </View>
           </View>
@@ -210,30 +223,40 @@ const BookingDetailsScreen: React.FC = () => {
       <View style={styles.content}>
         {booking.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.sectionTitle}>
+              {t("bookings.details.description")}
+            </Text>
             <Text style={styles.descriptionText}>{booking.description}</Text>
           </View>
         )}
 
         {booking.address && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Location</Text>
+            <Text style={styles.sectionTitle}>
+              {t("bookings.details.location")}
+            </Text>
             <Text style={styles.addressText}>{booking.address}</Text>
             <TouchableOpacity
               style={styles.directionsButton}
               onPress={handleGetDirections}
             >
               <Ionicons name="navigate" size={16} color="#007AFF" />
-              <Text style={styles.directionsText}>Get Directions</Text>
+              <Text style={styles.directionsText}>
+                {t("bookings.details.getDirections")}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Booking Details</Text>
+          <Text style={styles.sectionTitle}>
+            {t("bookings.details.bookingDetails")}
+          </Text>
           {booking.confirmationNumber && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Confirmation Number:</Text>
+              <Text style={styles.detailLabel}>
+                {t("bookings.details.confirmationNumber")}
+              </Text>
               <Text style={styles.detailValue}>
                 {booking.confirmationNumber}
               </Text>
@@ -241,19 +264,23 @@ const BookingDetailsScreen: React.FC = () => {
           )}
           {booking.price && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Price:</Text>
+              <Text style={styles.detailLabel}>
+                {t("bookings.details.price")}
+              </Text>
               <Text style={styles.detailValue}>
                 {booking.currency} {booking.price}
               </Text>
             </View>
           )}
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date:</Text>
+            <Text style={styles.detailLabel}>{t("bookings.details.date")}</Text>
             <Text style={styles.detailValue}>{formatDate(booking.date)}</Text>
           </View>
           {booking.time && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Time:</Text>
+              <Text style={styles.detailLabel}>
+                {t("bookings.details.time")}
+              </Text>
               <Text style={styles.detailValue}>{booking.time}</Text>
             </View>
           )}
@@ -261,7 +288,9 @@ const BookingDetailsScreen: React.FC = () => {
 
         {booking.attachments && booking.attachments.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Attachments</Text>
+            <Text style={styles.sectionTitle}>
+              {t("bookings.details.attachments")}
+            </Text>
             {booking.attachments.map((attachment, index) => (
               <TouchableOpacity
                 key={index}
@@ -282,7 +311,9 @@ const BookingDetailsScreen: React.FC = () => {
             onPress={handleEditBooking}
           >
             <Ionicons name="create" size={20} color="white" />
-            <Text style={styles.actionButtonText}>Edit Booking</Text>
+            <Text style={styles.actionButtonText}>
+              {t("bookings.details.editBooking")}
+            </Text>
           </TouchableOpacity>
           {booking.status !== "cancelled" && (
             <TouchableOpacity
@@ -290,7 +321,9 @@ const BookingDetailsScreen: React.FC = () => {
               onPress={handleCancelBooking}
             >
               <Ionicons name="close" size={20} color="white" />
-              <Text style={styles.actionButtonText}>Cancel</Text>
+              <Text style={styles.actionButtonText}>
+                {t("bookings.details.cancelBooking")}
+              </Text>
             </TouchableOpacity>
           )}
         </View>

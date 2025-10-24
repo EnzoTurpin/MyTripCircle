@@ -15,6 +15,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip, User } from "../types";
+import { useTranslation } from "react-i18next";
 
 type InviteFriendsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -29,6 +30,7 @@ const InviteFriendsScreen: React.FC = () => {
   const route = useRoute<InviteFriendsScreenRouteProp>();
   const navigation = useNavigation<InviteFriendsScreenNavigationProp>();
   const { tripId } = route.params;
+  const { t } = useTranslation();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
@@ -104,26 +106,31 @@ const InviteFriendsScreen: React.FC = () => {
 
   const handleInviteByEmail = () => {
     if (!emailInput.trim()) {
-      Alert.alert("Error", "Please enter an email address");
+      Alert.alert(t("inviteFriends.error"), t("inviteFriends.enterEmailError"));
       return;
     }
 
-    Alert.alert("Invitation Sent", `Invitation sent to ${emailInput}`, [
-      { text: "OK" },
-    ]);
+    Alert.alert(
+      t("inviteFriends.invitationSent"),
+      `${t("inviteFriends.invitationSentTo")} ${emailInput}`,
+      [{ text: t("common.ok") }]
+    );
     setEmailInput("");
   };
 
   const handleSendInvitations = () => {
     if (invitedFriends.length === 0) {
-      Alert.alert("No Friends Selected", "Please select friends to invite");
+      Alert.alert(
+        t("inviteFriends.noFriendsSelected"),
+        t("inviteFriends.selectFriendsToInvite")
+      );
       return;
     }
 
     Alert.alert(
-      "Invitations Sent",
-      `Invitations sent to ${invitedFriends.length} friend(s)`,
-      [{ text: "OK", onPress: () => navigation.goBack() }]
+      t("inviteFriends.invitationsSent"),
+      `${t("inviteFriends.invitationsSentTo")} ${invitedFriends.length}`,
+      [{ text: t("common.ok"), onPress: () => navigation.goBack() }]
     );
   };
 
@@ -151,7 +158,9 @@ const InviteFriendsScreen: React.FC = () => {
         <View style={styles.friendStatus}>
           {isAlreadyCollaborator ? (
             <View style={styles.collaboratorBadge}>
-              <Text style={styles.collaboratorText}>Member</Text>
+              <Text style={styles.collaboratorText}>
+                {t("inviteFriends.member")}
+              </Text>
             </View>
           ) : isInvited ? (
             <Ionicons name="checkmark-circle" size={24} color="#34C759" />
@@ -166,7 +175,7 @@ const InviteFriendsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading friends...</Text>
+        <Text style={styles.loadingText}>{t("inviteFriends.loading")}</Text>
       </View>
     );
   }
@@ -174,19 +183,21 @@ const InviteFriendsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
-        <Text style={styles.headerTitle}>Invite Friends</Text>
+        <Text style={styles.headerTitle}>{t("inviteFriends.header")}</Text>
         <Text style={styles.headerSubtitle}>
-          Invite friends to collaborate on "{trip?.title}"
+          {t("inviteFriends.subtitle")} "{trip?.title}"
         </Text>
       </LinearGradient>
 
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Invite by Email</Text>
+          <Text style={styles.sectionTitle}>
+            {t("inviteFriends.inviteByEmail")}
+          </Text>
           <View style={styles.emailContainer}>
             <TextInput
               style={styles.emailInput}
-              placeholder="Enter email address"
+              placeholder={t("inviteFriends.enterEmail")}
               value={emailInput}
               onChangeText={setEmailInput}
               keyboardType="email-address"
@@ -202,7 +213,7 @@ const InviteFriendsScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Friends</Text>
+          <Text style={styles.sectionTitle}>{t("inviteFriends.friends")}</Text>
           <FlatList
             data={friends}
             renderItem={renderFriendItem}
@@ -214,7 +225,7 @@ const InviteFriendsScreen: React.FC = () => {
         {invitedFriends.length > 0 && (
           <View style={styles.selectedFriendsContainer}>
             <Text style={styles.selectedFriendsTitle}>
-              Selected Friends ({invitedFriends.length})
+              {t("inviteFriends.selectedFriends")} ({invitedFriends.length})
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {invitedFriends.map((friendId) => {
@@ -245,7 +256,7 @@ const InviteFriendsScreen: React.FC = () => {
           >
             <Ionicons name="send" size={20} color="white" />
             <Text style={styles.sendButtonText}>
-              Send Invitations ({invitedFriends.length})
+              {t("inviteFriends.sendInvitations")} ({invitedFriends.length})
             </Text>
           </TouchableOpacity>
         </View>

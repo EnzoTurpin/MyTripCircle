@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTrips } from "../contexts/TripsContext";
+import { useTranslation } from "react-i18next";
 
 type BookingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -22,6 +23,7 @@ type BookingsScreenNavigationProp = StackNavigationProp<
 const BookingsScreen: React.FC = () => {
   const navigation = useNavigation<BookingsScreenNavigationProp>();
   const { bookings, loading } = useTrips();
+  const { t } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "flight" | "train" | "hotel" | "restaurant" | "activity"
   >("all");
@@ -82,8 +84,8 @@ const BookingsScreen: React.FC = () => {
   };
 
   const handleAddBooking = () => {
-    Alert.alert("Add Booking", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("bookings.addBooking"), t("bookings.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
@@ -145,8 +147,8 @@ const BookingsScreen: React.FC = () => {
             style={[styles.statusText, { color: getStatusColor(item.status) }]}
           >
             {item.status
-              ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
-              : "Unknown"}
+              ? t(`bookings.status.${item.status}`)
+              : t("common.unknown")}
           </Text>
         </View>
       </View>
@@ -165,7 +167,7 @@ const BookingsScreen: React.FC = () => {
       <View style={styles.bookingFooter}>
         {item.confirmationNumber && (
           <Text style={styles.confirmationText}>
-            Conf: {item.confirmationNumber}
+            {t("bookings.confirmationShort", { code: item.confirmationNumber })}
           </Text>
         )}
         {item.price && (
@@ -199,7 +201,7 @@ const BookingsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading your bookings...</Text>
+        <Text style={styles.loadingText}>{t("bookings.loading")}</Text>
       </View>
     );
   }
@@ -207,7 +209,7 @@ const BookingsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Bookings</Text>
+        <Text style={styles.headerTitle}>{t("bookings.header")}</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddBooking}>
           <Ionicons name="add" size={24} color="white" />
         </TouchableOpacity>
@@ -215,29 +217,33 @@ const BookingsScreen: React.FC = () => {
 
       <View style={styles.filtersContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {renderFilterButton("all", "All")}
-          {renderFilterButton("flight", "Flights")}
-          {renderFilterButton("train", "Trains")}
-          {renderFilterButton("hotel", "Hotels")}
-          {renderFilterButton("restaurant", "Restaurants")}
-          {renderFilterButton("activity", "Activities")}
+          {renderFilterButton("all", t("bookings.filters.all"))}
+          {renderFilterButton("flight", t("bookings.filters.flight"))}
+          {renderFilterButton("train", t("bookings.filters.train"))}
+          {renderFilterButton("hotel", t("bookings.filters.hotel"))}
+          {renderFilterButton("restaurant", t("bookings.filters.restaurant"))}
+          {renderFilterButton("activity", t("bookings.filters.activity"))}
         </ScrollView>
       </View>
 
       {filteredBookings.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="receipt-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyTitle}>No bookings found</Text>
+          <Text style={styles.emptyTitle}>{t("bookings.emptyTitle")}</Text>
           <Text style={styles.emptySubtitle}>
             {selectedFilter === "all"
-              ? "Add your first booking to get started"
-              : `No ${selectedFilter} bookings found`}
+              ? t("bookings.emptyAll")
+              : t("bookings.emptyFiltered", {
+                  type: t(`bookings.filters.${selectedFilter}`),
+                })}
           </Text>
           <TouchableOpacity
             style={styles.createButton}
             onPress={handleAddBooking}
           >
-            <Text style={styles.createButtonText}>Add Booking</Text>
+            <Text style={styles.createButtonText}>
+              {t("bookings.addBooking")}
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (

@@ -14,6 +14,7 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip, Booking, Address } from "../types";
 import { useTrips } from "../contexts/TripsContext";
+import { useTranslation } from "react-i18next";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 type TripDetailsScreenNavigationProp = StackNavigationProp<
@@ -25,6 +26,7 @@ const TripDetailsScreen: React.FC = () => {
   const route = useRoute<TripDetailsScreenRouteProp>();
   const navigation = useNavigation<TripDetailsScreenNavigationProp>();
   const { tripId } = route.params;
+  const { t } = useTranslation();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -66,27 +68,27 @@ const TripDetailsScreen: React.FC = () => {
   };
 
   const handleEditTrip = () => {
-    Alert.alert("Edit Trip", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("tripDetails.editTrip"), t("tripDetails.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   const handleAddBooking = () => {
-    Alert.alert("Add Booking", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("tripDetails.addBooking"), t("tripDetails.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   const handleAddAddress = () => {
-    Alert.alert("Add Address", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("tripDetails.addAddress"), t("tripDetails.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading trip details...</Text>
+        <Text style={styles.loadingText}>{t("tripDetails.loading")}</Text>
       </View>
     );
   }
@@ -94,7 +96,7 @@ const TripDetailsScreen: React.FC = () => {
   if (!trip) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Trip not found</Text>
+        <Text style={styles.errorText}>{t("tripDetails.notFound")}</Text>
       </View>
     );
   }
@@ -118,17 +120,21 @@ const TripDetailsScreen: React.FC = () => {
           onPress={handleInviteFriends}
         >
           <Ionicons name="person-add" size={20} color="white" />
-          <Text style={styles.actionButtonText}>Invite Friends</Text>
+          <Text style={styles.actionButtonText}>
+            {t("tripDetails.inviteFriends")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={handleEditTrip}>
           <Ionicons name="create" size={20} color="white" />
-          <Text style={styles.actionButtonText}>Edit Trip</Text>
+          <Text style={styles.actionButtonText}>
+            {t("tripDetails.editTrip")}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Bookings</Text>
+          <Text style={styles.sectionTitle}>{t("tripDetails.bookings")}</Text>
           <TouchableOpacity onPress={handleAddBooking}>
             <Ionicons name="add" size={24} color="#007AFF" />
           </TouchableOpacity>
@@ -136,7 +142,7 @@ const TripDetailsScreen: React.FC = () => {
         {bookings.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="receipt-outline" size={40} color="#ccc" />
-            <Text style={styles.emptyText}>No bookings yet</Text>
+            <Text style={styles.emptyText}>{t("tripDetails.noBookings")}</Text>
           </View>
         ) : (
           bookings.map((booking) => (
@@ -161,7 +167,9 @@ const TripDetailsScreen: React.FC = () => {
               </Text>
               {booking.confirmationNumber && (
                 <Text style={styles.confirmationText}>
-                  Confirmation: {booking.confirmationNumber}
+                  {t("tripDetails.confirmation", {
+                    code: booking.confirmationNumber,
+                  })}
                 </Text>
               )}
             </View>
@@ -171,7 +179,7 @@ const TripDetailsScreen: React.FC = () => {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Addresses</Text>
+          <Text style={styles.sectionTitle}>{t("tripDetails.addresses")}</Text>
           <TouchableOpacity onPress={handleAddAddress}>
             <Ionicons name="add" size={24} color="#007AFF" />
           </TouchableOpacity>
@@ -179,7 +187,7 @@ const TripDetailsScreen: React.FC = () => {
         {addresses.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="location-outline" size={40} color="#ccc" />
-            <Text style={styles.emptyText}>No addresses yet</Text>
+            <Text style={styles.emptyText}>{t("tripDetails.noAddresses")}</Text>
           </View>
         ) : (
           addresses.map((address) => (
@@ -208,21 +216,28 @@ const TripDetailsScreen: React.FC = () => {
       </View>
 
       <View style={styles.collaboratorsSection}>
-        <Text style={styles.sectionTitle}>Collaborators</Text>
+        <Text style={styles.sectionTitle}>
+          {t("tripDetails.collaborators")}
+        </Text>
         <View style={styles.collaboratorsList}>
-          <View style={styles.collaboratorItem}>
+          <View key="owner" style={styles.collaboratorItem}>
             <View style={styles.collaboratorAvatar}>
               <Ionicons name="person" size={20} color="white" />
             </View>
-            <Text style={styles.collaboratorName}>You (Owner)</Text>
+            <Text style={styles.collaboratorName}>
+              {t("tripDetails.ownerYou")}
+            </Text>
           </View>
           {trip.collaborators.map((collaboratorId, index) => (
-            <View key={collaboratorId} style={styles.collaboratorItem}>
+            <View
+              key={`collaborator-${collaboratorId}-${index}`}
+              style={styles.collaboratorItem}
+            >
               <View style={styles.collaboratorAvatar}>
                 <Ionicons name="person" size={20} color="white" />
               </View>
               <Text style={styles.collaboratorName}>
-                Collaborator {index + 1}
+                {t("tripDetails.collaborator", { index: index + 1 })}
               </Text>
             </View>
           ))}

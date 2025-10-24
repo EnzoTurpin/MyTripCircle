@@ -10,67 +10,67 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: logout },
+    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("common.logout"), style: "destructive", onPress: logout },
     ]);
   };
 
   const handleEditProfile = () => {
-    Alert.alert("Edit Profile", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("profile.editProfile"), t("profile.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   const handleSettings = () => {
-    Alert.alert("Settings", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("profile.settings"), t("profile.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   const handleHelp = () => {
-    Alert.alert("Help & Support", "This feature will be implemented soon!", [
-      { text: "OK" },
+    Alert.alert(t("profile.helpSupport"), t("profile.featureSoon"), [
+      { text: t("common.ok") },
     ]);
   };
 
   const handleAbout = () => {
-    Alert.alert(
-      "About MyTripCircle",
-      "Version 1.0.0\n\nMyTripCircle helps you plan and organize your trips with friends. Create detailed itineraries, manage bookings, and collaborate with your travel companions.",
-      [{ text: "OK" }]
-    );
+    Alert.alert(t("profile.aboutTitle"), t("profile.aboutBody"), [
+      { text: t("common.ok") },
+    ]);
   };
 
   const menuItems = [
     {
       icon: "person-outline",
-      title: "Edit Profile",
+      title: t("profile.editProfile"),
       onPress: handleEditProfile,
     },
     {
       icon: "settings-outline",
-      title: "Settings",
+      title: t("profile.settings"),
       onPress: handleSettings,
     },
     {
       icon: "help-circle-outline",
-      title: "Help & Support",
+      title: t("profile.helpSupport"),
       onPress: handleHelp,
     },
     {
       icon: "information-circle-outline",
-      title: "About",
+      title: t("profile.about"),
       onPress: handleAbout,
     },
     {
       icon: "log-out-outline",
-      title: "Logout",
+      title: t("profile.logoutTitle"),
       onPress: handleLogout,
       color: "#FF3B30",
     },
@@ -83,9 +83,11 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={40} color="white" />
           </View>
-          <Text style={styles.userName}>{user?.name || "User"}</Text>
+          <Text style={styles.userName}>
+            {user?.name || t("profile.userFallbackName")}
+          </Text>
           <Text style={styles.userEmail}>
-            {user?.email || "user@example.com"}
+            {user?.email || t("profile.userFallbackEmail")}
           </Text>
         </View>
       </LinearGradient>
@@ -93,19 +95,19 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statLabel}>Trips</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.trips")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>Bookings</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.bookings")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>8</Text>
-          <Text style={styles.statLabel}>Addresses</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.addresses")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>5</Text>
-          <Text style={styles.statLabel}>Friends</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.friends")}</Text>
         </View>
       </View>
 
@@ -137,8 +139,10 @@ const ProfileScreen: React.FC = () => {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>MyTripCircle v1.0.0</Text>
-        <Text style={styles.footerSubtext}>Made with ❤️ for travelers</Text>
+        <Text style={styles.footerText}>{t("profile.footerVersion")}</Text>
+        <Text style={styles.footerSubtext}>
+          {t("profile.footerMadeWithLove")}
+        </Text>
       </View>
     </ScrollView>
   );
