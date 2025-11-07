@@ -16,6 +16,8 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip, User } from "../types";
 import { useTranslation } from "react-i18next";
+import { useTrips } from "../contexts/TripsContext";
+import { useAuth } from "../contexts/AuthContext";
 
 type InviteFriendsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -31,34 +33,32 @@ const InviteFriendsScreen: React.FC = () => {
   const navigation = useNavigation<InviteFriendsScreenNavigationProp>();
   const { tripId } = route.params;
   const { t } = useTranslation();
+  const { getTripById, createInvitation } = useTrips();
+  const { user } = useAuth();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
   const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sendingInvitations, setSendingInvitations] = useState(false);
 
   useEffect(() => {
     loadData();
   }, [tripId]);
 
   const loadData = async () => {
-    // Simulate loading trip and friends data
-    setTimeout(() => {
-      const mockTrip: Trip = {
-        id: tripId,
-        title: "Paris Adventure",
-        description: "A romantic getaway to the City of Light",
-        startDate: new Date("2024-03-15"),
-        endDate: new Date("2024-03-22"),
-        destination: "Paris, France",
-        ownerId: "1",
-        collaborators: ["2", "3"],
-        isPublic: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    try {
+      setLoading(true);
 
+      // Charger les données du trip depuis le contexte
+      const tripData = getTripById(tripId);
+      if (tripData) {
+        setTrip(tripData);
+      }
+
+      // Pour l'instant, utiliser des données mock pour les amis
+      // Dans une vraie app, vous feriez un appel API pour récupérer les amis de l'utilisateur
       const mockFriends: User[] = [
         {
           id: "2",
@@ -90,10 +90,13 @@ const InviteFriendsScreen: React.FC = () => {
         },
       ];
 
-      setTrip(mockTrip);
       setFriends(mockFriends);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      Alert.alert(t("common.error"), t("inviteFriends.loadingError"));
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleInviteFriend = (friendId: string) => {
@@ -104,21 +107,51 @@ const InviteFriendsScreen: React.FC = () => {
     }
   };
 
-  const handleInviteByEmail = () => {
+  const handleInviteByEmail = async () => {
     if (!emailInput.trim()) {
       Alert.alert(t("inviteFriends.error"), t("inviteFriends.enterEmailError"));
       return;
     }
 
-    Alert.alert(
-      t("inviteFriends.invitationSent"),
-      `${t("inviteFriends.invitationSentTo")} ${emailInput}`,
-      [{ text: t("common.ok") }]
-    );
-    setEmailInput("");
+    if (!user || !trip) {
+      Alert.alert(t("common.error"), t("inviteFriends.userNotFound"));
+      return;
+    }
+
+    try {
+      setSendingInvitations(true);
+
+      await createInvitation({
+        tripId: trip.id,
+        inviterId: user.id,
+        inviteeEmail: emailInput.trim(),
+        message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
+        permissions: {
+          role: "editor",
+          canEdit: true,
+          canInvite: false,
+          canDelete: false,
+        },
+      });
+
+      Alert.alert(
+        t("inviteFriends.invitationSent"),
+        `${t("inviteFriends.invitationSentTo")} ${emailInput}`,
+        [{ text: t("common.ok") }]
+      );
+      setEmailInput("");
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      Alert.alert(
+        t("common.error"),
+        error.message || t("inviteFriends.invitationError")
+      );
+    } finally {
+      setSendingInvitations(false);
+    }
   };
 
-  const handleSendInvitations = () => {
+  const handleSendInvitations = async () => {
     if (invitedFriends.length === 0) {
       Alert.alert(
         t("inviteFriends.noFriendsSelected"),
@@ -127,11 +160,49 @@ const InviteFriendsScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert(
-      t("inviteFriends.invitationsSent"),
-      `${t("inviteFriends.invitationsSentTo")} ${invitedFriends.length}`,
-      [{ text: t("common.ok"), onPress: () => navigation.goBack() }]
-    );
+    if (!user || !trip) {
+      Alert.alert(t("common.error"), t("inviteFriends.userNotFound"));
+      return;
+    }
+
+    try {
+      setSendingInvitations(true);
+
+      // Envoyer les invitations en parallèle
+      const invitationPromises = invitedFriends.map((friendId) => {
+        const friend = friends.find((f) => f.id === friendId);
+        if (!friend) return Promise.resolve();
+
+        return createInvitation({
+          tripId: trip.id,
+          inviterId: user.id,
+          inviteeEmail: friend.email,
+          message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
+          permissions: {
+            role: "editor",
+            canEdit: true,
+            canInvite: false,
+            canDelete: false,
+          },
+        });
+      });
+
+      await Promise.all(invitationPromises);
+
+      Alert.alert(
+        t("inviteFriends.invitationsSent"),
+        `${t("inviteFriends.invitationsSentTo")} ${invitedFriends.length}`,
+        [{ text: t("common.ok"), onPress: () => navigation.goBack() }]
+      );
+    } catch (error) {
+      console.error("Error sending invitations:", error);
+      Alert.alert(
+        t("common.error"),
+        error.message || t("inviteFriends.invitationError")
+      );
+    } finally {
+      setSendingInvitations(false);
+    }
   };
 
   const renderFriendItem = ({ item }: { item: User }) => {
@@ -204,10 +275,18 @@ const InviteFriendsScreen: React.FC = () => {
               autoCapitalize="none"
             />
             <TouchableOpacity
-              style={styles.inviteButton}
+              style={[
+                styles.inviteButton,
+                sendingInvitations && styles.inviteButtonDisabled,
+              ]}
               onPress={handleInviteByEmail}
+              disabled={sendingInvitations}
             >
-              <Ionicons name="send" size={20} color="white" />
+              {sendingInvitations ? (
+                <Ionicons name="hourglass" size={20} color="white" />
+              ) : (
+                <Ionicons name="send" size={20} color="white" />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -251,12 +330,24 @@ const InviteFriendsScreen: React.FC = () => {
       {invitedFriends.length > 0 && (
         <View style={styles.bottomActions}>
           <TouchableOpacity
-            style={styles.sendButton}
+            style={[
+              styles.sendButton,
+              sendingInvitations && styles.sendButtonDisabled,
+            ]}
             onPress={handleSendInvitations}
+            disabled={sendingInvitations}
           >
-            <Ionicons name="send" size={20} color="white" />
+            {sendingInvitations ? (
+              <Ionicons name="hourglass" size={20} color="white" />
+            ) : (
+              <Ionicons name="send" size={20} color="white" />
+            )}
             <Text style={styles.sendButtonText}>
-              {t("inviteFriends.sendInvitations")} ({invitedFriends.length})
+              {sendingInvitations
+                ? t("inviteFriends.sendingInvitations")
+                : `${t("inviteFriends.sendInvitations")} (${
+                    invitedFriends.length
+                  })`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -340,6 +431,10 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center" as const,
     alignItems: "center" as const,
+  },
+  inviteButtonDisabled: {
+    backgroundColor: "#999",
+    opacity: 0.6,
   },
   friendItem: {
     flexDirection: "row" as const,
@@ -437,6 +532,10 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  sendButtonDisabled: {
+    backgroundColor: "#999",
+    opacity: 0.6,
   },
   sendButtonText: {
     color: "white",

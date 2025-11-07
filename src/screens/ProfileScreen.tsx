@@ -10,10 +10,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
 import { useTranslation } from "react-i18next";
+import {
+  changeLanguage,
+  getCurrentLanguage,
+  testDateFormatting,
+} from "../utils/i18n";
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const { invitations, unreadCount, refreshInvitations } = useNotifications();
   const { t } = useTranslation();
 
   const handleLogout = () => {
@@ -47,11 +54,51 @@ const ProfileScreen: React.FC = () => {
     ]);
   };
 
+  const handleInvitations = () => {
+    if (unreadCount > 0) {
+      Alert.alert(
+        t("profile.invitations"),
+        `${t("profile.invitationsMessage")} ${unreadCount}`,
+        [{ text: t("common.ok") }]
+      );
+    } else {
+      Alert.alert(t("profile.invitations"), t("profile.noInvitations"), [
+        { text: t("common.ok") },
+      ]);
+    }
+  };
+
+  const handleChangeLanguage = () => {
+    const currentLang = getCurrentLanguage();
+    const newLang = currentLang === "fr" ? "en" : "fr";
+    changeLanguage(newLang);
+    Alert.alert(
+      "Language Changed",
+      `Language changed to ${newLang === "fr" ? "French" : "English"}`,
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleTestDateFormatting = () => {
+    const result = testDateFormatting();
+    Alert.alert(
+      "Date Formatting Test",
+      `Language: ${result.language}\nShort: ${result.shortDate}\nLong: ${result.longDate}\nTime: ${result.time}`,
+      [{ text: "OK" }]
+    );
+  };
+
   const menuItems = [
     {
       icon: "person-outline",
       title: t("profile.editProfile"),
       onPress: handleEditProfile,
+    },
+    {
+      icon: "mail-outline",
+      title: t("profile.invitations"),
+      onPress: handleInvitations,
+      badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
       icon: "settings-outline",
@@ -62,6 +109,18 @@ const ProfileScreen: React.FC = () => {
       icon: "help-circle-outline",
       title: t("profile.helpSupport"),
       onPress: handleHelp,
+    },
+    {
+      icon: "language-outline",
+      title: `Language (${
+        getCurrentLanguage() === "fr" ? "Français" : "English"
+      })`,
+      onPress: handleChangeLanguage,
+    },
+    {
+      icon: "calendar-outline",
+      title: "Test Date Formatting",
+      onPress: handleTestDateFormatting,
     },
     {
       icon: "information-circle-outline",
@@ -133,7 +192,14 @@ const ProfileScreen: React.FC = () => {
                 {item.title}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            <View style={styles.menuItemRight}>
+              {item.badge && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{item.badge}</Text>
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -236,6 +302,24 @@ const styles = StyleSheet.create({
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  menuItemRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  badge: {
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   menuItemText: {
     fontSize: 16,

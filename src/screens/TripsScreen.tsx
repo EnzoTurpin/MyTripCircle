@@ -16,6 +16,7 @@ import { RootStackParamList, Trip } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { API_URLS } from "../config/api";
 import { useTranslation } from "react-i18next";
+import { formatDate } from "../utils/i18n";
 
 type TripsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -25,12 +26,15 @@ type TripsScreenNavigationProp = StackNavigationProp<
 const TripsScreen: React.FC = () => {
   const navigation = useNavigation<TripsScreenNavigationProp>();
   const { trips, loading } = useTrips();
+  
+  // Filtrer pour n'afficher que les voyages validés (ou sans status pour rétrocompatibilité)
+  const validatedTrips = trips.filter(
+    (trip) => trip.status === "validated" || !trip.status
+  );
   const { t } = useTranslation();
 
   const handleCreateTrip = () => {
-    Alert.alert(t("trips.createNewTripTitle"), t("trips.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    navigation.navigate("CreateTrip");
   };
 
   const handleTripPress = (trip: Trip) => {
@@ -65,28 +69,6 @@ const TripsScreen: React.FC = () => {
     }
 
     Alert.alert(t("trips.apiTestFailed"), t("trips.apiTestError"));
-  };
-
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-
-    try {
-      const dateObj = typeof date === "string" ? new Date(date) : date;
-
-      // Vérifier si la date est valide
-      if (isNaN(dateObj.getTime())) {
-        return "Invalid Date";
-      }
-
-      return dateObj.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Invalid Date";
-    }
   };
 
   const renderTripCard = ({ item }: { item: Trip }) => (
@@ -124,8 +106,7 @@ const TripsScreen: React.FC = () => {
               color="rgba(255, 255, 255, 0.8)"
             />
             <Text style={styles.collaboratorsText}>
-              {(item.collaborators?.length || 0) + 1}{" "}
-              {t("trips.membersSingular", {
+              {t("trips.members", {
                 count: (item.collaborators?.length || 0) + 1,
               })}
             </Text>
@@ -162,7 +143,7 @@ const TripsScreen: React.FC = () => {
         </View>
       </View>
 
-      {trips.length === 0 ? (
+      {validatedTrips.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="airplane-outline" size={80} color="#ccc" />
           <Text style={styles.emptyTitle}>{t("trips.emptyTitle")}</Text>
@@ -176,7 +157,7 @@ const TripsScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
-          data={trips}
+          data={validatedTrips}
           renderItem={renderTripCard}
           keyExtractor={(item, index) => item.id || `trip-${index}`}
           contentContainerStyle={styles.tripsList}

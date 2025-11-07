@@ -14,6 +14,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
+import { formatDate } from "../utils/i18n";
 
 type BookingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -87,28 +88,6 @@ const BookingsScreen: React.FC = () => {
     Alert.alert(t("bookings.addBooking"), t("bookings.featureSoon"), [
       { text: t("common.ok") },
     ]);
-  };
-
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-
-    try {
-      const dateObj = typeof date === "string" ? new Date(date) : date;
-
-      // Vérifier si la date est valide
-      if (isNaN(dateObj.getTime())) {
-        return "Invalid Date";
-      }
-
-      return dateObj.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Invalid Date";
-    }
   };
 
   const renderBookingCard = ({ item }: { item: Booking }) => (

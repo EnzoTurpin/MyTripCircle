@@ -15,6 +15,7 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTranslation } from "react-i18next";
+import { formatDateLong } from "../utils/i18n";
 
 type BookingDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -111,15 +112,6 @@ const BookingDetailsScreen: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const handleEditBooking = () => {
     Alert.alert(
       t("bookings.details.editBooking"),
@@ -195,7 +187,7 @@ const BookingDetailsScreen: React.FC = () => {
           <View style={styles.headerInfo}>
             <Text style={styles.bookingTitle}>{booking.title}</Text>
             <Text style={styles.bookingDate}>
-              {formatDate(booking.date)}
+              {formatDateLong(booking.date)}
               {booking.time && ` • ${booking.time}`}
             </Text>
             <View style={styles.statusContainer}>
@@ -274,7 +266,9 @@ const BookingDetailsScreen: React.FC = () => {
           )}
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{t("bookings.details.date")}</Text>
-            <Text style={styles.detailValue}>{formatDate(booking.date)}</Text>
+            <Text style={styles.detailValue}>
+              {formatDateLong(booking.date)}
+            </Text>
           </View>
           {booking.time && (
             <View style={styles.detailRow}>
