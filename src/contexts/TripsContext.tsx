@@ -153,6 +153,7 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
         id: booking._id,
         _id: undefined,
         date: booking.date ? new Date(booking.date) : new Date(),
+        endDate: booking.endDate ? new Date(booking.endDate) : undefined,
         createdAt: booking.createdAt ? new Date(booking.createdAt) : new Date(),
         updatedAt: booking.updatedAt ? new Date(booking.updatedAt) : new Date(),
       }));
@@ -316,15 +317,44 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
   ): Promise<Booking> => {
     try {
-      // TODO: POST /bookings
-      const newBooking = {
-        ...(booking as any),
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Booking;
-      setBookings((prev) => [...prev, newBooking]);
-      return newBooking;
+      const result = await ApiService.createBooking({
+        tripId: booking.tripId || "",
+        type: booking.type,
+        title: booking.title,
+        description: booking.description,
+        date: booking.date,
+        endDate: booking.endDate,
+        time: booking.time,
+        address: booking.address,
+        confirmationNumber: booking.confirmationNumber,
+        price: booking.price,
+        currency: booking.currency || "EUR",
+        status: booking.status || "pending",
+        attachments: booking.attachments || [],
+      });
+
+      // Mapper les données MongoDB vers notre interface
+      const mappedBooking: Booking = {
+        id: result._id,
+        tripId: result.tripId || "",
+        type: result.type,
+        title: result.title,
+        description: result.description,
+        date: new Date(result.date),
+        endDate: result.endDate ? new Date(result.endDate) : undefined,
+        time: result.time,
+        address: result.address,
+        confirmationNumber: result.confirmationNumber,
+        price: result.price,
+        currency: result.currency || "EUR",
+        status: result.status || "pending",
+        attachments: result.attachments || [],
+        createdAt: new Date(result.createdAt),
+        updatedAt: new Date(result.updatedAt),
+      };
+
+      setBookings((prev) => [...prev, mappedBooking]);
+      return mappedBooking;
     } catch (error) {
       console.error("Error creating booking:", error);
       throw error;

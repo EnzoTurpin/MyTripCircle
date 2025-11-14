@@ -78,6 +78,50 @@ export const getCurrentLanguage = () => {
   return i18n.language;
 };
 
+// Helper function to get booking status translation
+export const getBookingStatusTranslation = (status: string): string => {
+  const statusKey = `bookings.status.${status}`;
+  const translation = i18n.t(statusKey);
+  // Si la traduction retourne la clé elle-même, c'est qu'elle n'existe pas
+  if (translation === statusKey) {
+    return status; // Retourner le statut tel quel en fallback
+  }
+  return translation;
+};
+
+// Helper function to parse API errors and return translated messages
+export const parseApiError = (error: unknown): string => {
+  try {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+
+    // Try to parse as JSON
+    let parsedError: any;
+    try {
+      parsedError = JSON.parse(errorMessage);
+    } catch {
+      // If not JSON, use the message as is
+      parsedError = { error: errorMessage };
+    }
+
+    // Extract error message
+    const apiError = parsedError.error || parsedError.message || errorMessage;
+
+    // Map common API errors to translation keys
+    if (apiError.includes("End date must be after start date")) {
+      return i18n.t("createTrip.invalidDates");
+    }
+
+    // Return the error message if no translation found
+    return apiError;
+  } catch {
+    // Fallback to generic error message
+    return error instanceof Error
+      ? error.message
+      : i18n.t("common.error") || "An error occurred";
+  }
+};
+
 // Test function to demonstrate date formatting
 export const testDateFormatting = () => {
   const testDate = new Date("2024-03-15");
@@ -123,6 +167,7 @@ const resources = {
         loading: "Loading...",
         add: "Add",
         create: "Create",
+        delete: "Delete",
         edit: "Edit",
         save: "Save",
         discard: "Discard",
@@ -165,6 +210,11 @@ const resources = {
         header: "Bookings",
         loading: "Loading your bookings...",
         addBooking: "Add Booking",
+        selectOrCreate: "Select or create a booking",
+        createNew: "Create a new booking",
+        existingBookings: "Existing bookings",
+        noExistingBookings: "No existing bookings",
+        saveError: "Error saving booking",
         emptyTitle: "No bookings found",
         emptyAll: "Add your first booking to get started",
         emptyFiltered: "No {{type}} bookings found",
@@ -186,6 +236,8 @@ const resources = {
         title: "Title",
         titlePlaceholder: "Enter booking title",
         date: "Date",
+        startDate: "Start Date",
+        endDate: "End Date",
         time: "Time",
         selectTime: "Select time",
         address: "Address",
@@ -196,12 +248,23 @@ const resources = {
         confirmationNumberPlaceholder: "Enter confirmation number",
         price: "Price",
         currency: "Currency",
-        status: "Status",
+        statusLabel: "Status",
         editBooking: "Edit Booking",
         save: "Save",
         deleteConfirm: "Are you sure you want to delete this booking?",
         titleRequired: "Title is required",
         dateOutOfRange: "Booking date must be within the trip date range",
+        selectTrip: "Select a trip",
+        noTrips: "No trips available",
+        noTripsMessage: "You must first create a trip to add a booking.",
+        attachments: "Attachments",
+        addImage: "Add Image",
+        addDocument: "Add PDF",
+        removeAttachmentConfirm: "Remove this file?",
+        permissionDenied: "Gallery access permission denied",
+        imagePickerError: "Error selecting image",
+        documentPickerError: "Error selecting document",
+        endDateBeforeStart: "End date must be after start date",
         details: {
           loading: "Loading booking details...",
           notFound: "Booking not found",
@@ -423,9 +486,10 @@ const resources = {
         loading: "Chargement...",
         add: "Ajouter",
         create: "Créer",
+        delete: "Supprimer",
         edit: "Modifier",
         save: "Enregistrer",
-        discard: "Annuler",
+        discard: "Confirmer",
         logout: "Se déconnecter",
         settings: "Paramètres",
         helpSupport: "Aide & support",
@@ -464,6 +528,11 @@ const resources = {
         header: "Réservations",
         loading: "Chargement de vos réservations...",
         addBooking: "Ajouter une réservation",
+        selectOrCreate: "Sélectionner ou créer une réservation",
+        createNew: "Créer une nouvelle réservation",
+        existingBookings: "Réservations existantes",
+        noExistingBookings: "Aucune réservation existante",
+        saveError: "Erreur lors de la sauvegarde de la réservation",
         emptyTitle: "Aucune réservation",
         emptyAll: "Ajoute ta première réservation pour commencer",
         emptyFiltered: "Aucune réservation {{type}}",
@@ -485,6 +554,8 @@ const resources = {
         title: "Titre",
         titlePlaceholder: "Saisir le titre de la réservation",
         date: "Date",
+        startDate: "Date de début",
+        endDate: "Date de fin",
         time: "Heure",
         selectTime: "Sélectionner l'heure",
         address: "Adresse",
@@ -495,12 +566,23 @@ const resources = {
         confirmationNumberPlaceholder: "Saisir le numéro de confirmation",
         price: "Prix",
         currency: "Devise",
-        status: "Statut",
+        statusLabel: "Statut",
         editBooking: "Modifier la réservation",
         save: "Enregistrer",
         deleteConfirm: "Êtes-vous sûr de vouloir supprimer cette réservation ?",
         titleRequired: "Le titre est requis",
         dateOutOfRange: "La date de la réservation doit être dans la plage du voyage",
+        selectTrip: "Sélectionner un voyage",
+        noTrips: "Aucun voyage disponible",
+        noTripsMessage: "Vous devez d'abord créer un voyage pour ajouter une réservation.",
+        attachments: "Pièces jointes",
+        addImage: "Ajouter une image",
+        addDocument: "Ajouter un PDF",
+        removeAttachmentConfirm: "Supprimer ce fichier ?",
+        permissionDenied: "Permission d'accès à la galerie refusée",
+        imagePickerError: "Erreur lors de la sélection de l'image",
+        documentPickerError: "Erreur lors de la sélection du document",
+        endDateBeforeStart: "La date de fin doit être après la date de début",
         details: {
           loading: "Chargement des détails de la réservation...",
           notFound: "Réservation introuvable",
@@ -723,6 +805,8 @@ i18n.use(initReactI18next).init({
   lng: deviceLanguage,
   fallbackLng: "en",
   interpolation: { escapeValue: false },
+  keySeparator: ".", // Utiliser le point comme séparateur pour les clés imbriquées
+  nsSeparator: false, // Pas de namespace separator
 });
 
 export default i18n;

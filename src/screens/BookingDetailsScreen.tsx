@@ -15,7 +15,8 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTranslation } from "react-i18next";
-import { formatDateLong } from "../utils/i18n";
+import { formatDateLong, getBookingStatusTranslation } from "../utils/i18n";
+import { useTrips } from "../contexts/TripsContext";
 
 type BookingDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -31,38 +32,25 @@ const BookingDetailsScreen: React.FC = () => {
   const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
   const { bookingId } = route.params;
   const { t } = useTranslation();
+  const { bookings } = useTrips();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadBooking();
-  }, [bookingId]);
+  }, [bookingId, bookings]);
 
-  const loadBooking = async () => {
-    // Simulate loading booking data
-    setTimeout(() => {
-      const mockBooking: Booking = {
-        id: bookingId,
-        tripId: "1",
-        type: "flight",
-        title: "Paris Flight",
-        description:
-          "Round trip to Paris with Air France. Economy class with meal service included.",
-        date: new Date("2024-03-15"),
-        time: "14:30",
-        address: "Charles de Gaulle Airport, Paris",
-        confirmationNumber: "ABC123",
-        price: 450,
-        currency: "EUR",
-        status: "confirmed",
-        attachments: ["boarding-pass.pdf", "receipt.pdf"],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setBooking(mockBooking);
-      setLoading(false);
-    }, 1000);
+  const loadBooking = () => {
+    setLoading(true);
+    // Trouver la réservation dans la liste des réservations
+    const foundBooking = bookings.find((b) => b.id === bookingId);
+    if (foundBooking) {
+      setBooking(foundBooking);
+    } else {
+      setBooking(null);
+    }
+    setLoading(false);
   };
 
   const getTypeIcon = (type: Booking["type"]) => {
@@ -204,7 +192,7 @@ const BookingDetailsScreen: React.FC = () => {
                 ]}
               >
                 {booking.status
-                  ? t(`bookings.status.${booking.status}`)
+                  ? getBookingStatusTranslation(booking.status)
                   : t("common.unknown")}
               </Text>
             </View>
@@ -268,6 +256,7 @@ const BookingDetailsScreen: React.FC = () => {
             <Text style={styles.detailLabel}>{t("bookings.details.date")}</Text>
             <Text style={styles.detailValue}>
               {formatDateLong(booking.date)}
+              {booking.endDate && ` - ${formatDateLong(booking.endDate)}`}
             </Text>
           </View>
           {booking.time && (

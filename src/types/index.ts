@@ -55,6 +55,7 @@ export interface Booking {
   title: string;
   description?: string;
   date: Date;
+  endDate?: Date; // Date de fin (pour les hôtels par exemple)
   time?: string;
   address?: string;
   confirmationNumber?: string;

@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +22,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import BookingForm from "../components/BookingForm";
+import { formatDate, parseApiError } from "../utils/i18n";
+import i18n from "i18next";
 
 type EditTripScreenRouteProp = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripScreenNavigationProp = StackNavigationProp<
@@ -62,12 +65,26 @@ const EditTripScreen: React.FC = () => {
   const loadTripData = () => {
     const trip = getTripById(tripId);
     if (trip) {
+      // S'assurer que les dates sont des objets Date valides
+      const startDate = trip.startDate instanceof Date 
+        ? trip.startDate 
+        : new Date(trip.startDate);
+      const endDate = trip.endDate instanceof Date 
+        ? trip.endDate 
+        : new Date(trip.endDate);
+      
+      // Vérifier que les dates sont valides
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.error("Invalid dates in trip:", { startDate, endDate });
+        return;
+      }
+      
       setFormData({
         title: trip.title,
         description: trip.description || "",
         destination: trip.destination,
-        startDate: trip.startDate,
-        endDate: trip.endDate,
+        startDate: startDate,
+        endDate: endDate,
         isPublic: trip.isPublic,
       });
       // Charger les réservations existantes
@@ -96,18 +113,7 @@ const EditTripScreen: React.FC = () => {
 
     if (selectedDate) {
       if (type === "start") {
-        setFormData((prev) => {
-          const newStartDate = selectedDate;
-          // Si la date de fin est antérieure à la nouvelle date de début, la mettre à jour
-          if (newStartDate >= prev.endDate) {
-            return {
-              ...prev,
-              startDate: newStartDate,
-              endDate: new Date(newStartDate.getTime() + 24 * 60 * 60 * 1000),
-            };
-          }
-          return { ...prev, startDate: newStartDate };
-        });
+        setFormData((prev) => ({ ...prev, startDate: selectedDate }));
       } else {
         setFormData((prev) => ({ ...prev, endDate: selectedDate }));
       }
@@ -125,21 +131,7 @@ const EditTripScreen: React.FC = () => {
       return false;
     }
 
-    if (formData.startDate >= formData.endDate) {
-      Alert.alert(t("createTrip.error"), t("createTrip.invalidDates"));
-      return false;
-    }
-
-    // Vérifier que la date de début n'est pas dans le passé (en ignorant l'heure)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startDateOnly = new Date(formData.startDate);
-    startDateOnly.setHours(0, 0, 0, 0);
-
-    if (startDateOnly < today) {
-      Alert.alert(t("createTrip.error"), t("createTrip.startDatePast"));
-      return false;
-    }
+    // Validation des dates supprimée pour permettre n'importe quelle date
 
     return true;
   };
@@ -170,10 +162,7 @@ const EditTripScreen: React.FC = () => {
       ]);
     } catch (error) {
       console.error("Error updating trip:", error);
-      Alert.alert(
-        t("common.error"),
-        (error as Error).message || t("editTrip.errorMessage")
-      );
+      Alert.alert(t("common.error"), parseApiError(error));
     } finally {
       setLoading(false);
     }
@@ -322,29 +311,117 @@ const EditTripScreen: React.FC = () => {
           {/* Dates */}
           <View style={styles.dateRow}>
             <View style={styles.dateGroup}>
-              <Text style={styles.label}>{t("createTrip.startDate")} *</Text>
+              <Text style={styles.label}>{t("editTrip.startDate")} *</Text>
               <TouchableOpacity
                 style={styles.dateButton}
                 onPress={() => setShowStartDatePicker(true)}
               >
                 <Ionicons name="calendar" size={20} color="#666" />
                 <Text style={styles.dateText}>
-                  {formData.startDate.toLocaleDateString()}
+                  {formatDate(formData.startDate)}
                 </Text>
               </TouchableOpacity>
+              {Platform.OS === "ios" && showStartDatePicker && (
+                <Modal
+                  visible={showStartDatePicker}
+                  transparent={true}
+                  animationType="fade"
+                  onRequestClose={() => setShowStartDatePicker(false)}
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.pickerModalContent}>
+                      <Text style={styles.pickerModalTitle}>
+                        {t("editTrip.startDate")}
+                      </Text>
+                      <View style={styles.pickerWrapper}>
+                        <DateTimePicker
+                          value={formData.startDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, date) => handleDateChange(event, date, "start")}
+                          textColor="#000000"
+                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
+                        />
+                      </View>
+                      <View style={styles.pickerButtons}>
+                        <TouchableOpacity
+                          style={styles.pickerCancelButton}
+                          onPress={() => setShowStartDatePicker(false)}
+                        >
+                          <Text style={styles.pickerCancelText}>
+                            {t("common.cancel")}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.pickerConfirmButton}
+                          onPress={() => setShowStartDatePicker(false)}
+                        >
+                          <Text style={styles.pickerConfirmText}>
+                            {t("common.confirm")}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              )}
             </View>
 
             <View style={styles.dateGroup}>
-              <Text style={styles.label}>{t("createTrip.endDate")} *</Text>
+              <Text style={styles.label}>{t("editTrip.endDate")} *</Text>
               <TouchableOpacity
                 style={styles.dateButton}
                 onPress={() => setShowEndDatePicker(true)}
               >
                 <Ionicons name="calendar" size={20} color="#666" />
                 <Text style={styles.dateText}>
-                  {formData.endDate.toLocaleDateString()}
+                  {formatDate(formData.endDate)}
                 </Text>
               </TouchableOpacity>
+              {Platform.OS === "ios" && showEndDatePicker && (
+                <Modal
+                  visible={showEndDatePicker}
+                  transparent={true}
+                  animationType="fade"
+                  onRequestClose={() => setShowEndDatePicker(false)}
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.pickerModalContent}>
+                      <Text style={styles.pickerModalTitle}>
+                        {t("editTrip.endDate")}
+                      </Text>
+                      <View style={styles.pickerWrapper}>
+                        <DateTimePicker
+                          value={formData.endDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, date) => handleDateChange(event, date, "end")}
+                          textColor="#000000"
+                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
+                        />
+                      </View>
+                      <View style={styles.pickerButtons}>
+                        <TouchableOpacity
+                          style={styles.pickerCancelButton}
+                          onPress={() => setShowEndDatePicker(false)}
+                        >
+                          <Text style={styles.pickerCancelText}>
+                            {t("common.cancel")}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.pickerConfirmButton}
+                          onPress={() => setShowEndDatePicker(false)}
+                        >
+                          <Text style={styles.pickerConfirmText}>
+                            {t("common.confirm")}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              )}
             </View>
           </View>
 
@@ -442,7 +519,7 @@ const EditTripScreen: React.FC = () => {
                       <View style={styles.bookingInfo}>
                         <Text style={styles.bookingTitle}>{booking.title}</Text>
                         <Text style={styles.bookingDate}>
-                          {booking.date.toLocaleDateString()}
+                          {formatDate(booking.date)}
                           {booking.time && ` • ${booking.time}`}
                         </Text>
                       </View>
@@ -493,26 +570,22 @@ const EditTripScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Date Pickers */}
-      {showStartDatePicker && (
+      {/* Date Pickers Android */}
+      {Platform.OS === "android" && showStartDatePicker && (
         <DateTimePicker
           value={formData.startDate}
           mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
+          display="default"
           onChange={(event, date) => handleDateChange(event, date, "start")}
-          minimumDate={new Date()}
-          maximumDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)} // 1 an max
         />
       )}
 
-      {showEndDatePicker && (
+      {Platform.OS === "android" && showEndDatePicker && (
         <DateTimePicker
           value={formData.endDate}
           mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
+          display="default"
           onChange={(event, date) => handleDateChange(event, date, "end")}
-          minimumDate={formData.startDate}
-          maximumDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)} // 1 an max
         />
       )}
 
@@ -627,6 +700,76 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerModalContent: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pickerModalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  pickerWrapper: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    minHeight: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    gap: 10,
+  },
+  pickerCancelButton: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  pickerCancelText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  pickerConfirmButton: {
+    flex: 1,
+    backgroundColor: "#007AFF",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  pickerConfirmText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
   visibilityButton: {
     backgroundColor: "white",

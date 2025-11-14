@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,6 +21,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import BookingForm from "../components/BookingForm";
+import { formatDate, parseApiError } from "../utils/i18n";
+import i18n from "i18next";
 
 type CreateTripScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -28,20 +31,24 @@ type CreateTripScreenNavigationProp = StackNavigationProp<
 
 const CreateTripScreen: React.FC = () => {
   const navigation = useNavigation<CreateTripScreenNavigationProp>();
-  const { createTrip, createBooking } = useTrips();
+  const { createTrip, createBooking, updateBooking, bookings: allBookings } = useTrips();
   const { user } = useAuth();
   const { t } = useTranslation();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    destination: "",
-    startDate: new Date(),
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 jours plus tard
-    isPublic: false,
-    visibility: "private" as "private" | "friends" | "public",
-    tags: [] as string[],
-    tagInput: "",
+  const [formData, setFormData] = useState(() => {
+    const now = new Date();
+    const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 jours plus tard
+    return {
+      title: "",
+      description: "",
+      destination: "",
+      startDate: now,
+      endDate: endDate,
+      isPublic: false,
+      visibility: "private" as "private" | "friends" | "public",
+      tags: [] as string[],
+      tagInput: "",
+    };
   });
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -51,6 +58,7 @@ const CreateTripScreen: React.FC = () => {
     Omit<Booking, "id" | "createdAt" | "updatedAt">[]
   >([]);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showBookingSelector, setShowBookingSelector] = useState(false);
   const [editingBookingIndex, setEditingBookingIndex] = useState<number | null>(
     null
   );
@@ -83,7 +91,31 @@ const CreateTripScreen: React.FC = () => {
   };
 
   const handleAddBooking = () => {
+    setShowBookingSelector(true);
+  };
+
+  const handleSelectExistingBooking = (booking: Booking) => {
+    // Convertir la réservation existante en format pour le voyage en cours
+    const bookingForTrip: Omit<Booking, "id" | "createdAt" | "updatedAt"> = {
+      tripId: "", // Sera défini lors de la création du voyage
+      type: booking.type,
+      title: booking.title,
+      description: booking.description,
+      date: booking.date,
+      time: booking.time,
+      address: booking.address,
+      confirmationNumber: booking.confirmationNumber,
+      price: booking.price,
+      currency: booking.currency,
+      status: booking.status,
+    };
+    setBookings((prev) => [...prev, bookingForTrip]);
+    setShowBookingSelector(false);
+  };
+
+  const handleCreateNewBooking = () => {
     setEditingBookingIndex(null);
+    setShowBookingSelector(false);
     setShowBookingForm(true);
   };
 
@@ -109,18 +141,31 @@ const CreateTripScreen: React.FC = () => {
     );
   };
 
-  const handleSaveBooking = (
+  const handleSaveBooking = async (
     booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
   ) => {
-    if (editingBookingIndex !== null) {
-      setBookings((prev) =>
-        prev.map((b, i) => (i === editingBookingIndex ? booking : b))
-      );
-    } else {
-      setBookings((prev) => [...prev, booking]);
+    try {
+      // Créer la réservation globalement (elle sera liée au voyage lors de la création du voyage)
+      // Pour l'instant, on la sauvegarde sans tripId pour qu'elle soit visible dans la section Réservations
+      const newBooking = await createBooking({
+        ...booking,
+        tripId: "", // Sera mis à jour lors de la création du voyage
+      });
+      
+      if (editingBookingIndex !== null) {
+        setBookings((prev) =>
+          prev.map((b, i) => (i === editingBookingIndex ? { ...booking, id: newBooking.id } : b))
+        );
+      } else {
+        // Ajouter la réservation au voyage en cours de création avec son ID pour pouvoir la mettre à jour plus tard
+        setBookings((prev) => [...prev, { ...booking, id: newBooking.id } as any]);
+      }
+      setShowBookingForm(false);
+      setEditingBookingIndex(null);
+    } catch (error) {
+      console.error("Error saving booking:", error);
+      Alert.alert(t("common.error"), t("bookings.saveError") || "Erreur lors de la sauvegarde de la réservation");
     }
-    setShowBookingForm(false);
-    setEditingBookingIndex(null);
   };
 
   const getTypeIcon = (type: Booking["type"]) => {
@@ -155,6 +200,16 @@ const CreateTripScreen: React.FC = () => {
     selectedDate?: Date,
     type: "start" | "end" = "start"
   ) => {
+    console.log("[CreateTripScreen] handleDateChange - Called", { 
+      type, 
+      selectedDate, 
+      selectedDateType: typeof selectedDate,
+      selectedDateIsDate: selectedDate instanceof Date,
+      selectedDateTime: selectedDate?.getTime(),
+      selectedDateString: selectedDate?.toISOString(),
+      platform: Platform.OS
+    });
+    
     if (Platform.OS === "android") {
       if (type === "start") {
         setShowStartDatePicker(false);
@@ -163,23 +218,21 @@ const CreateTripScreen: React.FC = () => {
       }
     }
 
-    if (selectedDate) {
+    if (selectedDate && !isNaN(selectedDate.getTime())) {
+      console.log("[CreateTripScreen] handleDateChange - Valid date, updating", { type, selectedDate });
       if (type === "start") {
         setFormData((prev) => {
-          const newStartDate = selectedDate;
-          // Si la date de fin est antérieure à la nouvelle date de début, la mettre à jour
-          if (newStartDate >= prev.endDate) {
-            return {
-              ...prev,
-              startDate: newStartDate,
-              endDate: new Date(newStartDate.getTime() + 24 * 60 * 60 * 1000),
-            };
-          }
-          return { ...prev, startDate: newStartDate };
+          console.log("[CreateTripScreen] handleDateChange - Previous startDate:", prev.startDate, "New startDate:", selectedDate);
+          return { ...prev, startDate: selectedDate };
         });
       } else {
-        setFormData((prev) => ({ ...prev, endDate: selectedDate }));
+        setFormData((prev) => {
+          console.log("[CreateTripScreen] handleDateChange - Previous endDate:", prev.endDate, "New endDate:", selectedDate);
+          return { ...prev, endDate: selectedDate };
+        });
       }
+    } else {
+      console.error("[CreateTripScreen] handleDateChange - Invalid date:", selectedDate);
     }
   };
 
@@ -194,21 +247,7 @@ const CreateTripScreen: React.FC = () => {
       return false;
     }
 
-    if (formData.startDate >= formData.endDate) {
-      Alert.alert(t("createTrip.error"), t("createTrip.invalidDates"));
-      return false;
-    }
-
-    // Vérifier que la date de début n'est pas dans le passé (en ignorant l'heure)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startDateOnly = new Date(formData.startDate);
-    startDateOnly.setHours(0, 0, 0, 0);
-
-    if (startDateOnly < today) {
-      Alert.alert(t("createTrip.error"), t("createTrip.startDatePast"));
-      return false;
-    }
+    // Validation des dates supprimée pour permettre n'importe quelle date
 
     return true;
   };
@@ -242,15 +281,23 @@ const CreateTripScreen: React.FC = () => {
         },
       });
 
-      // Créer les réservations associées
+      // Créer ou mettre à jour les réservations associées
       for (const booking of bookings) {
         try {
-          await createBooking({
-            ...booking,
-            tripId: newTrip.id,
-          });
+          // Si la réservation a déjà un ID (créée précédemment), on la met à jour avec le tripId
+          // Sinon, on la crée
+          if ((booking as any).id) {
+            // Mettre à jour la réservation existante avec le tripId
+            await updateBooking((booking as any).id, { tripId: newTrip.id });
+          } else {
+            // Créer une nouvelle réservation liée au voyage
+            await createBooking({
+              ...booking,
+              tripId: newTrip.id,
+            });
+          }
         } catch (error) {
-          console.error("Error creating booking:", error);
+          console.error("Error creating/updating booking:", error);
         }
       }
 
@@ -266,10 +313,7 @@ const CreateTripScreen: React.FC = () => {
       ]);
     } catch (error) {
       console.error("Error creating trip:", error);
-      Alert.alert(
-        t("common.error"),
-        (error as Error).message || t("createTrip.errorMessage")
-      );
+      Alert.alert(t("common.error"), parseApiError(error));
     } finally {
       setLoading(false);
     }
@@ -331,26 +375,192 @@ const CreateTripScreen: React.FC = () => {
               <Text style={styles.label}>{t("createTrip.startDate")} *</Text>
               <TouchableOpacity
                 style={styles.dateButton}
-                onPress={() => setShowStartDatePicker(true)}
+                onPress={() => {
+                  console.log("[CreateTripScreen] Opening start date picker", {
+                    startDate: formData.startDate,
+                    startDateType: typeof formData.startDate,
+                    startDateIsDate: formData.startDate instanceof Date,
+                    startDateTime: formData.startDate?.getTime(),
+                    startDateString: formData.startDate?.toISOString?.(),
+                    isValid: formData.startDate instanceof Date && !isNaN(formData.startDate.getTime())
+                  });
+                  setShowStartDatePicker(true);
+                }}
               >
                 <Ionicons name="calendar" size={20} color="#666" />
                 <Text style={styles.dateText}>
-                  {formData.startDate.toLocaleDateString()}
+                  {(() => {
+                    console.log("[CreateTripScreen] Rendering start date text:", {
+                      startDate: formData.startDate,
+                      startDateTime: formData.startDate?.getTime(),
+                      startDateIsValid: formData.startDate instanceof Date && !isNaN(formData.startDate.getTime()),
+                      formatted: formatDate(formData.startDate)
+                    });
+                    return formatDate(formData.startDate);
+                  })()}
                 </Text>
               </TouchableOpacity>
+              {Platform.OS === "ios" && showStartDatePicker && (
+                <Modal
+                  visible={showStartDatePicker}
+                  transparent={true}
+                  animationType="fade"
+                  onRequestClose={() => setShowStartDatePicker(false)}
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.pickerModalContent}>
+                      <Text style={styles.pickerModalTitle}>
+                        {t("createTrip.startDate")}
+                      </Text>
+                      <View style={styles.pickerWrapper}>
+                        <DateTimePicker
+                          value={formData.startDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, date) => handleDateChange(event, date, "start")}
+                          textColor="#000000"
+                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
+                        />
+                      </View>
+                      <View style={styles.pickerButtons}>
+                        <TouchableOpacity
+                          style={styles.pickerCancelButton}
+                          onPress={() => setShowStartDatePicker(false)}
+                        >
+                          <Text style={styles.pickerCancelText}>
+                            {t("common.cancel")}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.pickerConfirmButton}
+                          onPress={() => {
+                            console.log("[CreateTripScreen] Confirming start date", {
+                              startDate: formData.startDate,
+                              startDateType: typeof formData.startDate,
+                              startDateIsDate: formData.startDate instanceof Date,
+                              startDateTime: formData.startDate?.getTime(),
+                              isValid: formData.startDate instanceof Date && !isNaN(formData.startDate.getTime())
+                            });
+                            // S'assurer que la date est bien mise à jour avant de fermer
+                            if (formData.startDate) {
+                              setFormData((prev) => {
+                                console.log("[CreateTripScreen] Updating startDate in state", {
+                                  prevStartDate: prev.startDate,
+                                  prevStartDateTime: prev.startDate?.getTime(),
+                                  newStartDate: prev.startDate,
+                                  newStartDateTime: prev.startDate?.getTime()
+                                });
+                                return { ...prev, startDate: prev.startDate };
+                              });
+                            }
+                            setShowStartDatePicker(false);
+                          }}
+                        >
+                          <Text style={styles.pickerConfirmText}>
+                            {t("common.confirm")}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              )}
             </View>
 
             <View style={styles.dateGroup}>
               <Text style={styles.label}>{t("createTrip.endDate")} *</Text>
               <TouchableOpacity
                 style={styles.dateButton}
-                onPress={() => setShowEndDatePicker(true)}
+                onPress={() => {
+                  console.log("[CreateTripScreen] Opening end date picker", {
+                    endDate: formData.endDate,
+                    endDateType: typeof formData.endDate,
+                    endDateIsDate: formData.endDate instanceof Date,
+                    endDateTime: formData.endDate?.getTime(),
+                    endDateString: formData.endDate?.toISOString?.(),
+                    isValid: formData.endDate instanceof Date && !isNaN(formData.endDate.getTime())
+                  });
+                  setShowEndDatePicker(true);
+                }}
               >
                 <Ionicons name="calendar" size={20} color="#666" />
                 <Text style={styles.dateText}>
-                  {formData.endDate.toLocaleDateString()}
+                  {(() => {
+                    console.log("[CreateTripScreen] Rendering end date text:", {
+                      endDate: formData.endDate,
+                      endDateTime: formData.endDate?.getTime(),
+                      endDateIsValid: formData.endDate instanceof Date && !isNaN(formData.endDate.getTime()),
+                      formatted: formatDate(formData.endDate)
+                    });
+                    return formatDate(formData.endDate);
+                  })()}
                 </Text>
               </TouchableOpacity>
+              {Platform.OS === "ios" && showEndDatePicker && (
+                <Modal
+                  visible={showEndDatePicker}
+                  transparent={true}
+                  animationType="fade"
+                  onRequestClose={() => setShowEndDatePicker(false)}
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.pickerModalContent}>
+                      <Text style={styles.pickerModalTitle}>
+                        {t("createTrip.endDate")}
+                      </Text>
+                      <View style={styles.pickerWrapper}>
+                        <DateTimePicker
+                          value={formData.endDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, date) => handleDateChange(event, date, "end")}
+                          textColor="#000000"
+                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
+                        />
+                      </View>
+                      <View style={styles.pickerButtons}>
+                        <TouchableOpacity
+                          style={styles.pickerCancelButton}
+                          onPress={() => setShowEndDatePicker(false)}
+                        >
+                          <Text style={styles.pickerCancelText}>
+                            {t("common.cancel")}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.pickerConfirmButton}
+                          onPress={() => {
+                            console.log("[CreateTripScreen] Confirming end date", {
+                              endDate: formData.endDate,
+                              endDateType: typeof formData.endDate,
+                              endDateIsDate: formData.endDate instanceof Date,
+                              endDateTime: formData.endDate?.getTime(),
+                              isValid: formData.endDate instanceof Date && !isNaN(formData.endDate.getTime())
+                            });
+                            // S'assurer que la date est bien mise à jour avant de fermer
+                            if (formData.endDate) {
+                              setFormData((prev) => {
+                                console.log("[CreateTripScreen] Updating endDate in state", {
+                                  prevEndDate: prev.endDate,
+                                  prevEndDateTime: prev.endDate?.getTime(),
+                                  newEndDate: prev.endDate,
+                                  newEndDateTime: prev.endDate?.getTime()
+                                });
+                                return { ...prev, endDate: prev.endDate };
+                              });
+                            }
+                            setShowEndDatePicker(false);
+                          }}
+                        >
+                          <Text style={styles.pickerConfirmText}>
+                            {t("common.confirm")}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              )}
             </View>
           </View>
 
@@ -496,7 +706,7 @@ const CreateTripScreen: React.FC = () => {
                       <View style={styles.bookingInfo}>
                         <Text style={styles.bookingTitle}>{booking.title}</Text>
                         <Text style={styles.bookingDate}>
-                          {booking.date.toLocaleDateString()}
+                          {formatDate(booking.date)}
                           {booking.time && ` • ${booking.time}`}
                         </Text>
                       </View>
@@ -547,28 +757,100 @@ const CreateTripScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Date Pickers */}
-      {showStartDatePicker && (
+      {/* Date Pickers Android */}
+      {Platform.OS === "android" && showStartDatePicker && (
         <DateTimePicker
           value={formData.startDate}
           mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
+          display="default"
           onChange={(event, date) => handleDateChange(event, date, "start")}
-          minimumDate={new Date()}
-          maximumDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)} // 1 an max
         />
       )}
 
-      {showEndDatePicker && (
-        <DateTimePicker
-          value={formData.endDate}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(event, date) => handleDateChange(event, date, "end")}
-          minimumDate={formData.startDate}
-          maximumDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)} // 1 an max
-        />
-      )}
+        {Platform.OS === "android" && showEndDatePicker && (
+          <DateTimePicker
+            value={formData.endDate}
+            mode="date"
+            display="default"
+            onChange={(event, date) => handleDateChange(event, date, "end")}
+          />
+        )}
+
+      {/* Booking Selector Modal */}
+      <Modal
+        visible={showBookingSelector}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowBookingSelector(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.selectorModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {t("bookings.selectOrCreate") || "Sélectionner ou créer une réservation"}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowBookingSelector(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.selectorContent}>
+              {/* Bouton pour créer une nouvelle réservation */}
+              <TouchableOpacity
+                style={styles.createNewButton}
+                onPress={handleCreateNewBooking}
+              >
+                <Ionicons name="add-circle" size={24} color="#007AFF" />
+                <Text style={styles.createNewButtonText}>
+                  {t("bookings.createNew") || "Créer une nouvelle réservation"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Liste des réservations existantes */}
+              <Text style={styles.existingBookingsTitle}>
+                {t("bookings.existingBookings") || "Réservations existantes"}
+              </Text>
+              
+              {allBookings.length === 0 ? (
+                <View style={styles.emptyBookingsList}>
+                  <Ionicons name="receipt-outline" size={40} color="#ccc" />
+                  <Text style={styles.emptyBookingsListText}>
+                    {t("bookings.noExistingBookings") || "Aucune réservation existante"}
+                  </Text>
+                </View>
+              ) : (
+                allBookings.map((booking) => (
+                  <TouchableOpacity
+                    key={booking.id}
+                    style={styles.existingBookingItem}
+                    onPress={() => handleSelectExistingBooking(booking)}
+                  >
+                    <View style={styles.existingBookingHeader}>
+                      <Ionicons
+                        name={getTypeIcon(booking.type) as any}
+                        size={24}
+                        color="#007AFF"
+                      />
+                      <View style={styles.existingBookingInfo}>
+                        <Text style={styles.existingBookingTitle}>
+                          {booking.title}
+                        </Text>
+                        <Text style={styles.existingBookingDate}>
+                          {formatDate(booking.date)}
+                          {booking.time && ` • ${booking.time}`}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Booking Form Modal */}
       <BookingForm
@@ -586,6 +868,18 @@ const CreateTripScreen: React.FC = () => {
         tripStartDate={formData.startDate}
         tripEndDate={formData.endDate}
       />
+      {console.log("[CreateTripScreen] BookingForm props:", {
+        visible: showBookingForm,
+        tripStartDate: formData.startDate,
+        tripStartDateType: typeof formData.startDate,
+        tripStartDateIsDate: formData.startDate instanceof Date,
+        tripStartDateTime: formData.startDate?.getTime(),
+        tripEndDate: formData.endDate,
+        tripEndDateType: typeof formData.endDate,
+        tripEndDateIsDate: formData.endDate instanceof Date,
+        tripEndDateTime: formData.endDate?.getTime(),
+        initialBooking: editingBookingIndex !== null ? bookings[editingBookingIndex] : undefined
+      })}
     </KeyboardAvoidingView>
   );
 };
@@ -671,6 +965,76 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerModalContent: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pickerModalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  pickerWrapper: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    minHeight: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    gap: 10,
+  },
+  pickerCancelButton: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  pickerCancelText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  pickerConfirmButton: {
+    flex: 1,
+    backgroundColor: "#007AFF",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  pickerConfirmText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
   visibilityButton: {
     backgroundColor: "white",
@@ -870,6 +1234,94 @@ const styles = StyleSheet.create({
   bookingActions: {
     flexDirection: "row",
     gap: 12,
+  },
+  selectorModalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "90%",
+    width: "100%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    flex: 1,
+    marginRight: 12,
+  },
+  selectorContent: {
+    padding: 20,
+    maxHeight: 600,
+  },
+  createNewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: "#007AFF",
+    borderStyle: "dashed",
+  },
+  createNewButtonText: {
+    marginLeft: 12,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007AFF",
+  },
+  existingBookingsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+  },
+  emptyBookingsList: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyBookingsListText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#999",
+  },
+  existingBookingItem: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  existingBookingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  existingBookingInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  existingBookingTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  existingBookingDate: {
+    fontSize: 14,
+    color: "#666",
+  },
+  closeButton: {
+    padding: 4,
   },
 });
 

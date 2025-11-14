@@ -14,7 +14,8 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
-import { formatDate } from "../utils/i18n";
+import { formatDate, getBookingStatusTranslation } from "../utils/i18n";
+import BookingForm from "../components/BookingForm";
 
 type BookingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -23,11 +24,12 @@ type BookingsScreenNavigationProp = StackNavigationProp<
 
 const BookingsScreen: React.FC = () => {
   const navigation = useNavigation<BookingsScreenNavigationProp>();
-  const { bookings, loading } = useTrips();
+  const { bookings, loading, createBooking, refreshData } = useTrips();
   const { t } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "flight" | "train" | "hotel" | "restaurant" | "activity"
   >("all");
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
   const getTypeIcon = (type: Booking["type"]) => {
     switch (type) {
@@ -85,9 +87,29 @@ const BookingsScreen: React.FC = () => {
   };
 
   const handleAddBooking = () => {
-    Alert.alert(t("bookings.addBooking"), t("bookings.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    // Ouvrir directement le formulaire de réservation
+    setShowBookingForm(true);
+  };
+
+  const handleSaveBooking = async (
+    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+  ) => {
+    try {
+      // Créer la réservation avec un tripId vide (sera associé plus tard si nécessaire)
+      await createBooking({
+        ...booking,
+        tripId: booking.tripId || "",
+      });
+      // Rafraîchir les données pour afficher la nouvelle réservation
+      await refreshData();
+      setShowBookingForm(false);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      Alert.alert(
+        t("common.error"),
+        (error as Error).message || t("bookings.saveError") || "Erreur lors de la création de la réservation"
+      );
+    }
   };
 
   const renderBookingCard = ({ item }: { item: Booking }) => (
@@ -126,7 +148,7 @@ const BookingsScreen: React.FC = () => {
             style={[styles.statusText, { color: getStatusColor(item.status) }]}
           >
             {item.status
-              ? t(`bookings.status.${item.status}`)
+              ? getBookingStatusTranslation(item.status)
               : t("common.unknown")}
           </Text>
         </View>
@@ -234,6 +256,13 @@ const BookingsScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Booking Form Modal */}
+      <BookingForm
+        visible={showBookingForm}
+        onClose={() => setShowBookingForm(false)}
+        onSave={handleSaveBooking}
+      />
     </View>
   );
 };

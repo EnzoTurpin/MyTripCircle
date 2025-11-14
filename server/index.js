@@ -9,6 +9,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Middleware de logging pour debug
+app.use((req, res, next) => {
+  console.log(`[server] ${req.method} ${req.path}`);
+  next();
+});
+
 const PORT = process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 4000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME || "mytripcircle";
@@ -294,6 +300,68 @@ app.delete("/trips/:id", async (req, res) => {
 
     res.json({ success: true, message: "Trip deleted successfully" });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Créer une nouvelle réservation (POST avant GET pour éviter les conflits)
+app.post("/bookings", async (req, res) => {
+  try {
+    const {
+      tripId,
+      type,
+      title,
+      description,
+      date,
+      endDate,
+      time,
+      address,
+      confirmationNumber,
+      price,
+      currency,
+      status,
+      attachments,
+    } = req.body;
+
+    console.log("=== CREATE BOOKING DEBUG ===");
+    console.log("Request body:", req.body);
+
+    // Validation des champs requis
+    if (!type || !title || !date) {
+      console.log("Missing required fields");
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Créer la réservation
+    const booking = {
+      tripId: tripId || "",
+      type,
+      title: title.trim(),
+      description: description ? description.trim() : undefined,
+      date: new Date(date),
+      endDate: endDate ? new Date(endDate) : undefined,
+      time: time || undefined,
+      address: address ? address.trim() : undefined,
+      confirmationNumber: confirmationNumber ? confirmationNumber.trim() : undefined,
+      price: price ? parseFloat(price) : undefined,
+      currency: currency || "EUR",
+      status: status || "pending",
+      attachments: attachments || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    console.log("Booking object to insert:", JSON.stringify(booking, null, 2));
+
+    const result = await db.collection("bookings").insertOne(booking);
+    console.log("Insert result:", result);
+
+    booking._id = result.insertedId;
+    console.log("Final booking with _id:", booking);
+
+    res.status(201).json(booking);
+  } catch (e) {
+    console.error("Error creating booking:", e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -586,6 +654,12 @@ app.get("/invitations/sent/:userId", async (req, res) => {
 
 connectMongo()
   .then(() => {
+    // Log toutes les routes enregistrées pour debug
+    console.log("[server] Routes registered:");
+    console.log("  POST /bookings");
+    console.log("  GET /bookings");
+    console.log("  GET /bookings/trip/:tripId");
+    
     app.listen(PORT, ACTIVE_IP, () => {
       console.log(`[server] API listening on http://${ACTIVE_IP}:${PORT}`);
       console.log(`[server] Accessible via http://localhost:${PORT}`);

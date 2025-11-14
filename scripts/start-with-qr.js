@@ -5,8 +5,8 @@ console.log("─".repeat(50));
 
 // Démarrer le serveur backend
 const serverProcess = spawn("node", ["server/index.js"], {
-  stdio: "pipe",
-  detached: true,
+  stdio: "inherit", // Afficher les logs du serveur
+  detached: false,
 });
 
 // Attendre un peu que le serveur démarre

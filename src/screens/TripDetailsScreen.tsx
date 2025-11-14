@@ -20,6 +20,7 @@ import { RootStackParamList, Trip, Booking, Address } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utils/i18n";
+import BookingForm from "../components/BookingForm";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 type TripDetailsScreenNavigationProp = StackNavigationProp<
@@ -37,7 +38,8 @@ const TripDetailsScreen: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
-  const { getTripById, getBookingsByTripId, getAddressesByTripId, validateTrip } = useTrips();
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const { getTripById, getBookingsByTripId, getAddressesByTripId, validateTrip, createBooking } = useTrips();
 
   useFocusEffect(
     useCallback(() => {
@@ -71,9 +73,28 @@ const TripDetailsScreen: React.FC = () => {
   };
 
   const handleAddBooking = () => {
-    Alert.alert(t("tripDetails.addBooking"), t("tripDetails.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    if (!trip) return;
+    setShowBookingForm(true);
+  };
+
+  const handleSaveBooking = async (
+    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+  ) => {
+    try {
+      const newBooking = await createBooking({
+        ...booking,
+        tripId,
+      });
+      // Recharger les données pour afficher la nouvelle réservation
+      await loadTripData();
+      setShowBookingForm(false);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      Alert.alert(
+        t("common.error"),
+        (error as Error).message || "Erreur lors de la création de la réservation"
+      );
+    }
   };
 
   const handleAddAddress = () => {
@@ -315,6 +336,17 @@ const TripDetailsScreen: React.FC = () => {
           ))}
         </View>
       </View>
+
+      {/* Booking Form Modal */}
+      {trip && (
+        <BookingForm
+          visible={showBookingForm}
+          onClose={() => setShowBookingForm(false)}
+          onSave={handleSaveBooking}
+          tripStartDate={trip.startDate}
+          tripEndDate={trip.endDate}
+        />
+      )}
     </ScrollView>
   );
 };
