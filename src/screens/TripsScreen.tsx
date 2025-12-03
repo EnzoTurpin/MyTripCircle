@@ -15,6 +15,8 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { API_URLS } from "../config/api";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "../utils/i18n";
 
 type TripsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -24,11 +26,15 @@ type TripsScreenNavigationProp = StackNavigationProp<
 const TripsScreen: React.FC = () => {
   const navigation = useNavigation<TripsScreenNavigationProp>();
   const { trips, loading } = useTrips();
+  
+  // Filtrer pour n'afficher que les voyages validés (ou sans status pour rétrocompatibilité)
+  const validatedTrips = trips.filter(
+    (trip) => trip.status === "validated" || !trip.status
+  );
+  const { t } = useTranslation();
 
   const handleCreateTrip = () => {
-    Alert.alert("Create New Trip", "This feature will be implemented soon!", [
-      { text: "OK" },
-    ]);
+    navigation.navigate("CreateTrip");
   };
 
   const handleTripPress = (trip: Trip) => {
@@ -53,7 +59,7 @@ const TripsScreen: React.FC = () => {
 
         const data = await response.json();
         Alert.alert(
-          "API Test Success",
+          t("trips.apiTestSuccess"),
           `URL: ${url}\nResponse: ${JSON.stringify(data, null, 2)}`
         );
         return;
@@ -62,32 +68,7 @@ const TripsScreen: React.FC = () => {
       }
     }
 
-    Alert.alert(
-      "API Test Failed",
-      "Could not connect to any API URL. Check if backend is running."
-    );
-  };
-
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-
-    try {
-      const dateObj = typeof date === "string" ? new Date(date) : date;
-
-      // Vérifier si la date est valide
-      if (isNaN(dateObj.getTime())) {
-        return "Invalid Date";
-      }
-
-      return dateObj.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Invalid Date";
-    }
+    Alert.alert(t("trips.apiTestFailed"), t("trips.apiTestError"));
   };
 
   const renderTripCard = ({ item }: { item: Trip }) => (
@@ -125,8 +106,9 @@ const TripsScreen: React.FC = () => {
               color="rgba(255, 255, 255, 0.8)"
             />
             <Text style={styles.collaboratorsText}>
-              {(item.collaborators?.length || 0) + 1} member
-              {(item.collaborators?.length || 0) > 0 ? "s" : ""}
+              {t("trips.members", {
+                count: (item.collaborators?.length || 0) + 1,
+              })}
             </Text>
           </View>
           <Ionicons
@@ -142,7 +124,7 @@ const TripsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading your trips...</Text>
+        <Text style={styles.loadingText}>{t("trips.loading")}</Text>
       </View>
     );
   }
@@ -150,7 +132,7 @@ const TripsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Trips</Text>
+        <Text style={styles.headerTitle}>{t("trips.header")}</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity style={styles.testButton} onPress={testAPI}>
             <Ionicons name="bug" size={20} color="white" />
@@ -161,23 +143,21 @@ const TripsScreen: React.FC = () => {
         </View>
       </View>
 
-      {trips.length === 0 ? (
+      {validatedTrips.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="airplane-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyTitle}>No trips yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Create your first trip to start planning your adventure
-          </Text>
+          <Text style={styles.emptyTitle}>{t("trips.emptyTitle")}</Text>
+          <Text style={styles.emptySubtitle}>{t("trips.emptySubtitle")}</Text>
           <TouchableOpacity
             style={styles.createButton}
             onPress={handleCreateTrip}
           >
-            <Text style={styles.createButtonText}>Create Trip</Text>
+            <Text style={styles.createButtonText}>{t("trips.createTrip")}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <FlatList
-          data={trips}
+          data={validatedTrips}
           renderItem={renderTripCard}
           keyExtractor={(item, index) => item.id || `trip-${index}`}
           contentContainerStyle={styles.tripsList}

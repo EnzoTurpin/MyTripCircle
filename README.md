@@ -92,20 +92,7 @@ MyTripCircle/
 3. **Start the development server**
 
    ```bash
-   npm start
-   ```
-
-4. **Run on specific platforms**
-
-   ```bash
-   # iOS
-   npm run ios
-
-   # Android
-   npm run android
-
-   # Web
-   npm run web
+   npm run start:clear
    ```
 
 ## Key Features Implementation

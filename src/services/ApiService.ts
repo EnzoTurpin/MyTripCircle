@@ -64,6 +64,114 @@ export const ApiService = {
   getAddresses: () => request<any[]>("/addresses"),
   getAddressesByTripId: (tripId: string) =>
     request<any[]>(`/addresses/trip/${tripId}`),
+
+  // Trips CRUD
+  createTrip: (trip: {
+    title: string;
+    description?: string;
+    destination: string;
+    startDate: Date;
+    endDate: Date;
+    ownerId: string;
+    collaborators?: any[];
+    isPublic?: boolean;
+    visibility?: "private" | "friends" | "public";
+    tags?: string[];
+    stats?: {
+      totalBookings: number;
+      totalAddresses: number;
+      totalCollaborators: number;
+    };
+    location?: {
+      type: "Point";
+      coordinates: [number, number];
+    };
+  }) => request<any>("/trips", "POST", trip),
+
+  updateTrip: (
+    tripId: string,
+    updates: {
+      title?: string;
+      description?: string;
+      destination?: string;
+      startDate?: Date;
+      endDate?: Date;
+      isPublic?: boolean;
+      userId: string;
+    }
+  ) => request<any>(`/trips/${tripId}`, "PUT", updates),
+
+  deleteTrip: (tripId: string, userId: string) =>
+    request<any>(`/trips/${tripId}`, "DELETE", { userId }),
+
+  // Bookings CRUD
+  createBooking: (booking: {
+    tripId: string;
+    type: "flight" | "train" | "hotel" | "restaurant" | "activity";
+    title: string;
+    description?: string;
+    date: Date;
+    endDate?: Date;
+    time?: string;
+    address?: string;
+    confirmationNumber?: string;
+    price?: number;
+    currency?: string;
+    status?: "confirmed" | "pending" | "cancelled";
+    attachments?: string[];
+  }) => request<any>("/bookings", "POST", booking),
+
+  updateBooking: (
+    bookingId: string,
+    updates: {
+      tripId?: string;
+      type?: "flight" | "train" | "hotel" | "restaurant" | "activity";
+      title?: string;
+      description?: string;
+      date?: Date;
+      endDate?: Date;
+      time?: string;
+      address?: string;
+      confirmationNumber?: string;
+      price?: number;
+      currency?: string;
+      status?: "confirmed" | "pending" | "cancelled";
+      attachments?: string[];
+    }
+  ) => request<any>(`/bookings/${bookingId}`, "PUT", updates),
+
+  deleteBooking: (bookingId: string) =>
+    request<any>(`/bookings/${bookingId}`, "DELETE"),
+
+  // Invitations
+  createInvitation: (invitation: {
+    tripId: string;
+    inviterId: string;
+    inviteeEmail: string;
+    message?: string;
+    permissions?: {
+      role: "viewer" | "editor";
+      canEdit: boolean;
+      canInvite: boolean;
+      canDelete: boolean;
+    };
+  }) => request<any>("/invitations", "POST", invitation),
+
+  getUserInvitations: (email: string, status?: string) => {
+    const query = status ? `?status=${status}` : "";
+    return request<any[]>(`/invitations/user/${email}${query}`);
+  },
+
+  getSentInvitations: (userId: string, status?: string) => {
+    const query = status ? `?status=${status}` : "";
+    return request<any[]>(`/invitations/sent/${userId}${query}`);
+  },
+
+  respondToInvitation: (
+    token: string,
+    action: "accept" | "decline",
+    userId?: string
+  ) => request<any>(`/invitations/${token}`, "PUT", { action, userId }),
 };
 
 export default ApiService;

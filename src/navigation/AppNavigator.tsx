@@ -18,6 +18,9 @@ import TripDetailsScreen from "../screens/TripDetailsScreen";
 import BookingDetailsScreen from "../screens/BookingDetailsScreen";
 import AddressDetailsScreen from "../screens/AddressDetailsScreen";
 import InviteFriendsScreen from "../screens/InviteFriendsScreen";
+import InvitationScreen from "../screens/InvitationScreen";
+import CreateTripScreen from "../screens/CreateTripScreen";
+import EditTripScreen from "../screens/EditTripScreen";
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -143,6 +146,27 @@ const AppNavigator = () => {
                 headerTitleStyle: {
                   fontWeight: "bold",
                 },
+              }}
+            />
+            <Stack.Screen
+              name="Invitation"
+              component={InvitationScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CreateTrip"
+              component={CreateTripScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="EditTrip"
+              component={EditTripScreen}
+              options={{
+                headerShown: false,
               }}
             />
           </>
