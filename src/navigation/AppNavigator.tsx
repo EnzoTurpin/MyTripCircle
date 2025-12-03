@@ -18,6 +18,9 @@ import TripDetailsScreen from "../screens/TripDetailsScreen";
 import BookingDetailsScreen from "../screens/BookingDetailsScreen";
 import AddressDetailsScreen from "../screens/AddressDetailsScreen";
 import InviteFriendsScreen from "../screens/InviteFriendsScreen";
+import InvitationScreen from "../screens/InvitationScreen";
+import CreateTripScreen from "../screens/CreateTripScreen";
+import EditTripScreen from "../screens/EditTripScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import HelpSupportScreen from "../screens/HelpSupportScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
@@ -146,6 +149,27 @@ const AppNavigator = () => {
                 headerTitleStyle: {
                   fontWeight: "bold",
                 },
+              }}
+            />
+            <Stack.Screen
+              name="Invitation"
+              component={InvitationScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CreateTrip"
+              component={CreateTripScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="EditTrip"
+              component={EditTripScreen}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

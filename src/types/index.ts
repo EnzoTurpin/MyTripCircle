@@ -15,10 +15,37 @@ export interface Trip {
   destination: string;
   coverImage?: string;
   ownerId: string;
-  collaborators: string[];
+  collaborators: Collaborator[];
   isPublic: boolean;
+  visibility: "private" | "friends" | "public";
+  status: "draft" | "validated";
+  stats: TripStats;
+  location: GeoLocation;
+  tags: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Collaborator {
+  userId: string;
+  role: "owner" | "editor" | "viewer";
+  joinedAt: Date;
+  permissions: {
+    canEdit: boolean;
+    canInvite: boolean;
+    canDelete: boolean;
+  };
+}
+
+export interface TripStats {
+  totalBookings: number;
+  totalAddresses: number;
+  totalCollaborators: number;
+}
+
+export interface GeoLocation {
+  type: "Point";
+  coordinates: [number, number]; // [longitude, latitude]
 }
 
 export interface Booking {
@@ -28,6 +55,7 @@ export interface Booking {
   title: string;
   description?: string;
   date: Date;
+  endDate?: Date; // Date de fin (pour les hôtels par exemple)
   time?: string;
   address?: string;
   confirmationNumber?: string;
@@ -80,10 +108,13 @@ export interface TripCollaborator {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
-  TripDetails: { tripId: string };
+  TripDetails: { tripId: string; showValidateButton?: boolean };
   BookingDetails: { bookingId: string };
   AddressDetails: { addressId: string };
   InviteFriends: { tripId: string };
+  Invitation: { token: string };
+  CreateTrip: undefined;
+  EditTrip: { tripId: string };
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;

@@ -122,6 +122,7 @@ class MongoDBAdapter {
         title: booking.title,
         description: booking.description,
         date: booking.date,
+        endDate: booking.endDate,
         time: booking.time,
         address: booking.address,
         confirmationNumber: booking.confirmationNumber,
@@ -301,20 +302,21 @@ class MongoDBAdapter {
   private mapMongoBookingToAppBooking(mongoBooking: any): Booking {
     return {
       id: mongoBooking._id,
-      tripId: mongoBooking.tripId,
+      tripId: mongoBooking.tripId || "",
       type: mongoBooking.type,
       title: mongoBooking.title,
       description: mongoBooking.description,
-      date: mongoBooking.date,
+      date: new Date(mongoBooking.date),
+      endDate: mongoBooking.endDate ? new Date(mongoBooking.endDate) : undefined,
       time: mongoBooking.time,
       address: mongoBooking.address,
       confirmationNumber: mongoBooking.confirmationNumber,
       price: mongoBooking.price,
-      currency: mongoBooking.currency,
-      status: mongoBooking.status,
-      attachments: mongoBooking.attachments,
-      createdAt: mongoBooking.createdAt,
-      updatedAt: mongoBooking.updatedAt,
+      currency: mongoBooking.currency || "EUR",
+      status: mongoBooking.status || "pending",
+      attachments: mongoBooking.attachments || [],
+      createdAt: new Date(mongoBooking.createdAt),
+      updatedAt: new Date(mongoBooking.updatedAt),
     };
   }
 

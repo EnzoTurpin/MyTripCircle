@@ -10,6 +10,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
+import { useTranslation } from "react-i18next";
+import {
+  changeLanguage,
+  getCurrentLanguage,
+  testDateFormatting,
+} from "../utils/i18n";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
@@ -21,40 +28,74 @@ type ProfileScreenNavigationProp = StackNavigationProp<
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const { invitations, unreadCount, refreshInvitations } = useNotifications();
+  const { t } = useTranslation();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: logout },
+    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("common.logout"), style: "destructive", onPress: logout },
     ]);
   };
 
   const handleEditProfile = () => {
     navigation.navigate("EditProfile");
-    // Alert.alert("Edit Profile", "This feature will be implemented soon!", [
-    //   { text: "OK" },
+    // Alert.alert(t("profile.editProfile"), t("profile.featureSoon"), [
+    //   { text: t("common.ok") },
     // ]);
   };
 
   const handleSettings = () => {
     navigation.navigate("Settings");
-    // Alert.alert("Settings", "This feature will be implemented soon!", [
-    //   { text: "OK" },
+    // Alert.alert(t("profile.settings"), t("profile.featureSoon"), [
+    //   { text: t("common.ok") },
     // ]);
   };
 
   const handleHelp = () => {
     navigation.navigate("HelpSupport");
-    // Alert.alert("Help & Support", "This feature will be implemented soon!", [
-    //   { text: "OK" },
+    // Alert.alert(t("profile.helpSupport"), t("profile.featureSoon"), [
+    //   { text: t("common.ok") },
     // ]);
   };
 
   const handleAbout = () => {
+    Alert.alert(t("profile.aboutTitle"), t("profile.aboutBody"), [
+      { text: t("common.ok") },
+    ]);
+  };
+
+  const handleInvitations = () => {
+    if (unreadCount > 0) {
+      Alert.alert(
+        t("profile.invitations"),
+        `${t("profile.invitationsMessage")} ${unreadCount}`,
+        [{ text: t("common.ok") }]
+      );
+    } else {
+      Alert.alert(t("profile.invitations"), t("profile.noInvitations"), [
+        { text: t("common.ok") },
+      ]);
+    }
+  };
+
+  const handleChangeLanguage = () => {
+    const currentLang = getCurrentLanguage();
+    const newLang = currentLang === "fr" ? "en" : "fr";
+    changeLanguage(newLang);
     Alert.alert(
-      "About MyTripCircle",
-      "Version 1.0.0\n\nMyTripCircle helps you plan and organize your trips with friends. Create detailed itineraries, manage bookings, and collaborate with your travel companions.",
+      "Language Changed",
+      `Language changed to ${newLang === "fr" ? "French" : "English"}`,
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleTestDateFormatting = () => {
+    const result = testDateFormatting();
+    Alert.alert(
+      "Date Formatting Test",
+      `Language: ${result.language}\nShort: ${result.shortDate}\nLong: ${result.longDate}\nTime: ${result.time}`,
       [{ text: "OK" }]
     );
   };
@@ -62,27 +103,45 @@ const ProfileScreen: React.FC = () => {
   const menuItems = [
     {
       icon: "person-outline",
-      title: "Edit Profile",
+      title: t("profile.editProfile"),
       onPress: handleEditProfile,
     },
     {
+      icon: "mail-outline",
+      title: t("profile.invitations"),
+      onPress: handleInvitations,
+      badge: unreadCount > 0 ? unreadCount : undefined,
+    },
+    {
       icon: "settings-outline",
-      title: "Settings",
+      title: t("profile.settings"),
       onPress: handleSettings,
     },
     {
       icon: "help-circle-outline",
-      title: "Help & Support",
+      title: t("profile.helpSupport"),
       onPress: handleHelp,
     },
     {
+      icon: "language-outline",
+      title: `Language (${
+        getCurrentLanguage() === "fr" ? "Français" : "English"
+      })`,
+      onPress: handleChangeLanguage,
+    },
+    {
+      icon: "calendar-outline",
+      title: "Test Date Formatting",
+      onPress: handleTestDateFormatting,
+    },
+    {
       icon: "information-circle-outline",
-      title: "About",
+      title: t("profile.about"),
       onPress: handleAbout,
     },
     {
       icon: "log-out-outline",
-      title: "Logout",
+      title: t("profile.logoutTitle"),
       onPress: handleLogout,
       color: "#FF3B30",
     },
@@ -95,9 +154,11 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={40} color="white" />
           </View>
-          <Text style={styles.userName}>{user?.name || "User"}</Text>
+          <Text style={styles.userName}>
+            {user?.name || t("profile.userFallbackName")}
+          </Text>
           <Text style={styles.userEmail}>
-            {user?.email || "user@example.com"}
+            {user?.email || t("profile.userFallbackEmail")}
           </Text>
         </View>
       </LinearGradient>
@@ -105,19 +166,19 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statLabel}>Trips</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.trips")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>Bookings</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.bookings")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>8</Text>
-          <Text style={styles.statLabel}>Addresses</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.addresses")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>5</Text>
-          <Text style={styles.statLabel}>Friends</Text>
+          <Text style={styles.statLabel}>{t("profile.stats.friends")}</Text>
         </View>
       </View>
 
@@ -143,14 +204,23 @@ const ProfileScreen: React.FC = () => {
                 {item.title}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            <View style={styles.menuItemRight}>
+              {item.badge && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{item.badge}</Text>
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </View>
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>MyTripCircle v1.0.0</Text>
-        <Text style={styles.footerSubtext}>Made with ❤️ for travelers</Text>
+        <Text style={styles.footerText}>{t("profile.footerVersion")}</Text>
+        <Text style={styles.footerSubtext}>
+          {t("profile.footerMadeWithLove")}
+        </Text>
       </View>
     </ScrollView>
   );
@@ -244,6 +314,24 @@ const styles = StyleSheet.create({
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  menuItemRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  badge: {
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   menuItemText: {
     fontSize: 16,

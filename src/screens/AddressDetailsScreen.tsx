@@ -14,6 +14,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Address } from "../types";
+import { useTranslation } from "react-i18next";
 
 type AddressDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -28,6 +29,7 @@ const AddressDetailsScreen: React.FC = () => {
   const route = useRoute<AddressDetailsScreenRouteProp>();
   const navigation = useNavigation<AddressDetailsScreenNavigationProp>();
   const { addressId } = route.params;
+  const { t } = useTranslation();
 
   const [address, setAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,9 +97,11 @@ const AddressDetailsScreen: React.FC = () => {
   };
 
   const handleEditAddress = () => {
-    Alert.alert("Edit Address", "This feature will be implemented soon!", [
-      { text: "OK" },
-    ]);
+    Alert.alert(
+      t("addresses.details.editAddress"),
+      t("addresses.details.featureSoon"),
+      [{ text: t("common.ok") }]
+    );
   };
 
   const handleGetDirections = () => {
@@ -106,7 +110,10 @@ const AddressDetailsScreen: React.FC = () => {
       const url = `https://maps.google.com/maps?daddr=${latitude},${longitude}`;
       Linking.openURL(url);
     } else {
-      Alert.alert("Directions", "Coordinates not available for this address");
+      Alert.alert(
+        t("addresses.directionsTitle"),
+        t("addresses.details.coordinatesNotAvailable")
+      );
     }
   };
 
@@ -125,7 +132,7 @@ const AddressDetailsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading address details...</Text>
+        <Text style={styles.loadingText}>{t("addresses.details.loading")}</Text>
       </View>
     );
   }
@@ -133,7 +140,7 @@ const AddressDetailsScreen: React.FC = () => {
   if (!address) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Address not found</Text>
+        <Text style={styles.errorText}>{t("addresses.details.notFound")}</Text>
       </View>
     );
   }
@@ -165,7 +172,9 @@ const AddressDetailsScreen: React.FC = () => {
 
       <View style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Address</Text>
+          <Text style={styles.sectionTitle}>
+            {t("addresses.details.address")}
+          </Text>
           <Text style={styles.addressText}>{address.address}</Text>
           <Text style={styles.cityText}>
             {address.city}, {address.country}
@@ -174,7 +183,9 @@ const AddressDetailsScreen: React.FC = () => {
 
         {(address.phone || address.website) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
+            <Text style={styles.sectionTitle}>
+              {t("addresses.details.contactInformation")}
+            </Text>
             {address.phone && (
               <TouchableOpacity style={styles.contactItem} onPress={handleCall}>
                 <Ionicons name="call" size={20} color="#007AFF" />
@@ -197,7 +208,9 @@ const AddressDetailsScreen: React.FC = () => {
 
         {address.notes && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
+            <Text style={styles.sectionTitle}>
+              {t("addresses.details.notes")}
+            </Text>
             <Text style={styles.notesText}>{address.notes}</Text>
           </View>
         )}
@@ -208,7 +221,9 @@ const AddressDetailsScreen: React.FC = () => {
             onPress={handleGetDirections}
           >
             <Ionicons name="navigate" size={20} color="white" />
-            <Text style={styles.actionButtonText}>Get Directions</Text>
+            <Text style={styles.actionButtonText}>
+              {t("addresses.details.getDirections")}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, styles.secondaryButton]}
@@ -216,7 +231,7 @@ const AddressDetailsScreen: React.FC = () => {
           >
             <Ionicons name="create" size={20} color="#007AFF" />
             <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
-              Edit Address
+              {t("addresses.details.editAddress")}
             </Text>
           </TouchableOpacity>
         </View>
