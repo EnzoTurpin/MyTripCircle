@@ -52,6 +52,8 @@ const ACTIVE_IP =
   })();
 
 let db;
+const trimIfString = (value) =>
+  typeof value === "string" ? value.trim() : value;
 
 async function connectMongo() {
   const client = new MongoClient(MONGODB_URI);
@@ -342,7 +344,9 @@ app.post("/bookings", async (req, res) => {
       endDate: endDate ? new Date(endDate) : undefined,
       time: time || undefined,
       address: address ? address.trim() : undefined,
-      confirmationNumber: confirmationNumber ? confirmationNumber.trim() : undefined,
+      confirmationNumber: confirmationNumber
+        ? confirmationNumber.trim()
+        : undefined,
       price: price ? parseFloat(price) : undefined,
       currency: currency || "EUR",
       status: status || "pending",
@@ -403,6 +407,118 @@ app.get("/addresses/trip/:tripId", async (req, res) => {
       .find({ tripId: req.params.tripId })
       .toArray();
     res.json(items);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/addresses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await db
+      .collection("addresses")
+      .findOne({ _id: new ObjectId(id) });
+    if (!item) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+    res.json(item);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/addresses", async (req, res) => {
+  try {
+    const { type, name, address, city, country, phone, website, notes } =
+      req.body;
+
+    if (!type || !name || !address || !city || !country) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const addressDoc = {
+      type,
+      name: trimIfString(name),
+      address: trimIfString(address),
+      city: trimIfString(city),
+      country: trimIfString(country),
+      phone: phone ? trimIfString(phone) : undefined,
+      website: website ? trimIfString(website) : undefined,
+      notes: notes ? trimIfString(notes) : undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await db.collection("addresses").insertOne(addressDoc);
+    addressDoc._id = result.insertedId;
+    res.status(201).json(addressDoc);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put("/addresses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await db
+      .collection("addresses")
+      .findOne({ _id: new ObjectId(id) });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+
+    const { type, name, address, city, country, phone, website, notes } =
+      req.body;
+
+    const setData = { updatedAt: new Date() };
+    const unsetData = {};
+
+    if (type !== undefined) setData.type = type;
+    if (name !== undefined) setData.name = trimIfString(name);
+    if (address !== undefined) setData.address = trimIfString(address);
+    if (city !== undefined) setData.city = trimIfString(city);
+    if (country !== undefined) setData.country = trimIfString(country);
+
+    if (phone !== undefined) {
+      if (phone) {
+        setData.phone = trimIfString(phone);
+      } else {
+        unsetData.phone = "";
+      }
+    }
+    if (website !== undefined) {
+      if (website) {
+        setData.website = trimIfString(website);
+      } else {
+        unsetData.website = "";
+      }
+    }
+    if (notes !== undefined) {
+      if (notes) {
+        setData.notes = trimIfString(notes);
+      } else {
+        unsetData.notes = "";
+      }
+    }
+
+    const updatePayload = {};
+    if (Object.keys(setData).length > 0) {
+      updatePayload.$set = setData;
+    }
+    if (Object.keys(unsetData).length > 0) {
+      updatePayload.$unset = unsetData;
+    }
+
+    await db
+      .collection("addresses")
+      .updateOne({ _id: new ObjectId(id) }, updatePayload);
+
+    const updated = await db
+      .collection("addresses")
+      .findOne({ _id: new ObjectId(id) });
+
+    res.json(updated);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -659,7 +775,7 @@ connectMongo()
     console.log("  POST /bookings");
     console.log("  GET /bookings");
     console.log("  GET /bookings/trip/:tripId");
-    
+
     app.listen(PORT, ACTIVE_IP, () => {
       console.log(`[server] API listening on http://${ACTIVE_IP}:${PORT}`);
       console.log(`[server] Accessible via http://localhost:${PORT}`);

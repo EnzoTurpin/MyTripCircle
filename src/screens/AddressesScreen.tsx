@@ -71,9 +71,7 @@ const AddressesScreen: React.FC = () => {
   };
 
   const handleAddAddress = () => {
-    Alert.alert(t("addresses.addAddress"), t("addresses.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    navigation.navigate("AddressForm");
   };
 
   const handleDirections = (address: Address) => {

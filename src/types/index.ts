@@ -69,16 +69,11 @@ export interface Booking {
 
 export interface Address {
   id: string;
-  tripId: string;
   type: "hotel" | "restaurant" | "activity" | "transport" | "other";
   name: string;
   address: string;
   city: string;
   country: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
   phone?: string;
   website?: string;
   notes?: string;
@@ -111,6 +106,7 @@ export type RootStackParamList = {
   TripDetails: { tripId: string; showValidateButton?: boolean };
   BookingDetails: { bookingId: string };
   AddressDetails: { addressId: string };
+  AddressForm: { addressId?: string } | undefined;
   InviteFriends: { tripId: string };
   Invitation: { token: string };
   CreateTrip: undefined;

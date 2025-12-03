@@ -17,6 +17,7 @@ import ProfileScreen from "../screens/ProfileScreen";
 import TripDetailsScreen from "../screens/TripDetailsScreen";
 import BookingDetailsScreen from "../screens/BookingDetailsScreen";
 import AddressDetailsScreen from "../screens/AddressDetailsScreen";
+import AddressFormScreen from "../screens/AddressFormScreen";
 import InviteFriendsScreen from "../screens/InviteFriendsScreen";
 import InvitationScreen from "../screens/InvitationScreen";
 import CreateTripScreen from "../screens/CreateTripScreen";
@@ -133,6 +134,13 @@ const AppNavigator = () => {
                 headerTitleStyle: {
                   fontWeight: "bold",
                 },
+              }}
+            />
+            <Stack.Screen
+              name="AddressForm"
+              component={AddressFormScreen}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

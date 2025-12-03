@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Address } from "../types";
 import { useTranslation } from "react-i18next";
+import { useTrips } from "../contexts/TripsContext";
 
 type AddressDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -30,37 +31,17 @@ const AddressDetailsScreen: React.FC = () => {
   const navigation = useNavigation<AddressDetailsScreenNavigationProp>();
   const { addressId } = route.params;
   const { t } = useTranslation();
-
+  const { addresses, loading } = useTrips();
   const [address, setAddress] = useState<Address | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    loadAddress();
-  }, [addressId]);
-
-  const loadAddress = async () => {
-    // Simulate loading address data
-    setTimeout(() => {
-      const mockAddress: Address = {
-        id: addressId,
-        tripId: "1",
-        type: "hotel",
-        name: "Hotel Le Marais",
-        address: "123 Rue de Rivoli",
-        city: "Paris",
-        country: "France",
-        coordinates: { latitude: 48.8566, longitude: 2.3522 },
-        phone: "+33 1 42 36 78 90",
-        website: "https://hotelmarais.com",
-        notes:
-          "Check-in at 3 PM, check-out at 11 AM. Located in the heart of Le Marais district.",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setAddress(mockAddress);
-      setLoading(false);
-    }, 1000);
-  };
+    if (!loading) {
+      const found = addresses.find((item) => item.id === addressId) || null;
+      setAddress(found);
+      setIsReady(true);
+    }
+  }, [loading, addresses, addressId]);
 
   const getTypeIcon = (type: Address["type"]) => {
     switch (type) {
@@ -97,24 +78,16 @@ const AddressDetailsScreen: React.FC = () => {
   };
 
   const handleEditAddress = () => {
-    Alert.alert(
-      t("addresses.details.editAddress"),
-      t("addresses.details.featureSoon"),
-      [{ text: t("common.ok") }]
-    );
+    navigation.navigate("AddressForm", { addressId });
   };
 
   const handleGetDirections = () => {
-    if (address?.coordinates) {
-      const { latitude, longitude } = address.coordinates;
-      const url = `https://maps.google.com/maps?daddr=${latitude},${longitude}`;
-      Linking.openURL(url);
-    } else {
-      Alert.alert(
-        t("addresses.directionsTitle"),
-        t("addresses.details.coordinatesNotAvailable")
-      );
-    }
+    if (!address) return;
+    const query = encodeURIComponent(
+      `${address.address}, ${address.city}, ${address.country}`
+    );
+    const url = `https://maps.google.com/maps?daddr=${query}`;
+    Linking.openURL(url);
   };
 
   const handleCall = () => {
@@ -129,7 +102,7 @@ const AddressDetailsScreen: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (!isReady || loading) {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>{t("addresses.details.loading")}</Text>
@@ -214,6 +187,8 @@ const AddressDetailsScreen: React.FC = () => {
             <Text style={styles.notesText}>{address.notes}</Text>
           </View>
         )}
+
+        {/* Les adresses ne sont plus liées à un voyage spécifique */}
 
         <View style={styles.actionsContainer}>
           <TouchableOpacity
@@ -345,6 +320,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     lineHeight: 22,
+  },
+  tripName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  tripDestination: {
+    fontSize: 14,
+    color: "#666",
   },
   actionsContainer: {
     flexDirection: "row" as const,

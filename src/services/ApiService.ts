@@ -64,6 +64,7 @@ export const ApiService = {
   getAddresses: () => request<any[]>("/addresses"),
   getAddressesByTripId: (tripId: string) =>
     request<any[]>(`/addresses/trip/${tripId}`),
+  getAddressById: (id: string) => request<any>(`/addresses/${id}`),
 
   // Trips CRUD
   createTrip: (trip: {
@@ -172,6 +173,32 @@ export const ApiService = {
     action: "accept" | "decline",
     userId?: string
   ) => request<any>(`/invitations/${token}`, "PUT", { action, userId }),
+
+  // Addresses CRUD
+  createAddress: (address: {
+    type: "hotel" | "restaurant" | "activity" | "transport" | "other";
+    name: string;
+    address: string;
+    city: string;
+    country: string;
+    phone?: string;
+    website?: string;
+    notes?: string;
+  }) => request<any>("/addresses", "POST", address),
+
+  updateAddress: (
+    addressId: string,
+    updates: {
+      type?: "hotel" | "restaurant" | "activity" | "transport" | "other";
+      name?: string;
+      address?: string;
+      city?: string;
+      country?: string;
+      phone?: string;
+      website?: string;
+      notes?: string;
+    }
+  ) => request<any>(`/addresses/${addressId}`, "PUT", updates),
 };
 
 export default ApiService;

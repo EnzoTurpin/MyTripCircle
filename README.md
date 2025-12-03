@@ -89,7 +89,17 @@ MyTripCircle/
    npm install
    ```
 
-3. **Start the development server**
+3. **Configure environment variables**
+
+   Create a `.env` file at the project root and set your Google Places API key:
+
+   ```bash
+   EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=<your-google-places-key>
+   ```
+
+   The `EXPO_PUBLIC_` prefix is required so that Expo can expose the key at runtime for the address auto-complete feature.
+
+4. **Start the development server**
 
    ```bash
    npm run start:clear
@@ -119,7 +129,7 @@ MyTripCircle/
 
 ### Address Management
 
-- Store important locations with coordinates
+- Store important locations with Google Places auto-completion
 - Contact information (phone, website)
 - Notes and additional details
 - Get directions integration
@@ -178,16 +188,11 @@ interface Booking {
 ```typescript
 interface Address {
   id: string;
-  tripId: string;
   type: "hotel" | "restaurant" | "activity" | "transport" | "other";
   name: string;
   address: string;
   city: string;
   country: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
   phone?: string;
   website?: string;
   notes?: string;
