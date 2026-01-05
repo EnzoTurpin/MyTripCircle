@@ -10,6 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 // Import screens
 import AuthScreen from "../screens/AuthScreen";
+import OtpScreen from "../screens/OtpScreen";
 import TripsScreen from "../screens/TripsScreen";
 import BookingsScreen from "../screens/BookingsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
@@ -204,7 +205,10 @@ const AppNavigator = () => {
             />
           </>
         ) : (
-          <Stack.Screen name="Auth" component={AuthScreen} />
+          <>
+            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen name="Otp" component={OtpScreen} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

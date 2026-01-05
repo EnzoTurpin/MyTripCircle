@@ -1,6 +1,7 @@
 // Adaptateur MongoDB pour remplacer DataService
 import MongoDBService from "./MongoDBService";
 import { Trip, Booking, Address, User } from "../types";
+import bcrypt from "bcrypt";
 
 class MongoDBAdapter {
   private static instance: MongoDBAdapter;
@@ -257,19 +258,30 @@ class MongoDBAdapter {
     }
   }
 
-  async createUser(user: Omit<User, "id" | "createdAt">): Promise<User> {
-    try {
-      const mongoUser = await this.mongoService.createUser({
-        email: user.email,
-        name: user.name,
-        avatar: user.avatar,
-      });
-      return this.mapMongoUserToAppUser(mongoUser);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      throw error;
-    }
+  async createUser(user: {
+    email: string;
+    name: string;
+    avatar?: string;
+    password: string;
+  }) {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    const created = await this.mongoService.createUser({
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      password: hashedPassword,
+      verified: false,
+      otp,
+      otpExpires
+    });
+
+    return created;
   }
+
 
   async getUserById(userId: string): Promise<User | null> {
     try {
@@ -345,6 +357,7 @@ class MongoDBAdapter {
       email: mongoUser.email,
       avatar: mongoUser.avatar,
       createdAt: mongoUser.createdAt,
+      verified: mongoUser.verified,
     };
   }
 

@@ -7,14 +7,16 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
+import ApiService from "../services/ApiService";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; userId?: string }>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
+  verifyOtp: (userId: string, otp: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,60 +60,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  const res = await ApiService.login({ email, password });
+  if (!res?.success) return false;
 
-      // For demo purposes, accept any email/password
-      const userData: User = {
-        id: "1",
-        name: "Demo User",
-        email: email,
-        createdAt: new Date(),
-      };
+  await AsyncStorage.setItem("user", JSON.stringify(res.user));
+  await AsyncStorage.setItem("token", res.token);
 
-      await AsyncStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-      return true;
-    } catch (error) {
-      console.error("Login error:", error);
-      return false;
-    }
-  };
+  setUser(res.user);
+  return true;
+};
+
 
   const register = async (
-    name: string,
-    email: string,
-    password: string
-  ): Promise<boolean> => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  name: string,
+  email: string,
+  password: string
+): Promise<{ success: boolean; userId?: string }> => {
+  try {
+    const res = await ApiService.register({ name, email, password });
 
-      const userData: User = {
-        id: Date.now().toString(),
-        name: name,
-        email: email,
-        createdAt: new Date(),
-      };
+    console.log("REGISTER RESPONSE:", res);
 
-      await AsyncStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-      return true;
-    } catch (error) {
-      console.error("Registration error:", error);
-      return false;
+    if (!res?.success) {
+      return { success: false };
     }
-  };
+
+    return {
+      success: true,
+      userId: res.userId,
+    };
+  } catch (error) {
+    console.error("REGISTER FRONT ERROR:", error);
+    return { success: false };
+  }
+};
+
 
   const logout = async (): Promise<void> => {
     try {
       await AsyncStorage.removeItem("user");
+      await AsyncStorage.removeItem("token");
       setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
+
+  const verifyOtp = async (userId: string, otp: string): Promise<boolean> => {
+    const res = await ApiService.verifyOtp({ userId, otp });
+    if (!res?.success) return false;
+
+    await AsyncStorage.setItem("user", JSON.stringify(res.user));
+    await AsyncStorage.setItem("token", res.token);
+
+    setUser(res.user);
+    return true;
+  };
+
 
   const updateUser = async (userData: Partial<User>): Promise<void> => {
     try {
@@ -132,6 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     updateUser,
+    verifyOtp,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

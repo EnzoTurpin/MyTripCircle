@@ -14,8 +14,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../types";
+
+type AuthNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const AuthScreen: React.FC = () => {
+  const navigation = useNavigation<AuthNavigationProp>();
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,20 +38,22 @@ const AuthScreen: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      let success = false;
       if (isLogin) {
-        success = await login(email, password);
+        const success = await login(email, password);
+        if (!success) {
+          Alert.alert(t("common.error"), t("common.loginFailed"));
+        }
       } else {
-        success = await register(name, email, password);
-      }
+        const res = await register(name, email, password);
 
-      if (!success) {
-        Alert.alert(
-          t("common.error"),
-          isLogin ? t("common.loginFailed") : t("common.registerFailed")
-        );
+        if (!res.success || !res.userId) {
+          Alert.alert(t("common.error"), t("common.registerFailed"));
+          return;
+        }
+
+        navigation.navigate("Otp", { userId: res.userId });
       }
-    } catch (error) {
+    } catch {
       Alert.alert(t("common.error"), t("common.unexpectedError"));
     } finally {
       setIsSubmitting(false);
@@ -129,8 +137,8 @@ const AuthScreen: React.FC = () => {
                 {loading || isSubmitting
                   ? t("common.pleaseWait")
                   : isLogin
-                  ? t("common.signIn")
-                  : t("common.signUp")}
+                    ? t("common.signIn")
+                    : t("common.signUp")}
               </Text>
             </TouchableOpacity>
 

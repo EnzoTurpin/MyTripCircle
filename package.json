@@ -23,6 +23,7 @@
     "@react-navigation/drawer": "^7.5.10",
     "@react-navigation/native": "^7.1.18",
     "@react-navigation/stack": "^7.4.10",
+    "bcrypt": "^6.0.0",
     "concurrently": "^9.2.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -37,6 +38,9 @@
     "express": "^5.1.0",
     "i18next": "^25.6.0",
     "i18next-http-backend": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0",
+    "nodemailer": "^7.0.12",
     "react": "19.1.0",
     "react-i18next": "^16.1.4",
     "react-native": "0.81.4",
@@ -48,6 +52,11 @@
     "react-native-super-grid": "^6.0.2"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/nodemailer": "^7.0.4",
     "@types/react": "~19.1.0",
     "mongodb": "^6.20.0",
     "typescript": "~5.9.2"

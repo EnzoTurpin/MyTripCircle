@@ -4,6 +4,7 @@ export interface User {
   email: string;
   avatar?: string;
   createdAt: Date;
+  verified: boolean;
 }
 
 export interface Trip {
@@ -107,6 +108,7 @@ export interface TripCollaborator {
 
 export type RootStackParamList = {
   Auth: undefined;
+  Otp: { userId: string };
   Main: undefined;
   TripDetails: { tripId: string; showValidateButton?: boolean };
   BookingDetails: { bookingId: string };

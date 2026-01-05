@@ -1,14 +1,35 @@
 // Simple Express API (JS) for Expo dev
-const express = require("express");
-const cors = require("cors");
-const { MongoClient, ObjectId } = require("mongodb");
-const os = require("os");
-require("dotenv").config();
+// const express = require("express");
+// const cors = require("cors");
+// const { MongoClient, ObjectId } = require("mongodb");
+// const os = require("os");
+// require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import { MongoClient, ObjectId } from "mongodb";
+import mongoose from "mongoose";
+import os from "os";
+import dotenv from "dotenv";
+
+dotenv.config();
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    dbName: process.env.DB_NAME || "mytripcircle",
+  })
+  .then(() => {
+    console.log("[server] Mongoose connected");
+  })
+  .catch((err) => {
+    console.error("[server] Mongoose connection error:", err);
+  });
+  mongoose.set("bufferCommands", false);
+
+import authRoutes from "../src/routes/authRoutes.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+app.use("/users", authRoutes);
 // Middleware de logging pour debug
 app.use((req, res, next) => {
   console.log(`[server] ${req.method} ${req.path}`);

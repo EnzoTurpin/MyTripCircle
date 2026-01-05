@@ -65,6 +65,25 @@ export const ApiService = {
   getAddressesByTripId: (tripId: string) =>
     request<any[]>(`/addresses/trip/${tripId}`),
 
+  // AUTH
+
+  register: (data: {
+    name: string;
+    email: string;
+    password: string;
+  }) => request<{ success: boolean; userId: string }>("/users/register", "POST", data),
+
+  verifyOtp: (data: {
+    userId: string;
+    otp: string;
+  }) => request<{ success: boolean; user: any; token: string }>("/users/verify-otp", "POST", data),
+
+  login: (data: {
+    email: string;
+    password: string;
+  }) => request<{ success: boolean; user: any; token: string }>("/users/login", "POST", data),
+
+
   // Trips CRUD
   createTrip: (trip: {
     title: string;

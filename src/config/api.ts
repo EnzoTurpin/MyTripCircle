@@ -5,7 +5,7 @@ const isDevelopment = __DEV__;
 
 // IPs depuis .env (dans l'ordre de priorité)
 // En Expo, process.env n'est pas disponible directement, on utilise une valeur par défaut
-const API_IP_PRIMARY = process.env.API_IP_PRIMARY || "10.229.191.82";
+const API_IP_PRIMARY = process.env.API_IP_PRIMARY || "192.168.1.25";
 
 // URLs à essayer dans l'ordre de priorité
 const API_URLS = [
