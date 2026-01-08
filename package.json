@@ -28,7 +28,10 @@
     "dotenv": "^17.2.3",
     "expo": "~54.0.14",
     "expo-camera": "^17.0.8",
+<<<<<<< HEAD
     "expo-dev-client": "^6.0.20",
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
     "expo-document-picker": "^14.0.7",
     "expo-image-picker": "^17.0.8",
     "expo-linear-gradient": "^15.0.7",
@@ -43,7 +46,10 @@
     "react-native": "0.81.4",
     "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "^2.28.0",
+<<<<<<< HEAD
     "react-native-iap": "^14.7.1",
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
     "react-native-paper": "^5.14.5",
     "react-native-safe-area-context": "^5.6.1",
     "react-native-screens": "~4.16.0",
