@@ -339,7 +339,8 @@ class DataService {
   async getAddressesByTripId(tripId: string): Promise<Address[]> {
     try {
       const addresses = await this.getAddresses();
-      return addresses.filter((address) => address.tripId === tripId);
+      // Les adresses ne sont plus liées à un voyage spécifique
+      return [];
     } catch (error) {
       console.error("Error getting addresses by trip ID:", error);
       return [];
@@ -349,10 +350,8 @@ class DataService {
   private async deleteAddressesByTripId(tripId: string): Promise<void> {
     try {
       const addresses = await this.getAddresses();
-      const filteredAddresses = addresses.filter(
-        (address) => address.tripId !== tripId
-      );
-      await this.saveAddresses(filteredAddresses);
+      // Les adresses ne sont plus liées à un voyage spécifique
+      await this.saveAddresses(addresses);
     } catch (error) {
       console.error("Error deleting addresses by trip ID:", error);
     }

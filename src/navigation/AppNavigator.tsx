@@ -13,6 +13,7 @@ import AuthScreen from "../screens/AuthScreen";
 import TripsScreen from "../screens/TripsScreen";
 import BookingsScreen from "../screens/BookingsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
+import AddressFormScreen from "../screens/AddressFormScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import TripDetailsScreen from "../screens/TripDetailsScreen";
 import BookingDetailsScreen from "../screens/BookingDetailsScreen";
@@ -133,6 +134,13 @@ const AppNavigator = () => {
                 headerTitleStyle: {
                   fontWeight: "bold",
                 },
+              }}
+            />
+            <Stack.Screen
+              name="AddressForm"
+              component={AddressFormScreen}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

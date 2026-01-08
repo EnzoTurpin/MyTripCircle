@@ -294,13 +294,10 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
 
       await ApiService.deleteTrip(tripId, currentUser);
 
-      // Supprimer localement
+      // Supprimer localement (les adresses sont indépendantes des voyages)
       setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
       setBookings((prev) =>
         prev.filter((booking) => booking.tripId !== tripId)
-      );
-      setAddresses((prev) =>
-        prev.filter((address) => address.tripId !== tripId)
       );
       return true;
     } catch (error) {
@@ -398,15 +395,22 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     address: Omit<Address, "id" | "createdAt" | "updatedAt">
   ): Promise<Address> => {
     try {
-      // TODO: POST /addresses
-      const newAddress = {
-        ...(address as any),
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Address;
-      setAddresses((prev) => [...prev, newAddress]);
-      return newAddress;
+      const result = await ApiService.createAddress(address);
+      const mappedAddress: Address = {
+        id: result._id,
+        type: result.type,
+        name: result.name,
+        address: result.address,
+        city: result.city,
+        country: result.country,
+        phone: result.phone,
+        website: result.website,
+        notes: result.notes,
+        createdAt: result.createdAt ? new Date(result.createdAt) : new Date(),
+        updatedAt: result.updatedAt ? new Date(result.updatedAt) : new Date(),
+      };
+      setAddresses((prev) => [...prev, mappedAddress]);
+      return mappedAddress;
     } catch (error) {
       console.error("Error creating address:", error);
       throw error;
@@ -418,13 +422,27 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     updates: Partial<Address>
   ): Promise<Address | null> => {
     try {
-      // TODO: PUT /addresses/:id
+      const result = await ApiService.updateAddress(addressId, updates);
+      if (!result) {
+        return null;
+      }
+      const mappedAddress: Address = {
+        id: result._id,
+        type: result.type,
+        name: result.name,
+        address: result.address,
+        city: result.city,
+        country: result.country,
+        phone: result.phone,
+        website: result.website,
+        notes: result.notes,
+        createdAt: result.createdAt ? new Date(result.createdAt) : new Date(),
+        updatedAt: result.updatedAt ? new Date(result.updatedAt) : new Date(),
+      };
       setAddresses((prev) =>
-        prev.map((address) =>
-          address.id === addressId ? { ...address, ...updates } : address
-        )
+        prev.map((address) => (address.id === addressId ? mappedAddress : address))
       );
-      return addresses.find((a) => a.id === addressId) || null;
+      return mappedAddress;
     } catch (error) {
       console.error("Error updating address:", error);
       throw error;
@@ -444,8 +462,9 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     }
   };
 
-  const getAddressesByTripId = (tripId: string): Address[] => {
-    return addresses.filter((address) => address.tripId === tripId);
+  const getAddressesByTripId = (_tripId: string): Address[] => {
+    // Les adresses ne sont plus liées à un voyage spécifique
+    return [];
   };
 
   const refreshData = async (): Promise<void> => {
