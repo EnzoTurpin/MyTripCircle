@@ -12,6 +12,22 @@ import os from "os";
 import dotenv from "dotenv";
 
 dotenv.config();
+// import path from "path";
+// import { fileURLToPath } from "url";
+
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// dotenv.config({
+//   path: path.resolve(__dirname, "../.env"),
+// });
+
+console.log("ENV CHECK:", {
+  MAIL_USER: process.env.MAIL_USER,
+  MAIL_PASS: process.env.MAIL_PASS ? "OK" : "MISSING",
+});
+
+
 mongoose
   .connect(process.env.MONGODB_URI, {
     dbName: process.env.DB_NAME || "mytripcircle",

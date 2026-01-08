@@ -35,8 +35,8 @@ export const register = async (req, res) => {
       otpExpires,             // ✅ NOM UNIQUE
     });
 
-    // await sendOtpEmail(email, otp);
-    console.log("OTP (DEV):", otp);
+    await sendOtpEmail(user.email, otp);
+    // console.log("OTP (DEV):", otp);
 
     res.status(201).json({
       success: true,

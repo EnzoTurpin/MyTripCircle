@@ -1,18 +1,26 @@
 import nodemailer from "nodemailer";
 
-export async function sendOtpEmail(to: string, otp: string) {
+export const sendOtpEmail = async (to: string, otp: string) => {
+  if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
+    console.error("❌ MAIL ENV NOT LOADED", {
+      MAIL_USER: process.env.MAIL_USER,
+      MAIL_PASS: process.env.MAIL_PASS ? "OK" : "MISSING",
+    });
+    throw new Error("Mail credentials missing");
+  }
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.EMAIL_PASSWORD,
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
     },
   });
 
   await transporter.sendMail({
-    from: process.env.EMAIL,
+    from: `"MyTripCircle" <${process.env.MAIL_USER}>`,
     to,
-    subject: "Verify your email",
-    text: `Your verification code is: ${otp}`,
+    subject: "Your OTP code",
+    text: `Your OTP code is: ${otp}`,
   });
-}
+};
