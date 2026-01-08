@@ -17,11 +17,19 @@ import {
   getCurrentLanguage,
   testDateFormatting,
 } from "../utils/i18n";
+<<<<<<< HEAD
+import { useNavigation } from "@react-navigation/native";
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
   const { invitations, unreadCount, refreshInvitations } = useNotifications();
   const { t } = useTranslation();
+<<<<<<< HEAD
+  const navigation = useNavigation<any>();
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
 
   const handleLogout = () => {
     Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
@@ -128,6 +136,14 @@ const ProfileScreen: React.FC = () => {
       onPress: handleAbout,
     },
     {
+<<<<<<< HEAD
+      icon: "card-outline",
+      title: "S’abonner",
+      onPress: () => navigation.navigate("Subscription"),
+    },
+    {
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
       icon: "log-out-outline",
       title: t("profile.logoutTitle"),
       onPress: handleLogout,

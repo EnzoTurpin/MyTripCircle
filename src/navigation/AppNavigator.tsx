@@ -22,6 +22,10 @@ import InviteFriendsScreen from "../screens/InviteFriendsScreen";
 import InvitationScreen from "../screens/InvitationScreen";
 import CreateTripScreen from "../screens/CreateTripScreen";
 import EditTripScreen from "../screens/EditTripScreen";
+<<<<<<< HEAD
+import SubscriptionScreen from "../screens/SubscriptionScreen";
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -177,6 +181,20 @@ const AppNavigator = () => {
                 headerShown: false,
               }}
             />
+<<<<<<< HEAD
+            <Stack.Screen
+              name="Subscription"
+              component={SubscriptionScreen}
+              options={{
+                headerShown: true,
+                title: "Abonnement",
+                headerStyle: { backgroundColor: "#007AFF" },
+                headerTintColor: "#fff",
+                headerTitleStyle: { fontWeight: "bold" },
+              }}
+            />
+=======
+>>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthScreen} />
