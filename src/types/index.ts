@@ -116,6 +116,9 @@ export type RootStackParamList = {
   CreateTrip: undefined;
   EditTrip: { tripId: string };
   Profile: undefined;
+  EditProfile: undefined;
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 export type MainTabParamList = {
