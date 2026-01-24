@@ -4,8 +4,8 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "seed": "node database/seed.js",
     "test-db": "node database/test-connection.js",
@@ -26,12 +26,10 @@
     "concurrently": "^9.2.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "expo": "~54.0.14",
+    "expo": "~54.0.32",
     "expo-camera": "^17.0.8",
-<<<<<<< HEAD
+    "expo-constants": "~18.0.13",
     "expo-dev-client": "^6.0.20",
-=======
->>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
     "expo-document-picker": "^14.0.7",
     "expo-image-picker": "^17.0.8",
     "expo-linear-gradient": "^15.0.7",
@@ -46,10 +44,8 @@
     "react-native": "0.81.4",
     "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "^2.28.0",
-<<<<<<< HEAD
-    "react-native-iap": "^14.7.1",
-=======
->>>>>>> 8890605b6411dc8d2acf728840db73ba24d3c1ec
+    "react-native-iap": "^14.7.6",
+    "react-native-nitro-modules": "^0.31.10",
     "react-native-paper": "^5.14.5",
     "react-native-safe-area-context": "^5.6.1",
     "react-native-screens": "~4.16.0",
