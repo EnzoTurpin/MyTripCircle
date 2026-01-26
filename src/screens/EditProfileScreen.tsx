@@ -15,14 +15,20 @@ import { useAuth } from "../contexts/AuthContext";
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
 
-  const handleSave = () => {
-    Alert.alert("Profile updated!", "Your profile changes have been saved.");
-    navigation.goBack();
+  const handleSave = async () => {
+    try {
+      await updateUser({ name, email });
+      Alert.alert("Profile updated!", "Your profile changes have been saved.");
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      Alert.alert("Error", "Failed to update profile.");
+    }
   };
 
   return (

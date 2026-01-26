@@ -10,6 +10,7 @@ import { MongoClient, ObjectId } from "mongodb";
 import mongoose from "mongoose";
 import os from "os";
 import dotenv from "dotenv";
+import userRoutes from "../src/routes/userRoutes.js";
 
 dotenv.config();
 // import path from "path";
@@ -51,6 +52,9 @@ app.use((req, res, next) => {
   console.log(`[server] ${req.method} ${req.path}`);
   next();
 });
+
+// user route
+app.use("/users", userRoutes);
 
 const PORT = process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 4000;
 const MONGODB_URI = process.env.MONGODB_URI;

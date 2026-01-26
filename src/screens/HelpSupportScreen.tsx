@@ -1,9 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, LayoutAnimation } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { FAQ } from "../data/faq";
 
 const HelpSupportScreen: React.FC = () => {
+  const [ openId, setOpenId ] = React.useState<string | null>(null);
+
+  const toggle = (id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpenId(openId === id ? null : id);
+  }
+
   const openEmail = () => {
     Linking.openURL("mailto:support@mytripcircle.com?subject=Help%20Request");
   };
@@ -13,6 +21,26 @@ const HelpSupportScreen: React.FC = () => {
       <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
         <Text style={styles.headerTitle}>Help & Support</Text>
       </LinearGradient>
+
+      {FAQ.map((item) => (
+        <View key={item.id} style={styles.card}>
+          <TouchableOpacity
+            style={styles.questionRow}
+            onPress={() => toggle(item.id)}
+          >
+            <Text style={styles.question}>{item.question}</Text>
+            <Ionicons
+              name={openId === item.id ? "chevron-up" : "chevron-down"}
+              size={20}
+              color="#007AFF"
+            />
+          </TouchableOpacity>
+
+          {openId === item.id && (
+            <Text style={styles.answer}>{item.answer}</Text>
+          )}
+        </View>
+      ) )}
 
       <View style={styles.content}>
         <Text style={styles.paragraph}>
@@ -62,6 +90,36 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 18,
     marginLeft: 8,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333",
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  questionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  question: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    flex: 1,
+    marginRight: 10,
+  },
+  answer: {
+    marginTop: 10,
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
   },
 });
 

@@ -1,4 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URLS } from "../config/api";
+// import { updateProfile } from "../controllers/userController";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -43,9 +45,11 @@ async function request<T>(
   body?: any
 ): Promise<T> {
   const baseUrl = await findWorkingUrl();
+  const token = await AsyncStorage.getItem("token");
   const res = await fetch(`${baseUrl}${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -191,6 +195,14 @@ export const ApiService = {
     action: "accept" | "decline",
     userId?: string
   ) => request<any>(`/invitations/${token}`, "PUT", { action, userId }),
+
+  updateProfile: (data: { name: string; email: string }) =>
+    request<{ success: boolean; user: any }>("/users/me", "PUT", data),
+
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+  }) => request<{ success: boolean }>("/users/change-password", "PUT", data),
 };
 
 export default ApiService;

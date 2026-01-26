@@ -120,6 +120,7 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
+  ChangePassword: undefined;
   HelpSupport: undefined;
 };
 

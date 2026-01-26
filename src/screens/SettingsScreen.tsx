@@ -2,12 +2,26 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+
+type RootStackParamList = {
+  ChangePassword: undefined;
+};
 
 const SettingsScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const settingsOptions = [
     { icon: "moon-outline", title: "Dark Mode", value: "Coming soon" },
     { icon: "notifications-outline", title: "Notifications", value: "Enabled" },
     { icon: "language-outline", title: "Language", value: "English" },
+  ];
+
+  const accountOptions = [
+    {
+      icon: "lock-closed-outline",
+      title: "Change Password",
+      action: "change-password"
+    }
   ];
 
   return (
@@ -24,6 +38,21 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.settingTitle}>{item.title}</Text>
             </View>
             <Text style={styles.settingValue}>{item.value}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <View style={styles.settingsContainer}>
+        {accountOptions.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.settingItem}
+            onPress={() => navigation.navigate("ChangePassword")}
+          >
+            <View style={styles.settingLeft}>
+              <Ionicons name={item.icon as any} size={22} color="#007AFF" />
+              <Text style={styles.settingTitle}>{item.title}</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={18} color="#ccc" />
           </TouchableOpacity>
         ))}
       </View>

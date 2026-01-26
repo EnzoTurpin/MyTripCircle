@@ -23,6 +23,7 @@ import InvitationScreen from "../screens/InvitationScreen";
 import CreateTripScreen from "../screens/CreateTripScreen";
 import EditTripScreen from "../screens/EditTripScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
 import HelpSupportScreen from "../screens/HelpSupportScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 
@@ -189,6 +190,16 @@ const AppNavigator = () => {
               options={{
                 headerShown: true,
                 title: "Settings",
+                headerStyle: { backgroundColor: "#007AFF" },
+                headerTintColor: "#fff",
+              }}
+            />
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
+              options={{
+                headerShown: true,
+                title: "Change Password",
                 headerStyle: { backgroundColor: "#007AFF" },
                 headerTintColor: "#fff",
               }}

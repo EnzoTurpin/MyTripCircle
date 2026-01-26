@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   verifyOtp: (userId: string, otp: string) => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -119,14 +120,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 
   const updateUser = async (userData: Partial<User>): Promise<void> => {
+    const token = await AsyncStorage.getItem("token");
+
+    const filteredData = Object.fromEntries(
+      Object.entries(userData).filter(([, value]) => value !== undefined)
+    ) as { name?: string; email?: string };
+
+    const res = await ApiService.updateProfile(filteredData as { name: string; email: string });
+
+    if (res.success) {
+      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      setUser(res.user);
+    }
+  };
+
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<boolean> => {
     try {
-      if (user) {
-        const updatedUser = { ...user, ...userData };
-        await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      }
+      const res = await ApiService.changePassword({ currentPassword, newPassword });
+
+    return !!res?.success;
     } catch (error) {
-      console.error("Update user error:", error);
+      console.error("Change password error:", error);
+      return false;
     }
   };
 
@@ -138,6 +156,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     updateUser,
     verifyOtp,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
