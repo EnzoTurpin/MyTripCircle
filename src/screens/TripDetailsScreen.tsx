@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +23,9 @@ import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utils/i18n";
 import BookingForm from "../components/BookingForm";
+import { AddressForm } from "../components/AddressForm";
+import { ModernCard } from "../components/ModernCard";
+import { ModernButton } from "../components/ModernButton";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 type TripDetailsScreenNavigationProp = StackNavigationProp<
@@ -39,7 +44,8 @@ const TripDetailsScreen: React.FC = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const { getTripById, getBookingsByTripId, getAddressesByTripId, validateTrip, createBooking } = useTrips();
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const { getTripById, getBookingsByTripId, getAddressesByTripId, validateTrip, createBooking, createAddress } = useTrips();
 
   useFocusEffect(
     useCallback(() => {
@@ -98,9 +104,12 @@ const TripDetailsScreen: React.FC = () => {
   };
 
   const handleAddAddress = () => {
-    Alert.alert(t("tripDetails.addAddress"), t("tripDetails.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    setShowAddressForm(true);
+  };
+
+  const handleSaveAddress = async (addressData: Omit<Address, "id" | "createdAt" | "updatedAt">) => {
+    await createAddress(addressData);
+    await loadTripData();
   };
 
   const handleValidateTrip = async () => {
@@ -165,196 +174,303 @@ const TripDetailsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
-        <Text style={styles.tripTitle}>{trip.title}</Text>
-        <Text style={styles.tripDestination}>{trip.destination}</Text>
-        <Text style={styles.tripDates}>
-          {formatDate(trip.startDate, {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}{" "}
-          -{" "}
-          {formatDate(trip.endDate, {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </Text>
-        {trip.description && (
-          <Text style={styles.tripDescription}>{trip.description}</Text>
-        )}
-      </LinearGradient>
-
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleInviteFriends}
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <LinearGradient 
+          colors={['#2891FF', '#8869FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
         >
-          <Ionicons name="person-add" size={20} color="white" />
-          <Text style={styles.actionButtonText}>
-            {t("tripDetails.inviteFriends")}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={handleEditTrip}>
-          <Ionicons name="create" size={20} color="white" />
-          <Text style={styles.actionButtonText}>
-            {t("tripDetails.editTrip")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {(showValidateButton || trip.status === "draft") && (
-        <View style={styles.validateContainer}>
-          <View style={styles.draftBanner}>
-            <Ionicons name="information-circle" size={20} color="#FF9500" />
-            <Text style={styles.draftBannerText}>
-              {t("tripDetails.draftMessage")}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={styles.validateButtonFullWidth}
-            onPress={handleValidateTrip}
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
           >
-            <Ionicons name="checkmark-circle" size={20} color="white" />
-            <Text style={styles.actionButtonText}>
-              {t("tripDetails.validateTrip")}
-            </Text>
+            <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-        </View>
-      )}
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t("tripDetails.bookings")}</Text>
-          <TouchableOpacity onPress={handleAddBooking}>
-            <Ionicons name="add" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-        {bookings.length === 0 ? (
-          <View style={styles.emptySection}>
-            <Ionicons name="receipt-outline" size={40} color="#ccc" />
-            <Text style={styles.emptyText}>{t("tripDetails.noBookings")}</Text>
-          </View>
-        ) : (
-          bookings.map((booking) => (
-            <View key={booking.id} style={styles.bookingItem}>
-              <View style={styles.bookingHeader}>
-                <Ionicons
-                  name={
-                    booking.type === "flight"
-                      ? "airplane"
-                      : booking.type === "hotel"
-                      ? "bed"
-                      : "receipt"
-                  }
-                  size={20}
-                  color="#007AFF"
-                />
-                <Text style={styles.bookingTitle}>{booking.title}</Text>
-              </View>
-              <Text style={styles.bookingDate}>
-                {formatDate(booking.date)}
-                {booking.time && ` • ${booking.time}`}
+          <View style={styles.headerContent}>
+            <Text style={styles.tripTitle}>{trip.title}</Text>
+            <View style={styles.destinationRow}>
+              <Ionicons name="location" size={20} color="rgba(255, 255, 255, 0.9)" />
+              <Text style={styles.tripDestination}>{trip.destination}</Text>
+            </View>
+            <View style={styles.datesRow}>
+              <Ionicons name="calendar" size={18} color="rgba(255, 255, 255, 0.8)" />
+              <Text style={styles.tripDates}>
+                {formatDate(trip.startDate, {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                -{" "}
+                {formatDate(trip.endDate, {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </Text>
-              {booking.confirmationNumber && (
-                <Text style={styles.confirmationText}>
-                  {t("tripDetails.confirmation", {
-                    code: booking.confirmationNumber,
-                  })}
+            </View>
+            {trip.description && (
+              <Text style={styles.tripDescription}>{trip.description}</Text>
+            )}
+          </View>
+        </LinearGradient>
+
+        <View style={styles.content}>
+          <View style={styles.actionsContainer}>
+            <ModernButton
+              title={t("tripDetails.inviteFriends")}
+              onPress={handleInviteFriends}
+              variant="primary"
+              size="medium"
+              icon="person-add-outline"
+              style={styles.actionButton}
+            />
+            <ModernButton
+              title={t("tripDetails.editTrip")}
+              onPress={handleEditTrip}
+              variant="outline"
+              size="medium"
+              icon="create-outline"
+              style={styles.actionButton}
+            />
+          </View>
+
+          {(showValidateButton || trip.status === "draft") && (
+            <ModernCard variant="elevated" style={styles.validateContainer}>
+              <View style={styles.draftBanner}>
+                <Ionicons name="information-circle" size={24} color={"#FF9800"} />
+                <Text style={styles.draftBannerText}>
+                  {t("tripDetails.draftMessage")}
                 </Text>
-              )}
-            </View>
-          ))
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t("tripDetails.addresses")}</Text>
-          <TouchableOpacity onPress={handleAddAddress}>
-            <Ionicons name="add" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-        {addresses.length === 0 ? (
-          <View style={styles.emptySection}>
-            <Ionicons name="location-outline" size={40} color="#ccc" />
-            <Text style={styles.emptyText}>{t("tripDetails.noAddresses")}</Text>
-          </View>
-        ) : (
-          addresses.map((address) => (
-            <View key={address.id} style={styles.addressItem}>
-              <View style={styles.addressHeader}>
-                <Ionicons
-                  name={
-                    address.type === "hotel"
-                      ? "bed"
-                      : address.type === "restaurant"
-                      ? "restaurant"
-                      : "location"
-                  }
-                  size={20}
-                  color="#007AFF"
-                />
-                <Text style={styles.addressName}>{address.name}</Text>
               </View>
-              <Text style={styles.addressText}>{address.address}</Text>
-              <Text style={styles.addressLocation}>
-                {address.city}, {address.country}
-              </Text>
-            </View>
-          ))
-        )}
-      </View>
+              <ModernButton
+                title={t("tripDetails.validateTrip")}
+                onPress={handleValidateTrip}
+                variant="primary"
+                gradient
+                size="large"
+                fullWidth
+                icon="checkmark-circle-outline"
+                style={styles.validateButton}
+              />
+            </ModernCard>
+          )}
 
-      <View style={styles.collaboratorsSection}>
-        <Text style={styles.sectionTitle}>
-          {t("tripDetails.collaborators")}
-        </Text>
-        <View style={styles.collaboratorsList}>
-          <View key="owner" style={styles.collaboratorItem}>
-            <View style={styles.collaboratorAvatar}>
-              <Ionicons name="person" size={20} color="white" />
-            </View>
-            <Text style={styles.collaboratorName}>
-              {t("tripDetails.ownerYou")}
-            </Text>
-          </View>
-          {trip.collaborators.map((collaboratorId, index) => (
-            <View
-              key={`collaborator-${collaboratorId}-${index}`}
-              style={styles.collaboratorItem}
-            >
-              <View style={styles.collaboratorAvatar}>
-                <Ionicons name="person" size={20} color="white" />
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>{t("tripDetails.bookings")}</Text>
+                <Text style={styles.sectionSubtitle}>
+                  {bookings.length} {bookings.length > 1 ? "réservations" : "réservation"}
+                </Text>
               </View>
-              <Text style={styles.collaboratorName}>
-                {t("tripDetails.collaborator", { index: index + 1 })}
-              </Text>
+              <TouchableOpacity 
+                style={styles.addButton}
+                onPress={handleAddBooking}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={24} color={"#2891FF"} />
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
-      </View>
+            {bookings.length === 0 ? (
+              <View style={styles.emptySection}>
+                <View style={styles.emptyIconContainer}>
+                  <Ionicons name="calendar-outline" size={40} color={"#7EBDFF"} />
+                </View>
+                <Text style={styles.emptyText}>{t("tripDetails.noBookings")}</Text>
+              </View>
+            ) : (
+              <View style={styles.itemsList}>
+                {bookings.map((booking, index) => (
+                  <ModernCard 
+                    key={booking.id} 
+                    variant="outlined"
+                    style={{...styles.bookingItem, ...(index > 0 ? { marginTop: 16 } : {})}}
+                  >
+                    <View style={styles.bookingHeader}>
+                      <View style={styles.bookingIconContainer}>
+                        <Ionicons
+                          name={
+                            booking.type === "flight"
+                              ? "airplane"
+                              : booking.type === "hotel"
+                              ? "bed"
+                              : "receipt"
+                          }
+                          size={20}
+                          color={"#2891FF"}
+                        />
+                      </View>
+                      <View style={styles.bookingInfo}>
+                        <Text style={styles.bookingTitle}>{booking.title}</Text>
+                        <Text style={styles.bookingDate}>
+                          {formatDate(booking.date)}
+                          {booking.time && ` • ${booking.time}`}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color={"#BDBDBD"} />
+                    </View>
+                    {booking.confirmationNumber && (
+                      <View style={styles.confirmationContainer}>
+                        <Ionicons name="checkmark-circle" size={14} color={"#4CAF50"} />
+                        <Text style={styles.confirmationText}>
+                          {booking.confirmationNumber}
+                        </Text>
+                      </View>
+                    )}
+                  </ModernCard>
+                ))}
+              </View>
+            )}
+          </View>
 
-      {/* Booking Form Modal */}
-      {trip && (
-        <BookingForm
-          visible={showBookingForm}
-          onClose={() => setShowBookingForm(false)}
-          onSave={handleSaveBooking}
-          tripStartDate={trip.startDate}
-          tripEndDate={trip.endDate}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>{t("tripDetails.addresses")}</Text>
+                <Text style={styles.sectionSubtitle}>
+                  {addresses.length} {addresses.length > 1 ? "lieux" : "lieu"}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.addButton}
+                onPress={handleAddAddress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={24} color={"#2891FF"} />
+              </TouchableOpacity>
+            </View>
+            {addresses.length === 0 ? (
+              <View style={styles.emptySection}>
+                <View style={styles.emptyIconContainer}>
+                  <Ionicons name="map-outline" size={40} color={"#7EBDFF"} />
+                </View>
+                <Text style={styles.emptyText}>{t("tripDetails.noAddresses")}</Text>
+              </View>
+            ) : (
+              <View style={styles.itemsList}>
+                {addresses.map((address, index) => (
+                  <ModernCard 
+                    key={address.id} 
+                    variant="outlined"
+                    style={{...styles.addressItem, ...(index > 0 ? { marginTop: 16 } : {})}}
+                  >
+                    <View style={styles.addressHeader}>
+                      <View style={styles.addressIconContainer}>
+                        <Ionicons
+                          name={
+                            address.type === "hotel"
+                              ? "bed"
+                              : address.type === "restaurant"
+                              ? "restaurant"
+                              : "location"
+                          }
+                          size={20}
+                          color={"#FF6B9D"}
+                        />
+                      </View>
+                      <View style={styles.addressInfo}>
+                        <Text style={styles.addressName}>{address.name}</Text>
+                        <Text style={styles.addressText}>{address.address}</Text>
+                        <Text style={styles.addressLocation}>
+                          {address.city}, {address.country}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color={"#BDBDBD"} />
+                    </View>
+                  </ModernCard>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <ModernCard variant="elevated" style={styles.collaboratorsSection}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>
+                  {t("tripDetails.collaborators")}
+                </Text>
+                <Text style={styles.sectionSubtitle}>
+                  {trip.collaborators.length + 1} {trip.collaborators.length > 0 ? "membres" : "membre"}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.collaboratorsList}>
+              <View key="owner" style={styles.collaboratorItem}>
+                <View style={styles.collaboratorAvatar}>
+                  <LinearGradient
+                    colors={['#2891FF', '#8869FF']}
+                    style={styles.avatarGradient}
+                  >
+                    <Ionicons name="person" size={20} color="white" />
+                  </LinearGradient>
+                </View>
+                <View style={styles.collaboratorInfo}>
+                  <Text style={styles.collaboratorName}>
+                    {t("tripDetails.ownerYou")}
+                  </Text>
+                  <Text style={styles.collaboratorRole}>Organisateur</Text>
+                </View>
+                <View style={styles.ownerBadge}>
+                  <Text style={styles.ownerBadgeText}>Vous</Text>
+                </View>
+              </View>
+              {trip.collaborators.map((collaboratorId, index) => (
+                <View
+                  key={`collaborator-${collaboratorId}-${index}`}
+                  style={styles.collaboratorItem}
+                >
+                  <View style={styles.collaboratorAvatar}>
+                    <View style={styles.avatarDefault}>
+                      <Ionicons name="person" size={20} color={"#2891FF"} />
+                    </View>
+                  </View>
+                  <View style={styles.collaboratorInfo}>
+                    <Text style={styles.collaboratorName}>
+                      {t("tripDetails.collaborator", { index: index + 1 })}
+                    </Text>
+                    <Text style={styles.collaboratorRole}>Membre</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ModernCard>
+        </View>
+
+        {/* Booking Form Modal */}
+        {trip && (
+          <BookingForm
+            visible={showBookingForm}
+            onClose={() => setShowBookingForm(false)}
+            onSave={handleSaveBooking}
+            tripStartDate={trip.startDate}
+            tripEndDate={trip.endDate}
+          />
+        )}
+
+        {/* Address Form Modal */}
+        <AddressForm
+          visible={showAddressForm}
+          onClose={() => setShowAddressForm(false)}
+          onSave={handleSaveAddress}
         />
-      )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
@@ -377,9 +493,38 @@ const styles = StyleSheet.create({
     color: "#FF3B30",
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
+    paddingBottom: 120,
+    paddingHorizontal: 24,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: -20,
+    marginTop: 5,
+    zIndex: 10,
+  },
+  headerContent: {
+    marginTop: 50,
+  },
+  destinationRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginBottom: 12,
+  },
+  datesRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginBottom: 20,
+  },
+  content: {
+    marginTop: -100,
+    paddingHorizontal: 24,
+    paddingBottom: 64,
   },
   tripTitle: {
     fontSize: 28,
@@ -390,12 +535,12 @@ const styles = StyleSheet.create({
   tripDestination: {
     fontSize: 18,
     color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 5,
+    marginLeft: 8,
   },
   tripDates: {
     fontSize: 16,
     color: "rgba(255, 255, 255, 0.8)",
-    marginBottom: 15,
+    marginLeft: 8,
   },
   tripDescription: {
     fontSize: 16,
@@ -404,163 +549,196 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     flexDirection: "row" as const,
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    gap: 16,
+    marginBottom: 24,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    paddingVertical: 15,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    marginHorizontal: 5,
   },
   validateContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    marginBottom: 24,
   },
-  validateButtonFullWidth: {
-    backgroundColor: "#34C759",
-    borderRadius: 25,
-    paddingVertical: 15,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    width: "100%",
-  },
-  actionButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold" as const,
-    marginLeft: 8,
+  validateButton: {
+    marginTop: 16,
   },
   section: {
-    backgroundColor: "white",
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginTop: 40,
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: "row" as const,
     justifyContent: "space-between",
     alignItems: "center" as const,
-    marginBottom: 15,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold" as const,
-    color: "#333",
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#616161',
+    marginTop: 4,
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F4FF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
   emptySection: {
     alignItems: "center" as const,
-    paddingVertical: 20,
+    paddingVertical: 32,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E8F4FF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: "#666",
-    marginTop: 10,
+    color: '#616161',
   },
-  bookingItem: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+  itemsList: {
+    marginTop: 8,
   },
+  bookingItem: {},
   bookingHeader: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    marginBottom: 5,
+  },
+  bookingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F4FF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 16,
+  },
+  bookingInfo: {
+    flex: 1,
   },
   bookingTitle: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-    marginLeft: 10,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 4,
   },
   bookingDate: {
     fontSize: 14,
-    color: "#666",
-    marginLeft: 30,
+    color: '#616161',
+  },
+  confirmationContainer: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
   },
   confirmationText: {
     fontSize: 12,
-    color: "#999",
-    marginLeft: 30,
-    marginTop: 5,
+    color: '#616161',
+    marginLeft: 4,
+    fontWeight: '500',
   },
-  addressItem: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
+  addressItem: {},
   addressHeader: {
     flexDirection: "row" as const,
+    alignItems: "flex-start",
+  },
+  addressIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FF6B9D' + '15',
+    justifyContent: "center" as const,
     alignItems: "center" as const,
-    marginBottom: 5,
+    marginRight: 16,
+  },
+  addressInfo: {
+    flex: 1,
   },
   addressName: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-    marginLeft: 10,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 4,
   },
   addressText: {
     fontSize: 14,
-    color: "#666",
-    marginLeft: 30,
-    marginBottom: 2,
+    color: '#616161',
+    marginBottom: 4,
+    lineHeight: 20,
   },
   addressLocation: {
     fontSize: 12,
-    color: "#999",
-    marginLeft: 30,
+    color: '#9E9E9E',
   },
   collaboratorsSection: {
-    backgroundColor: "white",
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 24,
   },
   collaboratorsList: {
-    marginTop: 10,
+    marginTop: 16,
   },
   collaboratorItem: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    paddingVertical: 10,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   collaboratorAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#007AFF",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 16,
+    overflow: "hidden",
+  },
+  avatarGradient: {
+    width: "100%",
+    height: "100%",
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    marginRight: 15,
+  },
+  avatarDefault: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: '#F5F5F5',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  collaboratorInfo: {
+    flex: 1,
   },
   collaboratorName: {
     fontSize: 16,
-    color: "#333",
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  collaboratorRole: {
+    fontSize: 14,
+    color: '#616161',
+  },
+  ownerBadge: {
+    backgroundColor: '#E8F4FF',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  ownerBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2891FF',
   },
   draftBanner: {
     flexDirection: "row" as const,

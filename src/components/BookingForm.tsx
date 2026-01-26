@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -10,8 +10,10 @@ import {
   Alert,
   Platform,
   Image,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
@@ -161,6 +163,22 @@ const BookingForm: React.FC<BookingFormProps> = ({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("");
+  
+  // Animation pour le slide du modal
+  const slideAnim = useRef(new Animated.Value(1000)).current;
+  
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }).start();
+    } else {
+      slideAnim.setValue(1000);
+    }
+  }, [visible]);
 
   // Déterminer si le type de réservation nécessite une date de fin
   const needsEndDate = (type: Booking["type"]): boolean => {
@@ -465,17 +483,25 @@ const BookingForm: React.FC<BookingFormProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }] }]}>
+          <LinearGradient
+            colors={['#2891FF', '#8869FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.modalHeader}
+          >
+            <View style={styles.headerIcon}>
+              <Ionicons name="receipt" size={24} color="white" />
+            </View>
             <Text style={styles.modalTitle}>
               {initialBooking ? t("bookings.editBooking") : t("bookings.addBooking")}
             </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#333" />
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
-          </View>
+          </LinearGradient>
 
           <ScrollView style={styles.formContainer}>
             {/* Type de réservation */}
@@ -490,17 +516,25 @@ const BookingForm: React.FC<BookingFormProps> = ({
                       formData.type === type && styles.typeButtonSelected,
                     ]}
                     onPress={() => handleInputChange("type", type)}
+                    activeOpacity={0.7}
                   >
-                    <Ionicons
-                      name={getTypeIcon(type) as any}
-                      size={20}
-                      color={formData.type === type ? "#007AFF" : "#666"}
-                    />
+                    <View style={[
+                      styles.typeIconContainer,
+                      formData.type === type && styles.typeIconContainerSelected
+                    ]}>
+                      <Ionicons
+                        name={getTypeIcon(type) as any}
+                        size={22}
+                        color={formData.type === type ? "#FFFFFF" : "#2891FF"}
+                      />
+                    </View>
                     <Text
                       style={[
                         styles.typeText,
                         formData.type === type && styles.typeTextSelected,
                       ]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
                     >
                       {t(`bookings.filters.${type}`)}
                     </Text>
@@ -512,12 +546,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
             {/* Titre */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t("bookings.title")} *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.title}
-                onChangeText={(value) => handleInputChange("title", value)}
-                placeholder={t("bookings.titlePlaceholder")}
-              />
+              <View style={styles.inputContainer}>
+                <Ionicons name="text-outline" size={20} color="#616161" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.title}
+                  onChangeText={(value) => handleInputChange("title", value)}
+                  placeholder={t("bookings.titlePlaceholder")}
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
             </View>
 
             {/* Date */}
@@ -532,7 +570,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                 style={styles.dateButton}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Ionicons name="calendar" size={20} color="#666" />
+                <Ionicons name="calendar" size={20} color="#616161" />
                 <Text style={styles.dateText}>
                   {(() => {
                     console.log("[BookingForm] Rendering date text:", {
@@ -610,7 +648,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                   style={styles.dateButton}
                   onPress={() => setShowEndDatePicker(true)}
                 >
-                  <Ionicons name="calendar" size={20} color="#666" />
+                  <Ionicons name="calendar" size={20} color="#616161" />
                   <Text style={styles.dateText}>
                     {formatDate(formData.endDate || new Date())}
                   </Text>
@@ -677,8 +715,8 @@ const BookingForm: React.FC<BookingFormProps> = ({
                 style={styles.dateButton}
                 onPress={() => setShowTimePicker(true)}
               >
-                <Ionicons name="time" size={20} color="#666" />
-                <Text style={styles.dateText}>
+                <Ionicons name="time" size={20} color="#616161" />
+                <Text style={[styles.dateText, !formData.time && styles.placeholderText]}>
                   {formData.time || t("bookings.selectTime")}
                 </Text>
               </TouchableOpacity>
@@ -738,25 +776,33 @@ const BookingForm: React.FC<BookingFormProps> = ({
             {/* Adresse */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t("bookings.address")}</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.address}
-                onChangeText={(value) => handleInputChange("address", value)}
-                placeholder={t("bookings.addressPlaceholder")}
-              />
+              <View style={styles.inputContainer}>
+                <Ionicons name="location-outline" size={20} color="#616161" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.address}
+                  onChangeText={(value) => handleInputChange("address", value)}
+                  placeholder={t("bookings.addressPlaceholder")}
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
             </View>
 
             {/* Description */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t("bookings.description")}</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={formData.description}
-                onChangeText={(value) => handleInputChange("description", value)}
-                placeholder={t("bookings.descriptionPlaceholder")}
-                multiline
-                numberOfLines={3}
-              />
+              <View style={styles.inputContainer}>
+                <Ionicons name="document-text-outline" size={20} color="#616161" style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formData.description}
+                  onChangeText={(value) => handleInputChange("description", value)}
+                  placeholder={t("bookings.descriptionPlaceholder")}
+                  placeholderTextColor="#9E9E9E"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
             </View>
 
             {/* Numéro de confirmation */}
@@ -764,39 +810,47 @@ const BookingForm: React.FC<BookingFormProps> = ({
               <Text style={styles.label}>
                 {t("bookings.confirmationNumber")}
               </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.confirmationNumber}
-                onChangeText={(value) =>
-                  handleInputChange("confirmationNumber", value)
-                }
-                placeholder={t("bookings.confirmationNumberPlaceholder")}
-              />
+              <View style={styles.inputContainer}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#616161" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.confirmationNumber}
+                  onChangeText={(value) =>
+                    handleInputChange("confirmationNumber", value)
+                  }
+                  placeholder={t("bookings.confirmationNumberPlaceholder")}
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
             </View>
 
             {/* Prix */}
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 2, marginRight: 10 }]}>
                 <Text style={styles.label}>{t("bookings.price")}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.price}
-                  onChangeText={(value) => handleInputChange("price", value)}
-                  placeholder="0.00"
-                  keyboardType="numeric"
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="cash-outline" size={20} color="#616161" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={formData.price}
+                    onChangeText={(value) => handleInputChange("price", value)}
+                    placeholder="0.00"
+                    placeholderTextColor="#9E9E9E"
+                    keyboardType="numeric"
+                  />
+                </View>
               </View>
               <View style={[styles.inputGroup, { flex: 1 }]}>
                 <Text style={styles.label}>{t("bookings.currency")}</Text>
                 <TouchableOpacity
                   style={styles.dateButton}
                   onPress={() => setShowCurrencyPicker(true)}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons name="cash" size={20} color="#666" />
-                  <Text style={styles.dateText}>
+                  <Text style={[styles.dateText, { marginLeft: 0 }]}>
                     {formData.currency || "EUR"}
                   </Text>
-                  <Ionicons name="chevron-down" size={16} color="#666" />
+                  <Ionicons name="chevron-down" size={16} color="#616161" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -847,7 +901,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                   style={styles.addAttachmentButton}
                   onPress={handlePickImage}
                 >
-                  <Ionicons name="image" size={20} color="#007AFF" />
+                  <Ionicons name="image" size={20} color="#2891FF" />
                   <Text style={styles.addAttachmentText}>
                     {t("bookings.addImage") || "Ajouter une image"}
                   </Text>
@@ -856,7 +910,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                   style={styles.addAttachmentButton}
                   onPress={handlePickDocument}
                 >
-                  <Ionicons name="document" size={20} color="#007AFF" />
+                  <Ionicons name="document" size={20} color="#2891FF" />
                   <Text style={styles.addAttachmentText}>
                     {t("bookings.addDocument") || "Ajouter un PDF"}
                   </Text>
@@ -879,7 +933,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                           <Ionicons
                             name={attachment.type === 'pdf' ? 'document' : 'image'}
                             size={24}
-                            color="#007AFF"
+                            color="#2891FF"
                           />
                         </View>
                       )}
@@ -903,10 +957,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={onClose}
+              activeOpacity={0.7}
             >
               <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSave}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
               <Text style={styles.saveButtonText}>{t("common.save")}</Text>
             </TouchableOpacity>
           </View>
@@ -982,7 +1042,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                         {currency.name}
                       </Text>
                       {(selectedCurrency || formData.currency) === currency.code && (
-                        <Ionicons name="checkmark" size={20} color="#007AFF" />
+                        <Ionicons name="checkmark" size={20} color="#2891FF" />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -1017,7 +1077,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
               </TouchableOpacity>
             </TouchableOpacity>
           </Modal>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -1052,112 +1112,172 @@ const styles = StyleSheet.create({
   },
   pickerModalTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
+    color: "#212121",
     marginBottom: 15,
     textAlign: "center",
   },
   modalContent: {
     backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: "90%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    padding: 24,
+    paddingTop: 28,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
+    color: "white",
+    flex: 1,
+    marginLeft: 12,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   formContainer: {
-    padding: 20,
+    padding: 24,
     maxHeight: 500,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#333",
+    color: "#212121",
     marginBottom: 8,
   },
-  input: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#F5F5F5",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
     borderWidth: 1,
     borderColor: "#E0E0E0",
+    paddingHorizontal: 16,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#212121",
   },
   textArea: {
     height: 80,
     textAlignVertical: "top",
+    paddingTop: 14,
   },
   dateButton: {
     backgroundColor: "#F5F5F5",
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   dateText: {
     fontSize: 16,
-    color: "#333",
-    marginLeft: 8,
+    color: "#212121",
+    flex: 1,
+    marginLeft: 12,
+  },
+  placeholderText: {
+    color: "#9E9E9E",
   },
   typeContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    justifyContent: "center",
+    gap: 10,
   },
   typeButton: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 16,
+    padding: 12,
+    paddingHorizontal: 14,
+    minWidth: 90,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "#E8E8E8",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   typeButtonSelected: {
-    backgroundColor: "#E3F2FD",
-    borderColor: "#007AFF",
+    backgroundColor: "#2891FF",
+    borderColor: "#2891FF",
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  typeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  typeIconContainerSelected: {
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
   typeText: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 6,
+    fontSize: 12,
+    color: "#616161",
+    textAlign: "center",
+    fontWeight: "500",
   },
   typeTextSelected: {
-    color: "#007AFF",
+    color: "#FFFFFF",
     fontWeight: "600",
   },
   statusContainer: {
     flexDirection: "row",
-    gap: 8,
+    gap: 12,
   },
   statusButton: {
     flex: 1,
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 2,
   },
   statusText: {
     fontSize: 14,
+    fontWeight: "600",
   },
   row: {
     flexDirection: "row",
@@ -1165,34 +1285,45 @@ const styles = StyleSheet.create({
   modalFooter: {
     flexDirection: "row",
     padding: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    gap: 10,
+    borderTopColor: "#F0F0F0",
+    gap: 12,
+    backgroundColor: "#FAFAFA",
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 15,
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 14,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
     alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
   },
   cancelButtonText: {
+    color: "#616161",
     fontSize: 16,
-    color: "#666",
     fontWeight: "600",
   },
   saveButton: {
     flex: 1,
-    backgroundColor: "#007AFF",
-    paddingVertical: 15,
+    backgroundColor: "#2891FF",
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveButtonText: {
-    fontSize: 16,
     color: "white",
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
   },
   pickerWrapper: {
     backgroundColor: "#F5F5F5",
@@ -1207,38 +1338,38 @@ const styles = StyleSheet.create({
   pickerButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
-    gap: 10,
+    marginTop: 16,
+    gap: 12,
   },
   pickerCancelButton: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#E0E0E0",
   },
   pickerCancelText: {
-    color: "#666",
+    color: "#616161",
     fontSize: 16,
     fontWeight: "600",
   },
   pickerConfirmButton: {
     flex: 1,
-    backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: "#2891FF",
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: "center",
   },
   pickerConfirmText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   attachmentsContainer: {
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
     marginBottom: 15,
   },
   addAttachmentButton: {
@@ -1246,19 +1377,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#E8F4FF",
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderWidth: 2,
+    borderColor: "#2891FF",
     borderStyle: "dashed",
   },
   addAttachmentText: {
     fontSize: 14,
-    color: "#007AFF",
+    color: "#2891FF",
     marginLeft: 8,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   attachmentsList: {
     marginTop: 10,
@@ -1266,10 +1397,12 @@ const styles = StyleSheet.create({
   attachmentItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
   attachmentThumbnail: {
     width: 50,
@@ -1281,7 +1414,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 8,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "#E8F4FF",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -1289,7 +1422,7 @@ const styles = StyleSheet.create({
   attachmentName: {
     flex: 1,
     fontSize: 14,
-    color: "#333",
+    color: "#212121",
     marginRight: 8,
   },
   removeAttachmentButton: {
@@ -1303,20 +1436,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 15,
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: "#F5F5F5",
   },
   currencyItemSelected: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "#E8F4FF",
   },
   currencyText: {
     fontSize: 16,
-    color: "#333",
+    color: "#212121",
   },
   currencyTextSelected: {
-    color: "#007AFF",
+    color: "#2891FF",
     fontWeight: "600",
   },
 });

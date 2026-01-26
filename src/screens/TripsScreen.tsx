@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +19,7 @@ import { useTrips } from "../contexts/TripsContext";
 import { API_URLS } from "../config/api";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utils/i18n";
+import { ModernButton } from "../components/ModernButton";
 
 type TripsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -75,47 +78,79 @@ const TripsScreen: React.FC = () => {
     <TouchableOpacity
       style={styles.tripCard}
       onPress={() => handleTripPress(item)}
+      activeOpacity={0.9}
     >
       <LinearGradient
-        colors={["#007AFF", "#5856D6"]}
+        colors={['#2891FF', '#8869FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.tripGradient}
       >
         <View style={styles.tripHeader}>
           <View style={styles.tripInfo}>
             <Text style={styles.tripTitle}>{item.title}</Text>
-            <Text style={styles.tripDestination}>{item.destination}</Text>
-            <Text style={styles.tripDates}>
-              {formatDate(item.startDate)} - {formatDate(item.endDate)}
-            </Text>
+            <View style={styles.destinationRow}>
+              <Ionicons
+                name="location"
+                size={16}
+                color="rgba(255, 255, 255, 0.9)"
+              />
+              <Text style={styles.tripDestination}>{item.destination}</Text>
+            </View>
+            <View style={styles.datesRow}>
+              <Ionicons
+                name="calendar-outline"
+                size={14}
+                color="rgba(255, 255, 255, 0.8)"
+              />
+              <Text style={styles.tripDates}>
+                {formatDate(item.startDate)} - {formatDate(item.endDate)}
+              </Text>
+            </View>
           </View>
           <TouchableOpacity
             style={styles.inviteButton}
             onPress={() => handleInviteFriends(item)}
+            activeOpacity={0.8}
           >
-            <Ionicons name="person-add" size={20} color="white" />
+            <Ionicons name="person-add-outline" size={22} color="white" />
           </TouchableOpacity>
         </View>
         {item.description && (
-          <Text style={styles.tripDescription}>{item.description}</Text>
+          <Text style={styles.tripDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
         )}
         <View style={styles.tripFooter}>
           <View style={styles.collaboratorsInfo}>
-            <Ionicons
-              name="people"
-              size={16}
-              color="rgba(255, 255, 255, 0.8)"
-            />
+            <View style={styles.avatarGroup}>
+              <View style={styles.avatar}>
+                <Ionicons name="person" size={12} color="#2891FF" />
+              </View>
+              {(item.collaborators?.length || 0) > 0 && (
+                <View style={[styles.avatar, styles.avatarOverlap]}>
+                  <Ionicons name="person" size={12} color="#8869FF" />
+                </View>
+              )}
+              {(item.collaborators?.length || 0) > 1 && (
+                <View style={[styles.avatar, styles.avatarOverlap]}>
+                  <Text style={styles.avatarText}>+{item.collaborators!.length - 1}</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.collaboratorsText}>
               {t("trips.members", {
                 count: (item.collaborators?.length || 0) + 1,
               })}
             </Text>
           </View>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color="rgba(255, 255, 255, 0.8)"
-          />
+          <View style={styles.arrowContainer}>
+            <Ionicons
+              name="arrow-forward"
+              size={18}
+              color="rgba(255, 255, 255, 0.9)"
+            />
+          </View>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -130,92 +165,119 @@ const TripsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("trips.header")}</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.testButton} onPress={testAPI}>
-            <Ionicons name="bug" size={20} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.addButton} onPress={handleCreateTrip}>
-            <Ionicons name="add" size={24} color="white" />
-          </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerTitle}>{t("trips.header")}</Text>
+          </View>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity style={styles.testButton} onPress={testAPI} activeOpacity={0.7}>
+              <Ionicons name="bug-outline" size={22} color="#212121" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addButton} onPress={handleCreateTrip} activeOpacity={0.7}>
+              <LinearGradient
+                colors={['#2891FF', '#8869FF']}
+                style={styles.addButtonGradient}
+              >
+                <Ionicons name="add" size={26} color="white" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {validatedTrips.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="airplane-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyTitle}>{t("trips.emptyTitle")}</Text>
-          <Text style={styles.emptySubtitle}>{t("trips.emptySubtitle")}</Text>
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={handleCreateTrip}
-          >
-            <Text style={styles.createButtonText}>{t("trips.createTrip")}</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={validatedTrips}
-          renderItem={renderTripCard}
-          keyExtractor={(item, index) => item.id || `trip-${index}`}
-          contentContainerStyle={styles.tripsList}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-    </View>
+        {validatedTrips.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="airplane-outline" size={64} color="#7EBDFF" />
+            </View>
+            <Text style={styles.emptyTitle}>{t("trips.emptyTitle")}</Text>
+            <Text style={styles.emptySubtitle}>{t("trips.emptySubtitle")}</Text>
+            <ModernButton
+              title={t("trips.createTrip")}
+              onPress={handleCreateTrip}
+              variant="primary"
+              gradient
+              size="large"
+              icon="add-circle-outline"
+              style={styles.createButton}
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={validatedTrips}
+            renderItem={renderTripCard}
+            keyExtractor={(item, index) => item.id || `trip-${index}`}
+            contentContainerStyle={styles.tripsList}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: '#616161',
   },
   header: {
     flexDirection: "row" as const,
     justifyContent: "space-between",
     alignItems: "center" as const,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
+    backgroundColor: '#FAFAFA',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold" as const,
-    color: "#333",
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#212121',
   },
   headerButtons: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 10,
+    gap: 16,
   },
   testButton: {
-    backgroundColor: "#FF9500",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 9999,
+    width: 44,
+    height: 44,
     justifyContent: "center" as const,
     alignItems: "center" as const,
   },
   addButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 9999,
+    width: 44,
+    height: 44,
+    overflow: "hidden",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addButtonGradient: {
+    width: "100%",
+    height: "100%",
     justifyContent: "center" as const,
     alignItems: "center" as const,
   },
@@ -223,102 +285,146 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    paddingHorizontal: 40,
+    paddingHorizontal: 48,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#E8F4FF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 24,
-    fontWeight: "bold" as const,
-    color: "#333",
-    marginTop: 20,
-    marginBottom: 10,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 8,
+    textAlign: "center" as const,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: "#666",
+    color: '#616161',
     textAlign: "center" as const,
-    marginBottom: 30,
+    marginBottom: 32,
+    lineHeight: 24,
   },
   createButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-  },
-  createButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold" as const,
+    marginTop: 16,
   },
   tripsList: {
-    padding: 20,
+    padding: 24,
+    paddingBottom: 100, // Espace pour la navbar floating
   },
   tripCard: {
-    marginBottom: 20,
-    borderRadius: 15,
+    marginBottom: 24,
+    borderRadius: 20,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
   },
   tripGradient: {
-    padding: 20,
+    padding: 24,
   },
   tripHeader: {
     flexDirection: "row" as const,
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 10,
+    marginBottom: 16,
   },
   tripInfo: {
     flex: 1,
+    marginRight: 16,
   },
   tripTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  destinationRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginBottom: 4,
   },
   tripDestination: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 5,
+    color: "rgba(255, 255, 255, 0.95)",
+    marginLeft: 4,
+  },
+  datesRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
   },
   tripDates: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255, 255, 255, 0.85)",
+    marginLeft: 4,
   },
   inviteButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    borderRadius: 9999,
+    width: 44,
+    height: 44,
     justifyContent: "center" as const,
     alignItems: "center" as const,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   tripDescription: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 15,
+    marginBottom: 16,
     lineHeight: 20,
   },
   tripFooter: {
     flexDirection: "row" as const,
     justifyContent: "space-between",
     alignItems: "center" as const,
+    marginTop: 8,
   },
   collaboratorsInfo: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
   },
+  avatarGroup: {
+    flexDirection: "row" as const,
+    marginRight: 8,
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    borderWidth: 2,
+    borderColor: '#2891FF',
+  },
+  avatarOverlap: {
+    marginLeft: -8,
+  },
+  avatarText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#2891FF',
+  },
   collaboratorsText: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginLeft: 5,
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: '500',
+  },
+  arrowContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
 });
 

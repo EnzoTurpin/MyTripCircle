@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,6 +21,7 @@ import {
   testDateFormatting,
 } from "../utils/i18n";
 import { useNavigation } from "@react-navigation/native";
+import { ModernCard } from "../components/ModernCard";
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
@@ -33,21 +37,15 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleEditProfile = () => {
-    Alert.alert(t("profile.editProfile"), t("profile.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    navigation.navigate("EditProfile");
   };
 
   const handleSettings = () => {
-    Alert.alert(t("profile.settings"), t("profile.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    navigation.navigate("Settings");
   };
 
   const handleHelp = () => {
-    Alert.alert(t("profile.helpSupport"), t("profile.featureSoon"), [
-      { text: t("common.ok") },
-    ]);
+    navigation.navigate("HelpSupport");
   };
 
   const handleAbout = () => {
@@ -57,17 +55,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleInvitations = () => {
-    if (unreadCount > 0) {
-      Alert.alert(
-        t("profile.invitations"),
-        `${t("profile.invitationsMessage")} ${unreadCount}`,
-        [{ text: t("common.ok") }]
-      );
-    } else {
-      Alert.alert(t("profile.invitations"), t("profile.noInvitations"), [
-        { text: t("common.ok") },
-      ]);
-    }
+    navigation.navigate("Invitation");
   };
 
   const handleChangeLanguage = () => {
@@ -143,171 +131,253 @@ const ProfileScreen: React.FC = () => {
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={40} color="white" />
-          </View>
-          <Text style={styles.userName}>
-            {user?.name || t("profile.userFallbackName")}
-          </Text>
-          <Text style={styles.userEmail}>
-            {user?.email || t("profile.userFallbackEmail")}
-          </Text>
-        </View>
-      </LinearGradient>
-
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statLabel}>{t("profile.stats.trips")}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>{t("profile.stats.bookings")}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>8</Text>
-          <Text style={styles.statLabel}>{t("profile.stats.addresses")}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>5</Text>
-          <Text style={styles.statLabel}>{t("profile.stats.friends")}</Text>
-        </View>
-      </View>
-
-      <View style={styles.menuContainer}>
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            onPress={item.onPress}
-          >
-            <View style={styles.menuItemLeft}>
-              <Ionicons
-                name={item.icon as any}
-                size={24}
-                color={item.color || "#333"}
-              />
-              <Text
-                style={[
-                  styles.menuItemText,
-                  item.color && { color: item.color },
-                ]}
-              >
-                {item.title}
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <LinearGradient 
+          colors={['#2891FF', '#8869FF']} 
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.header}>
+            <View style={styles.profileSection}>
+              <View style={styles.avatarContainer}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
+                  style={styles.avatarGradient}
+                >
+                  <Ionicons name="person" size={48} color="white" />
+                </LinearGradient>
+              </View>
+              <Text style={styles.userName}>
+                {user?.name || t("profile.userFallbackName")}
+              </Text>
+              <Text style={styles.userEmail}>
+                {user?.email || t("profile.userFallbackEmail")}
               </Text>
             </View>
-            <View style={styles.menuItemRight}>
-              {item.badge && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{item.badge}</Text>
-                </View>
-              )}
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+          </View>
+        </LinearGradient>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>{t("profile.footerVersion")}</Text>
-        <Text style={styles.footerSubtext}>
-          {t("profile.footerMadeWithLove")}
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={styles.contentContainer}>
+          <ModernCard variant="elevated" style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <View style={[styles.statIconContainer, { backgroundColor: '#E8F4FF' }]}>
+                <Ionicons name="airplane" size={20} color="#2891FF" />
+              </View>
+              <Text style={styles.statNumber}>3</Text>
+              <Text style={styles.statLabel}>{t("profile.stats.trips")}</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <View style={[styles.statIconContainer, { backgroundColor: '#F3F0FF' }]}>
+                <Ionicons name="calendar" size={20} color="#8869FF" />
+              </View>
+              <Text style={styles.statNumber}>12</Text>
+              <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
+                {t("profile.stats.bookings")}
+              </Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <View style={[styles.statIconContainer, { backgroundColor: '#FF6B9D20' }]}>
+                <Ionicons name="location" size={20} color="#FF6B9D" />
+              </View>
+              <Text style={styles.statNumber}>8</Text>
+              <Text style={styles.statLabel}>{t("profile.stats.addresses")}</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <View style={[styles.statIconContainer, { backgroundColor: '#4CAF5020' }]}>
+                <Ionicons name="people" size={20} color="#4CAF50" />
+              </View>
+              <Text style={styles.statNumber}>5</Text>
+              <Text style={styles.statLabel}>{t("profile.stats.friends")}</Text>
+            </View>
+          </ModernCard>
+
+          <View style={styles.menuContainer}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.menuItem}
+                onPress={item.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={[
+                    styles.menuIconContainer,
+                    item.color && { backgroundColor: item.color + '15' }
+                  ]}>
+                    <Ionicons
+                      name={item.icon as any}
+                      size={22}
+                      color={item.color || '#212121'}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.menuItemText,
+                      item.color && { color: item.color },
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                </View>
+                <View style={styles.menuItemRight}>
+                  {item.badge && (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>{item.badge}</Text>
+                    </View>
+                  )}
+                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>{t("profile.footerVersion")}</Text>
+            <Text style={styles.footerSubtext}>
+              {t("profile.footerMadeWithLove")}
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+      {/* Fond opaque pour cacher le contenu sous la navbar */}
+      <View style={styles.bottomOverlay} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  headerGradient: {
+    width: '100%',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
+  },
+  scrollContent: {
+    paddingBottom: 120, // Espace pour la navbar floating
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    marginTop: 24,
+    paddingTop: 0,
+    paddingBottom: 64,
+    paddingHorizontal: 24,
   },
   profileSection: {
     alignItems: "center",
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  avatarGradient: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
     justifyContent: "center" as const,
     alignItems: "center",
-    marginBottom: 15,
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   userName: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255, 255, 255, 0.85)",
+  },
+  contentContainer: {
+    marginTop: -64,
+    paddingHorizontal: 24,
   },
   statsContainer: {
     flexDirection: "row",
-    backgroundColor: "white",
-    marginHorizontal: 20,
-    marginTop: -20,
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 24,
+    paddingVertical: 24,
   },
   statItem: {
     flex: 1,
     alignItems: "center",
   },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center" as const,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#EEEEEE',
+    marginHorizontal: 4,
+  },
   statNumber: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#007AFF",
-    marginBottom: 5,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 11,
+    color: '#616161',
+    textAlign: "center" as const,
+    minHeight: 14,
   },
   menuContainer: {
-    backgroundColor: "white",
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: "hidden",
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: '#F5F5F5',
   },
   menuItemLeft: {
     flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    justifyContent: "center" as const,
     alignItems: "center",
   },
   menuItemRight: {
@@ -315,36 +385,48 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   badge: {
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    backgroundColor: '#F44336',
+    borderRadius: 9999,
+    minWidth: 22,
+    height: 22,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
+    paddingHorizontal: 4,
   },
   badgeText: {
-    color: "white",
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: '700',
   },
   menuItemText: {
     fontSize: 16,
-    color: "#333",
-    marginLeft: 15,
+    color: '#212121',
+    marginLeft: 16,
+    fontWeight: '500',
   },
   footer: {
     alignItems: "center",
-    paddingVertical: 30,
+    paddingVertical: 32,
+    marginTop: 24,
   },
   footerText: {
     fontSize: 14,
-    color: "#999",
-    marginBottom: 5,
+    color: '#9E9E9E',
+    marginBottom: 4,
   },
   footerSubtext: {
     fontSize: 12,
-    color: "#ccc",
+    color: '#9E9E9E',
+  },
+  bottomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: Platform.OS === 'ios' ? 74 : 70,
+    backgroundColor: '#FAFAFA',
+    pointerEvents: 'none',
   },
 });
 

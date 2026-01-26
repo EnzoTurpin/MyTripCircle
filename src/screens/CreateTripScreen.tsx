@@ -335,7 +335,12 @@ const CreateTripScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
+      <LinearGradient 
+        colors={['#2891FF', '#8869FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
@@ -887,12 +892,12 @@ const CreateTripScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   header: {
-    paddingTop: 60,
+    paddingTop: Platform.OS === "ios" ? 64 : 24,
     paddingBottom: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -1149,7 +1154,7 @@ const styles = StyleSheet.create({
   },
   createButton: {
     flex: 2,
-    backgroundColor: "#007AFF",
+    backgroundColor: '#2891FF',
     paddingVertical: 15,
     borderRadius: 12,
     flexDirection: "row",

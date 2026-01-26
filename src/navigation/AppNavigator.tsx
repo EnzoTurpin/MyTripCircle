@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { RootStackParamList, MainTabParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
+import { FloatingTabBar } from "../components/FloatingTabBar";
 
 // Import screens
 import AuthScreen from "../screens/AuthScreen";
@@ -23,6 +24,9 @@ import InvitationScreen from "../screens/InvitationScreen";
 import CreateTripScreen from "../screens/CreateTripScreen";
 import EditTripScreen from "../screens/EditTripScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import HelpSupportScreen from "../screens/HelpSupportScreen";
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -31,54 +35,52 @@ const MainTabNavigator = () => {
   const { t } = useTranslation();
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          if (route.name === "Trips") {
-            iconName = focused ? "airplane" : "airplane-outline";
-          } else if (route.name === "Bookings") {
-            iconName = focused ? "receipt" : "receipt-outline";
-          } else if (route.name === "Addresses") {
-            iconName = focused ? "location" : "location-outline";
-          } else if (route.name === "Profile") {
-            iconName = focused ? "person" : "person-outline";
-          } else {
-            iconName = "help-outline";
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "gray",
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{
         headerStyle: {
-          backgroundColor: "#007AFF",
+          backgroundColor: '#FFFFFF',
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
-        headerTintColor: "#fff",
+        headerTintColor: '#212121',
         headerTitleStyle: {
-          fontWeight: "bold",
+          fontWeight: "700",
+          fontSize: 20,
         },
-      })}
+      }}
     >
       <Tab.Screen
         name="Trips"
         component={TripsScreen}
-        options={{ title: t("tabs.myTrips") }}
+        options={{ 
+          title: t("tabs.myTrips"),
+          headerShown: false,
+        }}
       />
       <Tab.Screen
         name="Bookings"
         component={BookingsScreen}
-        options={{ title: t("tabs.bookings") }}
+        options={{ 
+          title: t("tabs.bookings"),
+          headerShown: false,
+        }}
       />
       <Tab.Screen
         name="Addresses"
         component={AddressesScreen}
-        options={{ title: t("tabs.addresses") }}
+        options={{ 
+          title: t("tabs.addresses"),
+          headerShown: false,
+        }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: t("tabs.profile") }}
+        options={{ 
+          title: t("tabs.profile"),
+          headerShown: false,
+        }}
       />
     </Tab.Navigator>
   );
@@ -102,39 +104,21 @@ const AppNavigator = () => {
               name="TripDetails"
               component={TripDetailsScreen}
               options={{
-                headerShown: true,
-                title: t("stack.tripDetails"),
-                headerStyle: { backgroundColor: "#007AFF" },
-                headerTintColor: "#fff",
-                headerTitleStyle: {
-                  fontWeight: "bold",
-                },
+                headerShown: false,
               }}
             />
             <Stack.Screen
               name="BookingDetails"
               component={BookingDetailsScreen}
               options={{
-                headerShown: true,
-                title: t("stack.bookingDetails"),
-                headerStyle: { backgroundColor: "#007AFF" },
-                headerTintColor: "#fff",
-                headerTitleStyle: {
-                  fontWeight: "bold",
-                },
+                headerShown: false,
               }}
             />
             <Stack.Screen
               name="AddressDetails"
               component={AddressDetailsScreen}
               options={{
-                headerShown: true,
-                title: t("stack.addressDetails"),
-                headerStyle: { backgroundColor: "#007AFF" },
-                headerTintColor: "#fff",
-                headerTitleStyle: {
-                  fontWeight: "bold",
-                },
+                headerShown: false,
               }}
             />
             <Stack.Screen
@@ -148,13 +132,7 @@ const AppNavigator = () => {
               name="InviteFriends"
               component={InviteFriendsScreen}
               options={{
-                headerShown: true,
-                title: t("stack.inviteFriends"),
-                headerStyle: { backgroundColor: "#007AFF" },
-                headerTintColor: "#fff",
-                headerTitleStyle: {
-                  fontWeight: "bold",
-                },
+                headerShown: false,
               }}
             />
             <Stack.Screen
@@ -182,11 +160,28 @@ const AppNavigator = () => {
               name="Subscription"
               component={SubscriptionScreen}
               options={{
-                headerShown: true,
-                title: "Abonnement",
-                headerStyle: { backgroundColor: "#007AFF" },
-                headerTintColor: "#fff",
-                headerTitleStyle: { fontWeight: "bold" },
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="HelpSupport"
+              component={HelpSupportScreen}
+              options={{
+                headerShown: false,
               }}
             />
           </>

@@ -108,13 +108,14 @@ export type RootStackParamList = {
   AddressDetails: { addressId: string };
   AddressForm: { addressId?: string } | undefined;
   InviteFriends: { tripId: string };
-  Invitation: { token: string };
+  Invitation: { token?: string };
   CreateTrip: undefined;
   EditTrip: { tripId: string };
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
   HelpSupport: undefined;
+  Subscription: undefined;
 };
 
 export type MainTabParamList = {

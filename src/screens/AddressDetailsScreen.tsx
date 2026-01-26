@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";import {
+import React, { useState, useEffect, useMemo } from "react";
+import {
   View,
   Text,
   StyleSheet,
@@ -6,6 +7,8 @@ import React, { useState, useEffect, useMemo } from "react";import {
   TouchableOpacity,
   Alert,
   Linking,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,6 +18,8 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Address } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
+import { ModernCard } from "../components/ModernCard";
+import { ModernButton } from "../components/ModernButton";
 
 type AddressDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -119,245 +124,279 @@ const AddressDetailsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
-        <View style={styles.headerContent}>
-          <View
-            style={[
-              styles.typeIcon,
-              { backgroundColor: getTypeColor(address.type) },
-            ]}
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <LinearGradient 
+          colors={['#2891FF', '#8869FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name={getTypeIcon(address.type) as any}
-              size={30}
-              color="white"
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+
+          <View style={styles.headerContent}>
+            <View
+              style={[
+                styles.typeIcon,
+                { backgroundColor: getTypeColor(address.type) },
+              ]}
+            >
+              <Ionicons
+                name={getTypeIcon(address.type) as any}
+                size={32}
+                color="white"
+              />
+            </View>
+            <View style={styles.headerInfo}>
+              <Text style={styles.addressName}>{address.name}</Text>
+              <Text style={styles.addressLocation}>
+                {address.city}, {address.country}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.content}>
+          <ModernCard variant="elevated" style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {t("addresses.details.address")}
+            </Text>
+            <View style={styles.addressRow}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="location" size={20} color="#FF6B9D" />
+              </View>
+              <View style={styles.addressInfo}>
+                <Text style={styles.addressText}>{address.address}</Text>
+                <Text style={styles.cityText}>
+                  {address.city}, {address.country}
+                </Text>
+              </View>
+            </View>
+          </ModernCard>
+
+          {(address.phone || address.website) && (
+            <ModernCard variant="elevated" style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {t("addresses.details.contactInformation")}
+              </Text>
+              {address.phone && (
+                <TouchableOpacity 
+                  style={styles.contactItem} 
+                  onPress={handleCall}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.contactIconContainer}>
+                    <Ionicons name="call" size={20} color="#2891FF" />
+                  </View>
+                  <Text style={styles.contactText}>{address.phone}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+                </TouchableOpacity>
+              )}
+              {address.website && (
+                <TouchableOpacity
+                  style={styles.contactItem}
+                  onPress={handleVisitWebsite}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.contactIconContainer}>
+                    <Ionicons name="globe" size={20} color="#2891FF" />
+                  </View>
+                  <Text style={styles.contactText}>{address.website}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+                </TouchableOpacity>
+              )}
+            </ModernCard>
+          )}
+
+          {address.notes && (
+            <ModernCard variant="elevated" style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {t("addresses.details.notes")}
+              </Text>
+              <Text style={styles.notesText}>{address.notes}</Text>
+            </ModernCard>
+          )}
+
+          <View style={styles.actionsContainer}>
+            <ModernButton
+              title={t("addresses.details.getDirections")}
+              onPress={handleGetDirections}
+              variant="primary"
+              size="medium"
+              icon="navigate"
+              style={styles.actionButton}
+            />
+            <ModernButton
+              title={t("addresses.details.editAddress")}
+              onPress={handleEditAddress}
+              variant="outline"
+              size="medium"
+              icon="create-outline"
+              style={styles.actionButton}
             />
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.addressName}>{address.name}</Text>
-            <Text style={styles.addressLocation}>
-              {address.city}, {address.country}
-            </Text>
-          </View>
         </View>
-      </LinearGradient>
-
-      <View style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("addresses.details.address")}
-          </Text>
-          <Text style={styles.addressText}>{address.address}</Text>
-          <Text style={styles.cityText}>
-            {address.city}, {address.country}
-          </Text>
-        </View>
-
-        {(address.phone || address.website) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("addresses.details.contactInformation")}
-            </Text>
-            {address.phone && (
-              <TouchableOpacity style={styles.contactItem} onPress={handleCall}>
-                <Ionicons name="call" size={20} color="#007AFF" />
-                <Text style={styles.contactText}>{address.phone}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#ccc" />
-              </TouchableOpacity>
-            )}
-            {address.website && (
-              <TouchableOpacity
-                style={styles.contactItem}
-                onPress={handleVisitWebsite}
-              >
-                <Ionicons name="globe" size={20} color="#007AFF" />
-                <Text style={styles.contactText}>{address.website}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#ccc" />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        {address.notes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("addresses.details.notes")}
-            </Text>
-            <Text style={styles.notesText}>{address.notes}</Text>
-          </View>
-        )}
-
-        {/* Les adresses ne sont plus liées à un voyage spécifique */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleGetDirections}
-          >
-            <Ionicons name="navigate" size={20} color="white" />
-            <Text style={styles.actionButtonText}>
-              {t("addresses.details.getDirections")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryButton]}
-            onPress={handleEditAddress}
-          >
-            <Ionicons name="create" size={20} color="#007AFF" />
-            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
-              {t("addresses.details.editAddress")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: '#616161',
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   errorText: {
     fontSize: 18,
-    color: "#FF3B30",
+    color: '#F44336',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
+    paddingBottom: 120,
+    paddingHorizontal: 24,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: -20,
+    marginTop: 5,
+    zIndex: 10,
   },
   headerContent: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    marginTop: 50,
   },
   typeIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    marginRight: 20,
+    marginRight: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerInfo: {
     flex: 1,
   },
   addressName: {
-    fontSize: 24,
-    fontWeight: "bold" as const,
+    fontSize: 26,
+    fontWeight: "700" as const,
     color: "white",
-    marginBottom: 5,
+    marginBottom: 8,
   },
   addressLocation: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255, 255, 255, 0.9)",
   },
   content: {
-    padding: 20,
+    marginTop: -100,
+    paddingHorizontal: 24,
+    paddingBottom: 64,
   },
   section: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold" as const,
-    color: "#333",
-    marginBottom: 15,
+    fontWeight: '700' as const,
+    color: '#212121',
+    marginBottom: 16,
+  },
+  addressRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start",
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FF6B9D' + '15',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 12,
+  },
+  addressInfo: {
+    flex: 1,
   },
   addressText: {
     fontSize: 16,
-    color: "#333",
-    marginBottom: 5,
-    lineHeight: 22,
+    color: '#212121',
+    marginBottom: 4,
+    lineHeight: 24,
   },
   cityText: {
     fontSize: 14,
-    color: "#666",
+    color: '#616161',
   },
   contactItem: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    paddingVertical: 15,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: '#F5F5F5',
+  },
+  contactIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F4FF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 12,
   },
   contactText: {
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 15,
+    fontSize: 15,
+    color: '#212121',
     flex: 1,
   },
   notesText: {
     fontSize: 16,
-    color: "#333",
-    lineHeight: 22,
-  },
-  tripName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
-  },
-  tripDestination: {
-    fontSize: 14,
-    color: "#666",
+    color: '#616161',
+    lineHeight: 24,
   },
   actionsContainer: {
     flexDirection: "row" as const,
-    justifyContent: "space-between",
-    marginTop: 20,
+    gap: 16,
+    marginTop: 24,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    paddingVertical: 15,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    marginHorizontal: 5,
-  },
-  secondaryButton: {
-    backgroundColor: "white",
-    borderWidth: 2,
-    borderColor: "#007AFF",
-  },
-  actionButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold" as const,
-    marginLeft: 8,
-  },
-  secondaryButtonText: {
-    color: "#007AFF",
   },
 });
 

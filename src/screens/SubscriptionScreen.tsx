@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Text, ScrollView, StyleSheet, Alert, Platform } from "react-native";
+import { 
+  Text, 
+  ScrollView, 
+  StyleSheet, 
+  Alert, 
+  Platform, 
+  View,
+  StatusBar,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { TouchableOpacity } from "react-native";
 import PlanCard from "../components/PlanCard";
 import Constants from "expo-constants";
 
@@ -34,6 +46,7 @@ interface MockProduct {
 }
 
 const SubscriptionScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [products, setProducts] = useState<MockProduct[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isExpoGo, setIsExpoGo] = useState(!isIapAvailable);
@@ -127,46 +140,254 @@ const SubscriptionScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>S'abonner</Text>
-      <Text style={styles.subheader}>Choisis un plan et profite des avantages</Text>
-      {isExpoGo && (
-        <Text style={styles.warning}>
-          ⚠️ Les achats intégrés ne sont pas disponibles dans Expo Go. Utilisez un build de développement pour tester les abonnements.
-        </Text>
-      )}
-      {products.length === 0 && <Text style={styles.info}>Chargement des offres...</Text>}
-      {products.map((p) => (
-        <PlanCard
-          key={p.productId}
-          id={p.productId}
-          title={p.title || p.productId}
-          price={p.localizedPrice}
-          advantages={[
-            "Accès illimité aux fonctionnalités premium",
-            "Support prioritaire",
-            "Sauvegardes dans le cloud",
-          ]}
-          onSubscribe={onSubscribe}
-          loading={loadingId === p.productId}
-        />
-      ))}
-    </ScrollView>
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <LinearGradient 
+          colors={['#2891FF', '#8869FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerContent}>
+            <View style={styles.iconContainer}>
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
+                style={styles.iconGradient}
+              >
+                <Ionicons name="diamond" size={40} color="white" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.headerTitle}>Abonnement Premium</Text>
+            <Text style={styles.headerSubtitle}>
+              Profitez de tous les avantages de MyTripCircle
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.content}>
+          {isExpoGo && (
+            <View style={styles.warningCard}>
+              <View style={styles.warningIcon}>
+                <Ionicons name="alert-circle" size={24} color="#FF9800" />
+              </View>
+              <View style={styles.warningContent}>
+                <Text style={styles.warningTitle}>Mode démo</Text>
+                <Text style={styles.warningText}>
+                  Les achats intégrés ne sont pas disponibles dans Expo Go. Utilisez un build de développement pour tester.
+                </Text>
+              </View>
+            </View>
+          )}
+          
+          {products.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <Ionicons name="hourglass-outline" size={40} color="#2891FF" />
+              <Text style={styles.loadingText}>Chargement des offres...</Text>
+            </View>
+          ) : (
+            products.map((product, index) => (
+              <PlanCard
+                key={product.productId}
+                id={product.productId}
+                title={product.title || product.productId}
+                price={product.localizedPrice}
+                advantages={
+                  index === 0
+                    ? [
+                        "Accès illimité aux fonctionnalités premium",
+                        "Support prioritaire par email",
+                        "Sauvegardes automatiques dans le cloud",
+                        "Partagez avec jusqu'à 10 collaborateurs",
+                      ]
+                    : [
+                        "Tous les avantages du plan mensuel",
+                        "Support prioritaire 24/7",
+                        "Fonctionnalités exclusives en avant-première",
+                        "Collaborateurs illimités",
+                        "2 mois offerts par an",
+                      ]
+                }
+                onSubscribe={onSubscribe}
+                loading={loadingId === product.productId}
+                recommended={index === 1}
+              />
+            ))
+          )}
+
+          <View style={styles.featuresSection}>
+            <Text style={styles.featuresTitle}>Inclus dans tous les plans</Text>
+            <View style={styles.featuresList}>
+              {[
+                { icon: "cloud-upload-outline", text: "Synchronisation cloud" },
+                { icon: "shield-checkmark-outline", text: "Données sécurisées" },
+                { icon: "people-outline", text: "Collaboration en équipe" },
+                { icon: "refresh-outline", text: "Mises à jour gratuites" },
+              ].map((feature, index) => (
+                <View key={index} style={styles.featureItem}>
+                  <View style={styles.featureIcon}>
+                    <Ionicons name={feature.icon as any} size={20} color="#2891FF" />
+                  </View>
+                  <Text style={styles.featureText}>{feature.text}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  header: { fontSize: 22, fontWeight: "700", marginBottom: 6 },
-  subheader: { color: "#666", marginBottom: 12 },
-  info: { color: "#888", marginBottom: 12 },
-  warning: {
-    color: "#ff6b00",
-    backgroundColor: "#fff3e0",
-    padding: 12,
-    borderRadius: 8,
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  scrollContent: {
+    paddingBottom: 64,
+  },
+  header: {
+    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
+    paddingBottom: 120,
+    paddingHorizontal: 24,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: -20,
+    marginTop: 5,
+    zIndex: 10,
+  },
+  headerContent: {
+    alignItems: "center",
+    marginTop: 40,
+  },
+  iconContainer: {
     marginBottom: 16,
+  },
+  iconGradient: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "white",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
+  },
+  content: {
+    marginTop: -100,
+    paddingHorizontal: 24,
+  },
+  warningCard: {
+    flexDirection: "row",
+    backgroundColor: "#FFF3E0",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#FF9800",
+  },
+  warningIcon: {
+    marginRight: 12,
+  },
+  warningContent: {
+    flex: 1,
+  },
+  warningTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FF9800",
+    marginBottom: 4,
+  },
+  warningText: {
     fontSize: 14,
+    color: "#E65100",
+    lineHeight: 20,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#616161",
+    marginTop: 16,
+  },
+  featuresSection: {
+    marginTop: 32,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  featuresTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#212121",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  featuresList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  featureItem: {
+    width: "48%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  featureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E8F4FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  featureText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#212121",
   },
 });
 

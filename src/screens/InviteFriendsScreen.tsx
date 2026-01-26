@@ -253,7 +253,12 @@ const InviteFriendsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
+      <LinearGradient 
+        colors={['#2891FF', '#8869FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>{t("inviteFriends.header")}</Text>
         <Text style={styles.headerSubtitle}>
           {t("inviteFriends.subtitle")} "{trip?.title}"
@@ -359,13 +364,13 @@ const InviteFriendsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,

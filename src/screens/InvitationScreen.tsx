@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,7 +19,10 @@ import { RootStackParamList, TripInvitation } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
 import { formatDate } from "../utils/i18n";
+import { ModernCard } from "../components/ModernCard";
+import { ModernButton } from "../components/ModernButton";
 
 type InvitationScreenRouteProp = RouteProp<RootStackParamList, "Invitation">;
 
@@ -29,18 +34,34 @@ type InvitationScreenNavigationProp = StackNavigationProp<
 const InvitationScreen: React.FC = () => {
   const route = useRoute<InvitationScreenRouteProp>();
   const navigation = useNavigation<InvitationScreenNavigationProp>();
-  const { token } = route.params;
+  const token = route.params?.token;
   const { t } = useTranslation();
   const { respondToInvitation } = useTrips();
   const { user } = useAuth();
+  const { invitations: allInvitations, loadInvitations: refreshInvitations } = useNotifications();
 
   const [invitation, setInvitation] = useState<TripInvitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState(false);
 
   useEffect(() => {
-    loadInvitation();
+    if (token) {
+      loadInvitation();
+    } else {
+      loadAllInvitations();
+    }
   }, [token]);
+
+  const loadAllInvitations = async () => {
+    try {
+      setLoading(true);
+      await refreshInvitations();
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading invitations:", error);
+      setLoading(false);
+    }
+  };
 
   const loadInvitation = async () => {
     try {
@@ -148,6 +169,91 @@ const InvitationScreen: React.FC = () => {
     ]);
   };
 
+  // Si pas de token, afficher la liste des invitations
+  if (!token) {
+    return (
+      <View style={styles.wrapper}>
+        <StatusBar barStyle="light-content" />
+        <LinearGradient 
+          colors={['#2891FF', '#8869FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              style={styles.backButtonHeader}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            <View style={{ width: 40 }} />
+          </View>
+          <View style={styles.headerContent}>
+            <View style={styles.headerIconContainer}>
+              <Ionicons name="mail" size={40} color="white" />
+            </View>
+            <Text style={styles.headerTitle}>{t("profile.invitations")}</Text>
+            <Text style={styles.headerSubtitle}>
+              {allInvitations.length} {allInvitations.length > 1 ? 'invitations' : 'invitation'}
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <ScrollView 
+          style={styles.content} 
+          contentContainerStyle={{ paddingTop: 24 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>{t("common.loading")}</Text>
+            </View>
+          ) : allInvitations.length === 0 ? (
+            <ModernCard variant="elevated" style={styles.emptyCard}>
+              <Ionicons name="mail-outline" size={64} color="#BDBDBD" />
+              <Text style={styles.emptyTitle}>{t("profile.noInvitations")}</Text>
+              <Text style={styles.emptyMessage}>
+                Vous n'avez aucune invitation en attente pour le moment.
+              </Text>
+            </ModernCard>
+          ) : (
+            allInvitations.map((inv) => (
+              <ModernCard key={inv.id} variant="elevated" style={styles.invitationListItem}>
+                <View style={styles.listItemHeader}>
+                  <View style={styles.inviterAvatarSmall}>
+                    <Ionicons name="person" size={20} color="white" />
+                  </View>
+                  <View style={styles.listItemInfo}>
+                    <Text style={styles.listItemTitle}>Invitation au voyage</Text>
+                    <Text style={styles.listItemDate}>{formatDate(inv.createdAt)}</Text>
+                  </View>
+                  <View style={[styles.statusBadge, 
+                    inv.status === 'accepted' && styles.statusBadgeAccepted,
+                    inv.status === 'declined' && styles.statusBadgeDeclined,
+                  ]}>
+                    <Text style={styles.statusBadgeText}>
+                      {inv.status === 'pending' ? 'En attente' : 
+                       inv.status === 'accepted' ? 'Acceptée' : 'Refusée'}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity 
+                  style={styles.viewDetailsButton}
+                  onPress={() => navigation.navigate('Invitation', { token: inv.token })}
+                >
+                  <Text style={styles.viewDetailsText}>Voir les détails</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#2891FF" />
+                </TouchableOpacity>
+              </ModernCard>
+            ))
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Sinon, afficher les détails d'une invitation spécifique
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -178,19 +284,37 @@ const InvitationScreen: React.FC = () => {
   const canRespond = invitation.status === "pending" && !isExpired;
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButtonHeader}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("invitation.title")}</Text>
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      <LinearGradient 
+        colors={['#2891FF', '#8869FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={styles.backButtonHeader}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.headerContent}>
+          <View style={styles.headerIconContainer}>
+            <Ionicons name="mail-open" size={40} color="white" />
+          </View>
+          <Text style={styles.headerTitle}>{t("invitation.title")}</Text>
+        </View>
       </LinearGradient>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.invitationCard}>
+      <ScrollView 
+        style={styles.content} 
+        contentContainerStyle={{ paddingTop: 24, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <ModernCard variant="elevated" style={styles.invitationCard}>
           <View style={styles.invitationHeader}>
             <View style={styles.inviterAvatar}>
               <Ionicons name="person" size={32} color="white" />
@@ -215,19 +339,19 @@ const InvitationScreen: React.FC = () => {
 
           <View style={styles.invitationDetails}>
             <View style={styles.detailRow}>
-              <Ionicons name="mail" size={20} color="#666" />
+              <Ionicons name="mail" size={20} color="#2891FF" />
               <Text style={styles.detailText}>
                 {t("invitation.sentTo")} {invitation.inviteeEmail}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Ionicons name="time" size={20} color="#666" />
+              <Ionicons name="time" size={20} color="#8869FF" />
               <Text style={styles.detailText}>
                 {t("invitation.sentOn")} {formatDate(invitation.createdAt)}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Ionicons name="hourglass" size={20} color="#666" />
+              <Ionicons name="hourglass" size={20} color="#FF9500" />
               <Text style={styles.detailText}>
                 {t("invitation.expiresOn")} {formatDate(invitation.expiresAt)}
               </Text>
@@ -267,35 +391,29 @@ const InvitationScreen: React.FC = () => {
               </Text>
             </View>
           )}
-        </View>
+        </ModernCard>
 
         {canRespond && (
           <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.declineButton]}
+            <ModernButton
+              title={responding ? t("invitation.processing") : t("invitation.decline")}
               onPress={handleDeclineInvitation}
+              variant="outline"
+              size="large"
+              icon="close-circle-outline"
               disabled={responding}
-            >
-              <Ionicons name="close" size={20} color="white" />
-              <Text style={styles.actionButtonText}>
-                {responding
-                  ? t("invitation.processing")
-                  : t("invitation.decline")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.acceptButton]}
+              style={styles.actionButton}
+            />
+            <ModernButton
+              title={responding ? t("invitation.processing") : t("invitation.accept")}
               onPress={handleAcceptInvitation}
+              variant="primary"
+              gradient
+              size="large"
+              icon="checkmark-circle-outline"
               disabled={responding}
-            >
-              <Ionicons name="checkmark" size={20} color="white" />
-              <Text style={styles.actionButtonText}>
-                {responding
-                  ? t("invitation.processing")
-                  : t("invitation.accept")}
-              </Text>
-            </TouchableOpacity>
+              style={styles.actionButton}
+            />
           </View>
         )}
       </ScrollView>
@@ -304,83 +422,110 @@ const InvitationScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: '#616161',
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    padding: 20,
+    backgroundColor: "#FAFAFA",
+    padding: 32,
   },
   errorTitle: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 20,
-    marginBottom: 10,
+    fontWeight: "700",
+    color: "#212121",
+    marginTop: 24,
+    marginBottom: 12,
   },
   errorMessage: {
     fontSize: 16,
-    color: "#666",
+    color: "#616161",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 32,
+    lineHeight: 24,
   },
   backButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
+    backgroundColor: "#2891FF",
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   backButtonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  headerTop: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 24,
   },
   backButtonHeader: {
-    marginRight: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerContent: {
+    alignItems: "center",
+  },
+  headerIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
     color: "white",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
   },
   content: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 0,
+    marginTop: -20,
   },
   invitationCard: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   invitationHeader: {
     flexDirection: "row",
@@ -388,116 +533,194 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inviterAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#007AFF",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#2891FF",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
+    marginRight: 16,
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
   inviterInfo: {
     flex: 1,
   },
   inviterName: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 2,
+    fontWeight: "700",
+    color: "#212121",
+    marginBottom: 4,
   },
   inviterEmail: {
     fontSize: 14,
-    color: "#666",
+    color: "#616161",
   },
   invitationContent: {
     marginBottom: 20,
   },
   invitationTitle: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 10,
+    color: "#616161",
+    marginBottom: 12,
+    fontWeight: "500",
   },
   tripTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#212121",
+    marginBottom: 8,
   },
   tripDestination: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 5,
+    color: "#616161",
+    marginBottom: 8,
   },
   tripDates: {
     fontSize: 14,
-    color: "#999",
+    color: "#9E9E9E",
   },
   invitationDetails: {
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    paddingTop: 15,
+    borderTopColor: "#F5F5F5",
+    paddingTop: 20,
+    marginTop: 20,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 14,
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 10,
   },
   detailText: {
     fontSize: 14,
-    color: "#666",
-    marginLeft: 10,
+    color: "#212121",
+    marginLeft: 12,
+    flex: 1,
   },
   expiredBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFE5E5",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
+    backgroundColor: "#FFEBEE",
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#FF3B30",
   },
   expiredText: {
     fontSize: 14,
     color: "#FF3B30",
-    marginLeft: 10,
-    fontWeight: "500",
+    marginLeft: 12,
+    fontWeight: "600",
+    flex: 1,
   },
   statusBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0F0F0",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
+    backgroundColor: "#F5F5F5",
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
   },
   statusText: {
     fontSize: 14,
-    marginLeft: 10,
-    fontWeight: "500",
+    marginLeft: 12,
+    fontWeight: "600",
+    flex: 1,
   },
   actionsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 15,
+    gap: 12,
+    marginBottom: 32,
+    paddingHorizontal: 4,
   },
   actionButton: {
     flex: 1,
+  },
+  // Styles pour la liste des invitations
+  emptyCard: {
+    alignItems: "center",
+    padding: 40,
+    marginTop: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#212121",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 15,
+    color: "#616161",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  invitationListItem: {
+    marginBottom: 16,
+    padding: 16,
+  },
+  listItemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  inviterAvatarSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#2891FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  listItemInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  listItemTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#212121",
+    marginBottom: 4,
+  },
+  listItemDate: {
+    fontSize: 13,
+    color: "#616161",
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: "#FFF3E0",
+  },
+  statusBadgeAccepted: {
+    backgroundColor: "#E8F5E9",
+  },
+  statusBadgeDeclined: {
+    backgroundColor: "#FFEBEE",
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FF9500",
+  },
+  viewDetailsButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 15,
-    borderRadius: 25,
+    paddingVertical: 8,
   },
-  declineButton: {
-    backgroundColor: "#FF3B30",
-  },
-  acceptButton: {
-    backgroundColor: "#34C759",
-  },
-  actionButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 8,
+  viewDetailsText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2891FF",
+    marginRight: 4,
   },
 });
 

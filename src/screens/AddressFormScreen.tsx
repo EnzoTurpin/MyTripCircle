@@ -10,10 +10,12 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 
 import { Address, RootStackParamList } from "../types";
@@ -201,7 +203,7 @@ const AddressFormScreen: React.FC = () => {
   if (!initialized && contextLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#2891FF" />
         <Text style={styles.loadingText}>{t("common.loading")}</Text>
       </View>
     );
@@ -215,6 +217,16 @@ const AddressFormScreen: React.FC = () => {
     );
   }
 
+  const getTypeIcon = (type: Address["type"]) => {
+    switch (type) {
+      case "hotel": return "bed";
+      case "restaurant": return "restaurant";
+      case "activity": return "ticket";
+      case "transport": return "car";
+      default: return "location";
+    }
+  };
+
   const renderTypeSelection = () => (
     <View style={styles.typeContainer}>
       {ADDRESS_TYPES.map((type) => {
@@ -227,27 +239,25 @@ const AddressFormScreen: React.FC = () => {
               selected && styles.typeButtonSelected,
             ]}
             onPress={() => handleInputChange("type", type)}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name={
-                type === "hotel"
-                  ? "bed"
-                  : type === "restaurant"
-                  ? "restaurant"
-                  : type === "activity"
-                  ? "ticket"
-                  : type === "transport"
-                  ? "car"
-                  : "location"
-              }
-              size={18}
-              color={selected ? "#007AFF" : "#666"}
-            />
+            <View style={[
+              styles.typeIconContainer,
+              selected && styles.typeIconContainerSelected
+            ]}>
+              <Ionicons
+                name={getTypeIcon(type) as any}
+                size={22}
+                color={selected ? "#FFFFFF" : "#2891FF"}
+              />
+            </View>
             <Text
               style={[
                 styles.typeText,
                 selected && styles.typeTextSelected,
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
             >
               {t(`addresses.filters.${type}`)}
             </Text>
@@ -262,12 +272,31 @@ const AddressFormScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <StatusBar barStyle="light-content" />
+      <LinearGradient
+        colors={['#2891FF', '#8869FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <View style={styles.headerIcon}>
+          <Ionicons name="location" size={24} color="white" />
+        </View>
+        <Text style={styles.headerTitle}>{title}</Text>
+        <View style={{ width: 40 }} />
+      </LinearGradient>
+
       <ScrollView
-        style={styles.container}
+        style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>{title}</Text>
 
         {/* Les adresses ne sont plus liées à un voyage, pas de sélection de trip */}
 
@@ -278,27 +307,35 @@ const AddressFormScreen: React.FC = () => {
 
         <View style={styles.section}>
           <Text style={styles.label}>{t("addresses.form.name")} *</Text>
-          <TextInput
-            style={styles.input}
-            value={form.name}
-            onChangeText={(value) => handleInputChange("name", value)}
-            placeholder={t("addresses.form.namePlaceholder")}
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons name="text-outline" size={20} color="#616161" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              value={form.name}
+              onChangeText={(value) => handleInputChange("name", value)}
+              placeholder={t("addresses.form.namePlaceholder")}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>{t("addresses.form.address")} *</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            multiline
-            numberOfLines={3}
-            value={form.address}
-            onChangeText={(value) => handleInputChange("address", value)}
-            placeholder={t("addresses.form.addressPlaceholder")}
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons name="location-outline" size={20} color="#616161" style={styles.inputIcon} />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              multiline
+              numberOfLines={3}
+              value={form.address}
+              onChangeText={(value) => handleInputChange("address", value)}
+              placeholder={t("addresses.form.addressPlaceholder")}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
           {(loadingSuggestions || fetchingPlaceDetails) && (
             <View style={styles.autocompleteStatus}>
-              <ActivityIndicator size="small" color="#007AFF" />
+              <ActivityIndicator size="small" color="#2891FF" />
               <Text style={styles.autocompleteStatusText}>
                 {t("common.loading")}
               </Text>
@@ -315,7 +352,7 @@ const AddressFormScreen: React.FC = () => {
                   <Ionicons
                     name="location-outline"
                     size={18}
-                    color="#007AFF"
+                    color="#2891FF"
                     style={styles.suggestionIcon}
                   />
                   <Text style={styles.suggestionText}>
@@ -330,56 +367,76 @@ const AddressFormScreen: React.FC = () => {
         <View style={styles.row}>
           <View style={[styles.section, styles.rowItem]}>
             <Text style={styles.label}>{t("addresses.form.city")} *</Text>
-            <TextInput
-              style={styles.input}
-              value={form.city}
-              onChangeText={(value) => handleInputChange("city", value)}
-              placeholder={t("addresses.form.cityPlaceholder")}
-            />
+            <View style={styles.inputContainer}>
+              <Ionicons name="business-outline" size={20} color="#616161" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={form.city}
+                onChangeText={(value) => handleInputChange("city", value)}
+                placeholder={t("addresses.form.cityPlaceholder")}
+                placeholderTextColor="#9E9E9E"
+              />
+            </View>
           </View>
           <View style={[styles.section, styles.rowItem]}>
             <Text style={styles.label}>{t("addresses.form.country")} *</Text>
-            <TextInput
-              style={styles.input}
-              value={form.country}
-              onChangeText={(value) => handleInputChange("country", value)}
-              placeholder={t("addresses.form.countryPlaceholder")}
-            />
+            <View style={styles.inputContainer}>
+              <Ionicons name="flag-outline" size={20} color="#616161" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={form.country}
+                onChangeText={(value) => handleInputChange("country", value)}
+                placeholder={t("addresses.form.countryPlaceholder")}
+                placeholderTextColor="#9E9E9E"
+              />
+            </View>
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>{t("addresses.form.phone")}</Text>
-          <TextInput
-            style={styles.input}
-            value={form.phone}
-            onChangeText={(value) => handleInputChange("phone", value)}
-            placeholder={t("addresses.form.phonePlaceholder")}
-            keyboardType="phone-pad"
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons name="call-outline" size={20} color="#616161" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              value={form.phone}
+              onChangeText={(value) => handleInputChange("phone", value)}
+              placeholder={t("addresses.form.phonePlaceholder")}
+              placeholderTextColor="#9E9E9E"
+              keyboardType="phone-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>{t("addresses.form.website")}</Text>
-          <TextInput
-            style={styles.input}
-            value={form.website}
-            onChangeText={(value) => handleInputChange("website", value)}
-            placeholder={t("addresses.form.websitePlaceholder")}
-            autoCapitalize="none"
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons name="globe-outline" size={20} color="#616161" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              value={form.website}
+              onChangeText={(value) => handleInputChange("website", value)}
+              placeholder={t("addresses.form.websitePlaceholder")}
+              placeholderTextColor="#9E9E9E"
+              autoCapitalize="none"
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>{t("addresses.form.notes")}</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            multiline
-            numberOfLines={3}
-            value={form.notes}
-            onChangeText={(value) => handleInputChange("notes", value)}
-            placeholder={t("addresses.form.notesPlaceholder")}
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons name="document-text-outline" size={20} color="#616161" style={styles.inputIcon} />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              multiline
+              numberOfLines={3}
+              value={form.notes}
+              onChangeText={(value) => handleInputChange("notes", value)}
+              placeholder={t("addresses.form.notesPlaceholder")}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
         </View>
 
         {/* Plus de coordonnées GPS dans le formulaire d'adresse */}
@@ -390,6 +447,7 @@ const AddressFormScreen: React.FC = () => {
           style={styles.cancelButton}
           onPress={() => navigation.goBack()}
           disabled={submitting}
+          activeOpacity={0.7}
         >
           <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
         </TouchableOpacity>
@@ -400,10 +458,16 @@ const AddressFormScreen: React.FC = () => {
           ]}
           onPress={handleSubmit}
           disabled={submitting}
+          activeOpacity={0.7}
         >
-          <Text style={styles.saveButtonText}>
-            {submitting ? t("common.loading") : t("common.save")}
-          </Text>
+          {submitting ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text style={styles.saveButtonText}>{t("common.save")}</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -413,35 +477,88 @@ const AddressFormScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#FAFAFA",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "white",
+    marginLeft: 12,
+  },
+  scrollView: {
+    flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#FAFAFA",
   },
   loadingText: {
     marginTop: 10,
-    color: "#666",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
+    color: "#616161",
+    fontSize: 16,
   },
   section: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#333",
+    color: "#212121",
     marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 16,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#212121",
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: "top",
+    paddingTop: 14,
   },
   autocompleteStatus: {
     flexDirection: "row",
@@ -451,70 +568,89 @@ const styles = StyleSheet.create({
   },
   autocompleteStatusText: {
     fontSize: 13,
-    color: "#666",
+    color: "#616161",
   },
   suggestionsContainer: {
     marginTop: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: "#E0E0E0",
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   suggestionItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f2f2f2",
+    borderBottomColor: "#F5F5F5",
   },
   suggestionIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   suggestionText: {
     flex: 1,
-    color: "#333",
+    color: "#212121",
+    fontSize: 15,
   },
   typeContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "center",
     gap: 10,
   },
   typeButton: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
-    borderRadius: 20,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 16,
+    padding: 12,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: "#fff",
+    minWidth: 90,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: "#E8E8E8",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   typeButtonSelected: {
-    borderColor: "#007AFF",
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "#2891FF",
+    borderColor: "#2891FF",
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  typeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  typeIconContainerSelected: {
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
   typeText: {
-    marginLeft: 8,
-    color: "#666",
+    fontSize: 12,
+    color: "#616161",
+    textAlign: "center",
+    fontWeight: "500",
   },
   typeTextSelected: {
-    color: "#007AFF",
+    color: "#FFFFFF",
     fontWeight: "600",
-  },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    fontSize: 16,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
   },
   row: {
     flexDirection: "row",
@@ -526,40 +662,48 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     padding: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-    backgroundColor: "#fff",
+    borderTopColor: "#F0F0F0",
+    backgroundColor: "#FAFAFA",
+    gap: 12,
   },
   cancelButton: {
     flex: 1,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     paddingVertical: 14,
-    marginRight: 10,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
   },
   cancelButtonText: {
-    color: "#666",
+    color: "#616161",
     fontSize: 16,
     fontWeight: "600",
   },
   saveButton: {
     flex: 1,
-    borderRadius: 12,
-    backgroundColor: "#007AFF",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#2891FF",
     paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   saveButtonText: {
-    color: "#fff",
+    color: "white",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });
 

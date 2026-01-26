@@ -13,6 +13,8 @@ const serverProcess = spawn("node", ["server/index.js"], {
 setTimeout(() => {
   console.log("📱 Lancement d'Expo avec QR code...");
   console.log("─".repeat(50));
+  console.log("\n💡 Astuce: Scannez le QR code directement avec l'application Expo Go");
+  console.log("   L'application s'ouvrira automatiquement!\n");
 
   // Lancer Expo
   const expoProcess = spawn("npx", ["expo", "start", "--clear"], {

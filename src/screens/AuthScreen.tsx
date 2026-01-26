@@ -9,20 +9,43 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
+  Animated,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import { ModernButton } from "../components/ModernButton";
 
 const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, register, loading } = useAuth();
   const { t } = useTranslation();
+  
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(50)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleSubmit = async () => {
     if (!email || !password || (!isLogin && !name)) {
@@ -53,30 +76,75 @@ const AuthScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.container}>
+    <LinearGradient 
+      colors={['#2891FF', '#8869FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.header}>
-            <Ionicons name="airplane" size={80} color="white" />
-            <Text style={styles.title}>{t("appName")}</Text>
-            <Text style={styles.subtitle}>{t("slogan")}</Text>
-          </View>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.iconContainer}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
+                style={styles.iconGradient}
+              >
+                <Ionicons name="airplane" size={80} color="white" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.title}>{t("appName") || "MyTripCircle"}</Text>
+            <Text style={styles.subtitle}>{t("slogan") || "Organisez vos voyages ensemble"}</Text>
+          </Animated.View>
 
-          <View style={styles.form}>
+          <Animated.View 
+            style={[
+              styles.form,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.formHeader}>
+              <Text style={styles.formTitle}>
+                {isLogin ? t("common.welcomeBack") || "Bon retour" : t("common.createAccount") || "Créer un compte"}
+              </Text>
+              <Text style={styles.formSubtitle}>
+                {isLogin 
+                  ? t("common.loginToContinue") || "Connectez-vous pour continuer" 
+                  : t("common.signUpToStart") || "Inscrivez-vous pour commencer"}
+              </Text>
+            </View>
+
             {!isLogin && (
               <View style={styles.inputContainer}>
-                <Ionicons
-                  name="person"
-                  size={20}
-                  color="#666"
-                  style={styles.inputIcon}
-                />
+                <View style={styles.inputIconContainer}>
+                  <Ionicons
+                    name="person-outline"
+                    size={20}
+                    color={"#2891FF"}
+                  />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t("common.fullName")}
+                  placeholderTextColor={"#BDBDBD"}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -85,15 +153,17 @@ const AuthScreen: React.FC = () => {
             )}
 
             <View style={styles.inputContainer}>
-              <Ionicons
-                name="mail"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
+              <View style={styles.inputIconContainer}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={"#2891FF"}
+                />
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder={t("common.email")}
+                placeholderTextColor={"#BDBDBD"}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -102,44 +172,82 @@ const AuthScreen: React.FC = () => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons
-                name="lock-closed"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
+              <View style={styles.inputIconContainer}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={"#2891FF"}
+                />
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder={t("common.password")}
+                placeholderTextColor={"#BDBDBD"}
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={true}
+                secureTextEntry={!showPassword}
               />
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-outline" : "eye-off-outline"}
+                  size={20}
+                  color={"#BDBDBD"}
+                />
+              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                loading || isSubmitting ? styles.buttonDisabled : null,
-              ]}
+            {isLogin && (
+              <TouchableOpacity style={styles.forgotButton}>
+                <Text style={styles.forgotText}>{t("common.forgotPassword") || "Mot de passe oublié ?"}</Text>
+              </TouchableOpacity>
+            )}
+
+            <ModernButton
+              title={loading || isSubmitting
+                ? t("common.pleaseWait")
+                : isLogin
+                ? t("common.signIn")
+                : t("common.signUp")}
               onPress={handleSubmit}
               disabled={loading || isSubmitting}
-            >
-              <Text style={styles.buttonText}>
-                {loading || isSubmitting
-                  ? t("common.pleaseWait")
-                  : isLogin
-                  ? t("common.signIn")
-                  : t("common.signUp")}
-              </Text>
-            </TouchableOpacity>
+              loading={loading || isSubmitting}
+              gradient
+              size="large"
+              fullWidth
+              icon={isLogin ? "log-in-outline" : "person-add-outline"}
+              style={styles.submitButton}
+            />
 
-            <TouchableOpacity
-              style={styles.switchButton}
-              onPress={() => setIsLogin(!isLogin)}
-            >
-              <Text style={styles.switchText}>
-                {isLogin ? t("common.noAccount") : t("common.haveAccount")}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OU</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>
+                {isLogin ? t("common.noAccount") || "Pas de compte ?" : t("common.haveAccount") || "Déjà un compte ?"}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setIsLogin(!isLogin)}
+              >
+                <Text style={styles.switchLink}>
+                  {isLogin ? t("common.signUp") || "S'inscrire" : t("common.signIn") || "Se connecter"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              {t("common.termsAgree") || "En continuant, vous acceptez nos"}
+            </Text>
+            <TouchableOpacity>
+              <Text style={styles.footerLink}>
+                {t("common.termsAndConditions") || "Conditions d'utilisation"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -159,75 +267,146 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center" as const,
-    padding: 20,
+    padding: 24,
   },
   header: {
     alignItems: "center" as const,
-    marginBottom: 50,
+    marginBottom: 64,
+  },
+  iconContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    marginBottom: 24,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.25, shadowRadius: 24, elevation: 12,
+  },
+  iconGradient: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 70,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "white",
-    marginTop: 20,
-    marginBottom: 10,
+    fontSize: 40,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: "center" as const,
   },
   subtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 18,
+    color: "rgba(255, 255, 255, 0.9)",
     textAlign: "center" as const,
   },
   form: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 30,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.25, shadowRadius: 24, elevation: 12,
+  },
+  formHeader: {
+    marginBottom: 32,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  formSubtitle: {
+    fontSize: 16,
+    color: '#616161',
   },
   inputContainer: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-    marginBottom: 20,
-    paddingBottom: 10,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: "transparent",
   },
-  inputIcon: {
-    marginRight: 15,
+  inputIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 16,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
+    color: '#212121',
+    paddingVertical: 8,
   },
-  button: {
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    paddingVertical: 15,
+  eyeButton: {
+    padding: 8,
+  },
+  forgotButton: {
+    alignSelf: "flex-end" as const,
+    marginBottom: 16,
+  },
+  forgotText: {
+    fontSize: 14,
+    color: '#2891FF',
+    fontWeight: '600',
+  },
+  submitButton: {
+    marginTop: 16,
+  },
+  divider: {
+    flexDirection: "row" as const,
     alignItems: "center" as const,
-    marginTop: 20,
+    marginVertical: 32,
   },
-  buttonDisabled: {
-    backgroundColor: "#ccc",
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#EEEEEE',
   },
-  buttonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold" as const,
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: '#616161',
+    fontWeight: '500',
   },
-  switchButton: {
-    marginTop: 20,
+  switchContainer: {
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
     alignItems: "center" as const,
+    marginTop: 16,
   },
-  switchText: {
-    color: "#007AFF",
+  switchLabel: {
     fontSize: 16,
+    color: '#616161',
+    marginRight: 4,
+  },
+  switchLink: {
+    fontSize: 16,
+    color: '#2891FF',
+    fontWeight: '700',
+  },
+  footer: {
+    marginTop: 32,
+    alignItems: "center" as const,
+  },
+  footerText: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.7)",
+    marginBottom: 4,
+  },
+  footerLink: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    textDecorationLine: "underline" as const,
   },
 });
 

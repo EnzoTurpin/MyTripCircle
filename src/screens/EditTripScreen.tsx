@@ -274,7 +274,12 @@ const EditTripScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
+      <LinearGradient 
+        colors={['#2891FF', '#8869FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
@@ -612,13 +617,13 @@ const EditTripScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,

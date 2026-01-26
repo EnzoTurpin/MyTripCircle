@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +19,8 @@ import { RootStackParamList, Booking } from "../types";
 import { useTranslation } from "react-i18next";
 import { formatDateLong, getBookingStatusTranslation } from "../utils/i18n";
 import { useTrips } from "../contexts/TripsContext";
+import { ModernCard } from "../components/ModernCard";
+import { ModernButton } from "../components/ModernButton";
 
 type BookingDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -157,223 +161,267 @@ const BookingDetailsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <LinearGradient colors={["#007AFF", "#5856D6"]} style={styles.header}>
-        <View style={styles.headerContent}>
-          <View
-            style={[
-              styles.typeIcon,
-              { backgroundColor: getTypeColor(booking.type) },
-            ]}
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <LinearGradient 
+          colors={['#2891FF', '#8869FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name={getTypeIcon(booking.type) as any}
-              size={30}
-              color="white"
-            />
-          </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.bookingTitle}>{booking.title}</Text>
-            <Text style={styles.bookingDate}>
-              {formatDateLong(booking.date)}
-              {booking.time && ` • ${booking.time}`}
-            </Text>
-            <View style={styles.statusContainer}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: getStatusColor(booking.status) },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.statusText,
-                  { color: getStatusColor(booking.status) },
-                ]}
-              >
-                {booking.status
-                  ? getBookingStatusTranslation(booking.status)
-                  : t("common.unknown")}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
-
-      <View style={styles.content}>
-        {booking.description && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("bookings.details.description")}
-            </Text>
-            <Text style={styles.descriptionText}>{booking.description}</Text>
-          </View>
-        )}
-
-        {booking.address && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("bookings.details.location")}
-            </Text>
-            <Text style={styles.addressText}>{booking.address}</Text>
-            <TouchableOpacity
-              style={styles.directionsButton}
-              onPress={handleGetDirections}
-            >
-              <Ionicons name="navigate" size={16} color="#007AFF" />
-              <Text style={styles.directionsText}>
-                {t("bookings.details.getDirections")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("bookings.details.bookingDetails")}
-          </Text>
-          {booking.confirmationNumber && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>
-                {t("bookings.details.confirmationNumber")}
-              </Text>
-              <Text style={styles.detailValue}>
-                {booking.confirmationNumber}
-              </Text>
-            </View>
-          )}
-          {booking.price && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>
-                {t("bookings.details.price")}
-              </Text>
-              <Text style={styles.detailValue}>
-                {booking.currency} {booking.price}
-              </Text>
-            </View>
-          )}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t("bookings.details.date")}</Text>
-            <Text style={styles.detailValue}>
-              {formatDateLong(booking.date)}
-              {booking.endDate && ` - ${formatDateLong(booking.endDate)}`}
-            </Text>
-          </View>
-          {booking.time && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>
-                {t("bookings.details.time")}
-              </Text>
-              <Text style={styles.detailValue}>{booking.time}</Text>
-            </View>
-          )}
-        </View>
-
-        {booking.attachments && booking.attachments.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("bookings.details.attachments")}
-            </Text>
-            {booking.attachments.map((attachment, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.attachmentItem}
-                onPress={() => handleViewAttachment(attachment)}
-              >
-                <Ionicons name="document" size={20} color="#007AFF" />
-                <Text style={styles.attachmentText}>{attachment}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#ccc" />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleEditBooking}
-          >
-            <Ionicons name="create" size={20} color="white" />
-            <Text style={styles.actionButtonText}>
-              {t("bookings.details.editBooking")}
-            </Text>
+            <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          {booking.status !== "cancelled" && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.cancelButton]}
-              onPress={handleCancelBooking}
+
+          <View style={styles.headerContent}>
+            <View
+              style={[
+                styles.typeIcon,
+                { backgroundColor: getTypeColor(booking.type) },
+              ]}
             >
-              <Ionicons name="close" size={20} color="white" />
-              <Text style={styles.actionButtonText}>
-                {t("bookings.details.cancelBooking")}
+              <Ionicons
+                name={getTypeIcon(booking.type) as any}
+                size={32}
+                color="white"
+              />
+            </View>
+            <View style={styles.headerInfo}>
+              <Text style={styles.bookingTitle}>{booking.title}</Text>
+              <Text style={styles.bookingDate}>
+                {formatDateLong(booking.date)}
+                {booking.time && ` • ${booking.time}`}
               </Text>
-            </TouchableOpacity>
+              <View style={styles.statusContainer}>
+                <View
+                  style={[
+                    styles.statusDot,
+                    { backgroundColor: getStatusColor(booking.status) },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: getStatusColor(booking.status) },
+                  ]}
+                >
+                  {booking.status
+                    ? getBookingStatusTranslation(booking.status)
+                    : t("common.unknown")}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.content}>
+          {booking.description && (
+            <ModernCard variant="elevated" style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {t("bookings.details.description")}
+              </Text>
+              <Text style={styles.descriptionText}>{booking.description}</Text>
+            </ModernCard>
           )}
+
+          {booking.address && (
+            <ModernCard variant="elevated" style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {t("bookings.details.location")}
+              </Text>
+              <Text style={styles.addressText}>{booking.address}</Text>
+              <TouchableOpacity
+                style={styles.directionsButton}
+                onPress={handleGetDirections}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="navigate" size={18} color="#2891FF" />
+                <Text style={styles.directionsText}>
+                  {t("bookings.details.getDirections")}
+                </Text>
+              </TouchableOpacity>
+            </ModernCard>
+          )}
+
+          <ModernCard variant="elevated" style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {t("bookings.details.bookingDetails")}
+            </Text>
+            {booking.confirmationNumber && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>
+                  {t("bookings.details.confirmationNumber")}
+                </Text>
+                <Text style={styles.detailValue}>
+                  {booking.confirmationNumber}
+                </Text>
+              </View>
+            )}
+            {booking.price && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>
+                  {t("bookings.details.price")}
+                </Text>
+                <Text style={styles.detailValue}>
+                  {booking.currency} {booking.price}
+                </Text>
+              </View>
+            )}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t("bookings.details.date")}</Text>
+              <Text style={styles.detailValue}>
+                {formatDateLong(booking.date)}
+                {booking.endDate && ` - ${formatDateLong(booking.endDate)}`}
+              </Text>
+            </View>
+            {booking.time && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>
+                  {t("bookings.details.time")}
+                </Text>
+                <Text style={styles.detailValue}>{booking.time}</Text>
+              </View>
+            )}
+          </ModernCard>
+
+          {booking.attachments && booking.attachments.length > 0 && (
+            <ModernCard variant="elevated" style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {t("bookings.details.attachments")}
+              </Text>
+              {booking.attachments.map((attachment, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.attachmentItem}
+                  onPress={() => handleViewAttachment(attachment)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.attachmentIconContainer}>
+                    <Ionicons name="document" size={20} color="#2891FF" />
+                  </View>
+                  <Text style={styles.attachmentText}>{attachment}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+                </TouchableOpacity>
+              ))}
+            </ModernCard>
+          )}
+
+          <View style={styles.actionsContainer}>
+            <ModernButton
+              title={t("bookings.details.editBooking")}
+              onPress={handleEditBooking}
+              variant="primary"
+              size="medium"
+              icon="create-outline"
+              style={styles.actionButton}
+            />
+            {booking.status !== "cancelled" && (
+              <ModernButton
+                title={t("bookings.details.cancelBooking")}
+                onPress={handleCancelBooking}
+                variant="outline"
+                size="medium"
+                icon="close-circle-outline"
+                style={styles.actionButton}
+              />
+            )}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: '#616161',
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#FAFAFA',
   },
   errorText: {
     fontSize: 18,
-    color: "#FF3B30",
+    color: '#F44336',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
+    paddingBottom: 120,
+    paddingHorizontal: 24,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: -20,
+    marginTop: 5,
+    zIndex: 10,
   },
   headerContent: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    marginTop: 50,
   },
   typeIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    marginRight: 20,
+    marginRight: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerInfo: {
     flex: 1,
   },
   bookingTitle: {
-    fontSize: 24,
-    fontWeight: "bold" as const,
+    fontSize: 26,
+    fontWeight: "700" as const,
     color: "white",
-    marginBottom: 5,
+    marginBottom: 8,
   },
   bookingDate: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginBottom: 10,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 12,
   },
   statusContainer: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: "flex-start",
   },
   statusDot: {
     width: 8,
@@ -382,107 +430,93 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   statusText: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: "white",
   },
   content: {
-    padding: 20,
+    marginTop: -100,
+    paddingHorizontal: 24,
+    paddingBottom: 64,
   },
   section: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold" as const,
-    color: "#333",
-    marginBottom: 15,
+    fontWeight: '700' as const,
+    color: '#212121',
+    marginBottom: 16,
   },
   descriptionText: {
     fontSize: 16,
-    color: "#333",
-    lineHeight: 22,
+    color: '#616161',
+    lineHeight: 24,
   },
   addressText: {
     fontSize: 16,
-    color: "#333",
-    marginBottom: 10,
-    lineHeight: 22,
+    color: '#616161',
+    marginBottom: 12,
+    lineHeight: 24,
   },
   directionsButton: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     alignSelf: "flex-start",
+    paddingVertical: 8,
   },
   directionsText: {
-    fontSize: 14,
-    color: "#007AFF",
-    marginLeft: 5,
+    fontSize: 15,
+    color: '#2891FF',
+    marginLeft: 6,
+    fontWeight: '600' as const,
   },
   detailRow: {
     flexDirection: "row" as const,
     justifyContent: "space-between",
     alignItems: "center" as const,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: '#F5F5F5',
   },
   detailLabel: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 15,
+    color: '#616161',
     flex: 1,
   },
   detailValue: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500",
+    fontSize: 15,
+    color: '#212121',
+    fontWeight: '600' as const,
   },
   attachmentItem: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: '#F5F5F5',
+  },
+  attachmentIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F4FF',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 12,
   },
   attachmentText: {
-    fontSize: 14,
-    color: "#333",
-    marginLeft: 12,
+    fontSize: 15,
+    color: '#212121',
     flex: 1,
   },
   actionsContainer: {
     flexDirection: "row" as const,
-    justifyContent: "space-between",
-    marginTop: 20,
+    gap: 16,
+    marginTop: 24,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    paddingVertical: 15,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    marginHorizontal: 5,
-  },
-  cancelButton: {
-    backgroundColor: "#FF3B30",
-  },
-  actionButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold" as const,
-    marginLeft: 8,
   },
 });
 
