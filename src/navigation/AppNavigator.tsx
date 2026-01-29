@@ -8,9 +8,13 @@ import { useTranslation } from "react-i18next";
 import { RootStackParamList, MainTabParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import { FloatingTabBar } from "../components/FloatingTabBar";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 
 // Import screens
 import AuthScreen from "../screens/AuthScreen";
+// @ts-ignore - OtpScreen exists but TypeScript cache may not be updated
+import OtpScreen from "../screens/OtpScreen";
 import TripsScreen from "../screens/TripsScreen";
 import BookingsScreen from "../screens/BookingsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
@@ -38,12 +42,12 @@ const MainTabNavigator = () => {
       tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: "#FFFFFF",
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,
         },
-        headerTintColor: '#212121',
+        headerTintColor: "#212121",
         headerTitleStyle: {
           fontWeight: "700",
           fontSize: 20,
@@ -53,7 +57,7 @@ const MainTabNavigator = () => {
       <Tab.Screen
         name="Trips"
         component={TripsScreen}
-        options={{ 
+        options={{
           title: t("tabs.myTrips"),
           headerShown: false,
         }}
@@ -61,7 +65,7 @@ const MainTabNavigator = () => {
       <Tab.Screen
         name="Bookings"
         component={BookingsScreen}
-        options={{ 
+        options={{
           title: t("tabs.bookings"),
           headerShown: false,
         }}
@@ -69,7 +73,7 @@ const MainTabNavigator = () => {
       <Tab.Screen
         name="Addresses"
         component={AddressesScreen}
-        options={{ 
+        options={{
           title: t("tabs.addresses"),
           headerShown: false,
         }}
@@ -77,7 +81,7 @@ const MainTabNavigator = () => {
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ 
+        options={{
           title: t("tabs.profile"),
           headerShown: false,
         }}
@@ -178,6 +182,15 @@ const AppNavigator = () => {
               }}
             />
             <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
+              options={{
+                // We use a custom header inside the screen (gradient + back button),
+                // so we disable the native Stack header to avoid duplicates.
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="HelpSupport"
               component={HelpSupportScreen}
               options={{
@@ -186,7 +199,23 @@ const AppNavigator = () => {
             />
           </>
         ) : (
-          <Stack.Screen name="Auth" component={AuthScreen} />
+          <>
+            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen
+              name="Otp"
+              component={OtpScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

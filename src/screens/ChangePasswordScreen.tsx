@@ -3,8 +3,8 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
+  TextInput,
   Alert,
   ScrollView,
   StatusBar,
@@ -17,24 +17,59 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import { ModernCard } from "../components/ModernCard";
 
-const EditProfileScreen: React.FC = () => {
+const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
-  const { user, updateUser } = useAuth();
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { changePassword } = useAuth();
 
-  const handleSave = async () => {
-    try {
-      await updateUser({ name, email });
+  const handleSubmit = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert(t("common.error"), t("changePassword.fillAllFields"));
+      return;
+    }
+
+    // min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!strongPasswordRegex.test(newPassword)) {
+      Alert.alert(t("common.error"), t("common.invalidPassword"));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert(t("common.error"), t("changePassword.passwordsDontMatch"));
+      return;
+    }
+
+    if (currentPassword === newPassword) {
       Alert.alert(
-        t("editProfile.updateSuccessTitle"),
-        t("editProfile.updateSuccessMessage"),
+        t("common.error"),
+        t("changePassword.passwordMustBeDifferent"),
       );
+      return;
+    }
+
+    setLoading(true);
+
+    const success = await changePassword(currentPassword, newPassword);
+
+    setLoading(false);
+
+    if (success) {
+      Alert.alert(
+        t("changePassword.successTitle"),
+        t("changePassword.successMessage"),
+      );
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
       navigation.goBack();
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      Alert.alert(t("common.error"), t("editProfile.updateErrorMessage"));
+    } else {
+      Alert.alert(t("common.error"), t("changePassword.errorMessage"));
     }
   };
 
@@ -57,93 +92,98 @@ const EditProfileScreen: React.FC = () => {
           </TouchableOpacity>
 
           <View style={styles.headerContent}>
-            <View style={styles.avatarContainer}>
+            <View style={styles.iconContainer}>
               <LinearGradient
                 colors={[
                   "rgba(255, 255, 255, 0.3)",
                   "rgba(255, 255, 255, 0.1)",
                 ]}
-                style={styles.avatarGradient}
+                style={styles.iconGradient}
               >
-                <Ionicons name="person" size={48} color="white" />
+                <Ionicons name="lock-closed" size={40} color="white" />
               </LinearGradient>
             </View>
-            <Text style={styles.headerTitle}>{t("editProfile.title")}</Text>
+            <Text style={styles.headerTitle}>{t("changePassword.title")}</Text>
             <Text style={styles.headerSubtitle}>
-              {t("editProfile.subtitle")}
+              {t("changePassword.subtitle")}
             </Text>
           </View>
         </LinearGradient>
 
         <View style={styles.content}>
-          <ModernCard variant="elevated" style={styles.formContainer}>
+          <ModernCard variant="elevated" style={styles.formCard}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("common.fullName")}</Text>
+              <Text style={styles.label}>
+                {t("changePassword.currentPasswordLabel")}
+              </Text>
               <View style={styles.inputContainer}>
                 <Ionicons
-                  name="person-outline"
+                  name="lock-closed-outline"
                   size={20}
                   color="#616161"
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  style={styles.input}
-                  placeholder={t("editProfile.namePlaceholder")}
+                  placeholder={t("changePassword.currentPasswordPlaceholder")}
                   placeholderTextColor="#9E9E9E"
+                  secureTextEntry
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  style={styles.input}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("common.email")}</Text>
+              <Text style={styles.label}>
+                {t("changePassword.newPasswordLabel")}
+              </Text>
               <View style={styles.inputContainer}>
                 <Ionicons
-                  name="mail-outline"
+                  name="key-outline"
                   size={20}
                   color="#616161"
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  style={styles.input}
-                  placeholder={t("editProfile.emailPlaceholder")}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                  placeholder={t("changePassword.newPasswordPlaceholder")}
                   placeholderTextColor="#9E9E9E"
+                  secureTextEntry
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  style={styles.input}
                 />
               </View>
             </View>
-          </ModernCard>
 
-          <ModernCard variant="elevated" style={styles.securitySection}>
-            <TouchableOpacity
-              style={styles.settingItem}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate("ChangePassword")}
-            >
-              <View style={styles.settingLeft}>
-                <View style={styles.settingIcon}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={22}
-                    color="#007AFF"
-                  />
-                </View>
-                <Text style={styles.settingTitle}>
-                  {t("editProfile.changePassword")}
-                </Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                {t("changePassword.confirmPasswordLabel")}
+              </Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="key-outline"
+                  size={20}
+                  color="#616161"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  placeholder={t("changePassword.confirmPasswordPlaceholder")}
+                  placeholderTextColor="#9E9E9E"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  style={styles.input}
+                />
               </View>
-              <Ionicons name="chevron-forward-outline" size={18} color="#ccc" />
-            </TouchableOpacity>
+            </View>
           </ModernCard>
 
           <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSave}
+            style={[styles.saveButton, loading && { opacity: 0.7 }]}
+            onPress={handleSubmit}
             activeOpacity={0.7}
+            disabled={loading}
           >
             <Ionicons
               name="checkmark-circle"
@@ -152,7 +192,9 @@ const EditProfileScreen: React.FC = () => {
               style={{ marginRight: 8 }}
             />
             <Text style={styles.saveButtonText}>
-              {t("editProfile.saveChanges")}
+              {loading
+                ? t("changePassword.saving")
+                : t("changePassword.saveButton")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -190,13 +232,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 40,
   },
-  avatarContainer: {
+  iconContainer: {
     marginBottom: 16,
   },
-  avatarGradient: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+  iconGradient: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 4,
@@ -217,7 +259,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 64,
   },
-  formContainer: {
+  formCard: {
     marginBottom: 24,
   },
   inputGroup: {
@@ -266,34 +308,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  securitySection: {
-    marginBottom: 24,
-  },
-  settingItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 16,
-  },
-  settingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  settingIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-    backgroundColor: "rgba(0, 122, 255, 0.08)",
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
-  },
 });
 
-export default EditProfileScreen;
+export default ChangePasswordScreen;

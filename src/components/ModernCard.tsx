@@ -1,28 +1,29 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   TouchableOpacityProps,
+  StyleProp,
   ViewStyle,
-} from 'react-native';
+} from "react-native";
 
 interface ModernCardProps extends TouchableOpacityProps {
   children: React.ReactNode;
-  variant?: 'default' | 'elevated' | 'outlined';
-  style?: ViewStyle;
+  variant?: "default" | "elevated" | "outlined";
+  style?: StyleProp<ViewStyle>;
 }
 
 export const ModernCard: React.FC<ModernCardProps> = ({
   children,
-  variant = 'default',
+  variant = "default",
   style,
   ...props
 }) => {
   const cardStyle = [
     styles.card,
-    variant === 'elevated' && styles.elevated,
-    variant === 'outlined' && styles.outlined,
+    variant === "elevated" && styles.elevated,
+    variant === "outlined" && styles.outlined,
     style,
   ];
 
@@ -39,17 +40,17 @@ export const ModernCard: React.FC<ModernCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   elevated: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
   },
   outlined: {
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: "#EEEEEE",
     shadowOpacity: 0,
     elevation: 0,
   },

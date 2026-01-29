@@ -1,11 +1,12 @@
 import React from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   Linking,
+  LayoutAnimation,
   StatusBar,
   Platform,
 } from "react-native";
@@ -14,8 +15,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ModernCard } from "../components/ModernCard";
 import { ModernButton } from "../components/ModernButton";
+import { FAQ } from "../data/faq";
 
 const HelpSupportScreen: React.FC = () => {
+  const [openId, setOpenId] = React.useState<string | null>(null);
+
+  const toggle = (id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpenId(openId === id ? null : id);
+  };
   const navigation = useNavigation();
 
   const openEmail = () => {
@@ -53,31 +61,36 @@ const HelpSupportScreen: React.FC = () => {
     <View style={styles.wrapper}>
       <StatusBar barStyle="light-content" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient 
-          colors={['#2891FF', '#8869FF']}
+        <LinearGradient
+          colors={["#2891FF", "#8869FF"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          
+
           <View style={styles.headerContent}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
+                colors={[
+                  "rgba(255, 255, 255, 0.3)",
+                  "rgba(255, 255, 255, 0.1)",
+                ]}
                 style={styles.iconGradient}
               >
                 <Ionicons name="help-circle" size={48} color="white" />
               </LinearGradient>
             </View>
             <Text style={styles.headerTitle}>Aide & Support</Text>
-            <Text style={styles.headerSubtitle}>Nous sommes là pour vous aider</Text>
+            <Text style={styles.headerSubtitle}>
+              Nous sommes là pour vous aider
+            </Text>
           </View>
         </LinearGradient>
 
@@ -88,29 +101,42 @@ const HelpSupportScreen: React.FC = () => {
               <Text style={styles.infoTitle}>Besoin d'aide ?</Text>
             </View>
             <Text style={styles.infoParagraph}>
-              Notre équipe de support est disponible pour répondre à toutes vos questions sur MyTripCircle.
+              Notre équipe de support est disponible pour répondre à toutes vos
+              questions sur MyTripCircle.
             </Text>
             <Text style={styles.infoParagraph}>
-              Contactez-nous par email ou consultez notre FAQ ci-dessous pour trouver rapidement des réponses.
+              Contactez-nous par email ou consultez notre FAQ ci-dessous pour
+              trouver rapidement des réponses.
             </Text>
           </ModernCard>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Questions fréquentes</Text>
             {faqItems.map((item, index) => (
-              <ModernCard 
-                key={index} 
-                variant="outlined" 
+              <ModernCard
+                key={index}
+                variant="outlined"
                 style={styles.faqItem}
                 onPress={() => {}}
               >
                 <View style={styles.faqHeader}>
-                  <View style={[styles.faqIcon, { backgroundColor: item.color + '15' }]}>
-                    <Ionicons name={item.icon as any} size={24} color={item.color} />
+                  <View
+                    style={[
+                      styles.faqIcon,
+                      { backgroundColor: item.color + "15" },
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.icon as any}
+                      size={24}
+                      color={item.color}
+                    />
                   </View>
                   <View style={styles.faqContent}>
                     <Text style={styles.faqTitle}>{item.title}</Text>
-                    <Text style={styles.faqDescription}>{item.description}</Text>
+                    <Text style={styles.faqDescription}>
+                      {item.description}
+                    </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
                 </View>
@@ -123,7 +149,12 @@ const HelpSupportScreen: React.FC = () => {
             onPress={openEmail}
             activeOpacity={0.7}
           >
-            <Ionicons name="mail" size={20} color="white" style={{ marginRight: 8 }} />
+            <Ionicons
+              name="mail"
+              size={20}
+              color="white"
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.contactButtonText}>Contacter le support</Text>
           </TouchableOpacity>
 
@@ -146,11 +177,11 @@ const HelpSupportScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   header: {
     paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
@@ -209,13 +240,13 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#212121',
+    fontWeight: "700",
+    color: "#212121",
     marginLeft: 12,
   },
   infoParagraph: {
     fontSize: 16,
-    color: '#616161',
+    color: "#616161",
     lineHeight: 24,
     marginBottom: 12,
   },
@@ -224,8 +255,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#212121',
+    fontWeight: "700",
+    color: "#212121",
     marginBottom: 16,
   },
   faqItem: {
@@ -248,32 +279,32 @@ const styles = StyleSheet.create({
   },
   faqTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: "600",
+    color: "#212121",
     marginBottom: 4,
   },
   faqDescription: {
     fontSize: 14,
-    color: '#616161',
+    color: "#616161",
   },
   contactButton: {
-    backgroundColor: '#2891FF',
+    backgroundColor: "#2891FF",
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
     marginBottom: 24,
-    shadowColor: '#2891FF',
+    shadowColor: "#2891FF",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   contactButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   contactInfo: {
     padding: 20,
@@ -285,7 +316,7 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 15,
-    color: '#616161',
+    color: "#616161",
     marginLeft: 12,
   },
 });

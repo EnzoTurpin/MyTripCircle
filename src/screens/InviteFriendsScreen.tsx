@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   FlatList,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,6 +20,8 @@ import { RootStackParamList, Trip, User } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { ModernCard } from "../components/ModernCard";
+import { ModernButton } from "../components/ModernButton";
 
 type InviteFriendsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -137,14 +141,14 @@ const InviteFriendsScreen: React.FC = () => {
       Alert.alert(
         t("inviteFriends.invitationSent"),
         `${t("inviteFriends.invitationSentTo")} ${emailInput}`,
-        [{ text: t("common.ok") }]
+        [{ text: t("common.ok") }],
       );
       setEmailInput("");
     } catch (error) {
       console.error("Error sending invitation:", error);
       Alert.alert(
         t("common.error"),
-        error.message || t("inviteFriends.invitationError")
+        (error as Error)?.message || t("inviteFriends.invitationError"),
       );
     } finally {
       setSendingInvitations(false);
@@ -155,7 +159,7 @@ const InviteFriendsScreen: React.FC = () => {
     if (invitedFriends.length === 0) {
       Alert.alert(
         t("inviteFriends.noFriendsSelected"),
-        t("inviteFriends.selectFriendsToInvite")
+        t("inviteFriends.selectFriendsToInvite"),
       );
       return;
     }
@@ -192,13 +196,13 @@ const InviteFriendsScreen: React.FC = () => {
       Alert.alert(
         t("inviteFriends.invitationsSent"),
         `${t("inviteFriends.invitationsSentTo")} ${invitedFriends.length}`,
-        [{ text: t("common.ok"), onPress: () => navigation.goBack() }]
+        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
       );
     } catch (error) {
       console.error("Error sending invitations:", error);
       Alert.alert(
         t("common.error"),
-        error.message || t("inviteFriends.invitationError")
+        (error as Error)?.message || t("inviteFriends.invitationError"),
       );
     } finally {
       setSendingInvitations(false);
@@ -207,233 +211,295 @@ const InviteFriendsScreen: React.FC = () => {
 
   const renderFriendItem = ({ item }: { item: User }) => {
     const isInvited = invitedFriends.includes(item.id);
-    const isAlreadyCollaborator = trip?.collaborators.includes(item.id);
+    const isAlreadyCollaborator = !!trip?.collaborators?.some(
+      (c) => c.userId === item.id,
+    );
 
     return (
-      <TouchableOpacity
+      <ModernCard
+        variant="outlined"
         style={[
-          styles.friendItem,
-          isInvited && styles.friendItemSelected,
-          isAlreadyCollaborator && styles.friendItemDisabled,
+          styles.friendCard,
+          isInvited ? styles.friendCardSelected : {},
+          isAlreadyCollaborator ? styles.friendCardDisabled : {},
         ]}
         onPress={() => !isAlreadyCollaborator && handleInviteFriend(item.id)}
         disabled={isAlreadyCollaborator}
       >
-        <View style={styles.friendAvatar}>
-          <Ionicons name="person" size={24} color="white" />
+        <View style={styles.friendRow}>
+          <View style={styles.friendAvatar}>
+            <Ionicons name="person" size={20} color="white" />
+          </View>
+          <View style={styles.friendInfo}>
+            <Text style={styles.friendName}>{item.name}</Text>
+            <Text style={styles.friendEmail}>{item.email}</Text>
+          </View>
+          <View style={styles.friendStatus}>
+            {isAlreadyCollaborator ? (
+              <View style={styles.collaboratorBadge}>
+                <Text style={styles.collaboratorText}>
+                  {t("inviteFriends.member")}
+                </Text>
+              </View>
+            ) : isInvited ? (
+              <Ionicons name="checkmark-circle" size={22} color="#34C759" />
+            ) : (
+              <Ionicons name="add-circle-outline" size={22} color="#2891FF" />
+            )}
+          </View>
         </View>
-        <View style={styles.friendInfo}>
-          <Text style={styles.friendName}>{item.name}</Text>
-          <Text style={styles.friendEmail}>{item.email}</Text>
-        </View>
-        <View style={styles.friendStatus}>
-          {isAlreadyCollaborator ? (
-            <View style={styles.collaboratorBadge}>
-              <Text style={styles.collaboratorText}>
-                {t("inviteFriends.member")}
-              </Text>
-            </View>
-          ) : isInvited ? (
-            <Ionicons name="checkmark-circle" size={24} color="#34C759" />
-          ) : (
-            <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-          )}
-        </View>
-      </TouchableOpacity>
+      </ModernCard>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>{t("inviteFriends.loading")}</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <LinearGradient 
-        colors={['#2891FF', '#8869FF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <Text style={styles.headerTitle}>{t("inviteFriends.header")}</Text>
-        <Text style={styles.headerSubtitle}>
-          {t("inviteFriends.subtitle")} "{trip?.title}"
-        </Text>
-      </LinearGradient>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("inviteFriends.inviteByEmail")}
-          </Text>
-          <View style={styles.emailContainer}>
-            <TextInput
-              style={styles.emailInput}
-              placeholder={t("inviteFriends.enterEmail")}
-              value={emailInput}
-              onChangeText={setEmailInput}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TouchableOpacity
-              style={[
-                styles.inviteButton,
-                sendingInvitations && styles.inviteButtonDisabled,
-              ]}
-              onPress={handleInviteByEmail}
-              disabled={sendingInvitations}
-            >
-              {sendingInvitations ? (
-                <Ionicons name="hourglass" size={20} color="white" />
-              ) : (
-                <Ionicons name="send" size={20} color="white" />
-              )}
-            </TouchableOpacity>
-          </View>
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="light-content" />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>{t("inviteFriends.loading")}</Text>
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("inviteFriends.friends")}</Text>
-          <FlatList
-            data={friends}
-            renderItem={renderFriendItem}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-          />
-        </View>
-
-        {invitedFriends.length > 0 && (
-          <View style={styles.selectedFriendsContainer}>
-            <Text style={styles.selectedFriendsTitle}>
-              {t("inviteFriends.selectedFriends")} ({invitedFriends.length})
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {invitedFriends.map((friendId) => {
-                const friend = friends.find((f) => f.id === friendId);
-                return (
-                  <View key={friendId} style={styles.selectedFriendChip}>
-                    <Text style={styles.selectedFriendText}>
-                      {friend?.name}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => handleInviteFriend(friendId)}
-                    >
-                      <Ionicons name="close" size={16} color="white" />
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-        )}
-      </ScrollView>
-
-      {invitedFriends.length > 0 && (
-        <View style={styles.bottomActions}>
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              sendingInvitations && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendInvitations}
-            disabled={sendingInvitations}
+      ) : (
+        <ScrollView
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.containerContent}
+        >
+          <LinearGradient
+            colors={["#2891FF", "#8869FF"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
           >
-            {sendingInvitations ? (
-              <Ionicons name="hourglass" size={20} color="white" />
-            ) : (
-              <Ionicons name="send" size={20} color="white" />
+            <View style={styles.headerTop}>
+              <TouchableOpacity
+                style={styles.backButtonHeader}
+                onPress={() => navigation.goBack()}
+              >
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+              <View style={{ width: 40 }} />
+            </View>
+            <View style={styles.headerContent}>
+              <View style={styles.headerIconContainer}>
+                <Ionicons name="person-add" size={40} color="white" />
+              </View>
+              <Text style={styles.headerTitle}>
+                {t("inviteFriends.header")}
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                {t("inviteFriends.subtitle")} "{trip?.title}"
+              </Text>
+            </View>
+          </LinearGradient>
+
+          <View style={styles.content}>
+            <ModernCard variant="elevated" style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>
+                {t("inviteFriends.inviteByEmail")}
+              </Text>
+              <View style={styles.emailInputContainer}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color="#616161"
+                  style={styles.emailInputIcon}
+                />
+                <TextInput
+                  style={styles.emailInput}
+                  placeholder={t("inviteFriends.enterEmail")}
+                  placeholderTextColor="#9E9E9E"
+                  value={emailInput}
+                  onChangeText={setEmailInput}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.inviteButton,
+                    sendingInvitations && styles.inviteButtonDisabled,
+                  ]}
+                  onPress={handleInviteByEmail}
+                  disabled={sendingInvitations}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name={sendingInvitations ? "hourglass" : "send"}
+                    size={18}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </View>
+            </ModernCard>
+
+            <ModernCard variant="elevated" style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>
+                {t("inviteFriends.friends")}
+              </Text>
+              <FlatList
+                data={friends}
+                renderItem={renderFriendItem}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                contentContainerStyle={styles.friendsList}
+              />
+            </ModernCard>
+
+            {invitedFriends.length > 0 && (
+              <ModernCard variant="elevated" style={styles.selectedFriendsCard}>
+                <Text style={styles.selectedFriendsTitle}>
+                  {t("inviteFriends.selectedFriends")} ({invitedFriends.length})
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {invitedFriends.map((friendId) => {
+                    const friend = friends.find((f) => f.id === friendId);
+                    return (
+                      <View key={friendId} style={styles.selectedFriendChip}>
+                        <Text style={styles.selectedFriendText}>
+                          {friend?.name}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => handleInviteFriend(friendId)}
+                        >
+                          <Ionicons name="close" size={16} color="white" />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </ModernCard>
             )}
-            <Text style={styles.sendButtonText}>
-              {sendingInvitations
-                ? t("inviteFriends.sendingInvitations")
-                : `${t("inviteFriends.sendInvitations")} (${
-                    invitedFriends.length
-                  })`}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {invitedFriends.length > 0 && (
+              <View style={styles.bottomActions}>
+                <ModernButton
+                  title={
+                    sendingInvitations
+                      ? t("inviteFriends.sendingInvitations")
+                      : `${t("inviteFriends.sendInvitations")} (${invitedFriends.length})`
+                  }
+                  onPress={handleSendInvitations}
+                  variant="primary"
+                  gradient
+                  size="large"
+                  icon={sendingInvitations ? "hourglass" : "send"}
+                  disabled={sendingInvitations}
+                  fullWidth
+                />
+              </View>
+            )}
+          </View>
+        </ScrollView>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: "#FAFAFA",
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
+  },
+  containerContent: {
+    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: "#616161",
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 80 : 60,
+    paddingBottom: 120,
+    paddingHorizontal: 24,
+  },
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  backButtonHeader: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerContent: {
+    alignItems: "center",
+  },
+  headerIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold" as const,
+    fontSize: 28,
+    fontWeight: "700",
     color: "white",
-    marginBottom: 5,
+    textAlign: "center",
+    marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
   },
   content: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 0,
+    marginTop: -100,
+    paddingBottom: 24,
   },
-  section: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
+  sectionCard: {
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold" as const,
-    color: "#333",
-    marginBottom: 15,
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: "#212121",
+    marginBottom: 12,
   },
-  emailContainer: {
+  emailInputContainer: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 16,
+  },
+  emailInputIcon: {
+    marginRight: 12,
   },
   emailInput: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
-    marginRight: 10,
+    color: "#212121",
   },
   inviteButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    width: 50,
-    height: 50,
+    backgroundColor: "#2891FF",
+    borderRadius: 12,
+    width: 44,
+    height: 44,
     justifyContent: "center" as const,
     alignItems: "center" as const,
   },
@@ -441,74 +507,72 @@ const styles = StyleSheet.create({
     backgroundColor: "#999",
     opacity: 0.6,
   },
-  friendItem: {
+  friendsList: {
+    gap: 12,
+  },
+  friendCard: {
+    padding: 16,
+  },
+  friendCardSelected: {
+    backgroundColor: "#E8F4FF",
+    borderColor: "#CFE7FF",
+  },
+  friendCardDisabled: {
+    opacity: 0.5,
+  },
+  friendRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  friendItemSelected: {
-    backgroundColor: "#E3F2FD",
-  },
-  friendItemDisabled: {
-    opacity: 0.5,
   },
   friendAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#2891FF",
     justifyContent: "center" as const,
     alignItems: "center" as const,
     marginRight: 15,
+    shadowColor: "#2891FF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
   friendInfo: {
     flex: 1,
   },
   friendName: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 2,
+    fontWeight: "600",
+    color: "#212121",
+    marginBottom: 4,
   },
   friendEmail: {
     fontSize: 14,
-    color: "#666",
+    color: "#616161",
   },
   friendStatus: {
     marginLeft: 10,
   },
   collaboratorBadge: {
-    backgroundColor: "#34C759",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 12,
   },
   collaboratorText: {
     fontSize: 12,
-    color: "white",
-    fontWeight: "500",
-  },
-  selectedFriendsContainer: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    color: "#34C759",
+    fontWeight: "700",
   },
   selectedFriendsTitle: {
     fontSize: 16,
     fontWeight: "bold" as const,
     color: "#333",
     marginBottom: 15,
+  },
+  selectedFriendsCard: {
+    marginBottom: 20,
   },
   selectedFriendChip: {
     backgroundColor: "#007AFF",
@@ -529,24 +593,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: "#E0E0E0",
-  },
-  sendButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 25,
-    paddingVertical: 15,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#999",
-    opacity: 0.6,
-  },
-  sendButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold" as const,
-    marginLeft: 8,
   },
 });
 

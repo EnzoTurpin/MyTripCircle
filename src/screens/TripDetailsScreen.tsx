@@ -18,7 +18,13 @@ import {
 } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList, Trip, Booking, Address } from "../types";
+import {
+  RootStackParamList,
+  Trip,
+  Booking,
+  Address,
+  Collaborator,
+} from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utils/i18n";
@@ -45,12 +51,19 @@ const TripDetailsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const { getTripById, getBookingsByTripId, getAddressesByTripId, validateTrip, createBooking, createAddress } = useTrips();
+  const {
+    getTripById,
+    getBookingsByTripId,
+    getAddressesByTripId,
+    validateTrip,
+    createBooking,
+    createAddress,
+  } = useTrips();
 
   useFocusEffect(
     useCallback(() => {
       loadTripData();
-    }, [tripId])
+    }, [tripId]),
   );
 
   const loadTripData = async () => {
@@ -84,7 +97,7 @@ const TripDetailsScreen: React.FC = () => {
   };
 
   const handleSaveBooking = async (
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
       const newBooking = await createBooking({
@@ -98,7 +111,8 @@ const TripDetailsScreen: React.FC = () => {
       console.error("Error creating booking:", error);
       Alert.alert(
         t("common.error"),
-        (error as Error).message || "Erreur lors de la création de la réservation"
+        (error as Error).message ||
+          "Erreur lors de la création de la réservation",
       );
     }
   };
@@ -107,7 +121,9 @@ const TripDetailsScreen: React.FC = () => {
     setShowAddressForm(true);
   };
 
-  const handleSaveAddress = async (addressData: Omit<Address, "id" | "createdAt" | "updatedAt">) => {
+  const handleSaveAddress = async (
+    addressData: Omit<Address, "id" | "createdAt" | "updatedAt">,
+  ) => {
     await createAddress(addressData);
     await loadTripData();
   };
@@ -141,19 +157,19 @@ const TripDetailsScreen: React.FC = () => {
                         navigation.goBack();
                       },
                     },
-                  ]
+                  ],
                 );
               }
             } catch (error) {
               console.error("Error validating trip:", error);
               Alert.alert(
                 t("common.error"),
-                (error as Error).message || "Erreur lors de la validation"
+                (error as Error).message || "Erreur lors de la validation",
               );
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -177,14 +193,14 @@ const TripDetailsScreen: React.FC = () => {
     <View style={styles.wrapper}>
       <StatusBar barStyle="light-content" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient 
-          colors={['#2891FF', '#8869FF']}
+        <LinearGradient
+          colors={["#2891FF", "#8869FF"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
@@ -194,11 +210,19 @@ const TripDetailsScreen: React.FC = () => {
           <View style={styles.headerContent}>
             <Text style={styles.tripTitle}>{trip.title}</Text>
             <View style={styles.destinationRow}>
-              <Ionicons name="location" size={20} color="rgba(255, 255, 255, 0.9)" />
+              <Ionicons
+                name="location"
+                size={20}
+                color="rgba(255, 255, 255, 0.9)"
+              />
               <Text style={styles.tripDestination}>{trip.destination}</Text>
             </View>
             <View style={styles.datesRow}>
-              <Ionicons name="calendar" size={18} color="rgba(255, 255, 255, 0.8)" />
+              <Ionicons
+                name="calendar"
+                size={18}
+                color="rgba(255, 255, 255, 0.8)"
+              />
               <Text style={styles.tripDates}>
                 {formatDate(trip.startDate, {
                   month: "long",
@@ -242,7 +266,11 @@ const TripDetailsScreen: React.FC = () => {
           {(showValidateButton || trip.status === "draft") && (
             <ModernCard variant="elevated" style={styles.validateContainer}>
               <View style={styles.draftBanner}>
-                <Ionicons name="information-circle" size={24} color={"#FF9800"} />
+                <Ionicons
+                  name="information-circle"
+                  size={24}
+                  color={"#FF9800"}
+                />
                 <Text style={styles.draftBannerText}>
                   {t("tripDetails.draftMessage")}
                 </Text>
@@ -263,12 +291,15 @@ const TripDetailsScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>{t("tripDetails.bookings")}</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("tripDetails.bookings")}
+                </Text>
                 <Text style={styles.sectionSubtitle}>
-                  {bookings.length} {bookings.length > 1 ? "réservations" : "réservation"}
+                  {bookings.length}{" "}
+                  {bookings.length > 1 ? "réservations" : "réservation"}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={handleAddBooking}
                 activeOpacity={0.7}
@@ -279,17 +310,26 @@ const TripDetailsScreen: React.FC = () => {
             {bookings.length === 0 ? (
               <View style={styles.emptySection}>
                 <View style={styles.emptyIconContainer}>
-                  <Ionicons name="calendar-outline" size={40} color={"#7EBDFF"} />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={40}
+                    color={"#7EBDFF"}
+                  />
                 </View>
-                <Text style={styles.emptyText}>{t("tripDetails.noBookings")}</Text>
+                <Text style={styles.emptyText}>
+                  {t("tripDetails.noBookings")}
+                </Text>
               </View>
             ) : (
               <View style={styles.itemsList}>
-                {bookings.map((booking, index) => (
-                  <ModernCard 
-                    key={booking.id} 
+                {bookings.map((booking: Booking, index: number) => (
+                  <ModernCard
+                    key={booking.id}
                     variant="outlined"
-                    style={{...styles.bookingItem, ...(index > 0 ? { marginTop: 16 } : {})}}
+                    style={{
+                      ...styles.bookingItem,
+                      ...(index > 0 ? { marginTop: 16 } : {}),
+                    }}
                   >
                     <View style={styles.bookingHeader}>
                       <View style={styles.bookingIconContainer}>
@@ -298,8 +338,8 @@ const TripDetailsScreen: React.FC = () => {
                             booking.type === "flight"
                               ? "airplane"
                               : booking.type === "hotel"
-                              ? "bed"
-                              : "receipt"
+                                ? "bed"
+                                : "receipt"
                           }
                           size={20}
                           color={"#2891FF"}
@@ -312,11 +352,19 @@ const TripDetailsScreen: React.FC = () => {
                           {booking.time && ` • ${booking.time}`}
                         </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={20} color={"#BDBDBD"} />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color={"#BDBDBD"}
+                      />
                     </View>
                     {booking.confirmationNumber && (
                       <View style={styles.confirmationContainer}>
-                        <Ionicons name="checkmark-circle" size={14} color={"#4CAF50"} />
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={14}
+                          color={"#4CAF50"}
+                        />
                         <Text style={styles.confirmationText}>
                           {booking.confirmationNumber}
                         </Text>
@@ -331,12 +379,14 @@ const TripDetailsScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>{t("tripDetails.addresses")}</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("tripDetails.addresses")}
+                </Text>
                 <Text style={styles.sectionSubtitle}>
                   {addresses.length} {addresses.length > 1 ? "lieux" : "lieu"}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={handleAddAddress}
                 activeOpacity={0.7}
@@ -349,15 +399,20 @@ const TripDetailsScreen: React.FC = () => {
                 <View style={styles.emptyIconContainer}>
                   <Ionicons name="map-outline" size={40} color={"#7EBDFF"} />
                 </View>
-                <Text style={styles.emptyText}>{t("tripDetails.noAddresses")}</Text>
+                <Text style={styles.emptyText}>
+                  {t("tripDetails.noAddresses")}
+                </Text>
               </View>
             ) : (
               <View style={styles.itemsList}>
-                {addresses.map((address, index) => (
-                  <ModernCard 
-                    key={address.id} 
+                {addresses.map((address: Address, index: number) => (
+                  <ModernCard
+                    key={address.id}
                     variant="outlined"
-                    style={{...styles.addressItem, ...(index > 0 ? { marginTop: 16 } : {})}}
+                    style={{
+                      ...styles.addressItem,
+                      ...(index > 0 ? { marginTop: 16 } : {}),
+                    }}
                   >
                     <View style={styles.addressHeader}>
                       <View style={styles.addressIconContainer}>
@@ -366,8 +421,8 @@ const TripDetailsScreen: React.FC = () => {
                             address.type === "hotel"
                               ? "bed"
                               : address.type === "restaurant"
-                              ? "restaurant"
-                              : "location"
+                                ? "restaurant"
+                                : "location"
                           }
                           size={20}
                           color={"#FF6B9D"}
@@ -375,12 +430,18 @@ const TripDetailsScreen: React.FC = () => {
                       </View>
                       <View style={styles.addressInfo}>
                         <Text style={styles.addressName}>{address.name}</Text>
-                        <Text style={styles.addressText}>{address.address}</Text>
+                        <Text style={styles.addressText}>
+                          {address.address}
+                        </Text>
                         <Text style={styles.addressLocation}>
                           {address.city}, {address.country}
                         </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={20} color={"#BDBDBD"} />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color={"#BDBDBD"}
+                      />
                     </View>
                   </ModernCard>
                 ))}
@@ -395,7 +456,8 @@ const TripDetailsScreen: React.FC = () => {
                   {t("tripDetails.collaborators")}
                 </Text>
                 <Text style={styles.sectionSubtitle}>
-                  {trip.collaborators.length + 1} {trip.collaborators.length > 0 ? "membres" : "membre"}
+                  {trip.collaborators.length + 1}{" "}
+                  {trip.collaborators.length > 0 ? "membres" : "membre"}
                 </Text>
               </View>
             </View>
@@ -403,7 +465,7 @@ const TripDetailsScreen: React.FC = () => {
               <View key="owner" style={styles.collaboratorItem}>
                 <View style={styles.collaboratorAvatar}>
                   <LinearGradient
-                    colors={['#2891FF', '#8869FF']}
+                    colors={["#2891FF", "#8869FF"]}
                     style={styles.avatarGradient}
                   >
                     <Ionicons name="person" size={20} color="white" />
@@ -419,24 +481,26 @@ const TripDetailsScreen: React.FC = () => {
                   <Text style={styles.ownerBadgeText}>Vous</Text>
                 </View>
               </View>
-              {trip.collaborators.map((collaboratorId, index) => (
-                <View
-                  key={`collaborator-${collaboratorId}-${index}`}
-                  style={styles.collaboratorItem}
-                >
-                  <View style={styles.collaboratorAvatar}>
-                    <View style={styles.avatarDefault}>
-                      <Ionicons name="person" size={20} color={"#2891FF"} />
+              {trip.collaborators.map(
+                (collaborator: Collaborator, index: number) => (
+                  <View
+                    key={`collaborator-${collaborator.userId}-${index}`}
+                    style={styles.collaboratorItem}
+                  >
+                    <View style={styles.collaboratorAvatar}>
+                      <View style={styles.avatarDefault}>
+                        <Ionicons name="person" size={20} color={"#2891FF"} />
+                      </View>
+                    </View>
+                    <View style={styles.collaboratorInfo}>
+                      <Text style={styles.collaboratorName}>
+                        {t("tripDetails.collaborator", { index: index + 1 })}
+                      </Text>
+                      <Text style={styles.collaboratorRole}>Membre</Text>
                     </View>
                   </View>
-                  <View style={styles.collaboratorInfo}>
-                    <Text style={styles.collaboratorName}>
-                      {t("tripDetails.collaborator", { index: index + 1 })}
-                    </Text>
-                    <Text style={styles.collaboratorRole}>Membre</Text>
-                  </View>
-                </View>
-              ))}
+                ),
+              )}
             </View>
           </ModernCard>
         </View>
@@ -466,11 +530,11 @@ const TripDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   loadingContainer: {
     flex: 1,
@@ -573,19 +637,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#212121',
+    fontWeight: "700",
+    color: "#212121",
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#616161',
+    color: "#616161",
     marginTop: 4,
   },
   addButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E8F4FF',
+    backgroundColor: "#E8F4FF",
     justifyContent: "center" as const,
     alignItems: "center" as const,
   },
@@ -597,14 +661,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#E8F4FF',
+    backgroundColor: "#E8F4FF",
     justifyContent: "center" as const,
     alignItems: "center" as const,
     marginBottom: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: '#616161',
+    color: "#616161",
   },
   itemsList: {
     marginTop: 8,
@@ -618,7 +682,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E8F4FF',
+    backgroundColor: "#E8F4FF",
     justifyContent: "center" as const,
     alignItems: "center" as const,
     marginRight: 16,
@@ -628,13 +692,13 @@ const styles = StyleSheet.create({
   },
   bookingTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: "600",
+    color: "#212121",
     marginBottom: 4,
   },
   bookingDate: {
     fontSize: 14,
-    color: '#616161',
+    color: "#616161",
   },
   confirmationContainer: {
     flexDirection: "row" as const,
@@ -642,13 +706,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
+    borderTopColor: "#F5F5F5",
   },
   confirmationText: {
     fontSize: 12,
-    color: '#616161',
+    color: "#616161",
     marginLeft: 4,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   addressItem: {},
   addressHeader: {
@@ -659,7 +723,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FF6B9D' + '15',
+    backgroundColor: "#FF6B9D" + "15",
     justifyContent: "center" as const,
     alignItems: "center" as const,
     marginRight: 16,
@@ -669,19 +733,19 @@ const styles = StyleSheet.create({
   },
   addressName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: "600",
+    color: "#212121",
     marginBottom: 4,
   },
   addressText: {
     fontSize: 14,
-    color: '#616161',
+    color: "#616161",
     marginBottom: 4,
     lineHeight: 20,
   },
   addressLocation: {
     fontSize: 12,
-    color: '#9E9E9E',
+    color: "#9E9E9E",
   },
   collaboratorsSection: {
     marginBottom: 24,
@@ -694,7 +758,7 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: "#F5F5F5",
   },
   collaboratorAvatar: {
     width: 48,
@@ -712,7 +776,7 @@ const styles = StyleSheet.create({
   avatarDefault: {
     width: "100%",
     height: "100%",
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
     justifyContent: "center" as const,
     alignItems: "center" as const,
   },
@@ -721,24 +785,24 @@ const styles = StyleSheet.create({
   },
   collaboratorName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: "600",
+    color: "#212121",
     marginBottom: 4,
   },
   collaboratorRole: {
     fontSize: 14,
-    color: '#616161',
+    color: "#616161",
   },
   ownerBadge: {
-    backgroundColor: '#E8F4FF',
+    backgroundColor: "#E8F4FF",
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderRadius: 9999,
   },
   ownerBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#2891FF',
+    fontWeight: "700",
+    color: "#2891FF",
   },
   draftBanner: {
     flexDirection: "row" as const,

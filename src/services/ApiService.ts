@@ -1,4 +1,6 @@
 import { API_URLS } from "../config/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { updateProfile } from "../controllers/userController";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -21,31 +23,37 @@ async function findWorkingUrl(): Promise<string> {
         return url;
       } else {
         console.log(
-          `[ApiService] ❌ ${url} returned status: ${response.status}`
+          `[ApiService] ❌ ${url} returned status: ${response.status}`,
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(
-        `[ApiService] ❌ Failed to connect to ${url}: ${error.message}`
+        `[ApiService] ❌ Failed to connect to ${url}: ${
+          error?.message ?? String(error)
+        }`,
       );
     }
   }
 
   console.log("[ApiService] ❌ No working URL found!");
   throw new Error(
-    "No working API URL found. Make sure the backend is running."
+    "No working API URL found. Make sure the backend is running.",
   );
 }
 
 async function request<T>(
   path: string,
   method: HttpMethod = "GET",
-  body?: any
+  body?: any,
 ): Promise<T> {
   const baseUrl = await findWorkingUrl();
+  const token = await AsyncStorage.getItem("token");
   const res = await fetch(`${baseUrl}${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -56,6 +64,28 @@ async function request<T>(
 }
 
 export const ApiService = {
+  // Auth
+  login: (data: { email: string; password: string }) =>
+    request<{ success: boolean; token: string; user: any }>(
+      "/users/login",
+      "POST",
+      data,
+    ),
+
+  register: (data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+  }) =>
+    request<{
+      success: boolean;
+      token?: string;
+      user?: any;
+      userId?: string;
+      error?: string;
+    }>("/users/register", "POST", data),
+
   getTrips: () => request<any[]>("/trips"),
   getTripById: (id: string) => request<any>(`/trips/${id}`),
   getBookings: () => request<any[]>("/bookings"),
@@ -99,7 +129,7 @@ export const ApiService = {
       endDate?: Date;
       isPublic?: boolean;
       userId: string;
-    }
+    },
   ) => request<any>(`/trips/${tripId}`, "PUT", updates),
 
   deleteTrip: (tripId: string, userId: string) =>
@@ -138,7 +168,7 @@ export const ApiService = {
       currency?: string;
       status?: "confirmed" | "pending" | "cancelled";
       attachments?: string[];
-    }
+    },
   ) => request<any>(`/bookings/${bookingId}`, "PUT", updates),
 
   deleteBooking: (bookingId: string) =>
@@ -171,8 +201,34 @@ export const ApiService = {
   respondToInvitation: (
     token: string,
     action: "accept" | "decline",
-    userId?: string
+    userId?: string,
   ) => request<any>(`/invitations/${token}`, "PUT", { action, userId }),
+
+  updateProfile: (data: { name: string; email: string }) =>
+    request<{ success: boolean; user: any }>("/users/me", "PUT", data),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    request<{ success: boolean }>("/users/change-password", "PUT", data),
+
+  requestPasswordReset: (email: string) =>
+    request<{ success: boolean; message?: string }>(
+      "/users/forgot-password",
+      "POST",
+      { email },
+    ),
+
+  resetPassword: (token: string, newPassword: string) =>
+    request<{ success: boolean }>("/users/reset-password", "POST", {
+      token,
+      newPassword,
+    }),
+
+  verifyOtp: (data: { userId: string; otp: string }) =>
+    request<{ success: boolean; token?: string; user?: any; error?: string }>(
+      "/users/verify-otp",
+      "POST",
+      data,
+    ),
 
   // Addresses CRUD
   createAddress: (address: {
@@ -197,7 +253,7 @@ export const ApiService = {
       phone?: string;
       website?: string;
       notes?: string;
-    }
+    },
   ) => request<any>(`/addresses/${addressId}`, "PUT", updates),
 };
 

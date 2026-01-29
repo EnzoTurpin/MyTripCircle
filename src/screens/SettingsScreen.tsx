@@ -1,9 +1,9 @@
 import React from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
   ScrollView,
   StatusBar,
   Platform,
@@ -14,62 +14,110 @@ import { useNavigation } from "@react-navigation/native";
 import { ModernCard } from "../components/ModernCard";
 
 const SettingsScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const settingsOptions = [
-    { icon: "moon-outline", title: "Mode sombre", value: "Bientôt disponible", color: "#8869FF" },
-    { icon: "notifications-outline", title: "Notifications", value: "Activées", color: "#2891FF" },
-    { icon: "language-outline", title: "Langue", value: "Français", color: "#FF6B9D" },
-    { icon: "lock-closed-outline", title: "Confidentialité", value: "Gérer", color: "#4CAF50" },
-    { icon: "shield-checkmark-outline", title: "Sécurité", value: "Configurer", color: "#FF9800" },
+    {
+      icon: "moon-outline",
+      title: "Mode sombre",
+      value: "Bientôt disponible",
+      color: "#8869FF",
+    },
+    {
+      icon: "notifications-outline",
+      title: "Notifications",
+      value: "Activées",
+      color: "#2891FF",
+    },
+    {
+      icon: "language-outline",
+      title: "Langue",
+      value: "Français",
+      color: "#FF6B9D",
+    },
+    {
+      icon: "lock-closed-outline",
+      title: "Confidentialité",
+      value: "Gérer",
+      color: "#4CAF50",
+    },
+    {
+      icon: "shield-checkmark-outline",
+      title: "Sécurité",
+      value: "Configurer",
+      color: "#FF9800",
+    },
+  ];
+
+  const accountOptions = [
+    {
+      icon: "lock-closed-outline",
+      title: "Change Password",
+      action: "change-password",
+    },
   ];
 
   return (
     <View style={styles.wrapper}>
       <StatusBar barStyle="light-content" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient 
-          colors={['#2891FF', '#8869FF']}
+        <LinearGradient
+          colors={["#2891FF", "#8869FF"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          
+
           <View style={styles.headerContent}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
+                colors={[
+                  "rgba(255, 255, 255, 0.3)",
+                  "rgba(255, 255, 255, 0.1)",
+                ]}
                 style={styles.iconGradient}
               >
                 <Ionicons name="settings" size={40} color="white" />
               </LinearGradient>
             </View>
             <Text style={styles.headerTitle}>Paramètres</Text>
-            <Text style={styles.headerSubtitle}>Personnalisez votre expérience</Text>
+            <Text style={styles.headerSubtitle}>
+              Personnalisez votre expérience
+            </Text>
           </View>
         </LinearGradient>
 
         <View style={styles.content}>
           <ModernCard variant="elevated">
             {settingsOptions.map((item, index) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={[
                   styles.settingItem,
-                  index !== settingsOptions.length - 1 && styles.settingItemBorder
+                  index !== settingsOptions.length - 1 &&
+                    styles.settingItemBorder,
                 ]}
                 activeOpacity={0.7}
               >
                 <View style={styles.settingLeft}>
-                  <View style={[styles.settingIcon, { backgroundColor: item.color + '15' }]}>
-                    <Ionicons name={item.icon as any} size={22} color={item.color} />
+                  <View
+                    style={[
+                      styles.settingIcon,
+                      { backgroundColor: item.color + "15" },
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.icon as any}
+                      size={22}
+                      color={item.color}
+                    />
                   </View>
                   <View>
                     <Text style={styles.settingTitle}>{item.title}</Text>
@@ -92,6 +140,25 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.aboutValue}>2026.01.25</Text>
             </View>
           </ModernCard>
+          <View style={styles.settingsContainer}>
+            {accountOptions.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.settingItem}
+                onPress={() => navigation.navigate("ChangePassword")}
+              >
+                <View style={styles.settingLeft}>
+                  <Ionicons name={item.icon as any} size={22} color="#007AFF" />
+                  <Text style={styles.settingTitle}>{item.title}</Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={18}
+                  color="#ccc"
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -101,11 +168,11 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
   },
   header: {
     paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
@@ -164,8 +231,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F5F5F5",
   },
-  settingLeft: { 
-    flexDirection: "row", 
+  settingLeft: {
+    flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
@@ -177,14 +244,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 16,
   },
-  settingTitle: { 
-    fontSize: 16, 
-    fontWeight: '600',
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#212121",
     marginBottom: 2,
   },
-  settingValue: { 
-    color: "#616161", 
+  settingValue: {
+    color: "#616161",
     fontSize: 13,
   },
   aboutSection: {
@@ -192,8 +259,8 @@ const styles = StyleSheet.create({
   },
   aboutTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#212121',
+    fontWeight: "700",
+    color: "#212121",
     marginBottom: 16,
   },
   aboutRow: {
@@ -205,12 +272,15 @@ const styles = StyleSheet.create({
   },
   aboutLabel: {
     fontSize: 15,
-    color: '#616161',
+    color: "#616161",
   },
   aboutValue: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: "600",
+    color: "#212121",
+  },
+  settingsContainer: {
+    marginTop: 16,
   },
 });
 

@@ -5,7 +5,7 @@ import { initReactI18next } from "react-i18next";
 // Date formatting utilities
 export const formatDate = (
   date: Date | string | null | undefined,
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions,
 ) => {
   if (!date) return "N/A";
 
@@ -92,8 +92,7 @@ export const getBookingStatusTranslation = (status: string): string => {
 // Helper function to parse API errors and return translated messages
 export const parseApiError = (error: unknown): string => {
   try {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Try to parse as JSON
     let parsedError: any;
@@ -150,6 +149,7 @@ const resources = {
         email: "Email",
         password: "Password",
         fullName: "Full Name",
+        phone: "Phone number",
         signIn: "Sign In",
         signUp: "Sign Up",
         pleaseWait: "Please wait...",
@@ -158,8 +158,8 @@ const resources = {
         unexpectedError: "An unexpected error occurred",
         loginFailed: "Login failed",
         registerFailed: "Registration failed",
-        noAccount: "Don't have an account? Sign Up",
-        haveAccount: "Already have an account? Sign In",
+        noAccount: "Don't have an account?",
+        haveAccount: "Already have an account?",
         ok: "OK",
         cancel: "Cancel",
         validate: "Validate",
@@ -177,6 +177,21 @@ const resources = {
         about: "About",
         user: "User",
         unknown: "Unknown",
+        welcomeBack: "Welcome back",
+        createAccount: "Create account",
+        loginToContinue: "Sign in to continue",
+        signUpToStart: "Sign up to get started",
+        forgotPassword: "Forgot password?",
+        termsAgree: "By continuing, you agree to our",
+        termsAndConditions: "Terms and Conditions",
+        invalidEmail: "Please enter a valid email address",
+        invalidPassword:
+          "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a special character.",
+        passwordTooShort:
+          "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a special character.",
+        invalidPhone: "Please enter a valid phone number",
+        invalidCredentials: "Invalid email or password",
+        emailAlreadyInUse: "This email is already in use",
       },
       tabs: {
         myTrips: "My Trips",
@@ -342,7 +357,8 @@ const resources = {
           coordinatesHint: "Use decimal degrees. Example: 48.8566 / 2.3522",
           requiredTrip: "Please select a trip for this address.",
           requiredFields: "Name, address, city and country are required.",
-          invalidCoordinates: "Invalid coordinates. Please enter valid numbers.",
+          invalidCoordinates:
+            "Invalid coordinates. Please enter valid numbers.",
           submitError: "Unable to save this address. Please try again.",
           noTrips: "You need at least one trip before adding an address.",
         },
@@ -489,6 +505,71 @@ const resources = {
         cancelMessage:
           "Are you sure you want to cancel? All changes will be lost.",
       },
+      editProfile: {
+        title: "Edit Profile",
+        subtitle: "Update your personal information",
+        namePlaceholder: "Enter your name",
+        emailPlaceholder: "Enter your email",
+        changePassword: "Change password",
+        saveChanges: "Save changes",
+        updateSuccessTitle: "Profile updated!",
+        updateSuccessMessage: "Your profile changes have been saved.",
+        updateErrorMessage: "Failed to update profile.",
+      },
+      changePassword: {
+        title: "Change Password",
+        subtitle: "Keep your account secure by using a strong password",
+        currentPasswordLabel: "Current password",
+        currentPasswordPlaceholder: "Enter your current password",
+        newPasswordLabel: "New password",
+        newPasswordPlaceholder: "Enter a new password",
+        confirmPasswordLabel: "Confirm new password",
+        confirmPasswordPlaceholder: "Re-enter new password",
+        fillAllFields: "Please fill in all fields.",
+        passwordsDontMatch: "New passwords do not match.",
+        passwordMustBeDifferent:
+          "New password must be different from current password.",
+        successTitle: "Password changed",
+        successMessage: "Your password has been changed successfully.",
+        errorMessage:
+          "Failed to change password. Please check your current password and try again.",
+        saving: "Updating...",
+        saveButton: "Update password",
+      },
+      forgotPassword: {
+        title: "Forgot Password",
+        subtitle: "Enter your email address and we'll send you a reset link",
+        resetPasswordTitle: "Reset Password",
+        resetPasswordSubtitle: "Enter your new password",
+        emailPlaceholder: "Enter your email address",
+        newPasswordLabel: "New password",
+        newPasswordPlaceholder: "Enter your new password",
+        confirmPasswordLabel: "Confirm password",
+        confirmPasswordPlaceholder: "Re-enter your new password",
+        sendResetLink: "Send Reset Link",
+        resetPassword: "Reset Password",
+        emailSentTitle: "Email Sent",
+        emailSentMessage: "We've sent a password reset link to {{email}}",
+        checkEmailHint: "Please check your inbox and follow the instructions.",
+        successTitle: "Password Reset",
+        successMessage:
+          "Your password has been reset successfully. You can now log in with your new password.",
+        requestError: "Failed to send reset email. Please try again.",
+        resetError:
+          "Failed to reset password. The link may have expired. Please request a new one.",
+        passwordsDontMatch: "Passwords do not match.",
+      },
+      otp: {
+        title: "Verify Your Account",
+        subtitle: "Enter the 6-digit code sent to your email",
+        codePlaceholder: "123456",
+        verifyButton: "Verify",
+        verifying: "Verifying...",
+        invalidCode: "Invalid OTP code",
+        codeRequired: "Please enter the 6-digit code",
+        verificationFailed: "OTP verification failed",
+        successMessage: "Your account has been verified successfully!",
+      },
     },
   },
   fr: {
@@ -499,6 +580,7 @@ const resources = {
         email: "E-mail",
         password: "Mot de passe",
         fullName: "Nom complet",
+        phone: "Numéro de téléphone",
         signIn: "Se connecter",
         signUp: "Créer un compte",
         pleaseWait: "Veuillez patienter...",
@@ -507,8 +589,8 @@ const resources = {
         unexpectedError: "Une erreur inattendue est survenue",
         loginFailed: "Échec de la connexion",
         registerFailed: "Échec de l'inscription",
-        noAccount: "Pas de compte ? Créer un compte",
-        haveAccount: "Déjà un compte ? Se connecter",
+        noAccount: "Pas de compte ?",
+        haveAccount: "Déjà un compte ?",
         ok: "OK",
         cancel: "Annuler",
         validate: "Valider",
@@ -526,6 +608,21 @@ const resources = {
         about: "À propos",
         user: "Utilisateur",
         unknown: "Inconnu",
+        welcomeBack: "Bon retour",
+        createAccount: "Créer un compte",
+        loginToContinue: "Connectez-vous pour continuer",
+        signUpToStart: "Inscrivez-vous pour commencer",
+        forgotPassword: "Mot de passe oublié ?",
+        termsAgree: "En continuant, vous acceptez nos",
+        termsAndConditions: "Conditions d'utilisation",
+        invalidEmail: "Veuillez entrer une adresse e-mail valide",
+        invalidPassword:
+          "Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.",
+        passwordTooShort:
+          "Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.",
+        invalidPhone: "Veuillez entrer un numéro de téléphone valide",
+        invalidCredentials: "E-mail ou mot de passe incorrect",
+        emailAlreadyInUse: "Cet e-mail est déjà utilisé",
       },
       tabs: {
         myTrips: "Mes voyages",
@@ -601,10 +698,12 @@ const resources = {
         save: "Enregistrer",
         deleteConfirm: "Êtes-vous sûr de vouloir supprimer cette réservation ?",
         titleRequired: "Le titre est requis",
-        dateOutOfRange: "La date de la réservation doit être dans la plage du voyage",
+        dateOutOfRange:
+          "La date de la réservation doit être dans la plage du voyage",
         selectTrip: "Sélectionner un voyage",
         noTrips: "Aucun voyage disponible",
-        noTripsMessage: "Vous devez d'abord créer un voyage pour ajouter une réservation.",
+        noTripsMessage:
+          "Vous devez d'abord créer un voyage pour ajouter une réservation.",
         attachments: "Pièces jointes",
         addImage: "Ajouter une image",
         addDocument: "Ajouter un PDF",
@@ -688,11 +787,13 @@ const resources = {
           coordinates: "Coordonnées (optionnel)",
           latitude: "Latitude",
           longitude: "Longitude",
-          coordinatesHint: "Utiliser des degrés décimaux. Exemple : 48.8566 / 2.3522",
+          coordinatesHint:
+            "Utiliser des degrés décimaux. Exemple : 48.8566 / 2.3522",
           requiredTrip: "Veuillez sélectionner un voyage pour cette adresse.",
           requiredFields:
             "Le nom, l'adresse, la ville et le pays sont obligatoires.",
-          invalidCoordinates: "Coordonnées invalides. Saisir des nombres valides.",
+          invalidCoordinates:
+            "Coordonnées invalides. Saisir des nombres valides.",
           submitError: "Impossible d'enregistrer cette adresse. Réessayez.",
           noTrips: "Vous devez créer un voyage avant d'ajouter une adresse.",
         },
@@ -718,7 +819,8 @@ const resources = {
         featureSoon: "Cette fonctionnalité arrive bientôt !",
         addBooking: "Ajouter une réservation",
         addAddress: "Ajouter une adresse",
-        draftMessage: "Ce voyage est un brouillon. Validez-le pour le rendre actif.",
+        draftMessage:
+          "Ce voyage est un brouillon. Validez-le pour le rendre actif.",
       },
       profile: {
         logoutTitle: "Se déconnecter",
@@ -839,6 +941,76 @@ const resources = {
         cancelTitle: "Annuler les modifications",
         cancelMessage:
           "Êtes-vous sûr de vouloir annuler ? Toutes les modifications seront perdues.",
+      },
+      editProfile: {
+        title: "Modifier le profil",
+        subtitle: "Mettez à jour vos informations personnelles",
+        namePlaceholder: "Entrez votre nom",
+        emailPlaceholder: "Entrez votre e-mail",
+        changePassword: "Modifier le mot de passe",
+        saveChanges: "Enregistrer les modifications",
+        updateSuccessTitle: "Profil mis à jour",
+        updateSuccessMessage:
+          "Les modifications de votre profil ont été enregistrées.",
+        updateErrorMessage: "Échec de la mise à jour du profil.",
+      },
+      changePassword: {
+        title: "Modifier le mot de passe",
+        subtitle: "Sécurisez votre compte avec un mot de passe solide",
+        currentPasswordLabel: "Mot de passe actuel",
+        currentPasswordPlaceholder: "Entrez votre mot de passe actuel",
+        newPasswordLabel: "Nouveau mot de passe",
+        newPasswordPlaceholder: "Entrez un nouveau mot de passe",
+        confirmPasswordLabel: "Confirmer le nouveau mot de passe",
+        confirmPasswordPlaceholder: "Confirmez votre nouveau mot de passe",
+        fillAllFields: "Veuillez renseigner tous les champs.",
+        passwordsDontMatch: "Les nouveaux mots de passe ne correspondent pas.",
+        passwordMustBeDifferent:
+          "Le nouveau mot de passe doit être différent de l'actuel.",
+        successTitle: "Mot de passe modifié",
+        successMessage: "Votre mot de passe a été modifié avec succès.",
+        errorMessage:
+          "Échec du changement de mot de passe. Vérifiez votre mot de passe actuel et réessayez.",
+        saving: "Mise à jour...",
+        saveButton: "Mettre à jour le mot de passe",
+      },
+      forgotPassword: {
+        title: "Mot de passe oublié",
+        subtitle:
+          "Entrez votre adresse e-mail et nous vous enverrons un lien de réinitialisation",
+        resetPasswordTitle: "Réinitialiser le mot de passe",
+        resetPasswordSubtitle: "Entrez votre nouveau mot de passe",
+        emailPlaceholder: "Entrez votre adresse e-mail",
+        newPasswordLabel: "Nouveau mot de passe",
+        newPasswordPlaceholder: "Entrez votre nouveau mot de passe",
+        confirmPasswordLabel: "Confirmer le mot de passe",
+        confirmPasswordPlaceholder: "Ré-entrez votre nouveau mot de passe",
+        sendResetLink: "Envoyer le lien de réinitialisation",
+        resetPassword: "Réinitialiser le mot de passe",
+        emailSentTitle: "E-mail envoyé",
+        emailSentMessage:
+          "Nous avons envoyé un lien de réinitialisation à {{email}}",
+        checkEmailHint:
+          "Veuillez vérifier votre boîte de réception et suivre les instructions.",
+        successTitle: "Mot de passe réinitialisé",
+        successMessage:
+          "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+        requestError:
+          "Échec de l'envoi de l'e-mail de réinitialisation. Veuillez réessayer.",
+        resetError:
+          "Échec de la réinitialisation du mot de passe. Le lien a peut-être expiré. Veuillez en demander un nouveau.",
+        passwordsDontMatch: "Les mots de passe ne correspondent pas.",
+      },
+      otp: {
+        title: "Vérifiez votre compte",
+        subtitle: "Entrez le code à 6 chiffres envoyé à votre e-mail",
+        codePlaceholder: "123456",
+        verifyButton: "Vérifier",
+        verifying: "Vérification...",
+        invalidCode: "Code OTP invalide",
+        codeRequired: "Veuillez entrer le code à 6 chiffres",
+        verificationFailed: "Échec de la vérification OTP",
+        successMessage: "Votre compte a été vérifié avec succès !",
       },
     },
   },

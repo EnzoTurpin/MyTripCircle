@@ -2,6 +2,8 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ObjectId } = require("mongodb");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const os = require("os");
 require("dotenv").config();
 
@@ -9,11 +11,474 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Auth + user routes backed by MongoDB (users collection)
+const authRoutes = express.Router();
+
+const userRoutes = express.Router();
+
+function getJwtSecret() {
+  return process.env.JWT_SECRET || "dev-secret-change-me";
+}
+
+console.log("ENV CHECK:", {
+  MAIL_USER: process.env.MAIL_USER,
+  MAIL_PASS: process.env.MAIL_PASS ? "OK" : "MISSING",
+});
+
+function sanitizeUser(userDoc) {
+  if (!userDoc) return null;
+  return {
+    id: String(userDoc._id),
+    name: userDoc.name,
+    email: userDoc.email,
+    phone: userDoc.phone,
+    avatar: userDoc.avatar,
+    verified: userDoc.verified || false,
+    createdAt: userDoc.createdAt,
+  };
+}
+
+function isStrongPassword(password) {
+  if (typeof password !== "string") return false;
+  // min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(
+    password,
+  );
+}
+
+async function requireAuth(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, getJwtSecret());
+    const userId = typeof decoded === "string" ? decoded : decoded.id;
+
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    req.user = user;
+    next();
+  } catch (e) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+}
+
+authRoutes.post("/register", async (req, res) => {
+  try {
+    const name = trimIfString(req.body?.name);
+    const email = trimIfString(req.body?.email)?.toLowerCase();
+    const password = req.body?.password;
+    const phone = trimIfString(req.body?.phone);
+
+    if (!name || !email || !password || !phone) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+      });
+    }
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        error: "Weak password",
+        field: "password",
+      });
+    }
+
+    // Very permissive phone validation (E.164-ish)
+    const phoneOk = /^[+]?[\d\s().-]{7,20}$/.test(phone);
+    if (!phoneOk) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid phone number",
+        field: "phone",
+      });
+    }
+
+    const existing = await db.collection("users").findOne({ email });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        error: "Email already in use",
+        field: "email",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    const userDoc = {
+      name,
+      email,
+      // Store the hash under `password` to satisfy MongoDB validators/schemas.
+      password: passwordHash,
+      phone,
+      otp,
+      otpExpiresAt,
+      verified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await db.collection("users").insertOne(userDoc);
+    const userId = String(result.insertedId);
+
+    // In production, send OTP via email/SMS here
+    // For now, log it for testing
+    console.log(`[REGISTER] OTP for ${email}: ${otp}`);
+
+    return res.status(201).json({
+      success: true,
+      userId,
+      message: "OTP sent to your email",
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+authRoutes.post("/login", async (req, res) => {
+  try {
+    const email = trimIfString(req.body?.email)?.toLowerCase();
+    const password = req.body?.password;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing required fields" });
+    }
+
+    const user = await db.collection("users").findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+        field: "password",
+      });
+    }
+
+    const storedHash = user.passwordHash || user.password;
+    if (!storedHash) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+        field: "password",
+      });
+    }
+
+    const ok = await bcrypt.compare(password, storedHash);
+    if (!ok) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+        field: "password",
+      });
+    }
+
+    const token = jwt.sign({ id: String(user._id) }, getJwtSecret(), {
+      expiresIn: "7d",
+    });
+
+    return res.json({
+      success: true,
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+userRoutes.put("/me", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const name = trimIfString(req.body?.name);
+    const email = trimIfString(req.body?.email)?.toLowerCase();
+
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        error: "Name and email are required",
+      });
+    }
+
+    const existing = await db.collection("users").findOne({
+      email,
+      _id: { $ne: userId },
+    });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ success: false, error: "Email already in use" });
+    }
+
+    await db
+      .collection("users")
+      .updateOne(
+        { _id: userId },
+        { $set: { name, email, updatedAt: new Date() } },
+      );
+
+    const updated = await db.collection("users").findOne({ _id: userId });
+    return res.json({ success: true, user: sanitizeUser(updated) });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+userRoutes.put("/change-password", requireAuth, async (req, res) => {
+  try {
+    const currentPassword = req.body?.currentPassword;
+    const newPassword = req.body?.newPassword;
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing required fields" });
+    }
+
+    const storedHash = req.user.passwordHash || req.user.password;
+    if (!storedHash) {
+      return res.status(400).json({
+        success: false,
+        error: "Current password is incorrect",
+      });
+    }
+
+    const ok = await bcrypt.compare(currentPassword, storedHash);
+    if (!ok) {
+      return res.status(400).json({
+        success: false,
+        error: "Current password is incorrect",
+      });
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        error: "Weak password",
+        field: "password",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await db.collection("users").updateOne(
+      { _id: req.user._id },
+      {
+        $set: { password: passwordHash, updatedAt: new Date() },
+        $unset: { passwordHash: "" },
+      },
+    );
+
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Forgot password - request reset link
+authRoutes.post("/forgot-password", async (req, res) => {
+  try {
+    const email = trimIfString(req.body?.email)?.toLowerCase();
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Email is required" });
+    }
+
+    const user = await db.collection("users").findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists for security
+      return res.json({
+        success: true,
+        message: "If an account exists, a reset link has been sent",
+      });
+    }
+
+    // Generate reset token (simple implementation - in production use crypto.randomBytes)
+    const resetToken = require("crypto").randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Store reset token (in production, use a separate collection)
+    await db.collection("users").updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          resetToken,
+          resetTokenExpiresAt: expiresAt,
+          updatedAt: new Date(),
+        },
+      },
+    );
+
+    // In production, send email here with reset link
+    // For now, just return success (you can log the token for testing)
+    console.log(`[FORGOT PASSWORD] Reset token for ${email}: ${resetToken}`);
+    console.log(
+      `[FORGOT PASSWORD] Reset link: /reset-password?token=${resetToken}`,
+    );
+
+    return res.json({
+      success: true,
+      message: "If an account exists, a reset link has been sent",
+      // In dev only - remove in production
+      devToken: resetToken,
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Reset password with token
+authRoutes.post("/reset-password", async (req, res) => {
+  try {
+    const token = req.body?.token;
+    const newPassword = req.body?.newPassword;
+
+    if (!token || !newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Token and new password are required" });
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        error: "Weak password",
+        field: "password",
+      });
+    }
+
+    const user = await db.collection("users").findOne({
+      resetToken: token,
+      resetTokenExpiresAt: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired reset token",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await db.collection("users").updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          password: passwordHash,
+          updatedAt: new Date(),
+        },
+        $unset: {
+          resetToken: "",
+          resetTokenExpiresAt: "",
+          passwordHash: "",
+        },
+      },
+    );
+
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Verify OTP
+authRoutes.post("/verify-otp", async (req, res) => {
+  try {
+    const userId = req.body?.userId;
+    const otp = req.body?.otp;
+
+    if (!userId || !otp) {
+      return res.status(400).json({
+        success: false,
+        error: "User ID and OTP are required",
+      });
+    }
+
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Check if OTP exists and is valid
+    if (!user.otp || user.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid OTP",
+      });
+    }
+
+    // Check if OTP has expired
+    if (user.otpExpiresAt && new Date() > new Date(user.otpExpiresAt)) {
+      return res.status(400).json({
+        success: false,
+        error: "OTP has expired",
+      });
+    }
+
+    // Mark user as verified and clear OTP
+    await db.collection("users").updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $set: {
+          verified: true,
+          updatedAt: new Date(),
+        },
+        $unset: {
+          otp: "",
+          otpExpiresAt: "",
+        },
+      },
+    );
+
+    // Generate JWT token
+    const token = jwt.sign({ id: userId }, getJwtSecret(), {
+      expiresIn: "7d",
+    });
+
+    // Get updated user
+    const updatedUser = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
+
+    return res.json({
+      success: true,
+      token,
+      user: sanitizeUser(updatedUser),
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.use("/users", authRoutes);
 // Middleware de logging pour debug
 app.use((req, res, next) => {
   console.log(`[server] ${req.method} ${req.path}`);
   next();
 });
+
+app.use("/users", userRoutes);
 
 const PORT = process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 4000;
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -24,7 +489,7 @@ const ACTIVE_IP =
   process.env.API_IP_PRIMARY ||
   (() => {
     console.log(
-      "[server] API_IP_PRIMARY not set, detecting IP automatically..."
+      "[server] API_IP_PRIMARY not set, detecting IP automatically...",
     );
     const interfaces = os.networkInterfaces();
     const priorityInterfaces = ["Wi-Fi", "Ethernet", "en0", "eth0"];
@@ -60,6 +525,42 @@ async function connectMongo() {
   await client.connect();
   db = client.db(DB_NAME);
   console.log(`[server] Connected to MongoDB: ${DB_NAME}`);
+  // Best effort: ensure unique emails
+  try {
+    await db.collection("users").createIndex({ email: 1 }, { unique: true });
+  } catch (_) {
+    // ignore
+  }
+
+  // Best effort: ensure `phone` is allowed by users collection validator (if any)
+  try {
+    const infos = await db
+      .listCollections({ name: "users" }, { nameOnly: false })
+      .toArray();
+    const info = infos[0];
+    const schema = info?.options?.validator?.$jsonSchema;
+
+    if (schema?.properties && !schema.properties.phone) {
+      const nextSchema = {
+        ...schema,
+        properties: {
+          ...schema.properties,
+          phone: { bsonType: "string" },
+        },
+      };
+
+      await db.command({
+        collMod: "users",
+        validator: { $jsonSchema: nextSchema },
+        validationLevel: info?.options?.validationLevel || "strict",
+        validationAction: info?.options?.validationAction || "error",
+      });
+
+      console.log("[server] users validator updated (phone enabled)");
+    }
+  } catch (e) {
+    console.log("[server] Could not update users validator:", e?.message || e);
+  }
 }
 
 app.get("/health", (_req, res) => {
@@ -131,7 +632,7 @@ app.post("/trips", async (req, res) => {
     const startDateOnly = new Date(
       start.getFullYear(),
       start.getMonth(),
-      start.getDate()
+      start.getDate(),
     );
 
     if (start >= end) {
@@ -221,7 +722,7 @@ app.put("/trips/:id", async (req, res) => {
     // Vérifier les permissions
     const isOwner = existingTrip.ownerId === userId;
     const isCollaborator = existingTrip.collaborators.some(
-      (collab) => collab.userId === userId && collab.permissions.canEdit
+      (collab) => collab.userId === userId && collab.permissions.canEdit,
     );
 
     if (!isOwner && !isCollaborator) {
@@ -345,8 +846,8 @@ app.post("/bookings", async (req, res) => {
       time: time || undefined,
       address: address ? address.trim() : undefined,
       confirmationNumber: confirmationNumber
-      ? confirmationNumber.trim()
-      : undefined,
+        ? confirmationNumber.trim()
+        : undefined,
       price: price ? parseFloat(price) : undefined,
       currency: currency || "EUR",
       status: status || "pending",
@@ -540,7 +1041,7 @@ app.post("/invitations", async (req, res) => {
     // Vérifier que l'inviteur est propriétaire ou collaborateur avec permissions
     const isOwner = trip.ownerId === inviterId;
     const isCollaborator = trip.collaborators.some(
-      (collab) => collab.userId === inviterId && collab.permissions.canInvite
+      (collab) => collab.userId === inviterId && collab.permissions.canInvite,
     );
 
     if (!isOwner && !isCollaborator) {
@@ -550,7 +1051,7 @@ app.post("/invitations", async (req, res) => {
     // Vérifier que l'email n'est pas déjà collaborateur
     const existingCollaborator = trip.collaborators.find(
       (collab) =>
-        collab.userId === inviteeEmail || collab.email === inviteeEmail
+        collab.userId === inviteeEmail || collab.email === inviteeEmail,
     );
 
     if (existingCollaborator) {
@@ -645,7 +1146,7 @@ app.get("/invitations/user/:email", async (req, res) => {
               }
             : null,
         };
-      })
+      }),
     );
 
     res.json(enrichedInvitations);
@@ -693,7 +1194,7 @@ app.put("/invitations/:token", async (req, res) => {
           status: newStatus,
           respondedAt: new Date(),
         },
-      }
+      },
     );
 
     if (action === "accept") {
@@ -709,7 +1210,7 @@ app.put("/invitations/:token", async (req, res) => {
         .collection("trips")
         .updateOne(
           { _id: invitation.tripId },
-          { $push: { collaborators: collaborator } }
+          { $push: { collaborators: collaborator } },
         );
     }
 
@@ -759,7 +1260,7 @@ app.get("/invitations/sent/:userId", async (req, res) => {
               }
             : null,
         };
-      })
+      }),
     );
 
     res.json(enrichedInvitations);
@@ -775,7 +1276,7 @@ connectMongo()
     console.log("  POST /bookings");
     console.log("  GET /bookings");
     console.log("  GET /bookings/trip/:tripId");
-    
+
     app.listen(PORT, ACTIVE_IP, () => {
       console.log(`[server] API listening on http://${ACTIVE_IP}:${PORT}`);
       console.log(`[server] Accessible via http://localhost:${PORT}`);

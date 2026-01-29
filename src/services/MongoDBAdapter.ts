@@ -1,6 +1,7 @@
 // Adaptateur MongoDB pour remplacer DataService
 import MongoDBService from "./MongoDBService";
 import { Trip, Booking, Address, User } from "../types";
+import bcrypt from "bcrypt";
 
 class MongoDBAdapter {
   private static instance: MongoDBAdapter;
@@ -20,7 +21,7 @@ class MongoDBAdapter {
   // Initialiser la connexion MongoDB
   async initialize(
     connectionString: string,
-    dbName: string = "mytripcircle"
+    dbName: string = "mytripcircle",
   ): Promise<void> {
     await this.mongoService.connect(connectionString, dbName);
   }
@@ -38,7 +39,7 @@ class MongoDBAdapter {
   }
 
   async createTrip(
-    trip: Omit<Trip, "id" | "createdAt" | "updatedAt">
+    trip: Omit<Trip, "id" | "createdAt" | "updatedAt">,
   ): Promise<Trip> {
     try {
       const mongoTrip = await this.mongoService.createTrip({
@@ -61,7 +62,7 @@ class MongoDBAdapter {
 
   async updateTrip(
     tripId: string,
-    updates: Partial<Trip>
+    updates: Partial<Trip>,
   ): Promise<Trip | null> {
     try {
       const mongoUpdates: any = { ...updates };
@@ -73,7 +74,7 @@ class MongoDBAdapter {
 
       const updatedTrip = await this.mongoService.updateTrip(
         tripId,
-        mongoUpdates
+        mongoUpdates,
       );
       return updatedTrip ? this.mapMongoTripToAppTrip(updatedTrip) : null;
     } catch (error) {
@@ -113,7 +114,7 @@ class MongoDBAdapter {
   }
 
   async createBooking(
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">,
   ): Promise<Booking> {
     try {
       const mongoBooking = await this.mongoService.createBooking({
@@ -140,12 +141,12 @@ class MongoDBAdapter {
 
   async updateBooking(
     bookingId: string,
-    updates: Partial<Booking>
+    updates: Partial<Booking>,
   ): Promise<Booking | null> {
     try {
       const updatedBooking = await this.mongoService.updateBooking(
         bookingId,
-        updates
+        updates,
       );
       return updatedBooking
         ? this.mapMongoBookingToAppBooking(updatedBooking)
@@ -187,17 +188,15 @@ class MongoDBAdapter {
   }
 
   async createAddress(
-    address: Omit<Address, "id" | "createdAt" | "updatedAt">
+    address: Omit<Address, "id" | "createdAt" | "updatedAt">,
   ): Promise<Address> {
     try {
       const mongoAddress = await this.mongoService.createAddress({
-        tripId: address.tripId,
         type: address.type,
         name: address.name,
         address: address.address,
         city: address.city,
         country: address.country,
-        coordinates: address.coordinates,
         phone: address.phone,
         website: address.website,
         notes: address.notes,
@@ -211,12 +210,12 @@ class MongoDBAdapter {
 
   async updateAddress(
     addressId: string,
-    updates: Partial<Address>
+    updates: Partial<Address>,
   ): Promise<Address | null> {
     try {
       const updatedAddress = await this.mongoService.updateAddress(
         addressId,
-        updates
+        updates,
       );
       return updatedAddress
         ? this.mapMongoAddressToAppAddress(updatedAddress)
@@ -257,18 +256,28 @@ class MongoDBAdapter {
     }
   }
 
-  async createUser(user: Omit<User, "id" | "createdAt">): Promise<User> {
-    try {
-      const mongoUser = await this.mongoService.createUser({
-        email: user.email,
-        name: user.name,
-        avatar: user.avatar,
-      });
-      return this.mapMongoUserToAppUser(mongoUser);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      throw error;
-    }
+  async createUser(user: {
+    email: string;
+    name: string;
+    avatar?: string;
+    password: string;
+  }) {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    const created = await this.mongoService.createUser({
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      password: hashedPassword,
+      verified: false,
+      otp,
+      otpExpires,
+    });
+
+    return created;
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -292,8 +301,31 @@ class MongoDBAdapter {
       destination: mongoTrip.destination,
       coverImage: mongoTrip.coverImage,
       ownerId: mongoTrip.ownerId.toString(),
-      collaborators: mongoTrip.collaborators?.map((c: any) => c.userId) || [],
-      isPublic: mongoTrip.isPublic,
+      collaborators:
+        mongoTrip.collaborators?.map((c: any) => ({
+          userId: c.userId || c,
+          role: c.role || "editor",
+          joinedAt: c.joinedAt || new Date(),
+          permissions: c.permissions || {
+            canEdit: true,
+            canInvite: false,
+            canDelete: false,
+          },
+        })) || [],
+      isPublic: mongoTrip.isPublic || false,
+      visibility:
+        mongoTrip.visibility || (mongoTrip.isPublic ? "public" : "private"),
+      status: mongoTrip.status || "draft",
+      stats: mongoTrip.stats || {
+        totalBookings: 0,
+        totalAddresses: 0,
+        totalCollaborators: mongoTrip.collaborators?.length || 0,
+      },
+      location: mongoTrip.location || {
+        type: "Point",
+        coordinates: [0, 0],
+      },
+      tags: mongoTrip.tags || [],
       createdAt: mongoTrip.createdAt,
       updatedAt: mongoTrip.updatedAt,
     };
@@ -307,7 +339,9 @@ class MongoDBAdapter {
       title: mongoBooking.title,
       description: mongoBooking.description,
       date: new Date(mongoBooking.date),
-      endDate: mongoBooking.endDate ? new Date(mongoBooking.endDate) : undefined,
+      endDate: mongoBooking.endDate
+        ? new Date(mongoBooking.endDate)
+        : undefined,
       time: mongoBooking.time,
       address: mongoBooking.address,
       confirmationNumber: mongoBooking.confirmationNumber,
@@ -323,13 +357,11 @@ class MongoDBAdapter {
   private mapMongoAddressToAppAddress(mongoAddress: any): Address {
     return {
       id: mongoAddress._id,
-      tripId: mongoAddress.tripId,
       type: mongoAddress.type,
       name: mongoAddress.name,
       address: mongoAddress.address,
       city: mongoAddress.city,
       country: mongoAddress.country,
-      coordinates: mongoAddress.coordinates,
       phone: mongoAddress.phone,
       website: mongoAddress.website,
       notes: mongoAddress.notes,
@@ -343,7 +375,9 @@ class MongoDBAdapter {
       id: mongoUser._id,
       name: mongoUser.name,
       email: mongoUser.email,
+      phone: mongoUser.phone,
       avatar: mongoUser.avatar,
+      verified: mongoUser.verified || false,
       createdAt: mongoUser.createdAt,
     };
   }
@@ -399,7 +433,15 @@ class MongoDBAdapter {
       }
       if (data.users) {
         for (const user of data.users) {
-          await this.createUser(user);
+          // createUser expects password, so we skip users without it
+          if ("password" in user) {
+            await this.createUser({
+              email: user.email,
+              name: user.name,
+              avatar: user.avatar,
+              password: "temp-password-change-me",
+            });
+          }
         }
       }
     } catch (error) {

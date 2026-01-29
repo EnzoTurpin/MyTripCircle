@@ -14,20 +14,31 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { ModernButton } from "../components/ModernButton";
 
+type AuthScreenNavigationProp = StackNavigationProp<RootStackParamList, "Auth">;
+
 const AuthScreen: React.FC = () => {
+  const navigation = useNavigation<AuthScreenNavigationProp>();
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const { login, register, loading } = useAuth();
   const { t } = useTranslation();
-  
+
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(50)).current;
 
@@ -47,26 +58,156 @@ const AuthScreen: React.FC = () => {
     ]).start();
   }, []);
 
+  const validateEmail = (emailValue: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailValue) {
+      setEmailError(t("common.fillAllFields"));
+      return false;
+    }
+    if (!emailRegex.test(emailValue)) {
+      setEmailError(t("common.invalidEmail"));
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const validatePasswordRequired = (passwordValue: string): boolean => {
+    if (!passwordValue) {
+      setPasswordError(t("common.fillAllFields"));
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const validatePasswordStrong = (passwordValue: string): boolean => {
+    if (!validatePasswordRequired(passwordValue)) return false;
+    // min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!strongPasswordRegex.test(passwordValue)) {
+      setPasswordError(t("common.invalidPassword"));
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const validateName = (nameValue: string): boolean => {
+    if (!nameValue || nameValue.trim().length < 2) {
+      setNameError(t("common.fillAllFields"));
+      return false;
+    }
+    setNameError("");
+    return true;
+  };
+
+  const validatePhone = (phoneValue: string): boolean => {
+    const value = phoneValue.trim();
+    if (!value) {
+      setPhoneError(t("common.fillAllFields"));
+      return false;
+    }
+    const phoneRegex = /^[+]?[\d\s().-]{7,20}$/;
+    if (!phoneRegex.test(value)) {
+      setPhoneError(t("common.invalidPhone"));
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
   const handleSubmit = async () => {
-    if (!email || !password || (!isLogin && !name)) {
-      Alert.alert(t("common.error"), t("common.fillAllFields"));
+    // Reset errors
+    setEmailError("");
+    setPasswordError("");
+    setNameError("");
+    setPhoneError("");
+
+    // Validate fields
+    let isValid = true;
+
+    if (!isLogin && !validateName(name)) {
+      isValid = false;
+    }
+
+    if (!isLogin && !validatePhone(phone)) {
+      isValid = false;
+    }
+
+    if (!validateEmail(email)) {
+      isValid = false;
+    }
+
+    if (isLogin) {
+      if (!validatePasswordRequired(password)) isValid = false;
+    } else {
+      if (!validatePasswordStrong(password)) isValid = false;
+    }
+
+    if (!isValid) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      let success = false;
       if (isLogin) {
-        success = await login(email, password);
+        const result = await login(email, password);
+        if (!result.success) {
+          // Prefer field-level errors for auth
+          if (result.field === "email") setEmailError(result.error);
+          else if (result.field === "password") {
+            setPasswordError(
+              result.error.includes("Invalid credentials")
+                ? t("common.invalidCredentials")
+                : result.error,
+            );
+          } else {
+            setPasswordError(
+              result.error.includes("Invalid credentials")
+                ? t("common.invalidCredentials")
+                : result.error,
+            );
+          }
+          return;
+        }
       } else {
-        success = await register(name, email, password);
-      }
+        const result = await register(name, email, password, phone.trim());
+        if (!result.success) {
+          if (result.field === "name") setNameError(result.error);
+          else if (result.field === "phone") {
+            setPhoneError(
+              result.error.includes("Invalid phone")
+                ? t("common.invalidPhone")
+                : result.error,
+            );
+          } else if (result.field === "email") {
+            setEmailError(
+              result.error.includes("Email already in use")
+                ? t("common.emailAlreadyInUse")
+                : result.error,
+            );
+          } else if (result.field === "password") {
+            setPasswordError(
+              result.error.includes("Weak password") ||
+                result.error.includes("Password must be at least")
+                ? t("common.invalidPassword")
+                : result.error,
+            );
+          } else {
+            Alert.alert(
+              t("common.error"),
+              result.error || t("common.registerFailed"),
+            );
+          }
+          return;
+        }
 
-      if (!success) {
-        Alert.alert(
-          t("common.error"),
-          isLogin ? t("common.loginFailed") : t("common.registerFailed")
-        );
+        // If userId is returned, redirect to OTP screen
+        if (result.userId) {
+          (navigation as any).navigate("Otp", { userId: result.userId });
+        }
       }
     } catch (error) {
       Alert.alert(t("common.error"), t("common.unexpectedError"));
@@ -76,8 +217,8 @@ const AuthScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient 
-      colors={['#2891FF', '#8869FF']}
+    <LinearGradient
+      colors={["#2891FF", "#8869FF"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -87,11 +228,11 @@ const AuthScreen: React.FC = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View 
+          <Animated.View
             style={[
               styles.header,
               {
@@ -102,17 +243,19 @@ const AuthScreen: React.FC = () => {
           >
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
+                colors={["rgba(255,255,255,0.3)", "rgba(255,255,255,0.1)"]}
                 style={styles.iconGradient}
               >
                 <Ionicons name="airplane" size={80} color="white" />
               </LinearGradient>
             </View>
             <Text style={styles.title}>{t("appName") || "MyTripCircle"}</Text>
-            <Text style={styles.subtitle}>{t("slogan") || "Organisez vos voyages ensemble"}</Text>
+            <Text style={styles.subtitle}>
+              {t("slogan") || "Organisez vos voyages ensemble"}
+            </Text>
           </Animated.View>
 
-          <Animated.View 
+          <Animated.View
             style={[
               styles.form,
               {
@@ -123,101 +266,198 @@ const AuthScreen: React.FC = () => {
           >
             <View style={styles.formHeader}>
               <Text style={styles.formTitle}>
-                {isLogin ? t("common.welcomeBack") || "Bon retour" : t("common.createAccount") || "Créer un compte"}
+                {isLogin ? t("common.welcomeBack") : t("common.createAccount")}
               </Text>
               <Text style={styles.formSubtitle}>
-                {isLogin 
-                  ? t("common.loginToContinue") || "Connectez-vous pour continuer" 
-                  : t("common.signUpToStart") || "Inscrivez-vous pour commencer"}
+                {isLogin
+                  ? t("common.loginToContinue")
+                  : t("common.signUpToStart")}
               </Text>
             </View>
 
             {!isLogin && (
-              <View style={styles.inputContainer}>
+              <View>
+                <View
+                  style={[
+                    styles.inputContainer,
+                    nameError && styles.inputContainerError,
+                  ]}
+                >
+                  <View style={styles.inputIconContainer}>
+                    <Ionicons
+                      name="person-outline"
+                      size={20}
+                      color={nameError ? "#FF3B30" : "#2891FF"}
+                    />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t("common.fullName")}
+                    placeholderTextColor={"#BDBDBD"}
+                    value={name}
+                    onChangeText={(text) => {
+                      setName(text);
+                      if (nameError) setNameError("");
+                    }}
+                    onBlur={() => !isLogin && validateName(name)}
+                    autoCapitalize="words"
+                  />
+                </View>
+                {nameError ? (
+                  <Text style={styles.errorText}>{nameError}</Text>
+                ) : null}
+              </View>
+            )}
+
+            {!isLogin && (
+              <View>
+                <View
+                  style={[
+                    styles.inputContainer,
+                    phoneError && styles.inputContainerError,
+                  ]}
+                >
+                  <View style={styles.inputIconContainer}>
+                    <Ionicons
+                      name="call-outline"
+                      size={20}
+                      color={phoneError ? "#FF3B30" : "#2891FF"}
+                    />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t("common.phone")}
+                    placeholderTextColor={"#BDBDBD"}
+                    value={phone}
+                    onChangeText={(text) => {
+                      setPhone(text);
+                      if (phoneError) setPhoneError("");
+                    }}
+                    onBlur={() => !isLogin && validatePhone(phone)}
+                    keyboardType="phone-pad"
+                    autoCapitalize="none"
+                  />
+                </View>
+                {phoneError ? (
+                  <Text style={styles.errorText}>{phoneError}</Text>
+                ) : null}
+              </View>
+            )}
+
+            <View>
+              <View
+                style={[
+                  styles.inputContainer,
+                  emailError && styles.inputContainerError,
+                ]}
+              >
                 <View style={styles.inputIconContainer}>
                   <Ionicons
-                    name="person-outline"
+                    name="mail-outline"
                     size={20}
-                    color={"#2891FF"}
+                    color={emailError ? "#FF3B30" : "#2891FF"}
                   />
                 </View>
                 <TextInput
                   style={styles.input}
-                  placeholder={t("common.fullName")}
+                  placeholder={t("common.email")}
                   placeholderTextColor={"#BDBDBD"}
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (emailError) setEmailError("");
+                  }}
+                  onBlur={() => validateEmail(email)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
                 />
               </View>
-            )}
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={"#2891FF"}
-                />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t("common.email")}
-                placeholderTextColor={"#BDBDBD"}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+              {emailError ? (
+                <Text style={styles.errorText}>{emailError}</Text>
+              ) : null}
             </View>
 
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color={"#2891FF"}
-                />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t("common.password")}
-                placeholderTextColor={"#BDBDBD"}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity 
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
+            <View>
+              <View
+                style={[
+                  styles.inputContainer,
+                  passwordError && styles.inputContainerError,
+                ]}
               >
-                <Ionicons
-                  name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={20}
-                  color={"#BDBDBD"}
+                <View style={styles.inputIconContainer}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color={passwordError ? "#FF3B30" : "#2891FF"}
+                  />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t("common.password")}
+                  placeholderTextColor={"#BDBDBD"}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (passwordError) setPasswordError("");
+                  }}
+                  onBlur={() =>
+                    isLogin
+                      ? validatePasswordRequired(password)
+                      : validatePasswordStrong(password)
+                  }
+                  secureTextEntry={!showPassword}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={20}
+                    color={"#BDBDBD"}
+                  />
+                </TouchableOpacity>
+              </View>
+              {passwordError ? (
+                <Text style={styles.errorText}>{passwordError}</Text>
+              ) : null}
             </View>
 
             {isLogin && (
-              <TouchableOpacity style={styles.forgotButton}>
-                <Text style={styles.forgotText}>{t("common.forgotPassword") || "Mot de passe oublié ?"}</Text>
+              <TouchableOpacity
+                style={styles.forgotButton}
+                onPress={() =>
+                  (navigation as any).navigate("ForgotPassword", {})
+                }
+                activeOpacity={0.8}
+              >
+                <Text style={styles.forgotText}>
+                  {t("common.forgotPassword")}
+                </Text>
               </TouchableOpacity>
             )}
 
             <ModernButton
-              title={loading || isSubmitting
-                ? t("common.pleaseWait")
-                : isLogin
-                ? t("common.signIn")
-                : t("common.signUp")}
+              title={
+                loading || isSubmitting
+                  ? t("common.pleaseWait")
+                  : isLogin
+                    ? t("common.signIn")
+                    : t("common.signUp")
+              }
               onPress={handleSubmit}
               disabled={loading || isSubmitting}
-              loading={loading || isSubmitting}
+              variant="primary"
               gradient
               size="large"
               fullWidth
-              icon={isLogin ? "log-in-outline" : "person-add-outline"}
+              icon={
+                loading || isSubmitting
+                  ? "hourglass"
+                  : isLogin
+                    ? "log-in-outline"
+                    : "person-add-outline"
+              }
               style={styles.submitButton}
             />
 
@@ -229,25 +469,32 @@ const AuthScreen: React.FC = () => {
 
             <View style={styles.switchContainer}>
               <Text style={styles.switchLabel}>
-                {isLogin ? t("common.noAccount") || "Pas de compte ?" : t("common.haveAccount") || "Déjà un compte ?"}
+                {isLogin ? t("common.noAccount") : t("common.haveAccount")}
               </Text>
               <TouchableOpacity
-                onPress={() => setIsLogin(!isLogin)}
+                onPress={() => {
+                  setIsLogin(!isLogin);
+                  // Reset errors when switching modes
+                  setEmailError("");
+                  setPasswordError("");
+                  setNameError("");
+                  setPhoneError("");
+                  setPhone("");
+                }}
+                activeOpacity={0.8}
               >
                 <Text style={styles.switchLink}>
-                  {isLogin ? t("common.signUp") || "S'inscrire" : t("common.signIn") || "Se connecter"}
+                  {isLogin ? t("common.signUp") : t("common.signIn")}
                 </Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              {t("common.termsAgree") || "En continuant, vous acceptez nos"}
-            </Text>
+            <Text style={styles.footerText}>{t("common.termsAgree")}</Text>
             <TouchableOpacity>
               <Text style={styles.footerLink}>
-                {t("common.termsAndConditions") || "Conditions d'utilisation"}
+                {t("common.termsAndConditions")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -271,6 +518,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center" as const,
+    marginTop: 78,
     marginBottom: 64,
   },
   iconContainer: {
@@ -278,7 +526,11 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     marginBottom: 24,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.25, shadowRadius: 24, elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
   },
   iconGradient: {
     width: "100%",
@@ -291,8 +543,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 40,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontWeight: "800",
+    color: "#FFFFFF",
     marginBottom: 8,
     textAlign: "center" as const,
   },
@@ -302,40 +554,54 @@ const styles = StyleSheet.create({
     textAlign: "center" as const,
   },
   form: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 32,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.25, shadowRadius: 24, elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
   },
   formHeader: {
     marginBottom: 32,
   },
   formTitle: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#212121',
+    fontWeight: "700",
+    color: "#212121",
     marginBottom: 4,
   },
   formSubtitle: {
     fontSize: 16,
-    color: '#616161',
+    color: "#616161",
   },
   inputContainer: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginBottom: 16,
+    marginBottom: 4,
     borderWidth: 2,
     borderColor: "transparent",
+  },
+  inputContainerError: {
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFF5F5",
+  },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 12,
+    marginBottom: 12,
+    marginLeft: 4,
   },
   inputIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     justifyContent: "center" as const,
     alignItems: "center" as const,
     marginRight: 16,
@@ -343,7 +609,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#212121',
+    color: "#212121",
     paddingVertical: 8,
   },
   eyeButton: {
@@ -355,8 +621,8 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontSize: 14,
-    color: '#2891FF',
-    fontWeight: '600',
+    color: "#2891FF",
+    fontWeight: "600",
   },
   submitButton: {
     marginTop: 16,
@@ -369,13 +635,13 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: "#EEEEEE",
   },
   dividerText: {
     marginHorizontal: 16,
     fontSize: 14,
-    color: '#616161',
-    fontWeight: '500',
+    color: "#616161",
+    fontWeight: "500",
   },
   switchContainer: {
     flexDirection: "row" as const,
@@ -385,13 +651,13 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 16,
-    color: '#616161',
+    color: "#616161",
     marginRight: 4,
   },
   switchLink: {
     fontSize: 16,
-    color: '#2891FF',
-    fontWeight: '700',
+    color: "#2891FF",
+    fontWeight: "700",
   },
   footer: {
     marginTop: 32,
@@ -404,8 +670,8 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontWeight: "700",
     textDecorationLine: "underline" as const,
   },
 });

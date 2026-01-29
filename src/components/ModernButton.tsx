@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   TouchableOpacity,
   Text,
@@ -7,16 +7,16 @@ import {
   ViewStyle,
   TextStyle,
   ActivityIndicator,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ModernButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "small" | "medium" | "large";
   icon?: keyof typeof Ionicons.glyphMap;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   loading?: boolean;
   fullWidth?: boolean;
   gradient?: boolean;
@@ -24,10 +24,10 @@ interface ModernButtonProps extends TouchableOpacityProps {
 
 export const ModernButton: React.FC<ModernButtonProps> = ({
   title,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   icon,
-  iconPosition = 'left',
+  iconPosition = "left",
   loading = false,
   fullWidth = false,
   gradient = false,
@@ -43,47 +43,56 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
     style,
   ].filter(Boolean);
 
+  // Needed to keep gradient buttons perfectly rounded on all platforms.
+  const resolvedButtonStyle = StyleSheet.flatten(
+    buttonStyle as any,
+  ) as ViewStyle;
+  const borderRadius =
+    (resolvedButtonStyle?.borderRadius as number | undefined) ?? 12;
+
   const textStyle: TextStyle[] = [
     styles.text,
     styles[`${size}Text` as keyof typeof styles],
     styles[`${variant}Text` as keyof typeof styles],
   ];
 
-  const iconSize = size === 'small' ? 16 : size === 'medium' ? 18 : 24;
+  const iconSize = size === "small" ? 16 : size === "medium" ? 18 : 24;
 
   const renderContent = () => (
     <>
       {loading ? (
         <ActivityIndicator
           color={
-            variant === 'primary' || variant === 'secondary'
-              ? '#FFFFFF'
-              : '#2891FF'
+            variant === "primary" || variant === "secondary"
+              ? "#FFFFFF"
+              : "#2891FF"
           }
         />
       ) : (
         <>
-          {icon && iconPosition === 'left' && (
+          {icon && iconPosition === "left" && (
             <Ionicons
               name={icon}
               size={iconSize}
               color={
-                variant === 'primary' || variant === 'secondary'
-                  ? '#FFFFFF'
-                  : '#2891FF'
+                variant === "primary" || variant === "secondary"
+                  ? "#FFFFFF"
+                  : "#2891FF"
               }
               style={styles.iconLeft}
             />
           )}
-          <Text style={textStyle} numberOfLines={1}>{title}</Text>
-          {icon && iconPosition === 'right' && (
+          <Text style={textStyle} numberOfLines={1}>
+            {title}
+          </Text>
+          {icon && iconPosition === "right" && (
             <Ionicons
               name={icon}
               size={iconSize}
               color={
-                variant === 'primary' || variant === 'secondary'
-                  ? '#FFFFFF'
-                  : '#2891FF'
+                variant === "primary" || variant === "secondary"
+                  ? "#FFFFFF"
+                  : "#2891FF"
               }
               style={styles.iconRight}
             />
@@ -93,7 +102,7 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
     </>
   );
 
-  if (variant === 'primary' && gradient) {
+  if (variant === "primary" && gradient) {
     return (
       <TouchableOpacity
         style={buttonStyle}
@@ -102,10 +111,14 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
         {...props}
       >
         <LinearGradient
-          colors={['#2891FF', '#8869FF']}
+          colors={["#2891FF", "#8869FF"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.gradient, styles[size]]}
+          style={[
+            styles.gradient,
+            styles[size],
+            { borderRadius, overflow: "hidden" },
+          ]}
         >
           {renderContent()}
         </LinearGradient>
@@ -128,37 +141,45 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
   gradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   primary: {
-    backgroundColor: '#2891FF',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+    backgroundColor: "#2891FF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   secondary: {
-    backgroundColor: '#8869FF',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+    backgroundColor: "#8869FF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   outline: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 2,
-    borderColor: '#2891FF',
-    shadowColor: '#000',
+    borderColor: "#2891FF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   small: {
     paddingHorizontal: 16,
@@ -176,14 +197,14 @@ const styles = StyleSheet.create({
     minHeight: 60,
   },
   fullWidth: {
-    width: '100%',
+    width: "100%",
   },
   disabled: {
     opacity: 0.5,
   },
   text: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     flex: 1,
   },
   smallText: {
@@ -196,16 +217,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   secondaryText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   outlineText: {
-    color: '#2891FF',
+    color: "#2891FF",
   },
   ghostText: {
-    color: '#2891FF',
+    color: "#2891FF",
   },
   iconLeft: {
     marginRight: 6,

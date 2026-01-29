@@ -2,8 +2,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatar?: string;
   createdAt: Date;
+  verified?: boolean;
 }
 
 export interface Trip {
@@ -103,6 +105,7 @@ export interface TripCollaborator {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  Otp: { userId: string };
   TripDetails: { tripId: string; showValidateButton?: boolean };
   BookingDetails: { bookingId: string };
   AddressDetails: { addressId: string };
@@ -114,6 +117,8 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
+  ChangePassword: undefined;
+  ForgotPassword: { token?: string };
   HelpSupport: undefined;
   Subscription: undefined;
 };
