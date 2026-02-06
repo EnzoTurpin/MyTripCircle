@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "MyTripCircle",
+    "slug": "MyTripCircle",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.panda_sauvage.MyTripCircle"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.panda_sauvage.MyTripCircle"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      "expo-localization"
+    ],
+    "scheme": "mytripcircle",
+    "linking": {
+      "prefixes": [
+        "mytripcircle://"
+      ],
+      "config": {
+        "screens": {
+          "Invitation": "invitation/:token"
+        }
+      }
+    }
+  }
+}
