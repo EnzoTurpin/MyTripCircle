@@ -14,6 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
+import { useTrips } from "../contexts/TripsContext";
+import { useFriends } from "../contexts/FriendsContext";
 import { useTranslation } from "react-i18next";
 import {
   changeLanguage,
@@ -27,6 +29,8 @@ import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
   const { invitations, unreadCount, refreshInvitations } = useNotifications();
+  const { trips, bookings, addresses } = useTrips();
+  const { friends } = useFriends();
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
 
@@ -84,6 +88,11 @@ const ProfileScreen: React.FC = () => {
       icon: "person-outline",
       title: t("profile.editProfile"),
       onPress: handleEditProfile,
+    },
+    {
+      icon: "people-outline",
+      title: "Amis",
+      onPress: () => navigation.navigate("Friends" as never),
     },
     {
       icon: "mail-outline",
@@ -172,7 +181,7 @@ const ProfileScreen: React.FC = () => {
                 <View style={[styles.statIconContainer, { backgroundColor: '#E8F4FF' }]}>
                   <Ionicons name="airplane" size={20} color="#2891FF" />
                 </View>
-                <Text style={styles.statNumber}>3</Text>
+                <Text style={styles.statNumber}>{trips.length}</Text>
                 <Text style={styles.statLabel}>{t("profile.stats.trips")}</Text>
               </View>
               <View style={styles.statDivider} />
@@ -180,25 +189,25 @@ const ProfileScreen: React.FC = () => {
                 <View style={[styles.statIconContainer, { backgroundColor: '#F3F0FF' }]}>
                   <Ionicons name="calendar" size={20} color="#8869FF" />
                 </View>
-                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statNumber}>{bookings.length}</Text>
                 <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
                   {t("profile.stats.bookings")}
                 </Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#FF6B9D20' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#FFE8F0' }]}>
                   <Ionicons name="location" size={20} color="#FF6B9D" />
                 </View>
-                <Text style={styles.statNumber}>8</Text>
+                <Text style={styles.statNumber}>{addresses.length}</Text>
                 <Text style={styles.statLabel}>{t("profile.stats.addresses")}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#4CAF5020' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#E8F5E9' }]}>
                   <Ionicons name="people" size={20} color="#4CAF50" />
                 </View>
-                <Text style={styles.statNumber}>5</Text>
+                <Text style={styles.statNumber}>{friends.length}</Text>
                 <Text style={styles.statLabel}>{t("profile.stats.friends")}</Text>
               </View>
             </ModernCard>

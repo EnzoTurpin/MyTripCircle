@@ -44,6 +44,7 @@ const InvitationScreen: React.FC = () => {
   const [enrichedInvitations, setEnrichedInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
 
   useEffect(() => {
     if (currentToken) {
@@ -66,7 +67,18 @@ const InvitationScreen: React.FC = () => {
       // Récupérer les invitations enrichies depuis l'API
       if (user?.email) {
         const invitations = await getUserInvitations(user.email);
-        setEnrichedInvitations(invitations);
+        // Trier: pending > accepted > declined
+        const sortedInvitations = invitations.sort((a: any, b: any) => {
+          const statusOrder = { pending: 0, accepted: 1, declined: 2 };
+          const statusA = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
+          const statusB = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
+          if (statusA !== statusB) {
+            return statusA - statusB;
+          }
+          // Si même statut, trier par date (plus récent en premier)
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setEnrichedInvitations(sortedInvitations);
       }
       setLoading(false);
     } catch (error) {
@@ -167,7 +179,7 @@ const InvitationScreen: React.FC = () => {
                 [
                   {
                     text: t("common.ok"),
-                    onPress: () => navigation.goBack(),
+                    onPress: () => navigation.navigate("Main" as never),
                   },
                 ]
               );
@@ -237,7 +249,49 @@ const InvitationScreen: React.FC = () => {
               </Text>
             </ModernCard>
           ) : (
-            enrichedInvitations.map((inv) => (
+            <>
+              {/* Filtres */}
+              <View style={styles.filtersContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <TouchableOpacity
+                    style={[styles.filterButton, statusFilter === 'all' && styles.filterButtonActive]}
+                    onPress={() => setStatusFilter('all')}
+                  >
+                    <Text style={[styles.filterButtonText, statusFilter === 'all' && styles.filterButtonTextActive]}>
+                      Toutes
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, statusFilter === 'pending' && styles.filterButtonActive]}
+                    onPress={() => setStatusFilter('pending')}
+                  >
+                    <Text style={[styles.filterButtonText, statusFilter === 'pending' && styles.filterButtonTextActive]}>
+                      En attente
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, statusFilter === 'accepted' && styles.filterButtonActive]}
+                    onPress={() => setStatusFilter('accepted')}
+                  >
+                    <Text style={[styles.filterButtonText, statusFilter === 'accepted' && styles.filterButtonTextActive]}>
+                      Acceptées
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, statusFilter === 'declined' && styles.filterButtonActive]}
+                    onPress={() => setStatusFilter('declined')}
+                  >
+                    <Text style={[styles.filterButtonText, statusFilter === 'declined' && styles.filterButtonTextActive]}>
+                      Refusées
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+
+              {/* Liste des invitations filtrées */}
+              {enrichedInvitations
+                .filter(inv => statusFilter === 'all' || inv.status === statusFilter)
+                .map((inv) => (
               <ModernCard key={inv.id || inv._id} variant="elevated" style={styles.invitationListItem}>
                 {/* En-tête avec inviteur et statut */}
                 <View style={styles.listItemHeader}>
@@ -313,7 +367,20 @@ const InvitationScreen: React.FC = () => {
                   </View>
                 )}
               </ModernCard>
-            ))
+              ))}
+              {enrichedInvitations.filter(inv => statusFilter === 'all' || inv.status === statusFilter).length === 0 && (
+                <ModernCard variant="elevated" style={styles.emptyCard}>
+                  <Ionicons name="mail-outline" size={64} color="#BDBDBD" />
+                  <Text style={styles.emptyTitle}>Aucune invitation</Text>
+                  <Text style={styles.emptyMessage}>
+                    {statusFilter === 'pending' ? 'Aucune invitation en attente.' :
+                     statusFilter === 'accepted' ? 'Aucune invitation acceptée.' :
+                     statusFilter === 'declined' ? 'Aucune invitation refusée.' :
+                     'Vous n\'avez aucune invitation.'}
+                  </Text>
+                </ModernCard>
+              )}
+            </>
           )}
         </ScrollView>
       </View>
@@ -878,6 +945,28 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#2891FF",
     marginRight: 4,
+  },
+  // Styles pour les filtres
+  filtersContainer: {
+    marginBottom: 16,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    marginRight: 8,
+  },
+  filterButtonActive: {
+    backgroundColor: '#2891FF',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#616161',
+  },
+  filterButtonTextActive: {
+    color: 'white',
   },
 });
 

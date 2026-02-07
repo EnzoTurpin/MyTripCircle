@@ -46,7 +46,8 @@ interface TripsContextType {
   // Invitations
   createInvitation: (invitation: {
     tripId: string;
-    inviteeEmail: string;
+    inviteeEmail?: string;
+    inviteePhone?: string;
     message?: string;
     permissions?: {
       role: "viewer" | "editor";
@@ -555,7 +556,8 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
 
   const createInvitation = async (invitation: {
     tripId: string;
-    inviteeEmail: string;
+    inviteeEmail?: string;
+    inviteePhone?: string;
     message?: string;
     permissions?: {
       role: "viewer" | "editor";
@@ -573,6 +575,7 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
         tripId: result.tripId,
         inviterId: result.inviterId,
         inviteeEmail: result.inviteeEmail,
+        inviteePhone: result.inviteePhone,
         status: result.status,
         token: result.token,
         expiresAt: new Date(result.expiresAt),

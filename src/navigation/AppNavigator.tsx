@@ -26,6 +26,7 @@ import BookingDetailsScreen from "../screens/BookingDetailsScreen";
 import AddressDetailsScreen from "../screens/AddressDetailsScreen";
 import InviteFriendsScreen from "../screens/InviteFriendsScreen";
 import InvitationScreen from "../screens/InvitationScreen";
+import FriendsScreen from "../screens/FriendsScreen";
 import CreateTripScreen from "../screens/CreateTripScreen";
 import EditTripScreen from "../screens/EditTripScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen";
@@ -204,6 +205,13 @@ const AppNavigator = () => {
             <Stack.Screen
               name="Invitation"
               component={InvitationScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Friends"
+              component={FriendsScreen}
               options={{
                 headerShown: false,
               }}

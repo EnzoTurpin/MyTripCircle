@@ -44,6 +44,8 @@ const InviteFriendsScreen: React.FC = () => {
   const [friends, setFriends] = useState<User[]>([]);
   const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
+  const [inviteType, setInviteType] = useState<'email' | 'phone'>('email');
   const [loading, setLoading] = useState(true);
   const [sendingInvitations, setSendingInvitations] = useState(false);
 
@@ -111,9 +113,19 @@ const InviteFriendsScreen: React.FC = () => {
     }
   };
 
-  const handleInviteByEmail = async () => {
-    if (!emailInput.trim()) {
-      Alert.alert(t("inviteFriends.error"), t("inviteFriends.enterEmailError"));
+  const handleInvite = async () => {
+    const input = inviteType === 'email' ? emailInput.trim() : phoneInput.trim();
+    const isValid = inviteType === 'email'
+      ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)
+      : /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/.test(input);
+
+    if (!input) {
+      Alert.alert(t("inviteFriends.error"), inviteType === 'email' ? "Veuillez entrer une adresse email" : "Veuillez entrer un numéro de téléphone");
+      return;
+    }
+
+    if (!isValid) {
+      Alert.alert(t("inviteFriends.error"), inviteType === 'email' ? "Adresse email invalide" : "Numéro de téléphone invalide");
       return;
     }
 
@@ -127,7 +139,8 @@ const InviteFriendsScreen: React.FC = () => {
 
       await createInvitation({
         tripId: trip.id,
-        inviteeEmail: emailInput.trim(),
+        inviteeEmail: inviteType === 'email' ? input : undefined,
+        inviteePhone: inviteType === 'phone' ? input : undefined,
         message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
         permissions: {
           role: "editor",
@@ -139,10 +152,14 @@ const InviteFriendsScreen: React.FC = () => {
 
       Alert.alert(
         t("inviteFriends.invitationSent"),
-        `${t("inviteFriends.invitationSentTo")} ${emailInput}`,
+        `${t("inviteFriends.invitationSentTo")} ${input}`,
         [{ text: t("common.ok") }],
       );
-      setEmailInput("");
+      if (inviteType === 'email') {
+        setEmailInput("");
+      } else {
+        setPhoneInput("");
+      }
     } catch (error) {
       console.error("Error sending invitation:", error);
       Alert.alert(
@@ -152,6 +169,14 @@ const InviteFriendsScreen: React.FC = () => {
     } finally {
       setSendingInvitations(false);
     }
+  };
+
+  const handleInviteByEmail = async () => {
+    await handleInvite();
+  };
+
+  const handleInviteByPhone = async () => {
+    await handleInvite();
   };
 
   const handleSendInvitations = async () => {
@@ -295,40 +320,92 @@ const InviteFriendsScreen: React.FC = () => {
           <View style={styles.content}>
             <ModernCard variant="elevated" style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>
-                {t("inviteFriends.inviteByEmail")}
+                Inviter quelqu'un
               </Text>
-              <View style={styles.emailInputContainer}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color="#616161"
-                  style={styles.emailInputIcon}
-                />
-                <TextInput
-                  style={styles.emailInput}
-                  placeholder={t("inviteFriends.enterEmail")}
-                  placeholderTextColor="#9E9E9E"
-                  value={emailInput}
-                  onChangeText={setEmailInput}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+
+              {/* Sélecteur Email/Téléphone */}
+              <View style={styles.typeSelector}>
                 <TouchableOpacity
-                  style={[
-                    styles.inviteButton,
-                    sendingInvitations && styles.inviteButtonDisabled,
-                  ]}
-                  onPress={handleInviteByEmail}
-                  disabled={sendingInvitations}
-                  activeOpacity={0.8}
+                  style={[styles.typeButton, inviteType === 'email' && styles.typeButtonActive]}
+                  onPress={() => setInviteType('email')}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons
-                    name={sendingInvitations ? "hourglass" : "send"}
-                    size={18}
-                    color="white"
-                  />
+                  <Ionicons name="mail-outline" size={18} color={inviteType === 'email' ? "white" : "#616161"} />
+                  <Text style={[styles.typeButtonText, inviteType === 'email' && styles.typeButtonTextActive]}>Email</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.typeButton, inviteType === 'phone' && styles.typeButtonActive]}
+                  onPress={() => setInviteType('phone')}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="call-outline" size={18} color={inviteType === 'phone' ? "white" : "#616161"} />
+                  <Text style={[styles.typeButtonText, inviteType === 'phone' && styles.typeButtonTextActive]}>Téléphone</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Input Email */}
+              {inviteType === 'email' ? (
+                <View style={styles.inputContainer}>
+                  <View style={styles.inputWrapper}>
+                    <Ionicons name="mail-outline" size={20} color="#616161" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Entrez l'adresse email"
+                      placeholderTextColor="#9E9E9E"
+                      value={emailInput}
+                      onChangeText={setEmailInput}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.sendButton, sendingInvitations && styles.sendButtonDisabled]}
+                    onPress={handleInviteByEmail}
+                    disabled={sendingInvitations || !emailInput.trim()}
+                    activeOpacity={0.8}
+                  >
+                    {sendingInvitations ? (
+                      <Ionicons name="hourglass" size={18} color="white" />
+                    ) : (
+                      <>
+                        <Ionicons name="send" size={16} color="white" />
+                        <Text style={styles.sendButtonText}>Inviter</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* Input Téléphone */
+                <View style={styles.inputContainer}>
+                  <View style={styles.inputWrapper}>
+                    <Ionicons name="call-outline" size={20} color="#616161" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Entrez le numéro de téléphone"
+                      placeholderTextColor="#9E9E9E"
+                      value={phoneInput}
+                      onChangeText={setPhoneInput}
+                      keyboardType="phone-pad"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.sendButton, sendingInvitations && styles.sendButtonDisabled]}
+                    onPress={handleInviteByPhone}
+                    disabled={sendingInvitations || !phoneInput.trim()}
+                    activeOpacity={0.8}
+                  >
+                    {sendingInvitations ? (
+                      <Ionicons name="hourglass" size={18} color="white" />
+                    ) : (
+                      <>
+                        <Ionicons name="send" size={16} color="white" />
+                        <Text style={styles.sendButtonText}>Inviter</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
             </ModernCard>
 
             <ModernCard variant="elevated" style={styles.sectionCard}>
@@ -474,9 +551,39 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700" as const,
     color: "#212121",
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  emailInputContainer: {
+  typeSelector: {
+    flexDirection: "row" as const,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+  },
+  typeButton: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
+  },
+  typeButtonActive: {
+    backgroundColor: "#2891FF",
+  },
+  typeButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#616161",
+  },
+  typeButtonTextActive: {
+    color: "white",
+  },
+  inputContainer: {
+    gap: 12,
+  },
+  inputWrapper: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     backgroundColor: "#F5F5F5",
@@ -485,26 +592,32 @@ const styles = StyleSheet.create({
     borderColor: "#E0E0E0",
     paddingHorizontal: 16,
   },
-  emailInputIcon: {
+  inputIcon: {
     marginRight: 12,
   },
-  emailInput: {
+  input: {
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
     color: "#212121",
   },
-  inviteButton: {
+  sendButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
     backgroundColor: "#2891FF",
     borderRadius: 12,
-    width: 44,
-    height: 44,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    gap: 8,
   },
-  inviteButtonDisabled: {
-    backgroundColor: "#999",
-    opacity: 0.6,
+  sendButtonDisabled: {
+    backgroundColor: "#BDBDBD",
+  },
+  sendButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
   },
   friendsList: {
     gap: 12,

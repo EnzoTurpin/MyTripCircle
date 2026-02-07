@@ -87,11 +87,35 @@ export interface Address {
   updatedAt: Date;
 }
 
+export interface FriendRequest {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderEmail?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: Date;
+  respondedAt?: Date;
+}
+
+export interface Friend {
+  id: string;
+  userId: string;
+  friendId: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  avatar?: string;
+  createdAt: Date;
+}
+
 export interface TripInvitation {
   id: string;
   tripId: string;
   inviterId: string;
-  inviteeEmail: string;
+  inviteeEmail?: string;
+  inviteePhone?: string;
   status: "pending" | "accepted" | "declined" | "expired";
   token: string;
   expiresAt: Date;
@@ -129,6 +153,7 @@ export type RootStackParamList = {
   AddressForm: { addressId?: string } | undefined;
   InviteFriends: { tripId: string };
   Invitation: { token?: string };
+  Friends: undefined;
   CreateTrip: undefined;
   EditTrip: { tripId: string };
   Profile: undefined;

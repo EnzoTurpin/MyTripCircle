@@ -1,5 +1,6 @@
 import { API_URLS } from "../config/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FriendRequest, Friend } from "../types";
 // import { updateProfile } from "../controllers/userController";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -189,7 +190,8 @@ export const ApiService = {
   // Invitations
   createInvitation: (invitation: {
     tripId: string;
-    inviteeEmail: string;
+    inviteeEmail?: string;
+    inviteePhone?: string;
     message?: string;
     permissions?: {
       role: "viewer" | "editor";
@@ -217,6 +219,21 @@ export const ApiService = {
     action: "accept" | "decline",
     userId?: string,
   ) => request<any>(`/invitations/${token}`, "PUT", { action, userId }),
+
+  // Amis
+  sendFriendRequest: (data: {
+    recipientEmail?: string;
+    recipientPhone?: string;
+  }) => request<FriendRequest>("/friends/request", "POST", data),
+
+  getFriendRequests: () => request<FriendRequest[]>("/friends/requests", "GET"),
+
+  respondToFriendRequest: (requestId: string, action: "accept" | "decline") =>
+    request<{ success: boolean }>(`/friends/requests/${requestId}`, "PUT", { action }),
+
+  getFriends: () => request<Friend[]>("/friends", "GET"),
+
+  removeFriend: (friendId: string) => request<{ success: boolean }>(`/friends/${friendId}`, "DELETE"),
 
   updateProfile: (data: { name: string; email: string }) =>
     request<{ success: boolean; user: any }>("/users/me", "PUT", data),
