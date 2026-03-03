@@ -5,7 +5,9 @@
       "Bash(npx expo install:*)",
       "Bash(npx expo start --clear)",
       "Bash(npx tsc:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

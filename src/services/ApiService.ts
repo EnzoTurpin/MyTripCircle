@@ -291,6 +291,72 @@ export const ApiService = {
       notes?: string;
     },
   ) => request<any>(`/addresses/${addressId}`, "PUT", updates),
+
+  // Subscription endpoints
+  getSubscription: () =>
+    request<{
+      id: string;
+      userId: string;
+      plan: "free" | "premium";
+      status: "active" | "cancelled" | "expired" | "pending";
+      productId: string;
+      billingCycle: "monthly" | "yearly" | null;
+      startDate: Date;
+      endDate: Date | null;
+      autoRenew: boolean;
+      cancelledAt: Date | null;
+      nextBillingDate: Date | null;
+      features: {
+        maxTrips: number;
+        maxCollaborators: number;
+        canExport: boolean;
+        cloudStorage: number;
+        hasAds: boolean;
+        prioritySupport: boolean;
+      };
+      createdAt: Date;
+      updatedAt: Date;
+    }>("/subscription", "GET"),
+
+  validatePurchase: (receipt: {
+    receiptData: string;
+    platform: "ios" | "android";
+    productId: string;
+    transactionId?: string;
+  }) =>
+    request<{
+      success: boolean;
+      subscription: any;
+    }>("/subscription/purchase", "POST", receipt),
+
+  cancelSubscription: () =>
+    request<{ success: boolean; message: string }>("/subscription/cancel", "POST"),
+
+  checkFeatureAccess: (feature: string) =>
+    request<{
+      allowed: boolean;
+      limit?: number;
+      currentUsage?: number;
+      feature: string;
+      plan: string;
+      status: string;
+      isActive: boolean;
+    }>("/subscription/status", "GET", { feature }),
+
+  // ⚠️ Endpoints de TEST pour simuler des achats sans IAP
+  // À utiliser uniquement pour le développement, À SUPPRIMER en production !
+  simulatePurchase: (productId: string) =>
+    request<{
+      success: boolean;
+      message: string;
+      subscription: any;
+    }>("/subscription/simulate-purchase", "POST", { productId }),
+
+  simulateCancelSubscription: () =>
+    request<{
+      success: boolean;
+      message: string;
+    }>("/subscription/simulate-cancel", "POST"),
 };
 
 export default ApiService;

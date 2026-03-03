@@ -21,6 +21,7 @@ import { formatDateLong, getBookingStatusTranslation } from "../utils/i18n";
 import { useTrips } from "../contexts/TripsContext";
 import { ModernCard } from "../components/ModernCard";
 import { ModernButton } from "../components/ModernButton";
+import BookingForm from "../components/BookingForm";
 
 type BookingDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -36,10 +37,12 @@ const BookingDetailsScreen: React.FC = () => {
   const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
   const { bookingId } = route.params;
   const { t } = useTranslation();
-  const { bookings } = useTrips();
+  const { bookings, updateBooking } = useTrips();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  // État pour afficher le formulaire d'édition
+  const [showEditForm, setShowEditForm] = useState(false);
 
   useEffect(() => {
     loadBooking();
@@ -104,12 +107,37 @@ const BookingDetailsScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Fonction pour gérer l'édition d'une réservation
+   * Ouvre le formulaire avec les données actuelles de la réservation
+   */
   const handleEditBooking = () => {
-    Alert.alert(
-      t("bookings.details.editBooking"),
-      t("bookings.details.featureSoon"),
-      [{ text: t("common.ok") }]
-    );
+    if (!booking) return;
+    setShowEditForm(true);
+  };
+
+  /**
+   * Fonction pour sauvegarder les modifications de la réservation
+   * @param updatedBooking - Les données mises à jour de la réservation
+   */
+  const handleSaveBooking = async (updatedBooking: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      // Appeler la méthode updateBooking du contexte Trips
+      await updateBooking(bookingId, updatedBooking);
+      // Recharger les données de la réservation
+      loadBooking();
+      setShowEditForm(false);
+      Alert.alert(
+        t("common.success") || "Succès",
+        t("bookings.updateSuccess") || "Réservation mise à jour avec succès"
+      );
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      Alert.alert(
+        t("common.error") || "Erreur",
+        (error as Error).message || t("bookings.updateError") || "Erreur lors de la mise à jour"
+      );
+    }
   };
 
   const handleCancelBooking = () => {
@@ -333,6 +361,16 @@ const BookingDetailsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Formulaire d'édition de réservation */}
+      {booking && (
+        <BookingForm
+          visible={showEditForm}
+          onClose={() => setShowEditForm(false)}
+          onSave={handleSaveBooking}
+          initialBooking={booking}
+        />
+      )}
     </View>
   );
 };

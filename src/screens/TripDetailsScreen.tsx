@@ -28,6 +28,7 @@ import {
 import { useTrips } from "../contexts/TripsContext";
 import ApiService from "../services/ApiService";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utils/i18n";
 import BookingForm from "../components/BookingForm";
@@ -53,13 +54,17 @@ const TripDetailsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  // État pour stocker l'adresse en cours d'édition (null = création, objet = édition)
+  const [editingAddress, setEditingAddress] = useState<Address | undefined>(undefined);
   const [collaboratorUsers, setCollaboratorUsers] = useState<Map<string, any>>(new Map());
   const {
     validateTrip,
     createBooking,
     createAddress,
+    updateAddress,
   } = useTrips();
   const { user } = useAuth();
+  const { canExportData, subscription } = useSubscription();
 
   // Vérifier si l'utilisateur est le propriétaire du voyage
   const isOwner = trip && user ? trip.ownerId === user.id : false;
@@ -233,6 +238,38 @@ const TripDetailsScreen: React.FC = () => {
     navigation.navigate("EditTrip", { tripId });
   };
 
+  /**
+   * Fonction pour exporter le voyage en PDF
+   * Vérifie d'abord si l'utilisateur a accès à cette fonctionnalité (Premium)
+   */
+  const handleExportTrip = () => {
+    // Vérifier si l'utilisateur a le droit d'exporter (fonctionnalité Premium)
+    if (!canExportData()) {
+      Alert.alert(
+        "Fonctionnalité Premium",
+        "L'export de données en PDF est réservé aux abonnés Premium. Passez à Premium pour accéder à cette fonctionnalité !",
+        [
+          { text: "Annuler", style: "cancel" },
+          {
+            text: "Voir les plans",
+            onPress: () => navigation.navigate("Subscription" as never),
+          },
+        ]
+      );
+      return;
+    }
+
+    // TODO: Implémenter la logique d'export PDF réelle ici
+    // Pour l'instant, on montre une alerte de succès
+    Alert.alert(
+      "Export PDF",
+      `Export du voyage "${trip?.title}" en PDF...\n\nCette fonctionnalité sera bientôt disponible !`,
+      [
+        { text: "OK" },
+      ]
+    );
+  };
+
   const handleAddBooking = () => {
     if (!trip) return;
     setShowBookingForm(true);
@@ -259,19 +296,49 @@ const TripDetailsScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Fonction pour ouvrir le formulaire d'ajout d'adresse
+   * Réinitialise l'adresse d'édition pour créer une nouvelle adresse
+   */
   const handleAddAddress = () => {
+    setEditingAddress(undefined); // undefined = mode création
     setShowAddressForm(true);
   };
 
+  /**
+   * Fonction pour ouvrir le formulaire d'édition d'une adresse existante
+   * @param address - L'adresse à modifier
+   */
+  const handleEditAddress = (address: Address) => {
+    setEditingAddress(address); // défini = mode édition
+    setShowAddressForm(true);
+  };
+
+  /**
+   * Fonction pour sauvegarder une adresse (création ou mise à jour)
+   * @param addressData - Les données de l'adresse à sauvegarder
+   */
   const handleSaveAddress = async (
     addressData: Omit<Address, "id" | "createdAt" | "updatedAt">,
   ) => {
-    const newAddress = await createAddress({
-      ...addressData,
-      tripId, // Lier l'adresse au voyage actuel
-    });
-    // Ajouter la nouvelle adresse à l'état local sans recharger depuis l'API
-    setAddresses((prev) => [...prev, newAddress]);
+    if (editingAddress) {
+      // Mode édition : mettre à jour l'adresse existante
+      const updatedAddress = await updateAddress(editingAddress.id, addressData);
+      // Mettre à jour l'état local en remplaçant l'adresse modifiée
+      setAddresses((prev) =>
+        prev.map((addr) => (addr.id === editingAddress.id ? updatedAddress : addr))
+      );
+    } else {
+      // Mode création : créer une nouvelle adresse
+      const newAddress = await createAddress({
+        ...addressData,
+        tripId, // Lier l'adresse au voyage actuel
+      });
+      // Ajouter la nouvelle adresse à l'état local
+      setAddresses((prev) => [...prev, newAddress]);
+    }
+    // Réinitialiser l'adresse d'édition après sauvegarde
+    setEditingAddress(undefined);
   };
 
   const handleValidateTrip = async () => {
@@ -424,6 +491,16 @@ const TripDetailsScreen: React.FC = () => {
                   style={styles.actionButton}
                 />
               )}
+              {/* Bouton d'export PDF - Vérifie l'abonnement Premium */}
+              <ModernButton
+                title="Exporter PDF"
+                onPress={handleExportTrip}
+                variant={subscription?.plan === "premium" ? "primary" : "outline"}
+                size="medium"
+                icon="document-text-outline"
+                style={styles.actionButton}
+                disabled={!canExportData()}
+              />
             </View>
           )}
 
@@ -601,11 +678,18 @@ const TripDetailsScreen: React.FC = () => {
                           {address.city}, {address.country}
                         </Text>
                       </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={20}
-                        color={"#BDBDBD"}
-                      />
+                      {/* Bouton d'édition de l'adresse */}
+                      <TouchableOpacity
+                        onPress={() => handleEditAddress(address)}
+                        style={styles.addressEditButton}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name="create-outline"
+                          size={20}
+                          color="#2891FF"
+                        />
+                      </TouchableOpacity>
                     </View>
                   </ModernCard>
                 ))}
@@ -716,8 +800,12 @@ const TripDetailsScreen: React.FC = () => {
         {/* Address Form Modal */}
         <AddressForm
           visible={showAddressForm}
-          onClose={() => setShowAddressForm(false)}
+          onClose={() => {
+            setShowAddressForm(false);
+            setEditingAddress(undefined); // Réinitialiser à la fermeture
+          }}
           onSave={handleSaveAddress}
+          initialAddress={editingAddress} // Passer l'adresse à éditer (ou undefined pour création)
         />
       </ScrollView>
     </View>
@@ -939,6 +1027,16 @@ const styles = StyleSheet.create({
   },
   addressInfo: {
     flex: 1,
+  },
+  // Style du bouton d'édition d'adresse
+  addressEditButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E8F4FF",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginLeft: 12,
   },
   addressName: {
     fontSize: 16,

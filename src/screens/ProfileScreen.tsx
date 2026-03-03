@@ -16,6 +16,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useTrips } from "../contexts/TripsContext";
 import { useFriends } from "../contexts/FriendsContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { useTranslation } from "react-i18next";
 import {
   changeLanguage,
@@ -31,8 +32,16 @@ const ProfileScreen: React.FC = () => {
   const { invitations, unreadCount, refreshInvitations } = useNotifications();
   const { trips, bookings, addresses } = useTrips();
   const { friends } = useFriends();
+  const { subscription } = useSubscription();
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+
+  // Check if user is premium
+  const isPremiumActive = subscription?.plan === "premium" &&
+    (subscription?.status === "active" ||
+      (subscription?.status === "cancelled" &&
+        subscription?.endDate &&
+        new Date() < new Date(subscription.endDate)));
 
   const handleLogout = () => {
     Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
@@ -171,6 +180,25 @@ const ProfileScreen: React.FC = () => {
                 <Text style={styles.userEmail}>
                   {user?.email || t("profile.userFallbackEmail")}
                 </Text>
+                {/* Subscription Badge */}
+                {subscription && (
+                  <View style={[
+                    styles.subscriptionBadge,
+                    isPremiumActive && styles.premiumBadge
+                  ]}>
+                    <Ionicons
+                      name={isPremiumActive ? "diamond" : "person-outline"}
+                      size={14}
+                      color={isPremiumActive ? "#FFFFFF" : "#757575"}
+                    />
+                    <Text style={[
+                      styles.subscriptionBadgeText,
+                      isPremiumActive && styles.premiumBadgeText
+                    ]}>
+                      {isPremiumActive ? "Premium" : "Gratuit"}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           </LinearGradient>
@@ -439,6 +467,30 @@ const styles = StyleSheet.create({
     height: Platform.OS === 'ios' ? 74 : 70,
     backgroundColor: '#FAFAFA',
     pointerEvents: 'none',
+  },
+  subscriptionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  premiumBadge: {
+    backgroundColor: 'rgba(255, 215, 0, 0.3)',
+    borderColor: 'rgba(255, 215, 0, 0.5)',
+  },
+  subscriptionBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginLeft: 6,
+  },
+  premiumBadgeText: {
+    color: '#FFD700',
   },
 });
 

@@ -20,6 +20,7 @@ import { RootStackParamList, Trip, User } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { ModernCard } from "../components/ModernCard";
 import { ModernButton } from "../components/ModernButton";
 
@@ -39,6 +40,7 @@ const InviteFriendsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { getTripById, createInvitation } = useTrips();
   const { user } = useAuth();
+  const { canAddCollaborator, subscription } = useSubscription();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
@@ -114,6 +116,21 @@ const InviteFriendsScreen: React.FC = () => {
   };
 
   const handleInvite = async () => {
+    // Check subscription limit for collaborators
+    if (!canAddCollaborator()) {
+      const maxCollaborators = subscription?.features?.maxCollaborators || 2;
+      const currentCollaborators = trip?.collaborators?.length || 0;
+      Alert.alert(
+        "Limite atteinte",
+        `Les utilisateurs Free peuvent ajouter jusqu'à ${maxCollaborators} collaborateurs par voyage (${currentCollaborators}/${maxCollaborators} utilisés). Passez à Premium pour des collaborateurs illimités !`,
+        [
+          { text: "Annuler", style: "cancel" },
+          { text: "Voir les plans", onPress: () => navigation.navigate("Subscription" as never) },
+        ]
+      );
+      return;
+    }
+
     const input = inviteType === 'email' ? emailInput.trim() : phoneInput.trim();
     const isValid = inviteType === 'email'
       ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)
@@ -184,6 +201,21 @@ const InviteFriendsScreen: React.FC = () => {
       Alert.alert(
         t("inviteFriends.noFriendsSelected"),
         t("inviteFriends.selectFriendsToInvite"),
+      );
+      return;
+    }
+
+    // Check subscription limit for collaborators
+    if (!canAddCollaborator()) {
+      const maxCollaborators = subscription?.features?.maxCollaborators || 2;
+      const currentCollaborators = trip?.collaborators?.length || 0;
+      Alert.alert(
+        "Limite atteinte",
+        `Les utilisateurs Free peuvent ajouter jusqu'à ${maxCollaborators} collaborateurs par voyage (${currentCollaborators}/${maxCollaborators} utilisés). Passez à Premium pour des collaborateurs illimités !`,
+        [
+          { text: "Annuler", style: "cancel" },
+          { text: "Voir les plans", onPress: () => navigation.navigate("Subscription" as never) },
+        ]
       );
       return;
     }
