@@ -3,6 +3,7 @@ import { AuthProvider } from "./src/contexts/AuthContext";
 import { TripsProvider } from "./src/contexts/TripsContext";
 import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { FriendsProvider } from "./src/contexts/FriendsContext";
+import { SubscriptionProvider } from "./src/contexts/SubscriptionContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import "./src/utils/i18n";
 
@@ -12,7 +13,9 @@ export default function App() {
       <TripsProvider>
         <NotificationProvider>
           <FriendsProvider>
-            <AppNavigator />
+            <SubscriptionProvider>
+              <AppNavigator />
+            </SubscriptionProvider>
           </FriendsProvider>
         </NotificationProvider>
       </TripsProvider>

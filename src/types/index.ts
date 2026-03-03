@@ -182,3 +182,37 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> = {
   navigation: any;
   route: { params: MainTabParamList[T] };
 };
+
+// Subscription types
+export interface SubscriptionFeatures {
+  maxTrips: number; // Free: 5, Premium: -1 (illimité)
+  maxCollaborators: number; // Free: 2, Premium: -1
+  canExport: boolean; // Free: false, Premium: true
+  cloudStorage: number; // Free: 100 MB, Premium: -1 (illimité)
+  hasAds: boolean; // Free: true, Premium: false
+  prioritySupport: boolean; // Free: false, Premium: true
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  plan: "free" | "premium";
+  status: "active" | "cancelled" | "expired" | "pending";
+  productId: string; // com.myapp.monthly ou com.myapp.yearly
+  billingCycle: "monthly" | "yearly";
+  startDate: Date;
+  endDate?: Date;
+  autoRenew: boolean;
+  cancelledAt?: Date;
+  nextBillingDate?: Date;
+  features: SubscriptionFeatures;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PurchaseReceipt {
+  receiptData: string; // iOS receipt ou Android purchaseToken
+  platform: "ios" | "android";
+  productId: string;
+  transactionId?: string;
+}

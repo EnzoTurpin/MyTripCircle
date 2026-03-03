@@ -367,6 +367,10 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                   placeholder={t("addresses.form.phonePlaceholder")}
                   placeholderTextColor="#9E9E9E"
                   keyboardType="phone-pad"
+                  // Empêcher le téléphone de passer à la ligne
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  autoCorrect={false}
                 />
               </View>
             </View>

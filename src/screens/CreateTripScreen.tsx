@@ -18,6 +18,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { formatDate, parseApiError } from "../utils/i18n";
@@ -30,8 +31,9 @@ type CreateTripScreenNavigationProp = StackNavigationProp<
 
 const CreateTripScreen: React.FC = () => {
   const navigation = useNavigation<CreateTripScreenNavigationProp>();
-  const { createTrip } = useTrips();
+  const { createTrip, trips } = useTrips();
   const { user } = useAuth();
+  const { canCreateTrip, subscription } = useSubscription();
   const { t } = useTranslation();
 
   const [formData, setFormData] = useState(() => {
@@ -128,6 +130,20 @@ const CreateTripScreen: React.FC = () => {
 
   const handleCreateTrip = async () => {
     if (!validateForm() || !user) return;
+
+    // Check subscription limit
+    if (!canCreateTrip()) {
+      const maxTrips = subscription?.features?.maxTrips || 5;
+      Alert.alert(
+        "Limite atteinte",
+        `Les utilisateurs Free peuvent créer jusqu'à ${maxTrips} voyages. Passez à Premium pour des voyages illimités !`,
+        [
+          { text: "Annuler", style: "cancel" },
+          { text: "Voir les plans", onPress: () => navigation.navigate("Subscription" as never) },
+        ]
+      );
+      return;
+    }
 
     try {
       setLoading(true);
