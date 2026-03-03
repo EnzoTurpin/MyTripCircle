@@ -42,4 +42,4 @@ yarn-error.*
 /android
 
 # database related
-/database
+/database.claude/
