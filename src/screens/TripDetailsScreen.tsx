@@ -297,47 +297,41 @@ const TripDetailsScreen: React.FC = () => {
   };
 
   /**
-   * Fonction pour ouvrir le formulaire d'ajout d'adresse
-   * Réinitialise l'adresse d'édition pour créer une nouvelle adresse
+   * Open address form in creation mode
    */
   const handleAddAddress = () => {
-    setEditingAddress(undefined); // undefined = mode création
+    setEditingAddress(undefined);
     setShowAddressForm(true);
   };
 
   /**
-   * Fonction pour ouvrir le formulaire d'édition d'une adresse existante
-   * @param address - L'adresse à modifier
+   * Open address form in edit mode
+   * @param address - Address to edit
    */
   const handleEditAddress = (address: Address) => {
-    setEditingAddress(address); // défini = mode édition
+    setEditingAddress(address);
     setShowAddressForm(true);
   };
 
   /**
-   * Fonction pour sauvegarder une adresse (création ou mise à jour)
-   * @param addressData - Les données de l'adresse à sauvegarder
+   * Save address (create or update based on editingAddress state)
+   * @param addressData - Address data to save
    */
   const handleSaveAddress = async (
     addressData: Omit<Address, "id" | "createdAt" | "updatedAt">,
   ) => {
     if (editingAddress) {
-      // Mode édition : mettre à jour l'adresse existante
       const updatedAddress = await updateAddress(editingAddress.id, addressData);
-      // Mettre à jour l'état local en remplaçant l'adresse modifiée
       setAddresses((prev) =>
         prev.map((addr) => (addr.id === editingAddress.id ? updatedAddress : addr))
       );
     } else {
-      // Mode création : créer une nouvelle adresse
       const newAddress = await createAddress({
         ...addressData,
-        tripId, // Lier l'adresse au voyage actuel
+        tripId,
       });
-      // Ajouter la nouvelle adresse à l'état local
       setAddresses((prev) => [...prev, newAddress]);
     }
-    // Réinitialiser l'adresse d'édition après sauvegarde
     setEditingAddress(undefined);
   };
 

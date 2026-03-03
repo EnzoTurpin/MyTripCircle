@@ -108,8 +108,7 @@ const BookingDetailsScreen: React.FC = () => {
   };
 
   /**
-   * Fonction pour gérer l'édition d'une réservation
-   * Ouvre le formulaire avec les données actuelles de la réservation
+   * Open booking edit form with current booking data
    */
   const handleEditBooking = () => {
     if (!booking) return;
@@ -117,14 +116,12 @@ const BookingDetailsScreen: React.FC = () => {
   };
 
   /**
-   * Fonction pour sauvegarder les modifications de la réservation
-   * @param updatedBooking - Les données mises à jour de la réservation
+   * Save booking updates via TripsContext
+   * @param updatedBooking - Updated booking data
    */
   const handleSaveBooking = async (updatedBooking: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
     try {
-      // Appeler la méthode updateBooking du contexte Trips
       await updateBooking(bookingId, updatedBooking);
-      // Recharger les données de la réservation
       loadBooking();
       setShowEditForm(false);
       Alert.alert(
