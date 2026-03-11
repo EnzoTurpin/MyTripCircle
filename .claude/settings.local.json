@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo start --clear)",
+      "Bash(npx tsc:*)",
+      "Bash(del:*)"
+    ]
+  }
+}
