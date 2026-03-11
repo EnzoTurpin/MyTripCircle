@@ -142,7 +142,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [form.address]);
+  }, [form.address, currentLocation]);
 
   const handleInputChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));

@@ -127,12 +127,32 @@ const BookingDetailsScreen: React.FC = () => {
     );
   };
 
-  const handleViewAttachment = (attachment: string) => {
-    Alert.alert(
-      t("bookings.details.viewAttachment"),
-      `${t("bookings.details.opening")} ${attachment}`,
-      [{ text: t("common.ok") }]
-    );
+  const handleViewAttachment = async (attachment: string) => {
+    // Les URI file:// et content:// ne passent pas canOpenURL sur iOS/Android
+    // On tente directement l'ouverture
+    const isUri =
+      attachment.startsWith("file://") ||
+      attachment.startsWith("content://") ||
+      attachment.startsWith("http://") ||
+      attachment.startsWith("https://") ||
+      attachment.startsWith("ph://");
+
+    if (!isUri) {
+      Alert.alert(
+        t("common.error"),
+        "Ce fichier n'est plus accessible. Veuillez le rajouter à la réservation."
+      );
+      return;
+    }
+
+    try {
+      await Linking.openURL(attachment);
+    } catch (error) {
+      Alert.alert(
+        t("common.error"),
+        "Impossible d'ouvrir ce fichier. Il a peut-être été supprimé de l'appareil."
+      );
+    }
   };
 
   const handleGetDirections = () => {
@@ -294,20 +314,30 @@ const BookingDetailsScreen: React.FC = () => {
               <Text style={styles.sectionTitle}>
                 {t("bookings.details.attachments")}
               </Text>
-              {booking.attachments.map((attachment, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.attachmentItem}
-                  onPress={() => handleViewAttachment(attachment)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.attachmentIconContainer}>
-                    <Ionicons name="document" size={20} color="#2891FF" />
-                  </View>
-                  <Text style={styles.attachmentText}>{attachment}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
-                </TouchableOpacity>
-              ))}
+              {booking.attachments.map((attachment, index) => {
+                const [name, uri] = attachment.includes("::")
+                  ? attachment.split("::")
+                  : [attachment.split("/").pop() || attachment, attachment];
+                const isPdf = name.toLowerCase().endsWith(".pdf");
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.attachmentItem}
+                    onPress={() => handleViewAttachment(uri)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.attachmentIconContainer}>
+                      <Ionicons
+                        name={isPdf ? "document-text" : "image"}
+                        size={20}
+                        color="#2891FF"
+                      />
+                    </View>
+                    <Text style={styles.attachmentText}>{name}</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+                  </TouchableOpacity>
+                );
+              })}
             </ModernCard>
           )}
 

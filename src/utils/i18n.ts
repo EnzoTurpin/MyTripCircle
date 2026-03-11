@@ -506,9 +506,12 @@ const resources = {
         successMessage: "Your trip has been updated successfully!",
         error: "Error",
         errorMessage: "Failed to update trip",
+        startDate: "Start Date",
+        endDate: "End Date",
         cancelTitle: "Cancel Changes",
         cancelMessage:
           "Are you sure you want to cancel? All changes will be lost.",
+        cancelModification: "Discard Changes",
       },
       editProfile: {
         title: "Edit Profile",
@@ -948,9 +951,12 @@ const resources = {
         successMessage: "Votre voyage a été mis à jour avec succès !",
         error: "Erreur",
         errorMessage: "Échec de la mise à jour du voyage",
+        startDate: "Date de début",
+        endDate: "Date de fin",
         cancelTitle: "Annuler les modifications",
         cancelMessage:
           "Êtes-vous sûr de vouloir annuler ? Toutes les modifications seront perdues.",
+        cancelModification: "Quitter sans sauvegarder",
       },
       editProfile: {
         title: "Modifier le profil",

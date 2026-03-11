@@ -20,6 +20,7 @@ import { RootStackParamList, Trip, User } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useFriends } from "../contexts/FriendsContext";
 import { ModernCard } from "../components/ModernCard";
 import { ModernButton } from "../components/ModernButton";
 
@@ -39,6 +40,7 @@ const InviteFriendsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { getTripById, createInvitation } = useTrips();
   const { user } = useAuth();
+  const { friends: realFriends, loading: friendsLoading } = useFriends();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
@@ -51,7 +53,7 @@ const InviteFriendsScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [tripId]);
+  }, [tripId, realFriends]);
 
   const loadData = async () => {
     try {
@@ -63,40 +65,15 @@ const InviteFriendsScreen: React.FC = () => {
         setTrip(tripData);
       }
 
-      // Pour l'instant, utiliser des données mock pour les amis
-      // Dans une vraie app, vous feriez un appel API pour récupérer les amis de l'utilisateur
-      const mockFriends: User[] = [
-        {
-          id: "2",
-          name: "Sarah Johnson",
-          email: "sarah@example.com",
-          avatar: "https://example.com/avatar1.jpg",
-          createdAt: new Date(),
-        },
-        {
-          id: "3",
-          name: "Mike Chen",
-          email: "mike@example.com",
-          avatar: "https://example.com/avatar2.jpg",
-          createdAt: new Date(),
-        },
-        {
-          id: "4",
-          name: "Emma Wilson",
-          email: "emma@example.com",
-          avatar: "https://example.com/avatar3.jpg",
-          createdAt: new Date(),
-        },
-        {
-          id: "5",
-          name: "David Brown",
-          email: "david@example.com",
-          avatar: "https://example.com/avatar4.jpg",
-          createdAt: new Date(),
-        },
-      ];
-
-      setFriends(mockFriends);
+      // Convertir les vrais amis en format User pour la liste
+      const mappedFriends: User[] = realFriends.map((f) => ({
+        id: f.friendId,
+        name: f.name,
+        email: f.email,
+        avatar: f.avatar,
+        createdAt: f.createdAt,
+      }));
+      setFriends(mappedFriends);
     } catch (error) {
       console.error("Error loading data:", error);
       Alert.alert(t("common.error"), t("inviteFriends.loadingError"));

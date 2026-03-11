@@ -24,6 +24,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import BookingForm from "../components/BookingForm";
 import { formatDate, parseApiError } from "../utils/i18n";
 import i18n from "i18next";
+import ApiService from "../services/ApiService";
 
 type EditTripScreenRouteProp = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripScreenNavigationProp = StackNavigationProp<
@@ -35,7 +36,7 @@ const EditTripScreen: React.FC = () => {
   const route = useRoute<EditTripScreenRouteProp>();
   const navigation = useNavigation<EditTripScreenNavigationProp>();
   const { tripId } = route.params;
-  const { updateTrip, getTripById, getBookingsByTripId, createBooking, updateBooking, deleteBooking } = useTrips();
+  const { updateTrip, createBooking, updateBooking, deleteBooking } = useTrips();
   const { user } = useAuth();
   const { t } = useTranslation();
 
@@ -62,36 +63,57 @@ const EditTripScreen: React.FC = () => {
     loadTripData();
   }, [tripId]);
 
-  const loadTripData = () => {
-    const trip = getTripById(tripId);
-    if (trip) {
-      // S'assurer que les dates sont des objets Date valides
-      const startDate = trip.startDate instanceof Date 
-        ? trip.startDate 
-        : new Date(trip.startDate);
-      const endDate = trip.endDate instanceof Date 
-        ? trip.endDate 
-        : new Date(trip.endDate);
-      
-      // Vérifier que les dates sont valides
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        console.error("Invalid dates in trip:", { startDate, endDate });
-        return;
+  const loadTripData = async () => {
+    try {
+      // Charger le voyage et ses réservations depuis l'API
+      const [tripData, bookingsData] = await Promise.all([
+        ApiService.getTripById(tripId),
+        ApiService.getBookingsByTripId(tripId),
+      ]);
+
+      if (tripData) {
+        const startDate = new Date(tripData.startDate);
+        const endDate = new Date(tripData.endDate);
+
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.error("Invalid dates in trip:", { startDate, endDate });
+          return;
+        }
+
+        setFormData({
+          title: tripData.title,
+          description: tripData.description || "",
+          destination: tripData.destination,
+          startDate,
+          endDate,
+          isPublic: tripData.isPublic,
+        });
       }
-      
-      setFormData({
-        title: trip.title,
-        description: trip.description || "",
-        destination: trip.destination,
-        startDate: startDate,
-        endDate: endDate,
-        isPublic: trip.isPublic,
-      });
-      // Charger les réservations existantes
-      const existingBookings = getBookingsByTripId(tripId);
-      setBookings(existingBookings);
+
+      const mappedBookings: Booking[] = (bookingsData || []).map((b: any) => ({
+        id: b._id,
+        tripId: b.tripId,
+        type: b.type,
+        title: b.title,
+        description: b.description,
+        date: new Date(b.date),
+        endDate: b.endDate ? new Date(b.endDate) : undefined,
+        time: b.time,
+        address: b.address,
+        confirmationNumber: b.confirmationNumber,
+        price: b.price,
+        currency: b.currency,
+        status: b.status,
+        attachments: b.attachments,
+        createdAt: new Date(b.createdAt),
+        updatedAt: new Date(b.updatedAt),
+      }));
+      setBookings(mappedBookings);
+    } catch (error) {
+      console.error("Error loading trip data:", error);
+    } finally {
+      setInitialLoading(false);
     }
-    setInitialLoading(false);
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -813,14 +835,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 15,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderWidth: 1.5,
+    borderColor: "#FF3B30",
     marginRight: 10,
     alignItems: "center",
   },
   cancelButtonText: {
     fontSize: 16,
-    color: "#666",
+    color: "#FF3B30",
     fontWeight: "600",
   },
   updateButton: {

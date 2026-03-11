@@ -27,6 +27,7 @@ import {
   hasGooglePlacesApiKey,
   type AddressSuggestion,
 } from "../services/PlacesService";
+import { useCurrentLocation } from "../hooks/useCurrentLocation";
 
 interface BookingFormProps {
   visible: boolean;
@@ -46,6 +47,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
   tripEndDate,
 }) => {
   const { t } = useTranslation();
+  const currentLocation = useCurrentLocation();
   
   // S'assurer que les dates sont des objets Date valides
   const getValidDate = (date: Date | string | undefined, fallback: Date): Date => {
@@ -104,6 +106,10 @@ const BookingForm: React.FC<BookingFormProps> = ({
   // État pour les pièces jointes (fichiers)
   const [attachments, setAttachments] = useState<Array<{ uri: string; name: string; type: 'image' | 'pdf' }>>([]);
 
+  // État pour le modal de renommage
+  const [renamingIndex, setRenamingIndex] = useState<number | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+
   // État pour les suggestions d'adresses
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
@@ -114,11 +120,14 @@ const BookingForm: React.FC<BookingFormProps> = ({
       // Réinitialiser les pièces jointes avec celles de la réservation initiale si elle existe
       if (initialBooking?.attachments) {
         setAttachments(
-          initialBooking.attachments.map(name => ({
-            uri: name, // Pour les fichiers existants, on utilise le nom comme URI
-            name: name,
-            type: name.toLowerCase().endsWith('.pdf') ? 'pdf' as const : 'image' as const
-          }))
+          initialBooking.attachments.map(entry => {
+            const [name, uri] = entry.includes("::") ? entry.split("::") : [entry.split("/").pop() || entry, entry];
+            return {
+              uri,
+              name,
+              type: name.toLowerCase().endsWith(".pdf") ? "pdf" as const : "image" as const,
+            };
+          })
         );
       } else {
         setAttachments([]);
@@ -170,7 +179,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
     try {
       const controller = new AbortController();
-      const results = await getAddressSuggestions(text.trim(), controller.signal);
+      const results = await getAddressSuggestions(text.trim(), controller.signal, currentLocation ?? undefined);
       setAddressSuggestions(results);
       setShowAddressSuggestions(results.length > 0);
     } catch (error) {
@@ -413,7 +422,14 @@ const BookingForm: React.FC<BookingFormProps> = ({
           name: asset.fileName || `image_${Date.now()}.jpg`,
           type: 'image' as const,
         }));
-        setAttachments(prev => [...prev, ...newAttachments]);
+        setAttachments(prev => {
+          const startIndex = prev.length;
+          if (newAttachments.length === 1) {
+            setRenameValue("");
+            setRenamingIndex(startIndex);
+          }
+          return [...prev, ...newAttachments];
+        });
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -435,12 +451,35 @@ const BookingForm: React.FC<BookingFormProps> = ({
           name: asset.name,
           type: asset.mimeType?.includes('pdf') ? 'pdf' as const : 'image' as const,
         }));
-        setAttachments(prev => [...prev, ...newAttachments]);
+        setAttachments(prev => {
+          const startIndex = prev.length;
+          if (newAttachments.length === 1) {
+            setRenameValue("");
+            setRenamingIndex(startIndex);
+          }
+          return [...prev, ...newAttachments];
+        });
       }
     } catch (error) {
       console.error("Error picking document:", error);
       Alert.alert(t("common.error"), t("bookings.documentPickerError") || "Erreur lors de la sélection du document");
     }
+  };
+
+  const handleOpenRename = (index: number) => {
+    setRenameValue("");
+    setRenamingIndex(index);
+  };
+
+  const handleConfirmRename = () => {
+    if (renamingIndex === null) return;
+    const trimmed = renameValue.trim();
+    if (!trimmed) return;
+    const ext = attachments[renamingIndex].name.match(/\.[^.]+$/)?.[0] || "";
+    setAttachments(prev =>
+      prev.map((a, i) => i === renamingIndex ? { ...a, name: trimmed + ext } : a)
+    );
+    setRenamingIndex(null);
   };
 
   const handleRemoveAttachment = (index: number) => {
@@ -476,7 +515,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
       price: formData.price ? parseFloat(formData.price) : undefined,
       currency: formData.currency,
       status: formData.status,
-      attachments: attachments.length > 0 ? attachments.map(att => att.name) : undefined,
+      attachments: attachments.length > 0 ? attachments.map(att => `${att.name}::${att.uri}`) : undefined,
     };
 
     onSave(booking);
@@ -954,6 +993,12 @@ const BookingForm: React.FC<BookingFormProps> = ({
                         {attachment.name}
                       </Text>
                       <TouchableOpacity
+                        style={styles.renameAttachmentButton}
+                        onPress={() => handleOpenRename(index)}
+                      >
+                        <Ionicons name="pencil" size={18} color="#2891FF" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={styles.removeAttachmentButton}
                         onPress={() => handleRemoveAttachment(index)}
                       >
@@ -1013,6 +1058,43 @@ const BookingForm: React.FC<BookingFormProps> = ({
               onChange={handleTimeChange}
             />
           )}
+
+          {/* Rename Attachment Modal */}
+          <Modal visible={renamingIndex !== null} transparent animationType="fade">
+            <View style={styles.renameOverlay}>
+              <View style={styles.renameModal}>
+                <Text style={styles.renameTitle}>Nommer le fichier</Text>
+                <Text style={styles.renameSubtitle}>
+                  L'extension sera conservée automatiquement
+                </Text>
+                <TextInput
+                  style={styles.renameInput}
+                  value={renameValue}
+                  onChangeText={setRenameValue}
+                  placeholder="Ex: Billet avion, Confirmation hôtel..."
+                  placeholderTextColor="#9E9E9E"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={handleConfirmRename}
+                />
+                <View style={styles.renameButtons}>
+                  <TouchableOpacity
+                    style={styles.renameCancelBtn}
+                    onPress={() => setRenamingIndex(null)}
+                  >
+                    <Text style={styles.renameCancelText}>Annuler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.renameConfirmBtn, !renameValue.trim() && { opacity: 0.5 }]}
+                    onPress={handleConfirmRename}
+                    disabled={!renameValue.trim()}
+                  >
+                    <Text style={styles.renameConfirmText}>Confirmer</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           {/* Currency Picker Modal */}
           <Modal
@@ -1438,8 +1520,81 @@ const styles = StyleSheet.create({
     color: "#212121",
     marginRight: 8,
   },
+  renameAttachmentButton: {
+    padding: 4,
+    marginRight: 4,
+  },
   removeAttachmentButton: {
     padding: 4,
+  },
+  renameOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  renameModal: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  renameTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#212121",
+    marginBottom: 4,
+  },
+  renameSubtitle: {
+    fontSize: 13,
+    color: "#9E9E9E",
+    marginBottom: 16,
+  },
+  renameInput: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#212121",
+    marginBottom: 16,
+  },
+  renameButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  renameCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+  },
+  renameCancelText: {
+    fontSize: 15,
+    color: "#616161",
+    fontWeight: "600",
+  },
+  renameConfirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#2891FF",
+    alignItems: "center",
+  },
+  renameConfirmText: {
+    fontSize: 15,
+    color: "white",
+    fontWeight: "700",
   },
   currencyList: {
     maxHeight: 300,
