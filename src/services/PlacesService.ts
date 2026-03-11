@@ -26,7 +26,7 @@ export const hasGooglePlacesApiKey = GOOGLE_PLACES_API_KEY.length > 0;
 
 export const getAddressSuggestions = async (
   input: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<AddressSuggestion[]> => {
   if (!hasGooglePlacesApiKey || !input.trim()) {
     return [];
@@ -35,13 +35,13 @@ export const getAddressSuggestions = async (
   const params = new URLSearchParams({
     input,
     key: GOOGLE_PLACES_API_KEY,
-    types: "address",
+
     language: "fr",
   });
 
   const response = await fetch(
     `${GOOGLE_PLACES_AUTOCOMPLETE_URL}?${params.toString()}`,
-    { signal }
+    { signal },
   );
   const data = await response.json();
 
@@ -61,14 +61,14 @@ export const getAddressSuggestions = async (
 
 const extractComponent = (
   components: any[] = [],
-  type: string
+  type: string,
 ): string | undefined => {
   const component = components.find((item) => item.types?.includes(type));
   return component?.long_name;
 };
 
 export const getPlaceDetails = async (
-  placeId: string
+  placeId: string,
 ): Promise<PlaceDetailsResult> => {
   if (!hasGooglePlacesApiKey || !placeId) {
     return {};
@@ -82,7 +82,7 @@ export const getPlaceDetails = async (
   });
 
   const response = await fetch(
-    `${GOOGLE_PLACES_DETAILS_URL}?${params.toString()}`
+    `${GOOGLE_PLACES_DETAILS_URL}?${params.toString()}`,
   );
   const data = await response.json();
 
