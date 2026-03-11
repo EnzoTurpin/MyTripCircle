@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -54,6 +54,8 @@ const TripDetailsScreen: React.FC = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [collaboratorUsers, setCollaboratorUsers] = useState<Map<string, any>>(new Map());
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const {
     validateTrip,
     createBooking,
@@ -112,6 +114,36 @@ const TripDetailsScreen: React.FC = () => {
 
     loadCollaboratorInfo();
   }, [trip, user]);
+
+  // Countdown jusqu'au début du voyage
+  useEffect(() => {
+    if (!trip) return;
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const start = new Date(trip.startDate).getTime();
+      const diff = start - now;
+
+      if (diff <= 0) {
+        setCountdown(null);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        return;
+      }
+
+      setCountdown({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      });
+    };
+
+    updateCountdown();
+    countdownRef.current = setInterval(updateCountdown, 1000);
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [trip?.startDate]);
 
   useFocusEffect(
     useCallback(() => {
@@ -400,6 +432,34 @@ const TripDetailsScreen: React.FC = () => {
             {trip.description && (
               <Text style={styles.tripDescription}>{trip.description}</Text>
             )}
+
+            {/* Countdown */}
+            {countdown && (
+              <View style={styles.countdownContainer}>
+                <Text style={styles.countdownLabel}>Départ dans</Text>
+                <View style={styles.countdownRow}>
+                  <View style={styles.countdownUnit}>
+                    <Text style={styles.countdownNumber}>{String(countdown.days).padStart(2, "0")}</Text>
+                    <Text style={styles.countdownUnitLabel}>j</Text>
+                  </View>
+                  <Text style={styles.countdownSeparator}>:</Text>
+                  <View style={styles.countdownUnit}>
+                    <Text style={styles.countdownNumber}>{String(countdown.hours).padStart(2, "0")}</Text>
+                    <Text style={styles.countdownUnitLabel}>h</Text>
+                  </View>
+                  <Text style={styles.countdownSeparator}>:</Text>
+                  <View style={styles.countdownUnit}>
+                    <Text style={styles.countdownNumber}>{String(countdown.minutes).padStart(2, "0")}</Text>
+                    <Text style={styles.countdownUnitLabel}>min</Text>
+                  </View>
+                  <Text style={styles.countdownSeparator}>:</Text>
+                  <View style={styles.countdownUnit}>
+                    <Text style={styles.countdownNumber}>{String(countdown.seconds).padStart(2, "0")}</Text>
+                    <Text style={styles.countdownUnitLabel}>sec</Text>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
         </LinearGradient>
 
@@ -494,6 +554,7 @@ const TripDetailsScreen: React.FC = () => {
                       ...styles.bookingItem,
                       ...(index > 0 ? { marginTop: 16 } : {}),
                     }}
+                    onPress={() => navigation.navigate("BookingDetails", { bookingId: booking.id })}
                   >
                     <View style={styles.bookingHeader}>
                       <View style={styles.bookingIconContainer}>
@@ -1051,6 +1112,51 @@ const styles = StyleSheet.create({
     color: "#FF9500",
     marginLeft: 8,
     fontWeight: "500" as const,
+  },
+  countdownContainer: {
+    marginTop: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
+  },
+  countdownLabel: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.8)",
+    fontWeight: "600" as const,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    marginBottom: 10,
+    textAlign: "center" as const,
+  },
+  countdownRow: {
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 4,
+  },
+  countdownUnit: {
+    alignItems: "center" as const,
+    minWidth: 52,
+  },
+  countdownNumber: {
+    fontSize: 32,
+    fontWeight: "700" as const,
+    color: "white",
+    lineHeight: 36,
+  },
+  countdownUnitLabel: {
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "500" as const,
+    marginTop: 2,
+  },
+  countdownSeparator: {
+    fontSize: 28,
+    fontWeight: "700" as const,
+    color: "rgba(255, 255, 255, 0.6)",
+    marginBottom: 12,
   },
 });
 
