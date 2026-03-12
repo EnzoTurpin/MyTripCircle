@@ -102,6 +102,7 @@ const AppNavigator = () => {
     config: {
       screens: {
         Invitation: "invitation/:token",
+        ForgotPassword: "reset-password",
       },
     },
   };
