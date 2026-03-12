@@ -43,3 +43,6 @@ yarn-error.*
 
 # database related
 /database
+
+#claude
+.claude
