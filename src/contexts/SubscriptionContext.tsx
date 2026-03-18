@@ -218,12 +218,12 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   }, [checkFeatureAccess]);
 
   const isPremium = useCallback((): boolean => {
-    return subscription?.plan === "premium" && (
+    return !!(subscription?.plan === "premium" && (
       subscription.status === "active" ||
       (subscription.status === "cancelled" &&
        subscription.endDate &&
        new Date() < new Date(subscription.endDate))
-    );
+    ));
   }, [subscription]);
 
   const value: SubscriptionContextType = useMemo(

@@ -69,7 +69,7 @@ const InviteFriendsScreen: React.FC = () => {
       const mappedFriends: User[] = realFriends.map((f) => ({
         id: f.friendId,
         name: f.name,
-        email: f.email,
+        email: f.email ?? "",
         avatar: f.avatar,
         createdAt: f.createdAt,
       }));
@@ -180,8 +180,7 @@ const InviteFriendsScreen: React.FC = () => {
 
         return createInvitation({
           tripId: trip.id,
-          inviterId: user.id,
-          inviteeEmail: friend.email,
+          inviteeEmail: friend.email || undefined,
           message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
           permissions: {
             role: "editor",

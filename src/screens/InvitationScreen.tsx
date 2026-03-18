@@ -92,7 +92,7 @@ const InvitationScreen: React.FC = () => {
       setLoading(true);
 
       // Appel API pour récupérer l'invitation par token
-      const invitationData = await getInvitationByToken(currentToken);
+      const invitationData = await getInvitationByToken(currentToken!);
 
       setInvitation(invitationData);
       setLoading(false);
@@ -128,7 +128,7 @@ const InvitationScreen: React.FC = () => {
     try {
       setResponding(true);
 
-      const success = await respondToInvitation(currentToken, "accept", user.id);
+      const success = await respondToInvitation(currentToken!, "accept", user.id);
 
       if (success) {
         Alert.alert(t("invitation.accepted"), t("invitation.acceptedMessage"), [
@@ -144,7 +144,7 @@ const InvitationScreen: React.FC = () => {
       console.error("Error accepting invitation:", error);
       Alert.alert(
         t("common.error"),
-        error.message || t("invitation.acceptError")
+        (error as Error).message || t("invitation.acceptError")
       );
     } finally {
       setResponding(false);
@@ -167,7 +167,7 @@ const InvitationScreen: React.FC = () => {
             setResponding(true);
 
             const success = await respondToInvitation(
-              currentToken,
+              currentToken!,
               "decline",
               user?.id
             );
@@ -190,7 +190,7 @@ const InvitationScreen: React.FC = () => {
             console.error("Error declining invitation:", error);
             Alert.alert(
               t("common.error"),
-              error.message || t("invitation.declineError")
+              (error as Error).message || t("invitation.declineError")
             );
           } finally {
             setResponding(false);

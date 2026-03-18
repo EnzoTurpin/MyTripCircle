@@ -158,7 +158,7 @@ const CreateTripScreen: React.FC = () => {
         {
           text: t("common.ok"),
           onPress: () =>
-            navigation.navigate("TripDetails", {
+            navigation.replace("TripDetails", {
               tripId: newTrip.id,
               showValidateButton: true,
             }),

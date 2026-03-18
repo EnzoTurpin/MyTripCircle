@@ -50,8 +50,10 @@ class MongoDBAdapter {
         destination: trip.destination,
         coverImage: trip.coverImage,
         ownerId: trip.ownerId,
-        collaborators: trip.collaborators.map((id) => ({ userId: id })),
+        collaborators: trip.collaborators,
         isPublic: trip.isPublic,
+        status: trip.status,
+        visibility: trip.visibility,
       });
       return this.mapMongoTripToAppTrip(mongoTrip);
     } catch (error) {

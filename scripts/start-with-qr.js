@@ -1,43 +1,25 @@
 const { spawn } = require("child_process");
 
-console.log("🚀 Démarrage du backend et Expo...");
+console.log("📱 Lancement d'Expo avec QR code (API sur VPS)...");
 console.log("─".repeat(50));
+console.log("\n💡 Astuce: Scannez le QR code directement avec l'application Expo Go");
+console.log("   L'application s'ouvrira automatiquement!\n");
 
-// Démarrer le serveur backend
-const serverProcess = spawn("node", ["server/index.js"], {
-  stdio: "inherit", // Afficher les logs du serveur
-  detached: false,
+// Lancer Expo (le serveur tourne sur le VPS, pas en local)
+const expoProcess = spawn("npx", ["expo", "start", "--clear"], {
+  stdio: "inherit",
+  shell: true,
 });
 
-// Attendre un peu que le serveur démarre
-setTimeout(() => {
-  console.log("📱 Lancement d'Expo avec QR code...");
-  console.log("─".repeat(50));
-  console.log("\n💡 Astuce: Scannez le QR code directement avec l'application Expo Go");
-  console.log("   L'application s'ouvrira automatiquement!\n");
+expoProcess.on("close", (code) => {
+  console.log(`\n📱 Expo terminé avec le code: ${code}`);
+});
 
-  // Lancer Expo
-  const expoProcess = spawn("npx", ["expo", "start", "--clear"], {
-    stdio: "inherit",
-    shell: true,
-  });
-
-  expoProcess.on("close", (code) => {
-    console.log(`\n📱 Expo terminé avec le code: ${code}`);
-    if (serverProcess && !serverProcess.killed) {
-      serverProcess.kill();
-    }
-  });
-
-  // Gérer l'arrêt propre
-  process.on("SIGINT", () => {
-    console.log("\n🛑 Arrêt en cours...");
-    if (serverProcess && !serverProcess.killed) {
-      serverProcess.kill();
-    }
-    if (expoProcess && !expoProcess.killed) {
-      expoProcess.kill();
-    }
-    process.exit(0);
-  });
-}, 2000); // Attendre 2 secondes que le serveur démarre
+// Gérer l'arrêt propre
+process.on("SIGINT", () => {
+  console.log("\n🛑 Arrêt en cours...");
+  if (expoProcess && !expoProcess.killed) {
+    expoProcess.kill();
+  }
+  process.exit(0);
+});

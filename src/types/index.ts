@@ -143,6 +143,29 @@ export interface TripCollaborator {
   joinedAt: Date;
 }
 
+export interface SubscriptionFeatures {
+  maxTrips: number;
+  maxCollaborators: number;
+  canExport: boolean;
+  hasAds: boolean;
+  prioritySupport: boolean;
+  maxAttachments: number;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  plan: "free" | "premium";
+  status: "active" | "cancelled" | "expired";
+  features: SubscriptionFeatures;
+  startDate: Date;
+  endDate?: Date;
+  cancelledAt?: Date;
+  nextBillingDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
