@@ -74,7 +74,7 @@ const TripsScreen: React.FC = () => {
         );
         return;
       } catch (error) {
-        console.log(`[Test] Failed ${url}: ${error.message}`);
+        console.log(`[Test] Failed ${url}: ${(error as Error).message}`);
       }
     }
 

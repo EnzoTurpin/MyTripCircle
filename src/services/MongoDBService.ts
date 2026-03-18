@@ -379,7 +379,7 @@ class MongoDBService {
   }
 
   // === MÉTHODES UTILITAIRES ===
-  async isConnected(): Promise<boolean> {
+  async checkConnection(): Promise<boolean> {
     return this.isConnected;
   }
 

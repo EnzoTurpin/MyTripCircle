@@ -390,6 +390,8 @@ const resources = {
         addBooking: "Add Booking",
         addAddress: "Add Address",
         draftMessage: "This trip is a draft. Validate it to make it active.",
+        deleteDraftTitle: "Delete draft",
+        deleteDraftMessage: "Do you want to delete this draft trip? This action cannot be undone.",
       },
       profile: {
         logoutTitle: "Logout",
@@ -834,6 +836,8 @@ const resources = {
         addAddress: "Ajouter une adresse",
         draftMessage:
           "Ce voyage est un brouillon. Validez-le pour le rendre actif.",
+        deleteDraftTitle: "Supprimer le brouillon",
+        deleteDraftMessage: "Voulez-vous supprimer ce voyage brouillon ? Cette action est irréversible.",
       },
       profile: {
         logoutTitle: "Se déconnecter",

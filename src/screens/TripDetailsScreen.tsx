@@ -58,6 +58,7 @@ const TripDetailsScreen: React.FC = () => {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const {
     validateTrip,
+    deleteTrip,
     createBooking,
     createAddress,
   } = useTrips();
@@ -390,10 +391,33 @@ const TripDetailsScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => (navigation as any).reset({
-              index: 0,
-              routes: [{ name: "Main" as any, params: { screen: "Trips" as any } }],
-            })}
+            onPress={() => {
+              if (trip?.status === "draft") {
+                Alert.alert(
+                  t("tripDetails.deleteDraftTitle"),
+                  t("tripDetails.deleteDraftMessage"),
+                  [
+                    { text: t("common.cancel"), style: "cancel" },
+                    {
+                      text: t("common.delete"),
+                      style: "destructive",
+                      onPress: async () => {
+                        await deleteTrip(tripId);
+                        (navigation as any).reset({
+                          index: 0,
+                          routes: [{ name: "Main" as any, params: { screen: "Trips" as any } }],
+                        });
+                      },
+                    },
+                  ]
+                );
+              } else {
+                (navigation as any).reset({
+                  index: 0,
+                  routes: [{ name: "Main" as any, params: { screen: "Trips" as any } }],
+                });
+              }
+            }}
             activeOpacity={0.7}
           >
             <Ionicons name="close" size={28} color="white" />
