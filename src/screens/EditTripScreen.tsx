@@ -1,634 +1,366 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  Modal,
+  StatusBar,
+  Image,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { RouteProp } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList, Trip, Booking } from "../types";
-import { useTrips } from "../contexts/TripsContext";
-import { useAuth } from "../contexts/AuthContext";
+import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import BookingForm from "../components/BookingForm";
-import { formatDate, parseApiError } from "../utils/i18n";
-import i18n from "i18next";
-import ApiService from "../services/ApiService";
+import { formatDate } from "../utils/i18n";
+import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
 
-type EditTripScreenRouteProp = RouteProp<RootStackParamList, "EditTrip">;
-type EditTripScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "EditTrip"
->;
+type EditTripRouteProp = RouteProp<RootStackParamList, "EditTrip">;
+
+import useEditTrip from "../hooks/useEditTrip";
+import FocusableField from "../components/editTrip/FocusableField";
+import TripCalendar from "../components/editTrip/TripCalendar";
+import RadioOptionCard, { RadioOption } from "../components/editTrip/RadioOptionCard";
+import BookingsList from "../components/editTrip/BookingsList";
+
+type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
 
 const EditTripScreen: React.FC = () => {
-  const route = useRoute<EditTripScreenRouteProp>();
-  const navigation = useNavigation<EditTripScreenNavigationProp>();
-  const { tripId } = route.params;
-  const { updateTrip, createBooking, updateBooking, deleteBooking } = useTrips();
-  const { user } = useAuth();
-  const { t } = useTranslation();
+  const navigation = useNavigation<EditTripNavigationProp>();
+  const route = useRoute<EditTripRouteProp>();
+  const { t }      = useTranslation();
+  const { colors, isDark } = useTheme();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    destination: "",
-    startDate: new Date(),
-    endDate: new Date(),
-    isPublic: false,
-  });
+  const {
+    formData, setFormData,
+    loading, initialLoading, isOwner,
+    showCalendar, calendarPickingFor, calendarYear, calendarMonth,
+    openCalendar, closeCalendar, handleCalendarDayPress, goToPrevMonth, goToNextMonth,
+    bookings, showBookingForm, editingBookingIndex,
+    handleAddBooking, handleEditBooking, handleDeleteBooking, handleSaveBooking, closeBookingForm,
+    handlePickCoverPhoto, handleUpdateTrip, handleDeleteTrip, handleCancel,
+  } = useEditTrip();
 
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [showBookingForm, setShowBookingForm] = useState(false);
-  const [editingBookingIndex, setEditingBookingIndex] = useState<number | null>(
-    null
-  );
+  const MONTHS = t("editTrip.monthNames").split(",");
+  const DAYS   = t("editTrip.dayInitials").split(",");
 
-  useEffect(() => {
-    loadTripData();
-  }, [tripId]);
+  const visibilityOptions: RadioOption<"private" | "friends" | "public">[] = [
+    { value: "private", label: t("editTrip.visibilityPrivate"), desc: t("editTrip.visibilityPrivateDesc"), emoji: "🔒", selBg: "#F5E5DC", selColor: "#C4714A", dotColor: "#C4714A" },
+    { value: "friends", label: t("editTrip.visibilityFriends"), desc: t("editTrip.visibilityFriendsDesc"), emoji: "👥", selBg: "#DCF0F5", selColor: "#5A8FAA", dotColor: "#5A8FAA" },
+    { value: "public",  label: t("editTrip.visibilityPublic"),  desc: t("editTrip.visibilityPublicDesc"),  emoji: "🌐", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
+  ];
 
-  const loadTripData = async () => {
-    try {
-      // Charger le voyage et ses réservations depuis l'API
-      const [tripData, bookingsData] = await Promise.all([
-        ApiService.getTripById(tripId),
-        ApiService.getBookingsByTripId(tripId),
-      ]);
-
-      if (tripData) {
-        const startDate = new Date(tripData.startDate);
-        const endDate = new Date(tripData.endDate);
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.error("Invalid dates in trip:", { startDate, endDate });
-          return;
-        }
-
-        setFormData({
-          title: tripData.title,
-          description: tripData.description || "",
-          destination: tripData.destination,
-          startDate,
-          endDate,
-          isPublic: tripData.isPublic,
-        });
-      }
-
-      const mappedBookings: Booking[] = (bookingsData || []).map((b: any) => ({
-        id: b._id,
-        tripId: b.tripId,
-        type: b.type,
-        title: b.title,
-        description: b.description,
-        date: new Date(b.date),
-        endDate: b.endDate ? new Date(b.endDate) : undefined,
-        time: b.time,
-        address: b.address,
-        confirmationNumber: b.confirmationNumber,
-        price: b.price,
-        currency: b.currency,
-        status: b.status,
-        attachments: b.attachments,
-        createdAt: new Date(b.createdAt),
-        updatedAt: new Date(b.updatedAt),
-      }));
-      setBookings(mappedBookings);
-    } catch (error) {
-      console.error("Error loading trip data:", error);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleDateChange = (
-    event: any,
-    selectedDate?: Date,
-    type: "start" | "end" = "start"
-  ) => {
-    if (Platform.OS === "android") {
-      if (type === "start") {
-        setShowStartDatePicker(false);
-      } else {
-        setShowEndDatePicker(false);
-      }
-    }
-
-    if (selectedDate) {
-      if (type === "start") {
-        setFormData((prev) => ({ ...prev, startDate: selectedDate }));
-      } else {
-        setFormData((prev) => ({ ...prev, endDate: selectedDate }));
-      }
-    }
-  };
-
-  const validateForm = () => {
-    if (!formData.title.trim()) {
-      Alert.alert(t("createTrip.error"), t("createTrip.titleRequired"));
-      return false;
-    }
-
-    if (!formData.destination.trim()) {
-      Alert.alert(t("createTrip.error"), t("createTrip.destinationRequired"));
-      return false;
-    }
-
-    // Validation des dates supprimée pour permettre n'importe quelle date
-
-    return true;
-  };
-
-  const handleUpdateTrip = async () => {
-    if (!validateForm() || !user) return;
-
-    try {
-      setLoading(true);
-
-      await updateTrip(tripId, {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        destination: formData.destination.trim(),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        isPublic: formData.isPublic,
-      });
-
-      // Mettre à jour les statistiques du voyage avec le nombre de réservations
-      // (Cette logique devrait être gérée côté backend, mais on peut l'ajouter ici si nécessaire)
-
-      Alert.alert(t("editTrip.success"), t("editTrip.successMessage"), [
-        {
-          text: t("common.ok"),
-          onPress: () => navigation.goBack(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error updating trip:", error);
-      Alert.alert(t("common.error"), parseApiError(error));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    Alert.alert(t("editTrip.cancelTitle"), t("editTrip.cancelMessage"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("editTrip.cancelModification"),
-        style: "destructive",
-        onPress: () => navigation.goBack(),
-      },
-    ]);
-  };
-
-  const handleAddBooking = () => {
-    setEditingBookingIndex(null);
-    setShowBookingForm(true);
-  };
-
-  const handleEditBooking = (index: number) => {
-    setEditingBookingIndex(index);
-    setShowBookingForm(true);
-  };
-
-  const handleDeleteBooking = async (index: number) => {
-    const booking = bookings[index];
-    Alert.alert(
-      t("common.confirm"),
-      t("bookings.deleteConfirm"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.ok"),
-          style: "destructive",
-          onPress: async () => {
-            if (booking.id) {
-              // Supprimer la réservation existante
-              await deleteBooking(booking.id);
-            }
-            setBookings((prev) => prev.filter((_, i) => i !== index));
-          },
-        },
-      ]
-    );
-  };
-
-  const handleSaveBooking = async (
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
-  ) => {
-    try {
-      if (editingBookingIndex !== null) {
-        // Modifier une réservation existante
-        const existingBooking = bookings[editingBookingIndex];
-        if (existingBooking.id) {
-          await updateBooking(existingBooking.id, booking);
-          setBookings((prev) =>
-            prev.map((b, i) =>
-              i === editingBookingIndex
-                ? { ...b, ...booking, updatedAt: new Date() }
-                : b
-            )
-          );
-        }
-      } else {
-        // Créer une nouvelle réservation
-        const newBooking = await createBooking({
-          ...booking,
-          tripId,
-        });
-        setBookings((prev) => [...prev, newBooking]);
-      }
-      setShowBookingForm(false);
-      setEditingBookingIndex(null);
-    } catch (error) {
-      console.error("Error saving booking:", error);
-      Alert.alert(t("common.error"), (error as Error).message || "Erreur lors de la sauvegarde");
-    }
-  };
-
-  const getTypeIcon = (type: Booking["type"]) => {
-    switch (type) {
-      case "flight":
-        return "airplane";
-      case "train":
-        return "train";
-      case "hotel":
-        return "bed";
-      case "restaurant":
-        return "restaurant";
-      case "activity":
-        return "ticket";
-      default:
-        return "receipt";
-    }
-  };
+  const statusOptions: RadioOption<"draft" | "validated">[] = [
+    { value: "draft",     label: t("editTrip.statusDraft"),     desc: t("editTrip.statusDraftDesc"),     emoji: "📝", selBg: "#EDE5D8", selColor: "#7A6A58", dotColor: "#7A6A58" },
+    { value: "validated", label: t("editTrip.statusValidated"), desc: t("editTrip.statusValidatedDesc"), emoji: "✅", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
+  ];
 
   if (initialLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>{t("editTrip.loading")}</Text>
+      <View style={[s.loadingContainer, { backgroundColor: colors.bg }]}>
+        <Text style={[s.loadingText, { color: colors.textMid }]}>{t("editTrip.loading")}</Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[s.root, { backgroundColor: colors.bg }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <LinearGradient 
-        colors={['#2891FF', '#8869FF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("editTrip.title")}</Text>
-        <View style={styles.headerSpacer} />
-      </LinearGradient>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
+      <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bgLight }]} edges={["top"]}>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.formContainer}>
-          {/* Titre du voyage */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t("createTrip.tripTitle")} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.title}
-              onChangeText={(value) => handleInputChange("title", value)}
-              placeholder={t("createTrip.tripTitlePlaceholder")}
-              maxLength={100}
-            />
-          </View>
-
-          {/* Destination */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t("createTrip.destination")} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.destination}
-              onChangeText={(value) => handleInputChange("destination", value)}
-              placeholder={t("createTrip.destinationPlaceholder")}
-              maxLength={100}
-            />
-          </View>
-
-          {/* Dates */}
-          <View style={styles.dateRow}>
-            <View style={styles.dateGroup}>
-              <Text style={styles.label}>{t("editTrip.startDate")} *</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowStartDatePicker(true)}
-              >
-                <Ionicons name="calendar" size={20} color="#666" />
-                <Text style={styles.dateText}>
-                  {formatDate(formData.startDate)}
-                </Text>
-              </TouchableOpacity>
-              {Platform.OS === "ios" && showStartDatePicker && (
-                <Modal
-                  visible={showStartDatePicker}
-                  transparent={true}
-                  animationType="fade"
-                  onRequestClose={() => setShowStartDatePicker(false)}
-                >
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.pickerModalContent}>
-                      <Text style={styles.pickerModalTitle}>
-                        {t("editTrip.startDate")}
-                      </Text>
-                      <View style={styles.pickerWrapper}>
-                        <DateTimePicker
-                          value={formData.startDate}
-                          mode="date"
-                          display="spinner"
-                          onChange={(event, date) => handleDateChange(event, date, "start")}
-                          textColor="#000000"
-                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
-                        />
-                      </View>
-                      <View style={styles.pickerButtons}>
-                        <TouchableOpacity
-                          style={styles.pickerCancelButton}
-                          onPress={() => setShowStartDatePicker(false)}
-                        >
-                          <Text style={styles.pickerCancelText}>
-                            {t("common.cancel")}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.pickerConfirmButton}
-                          onPress={() => setShowStartDatePicker(false)}
-                        >
-                          <Text style={styles.pickerConfirmText}>
-                            {t("common.confirm")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                </Modal>
-              )}
-            </View>
-
-            <View style={styles.dateGroup}>
-              <Text style={styles.label}>{t("editTrip.endDate")} *</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowEndDatePicker(true)}
-              >
-                <Ionicons name="calendar" size={20} color="#666" />
-                <Text style={styles.dateText}>
-                  {formatDate(formData.endDate)}
-                </Text>
-              </TouchableOpacity>
-              {Platform.OS === "ios" && showEndDatePicker && (
-                <Modal
-                  visible={showEndDatePicker}
-                  transparent={true}
-                  animationType="fade"
-                  onRequestClose={() => setShowEndDatePicker(false)}
-                >
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.pickerModalContent}>
-                      <Text style={styles.pickerModalTitle}>
-                        {t("editTrip.endDate")}
-                      </Text>
-                      <View style={styles.pickerWrapper}>
-                        <DateTimePicker
-                          value={formData.endDate}
-                          mode="date"
-                          display="spinner"
-                          onChange={(event, date) => handleDateChange(event, date, "end")}
-                          textColor="#000000"
-                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
-                        />
-                      </View>
-                      <View style={styles.pickerButtons}>
-                        <TouchableOpacity
-                          style={styles.pickerCancelButton}
-                          onPress={() => setShowEndDatePicker(false)}
-                        >
-                          <Text style={styles.pickerCancelText}>
-                            {t("common.cancel")}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.pickerConfirmButton}
-                          onPress={() => setShowEndDatePicker(false)}
-                        >
-                          <Text style={styles.pickerConfirmText}>
-                            {t("common.confirm")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                </Modal>
-              )}
-            </View>
-          </View>
-
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t("createTrip.description")}</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.description}
-              onChangeText={(value) => handleInputChange("description", value)}
-              placeholder={t("createTrip.descriptionPlaceholder")}
-              multiline
-              numberOfLines={4}
-              maxLength={500}
-            />
-            <Text style={styles.characterCount}>
-              {formData.description.length}/500
-            </Text>
-          </View>
-
-          {/* Visibilité */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t("createTrip.visibility")}</Text>
-            <TouchableOpacity
-              style={styles.visibilityButton}
-              onPress={() => handleInputChange("isPublic", !formData.isPublic)}
-            >
-              <View style={styles.visibilityContent}>
-                <Ionicons
-                  name={formData.isPublic ? "globe" : "lock-closed"}
-                  size={20}
-                  color="#666"
-                />
-                <Text style={styles.visibilityText}>
-                  {formData.isPublic
-                    ? t("createTrip.public")
-                    : t("createTrip.private")}
-                </Text>
-              </View>
-              <Ionicons
-                name={
-                  formData.isPublic
-                    ? "checkmark-circle"
-                    : "checkmark-circle-outline"
-                }
-                size={24}
-                color={formData.isPublic ? "#34C759" : "#ccc"}
-              />
-            </TouchableOpacity>
-            <Text style={styles.visibilityDescription}>
-              {formData.isPublic
-                ? t("createTrip.publicDescription")
-                : t("createTrip.privateDescription")}
-            </Text>
-          </View>
-
-          {/* Réservations */}
-          <View style={styles.inputGroup}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.label}>{t("bookings.header")}</Text>
-              <TouchableOpacity
-                style={styles.addBookingButton}
-                onPress={handleAddBooking}
-              >
-                <Ionicons name="add" size={20} color="#007AFF" />
-                <Text style={styles.addBookingText}>
-                  {t("bookings.addBooking")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {bookings.length === 0 ? (
-              <View style={styles.emptyBookings}>
-                <Ionicons name="receipt-outline" size={40} color="#ccc" />
-                <Text style={styles.emptyBookingsText}>
-                  {t("bookings.emptyAll")}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.bookingsList}>
-                {bookings.map((booking, index) => (
-                  <View key={booking.id || index} style={styles.bookingItem}>
-                    <View style={styles.bookingHeader}>
-                      <View
-                        style={[
-                          styles.bookingTypeIcon,
-                          { backgroundColor: "#007AFF" },
-                        ]}
-                      >
-                        <Ionicons
-                          name={getTypeIcon(booking.type) as any}
-                          size={16}
-                          color="white"
-                        />
-                      </View>
-                      <View style={styles.bookingInfo}>
-                        <Text style={styles.bookingTitle}>{booking.title}</Text>
-                        <Text style={styles.bookingDate}>
-                          {formatDate(booking.date)}
-                          {booking.time && ` • ${booking.time}`}
-                        </Text>
-                      </View>
-                      <View style={styles.bookingActions}>
-                        <TouchableOpacity
-                          onPress={() => handleEditBooking(index)}
-                        >
-                          <Ionicons name="pencil" size={18} color="#007AFF" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => handleDeleteBooking(index)}
-                        >
-                          <Ionicons name="trash" size={18} color="#FF3B30" />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
+        {/* ── Header ─────────────────────────────────────────────────────────── */}
+        <View style={[s.header, { backgroundColor: colors.bgLight, borderBottomColor: colors.border }]}>
+          <TouchableOpacity
+            style={[s.backBtn, { backgroundColor: colors.bgMid }]}
+            onPress={handleCancel}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.textMid} />
+          </TouchableOpacity>
+          <Text style={[s.headerTitle, { color: colors.text }]}>{t("editTrip.screenTitle")}</Text>
+          <TouchableOpacity
+            style={[s.savePill, loading && s.savePillDisabled]}
+            onPress={handleUpdateTrip}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            <Text style={s.savePillText}>{loading ? "…" : t("editTrip.saveButton")}</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
 
-      {/* Boutons d'action */}
-      <View style={styles.actionContainer}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={handleCancel}
-          disabled={loading}
-        >
-          <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
-        </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={closeCalendar}>
+          <ScrollView style={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        <TouchableOpacity
-          style={[styles.updateButton, loading && styles.updateButtonDisabled]}
-          onPress={handleUpdateTrip}
-          disabled={loading}
-        >
-          {loading ? (
-            <Ionicons name="hourglass" size={20} color="white" />
-          ) : (
-            <Ionicons name="checkmark" size={20} color="white" />
-          )}
-          <Text style={styles.updateButtonText}>
-            {loading ? t("editTrip.updating") : t("editTrip.updateTrip")}
-          </Text>
-        </TouchableOpacity>
-      </View>
+            {/* ── Photo de couverture ─────────────────────────────────────────── */}
+            <TouchableOpacity style={s.cover} onPress={handlePickCoverPhoto} activeOpacity={0.9}>
+              {formData.coverImage ? (
+                <>
+                  <Image
+                    source={{ uri: formData.coverImage }}
+                    style={StyleSheet.absoluteFillObject}
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(15,8,2,0.55)"]}
+                    style={StyleSheet.absoluteFillObject}
+                    start={{ x: 0, y: 0.3 }}
+                    end={{ x: 0, y: 1 }}
+                  />
+                </>
+              ) : (
+                <LinearGradient colors={["#3A3020", "#1E1A10"]} style={StyleSheet.absoluteFillObject} />
+              )}
+              <View style={s.coverBtn}>
+                <Text style={s.coverBtnEmoji}>📸</Text>
+                <Text style={s.coverBtnText}>{t("editTrip.changeCoverPhoto")}</Text>
+              </View>
+            </TouchableOpacity>
 
-      {/* Date Pickers Android */}
-      {Platform.OS === "android" && showStartDatePicker && (
-        <DateTimePicker
-          value={formData.startDate}
-          mode="date"
-          display="default"
-          onChange={(event, date) => handleDateChange(event, date, "start")}
-        />
-      )}
+            <View style={s.form}>
 
-      {Platform.OS === "android" && showEndDatePicker && (
-        <DateTimePicker
-          value={formData.endDate}
-          mode="date"
-          display="default"
-          onChange={(event, date) => handleDateChange(event, date, "end")}
-        />
-      )}
+              {/* ── Nom du voyage ─────────────────────────────────────────────── */}
+              <FocusableField
+                baseStyle={[s.field, { backgroundColor: colors.surface }]}
+                render={({ onFocus, onBlur }) => (
+                  <>
+                    <Text style={[s.fieldLbl, { color: colors.textLight }]}>{t("editTrip.tripNameLabel")}</Text>
+                    <TextInput
+                      style={[s.fieldInput, { color: colors.text }]}
+                      value={formData.title}
+                      onChangeText={v => setFormData(p => ({ ...p, title: v }))}
+                      placeholder={t("editTrip.tripNamePlaceholder")}
+                      placeholderTextColor={colors.textLight}
+                      maxLength={100}
+                      onFocus={() => { onFocus(); closeCalendar(); }}
+                      onBlur={onBlur}
+                    />
+                  </>
+                )}
+              />
 
-      {/* Booking Form Modal */}
+              {/* ── Destination ───────────────────────────────────────────────── */}
+              <FocusableField
+                baseStyle={[s.field, { backgroundColor: colors.surface }]}
+                render={({ onFocus, onBlur }) => (
+                  <>
+                    <Text style={[s.fieldLbl, { color: colors.textLight }]}>{t("editTrip.mainDestination")}</Text>
+                    <View style={s.fieldRow}>
+                      <Text style={s.fieldEmoji}>📍</Text>
+                      <TextInput
+                        style={[s.fieldInput, { color: colors.text, flex: 1 }]}
+                        value={formData.destination}
+                        onChangeText={v => setFormData(p => ({ ...p, destination: v }))}
+                        placeholder={t("editTrip.mainDestinationPlaceholder")}
+                        placeholderTextColor={colors.textLight}
+                        maxLength={100}
+                        onFocus={() => { onFocus(); closeCalendar(); }}
+                        onBlur={onBlur}
+                      />
+                    </View>
+                  </>
+                )}
+              />
+
+              {/* ── Dates ─────────────────────────────────────────────────────── */}
+              <View style={s.dateRow}>
+                <View style={s.dateCol}>
+                  <TouchableOpacity
+                    style={[
+                      s.field, s.fieldNoMargin,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      showCalendar && calendarPickingFor === "start" && s.fieldActive,
+                    ]}
+                    onPress={() => openCalendar("start")}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[
+                      s.fieldLbl, { color: colors.textLight },
+                      showCalendar && calendarPickingFor === "start" && { color: "#C4714A" },
+                    ]}>
+                      {t("editTrip.departureDateLabel")}
+                      {showCalendar && calendarPickingFor === "start" ? " ✎" : ""}
+                    </Text>
+                    <View style={s.fieldRow}>
+                      <Text style={s.fieldEmoji}>📅</Text>
+                      <Text style={[
+                        s.dateVal, { color: colors.text },
+                        showCalendar && calendarPickingFor === "start" && { color: "#C4714A", fontFamily: F.sans700 },
+                      ]}>
+                        {formatDate(formData.startDate)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={s.dateCol}>
+                  <TouchableOpacity
+                    style={[
+                      s.field, s.fieldNoMargin,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      showCalendar && calendarPickingFor === "end" && s.fieldActive,
+                    ]}
+                    onPress={() => openCalendar("end")}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[
+                      s.fieldLbl, { color: colors.textLight },
+                      showCalendar && calendarPickingFor === "end" && { color: "#C4714A" },
+                    ]}>
+                      {t("editTrip.returnDateLabel")}
+                      {showCalendar && calendarPickingFor === "end" ? " ✎" : ""}
+                    </Text>
+                    <View style={s.fieldRow}>
+                      <Text style={s.fieldEmoji}>📅</Text>
+                      <Text style={[
+                        s.dateVal, { color: colors.text },
+                        showCalendar && calendarPickingFor === "end" && { color: "#C4714A", fontFamily: F.sans700 },
+                      ]}>
+                        {formatDate(formData.endDate)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* ── Calendrier ────────────────────────────────────────────────── */}
+              {showCalendar && (
+                <TripCalendar
+                  year={calendarYear}
+                  month={calendarMonth}
+                  startDate={formData.startDate}
+                  endDate={formData.endDate}
+                  months={MONTHS}
+                  days={DAYS}
+                  periodLabel={t("editTrip.period")}
+                  periodRangeLabel={t("editTrip.periodLabel")}
+                  colors={{
+                    surface:  colors.surface,
+                    border:   colors.border,
+                    bgMid:    colors.bgMid,
+                    text:     colors.text,
+                    textMid:  colors.textMid,
+                  }}
+                  onPrevMonth={goToPrevMonth}
+                  onNextMonth={goToNextMonth}
+                  onDayPress={handleCalendarDayPress}
+                />
+              )}
+
+              {/* ── Description ───────────────────────────────────────────────── */}
+              <FocusableField
+                baseStyle={[s.field, { backgroundColor: colors.surface }]}
+                render={({ onFocus, onBlur }) => (
+                  <>
+                    <Text style={[s.fieldLbl, { color: colors.textLight }]}>{t("editTrip.descriptionLabel")}</Text>
+                    <TextInput
+                      style={[s.fieldInput, s.fieldMultiline, { color: colors.text }]}
+                      value={formData.description}
+                      onChangeText={v => setFormData(p => ({ ...p, description: v }))}
+                      placeholder={t("editTrip.descriptionPlaceholder")}
+                      placeholderTextColor={colors.textLight}
+                      multiline
+                      maxLength={500}
+                      textAlignVertical="top"
+                      onFocus={() => { onFocus(); closeCalendar(); }}
+                      onBlur={onBlur}
+                    />
+                    <Text style={[s.charCount, { color: colors.textLight }]}>
+                      {formData.description.length}/500
+                    </Text>
+                  </>
+                )}
+              />
+
+              {/* ── Membres ───────────────────────────────────────────────────── */}
+              <Text style={[s.sectionLbl, { color: colors.textLight }]}>{t("editTrip.membersLabel")}</Text>
+              <TouchableOpacity
+                style={[s.membersBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => navigation.navigate("InviteFriends", { tripId: route.params.tripId })}
+                activeOpacity={0.75}
+              >
+                <View style={s.membersBtnIcon}>
+                  <Text style={{ fontSize: 16 }}>👥</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.membersBtnLabel, { color: colors.text }]}>{t("editTrip.manageMembers")}</Text>
+                  <Text style={[s.membersBtnDesc, { color: colors.textLight }]}>{t("editTrip.manageMembersSubtitle")}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={colors.border} />
+              </TouchableOpacity>
+
+              {/* ── Visibilité ────────────────────────────────────────────────── */}
+              <Text style={[s.sectionLbl, { color: colors.textLight }]}>{t("editTrip.visibilityLabel")}</Text>
+              <RadioOptionCard
+                options={visibilityOptions}
+                selected={formData.visibility}
+                isDark={isDark}
+                colors={colors}
+                onChange={value => setFormData(p => ({ ...p, visibility: value }))}
+              />
+
+              {/* ── Statut ────────────────────────────────────────────────────── */}
+              <Text style={[s.sectionLbl, { color: colors.textLight }]}>{t("editTrip.tripStatusLabel")}</Text>
+              <RadioOptionCard
+                options={statusOptions}
+                selected={formData.status}
+                isDark={isDark}
+                colors={colors}
+                onChange={value => setFormData(p => ({ ...p, status: value }))}
+              />
+
+              {/* ── Réservations ──────────────────────────────────────────────── */}
+              <BookingsList
+                bookings={bookings}
+                colors={colors}
+                onAdd={handleAddBooking}
+                onEdit={handleEditBooking}
+                onDelete={handleDeleteBooking}
+              />
+
+              {/* ── Zone dangereuse ───────────────────────────────────────────── */}
+              {isOwner && (
+                <>
+                  <Text style={[s.sectionLbl, { marginTop: 8 }]}>{t("editTrip.dangerZone")}</Text>
+                  <TouchableOpacity
+                    style={[s.dangerRow, { backgroundColor: colors.dangerLight }]}
+                    onPress={handleDeleteTrip}
+                    activeOpacity={0.8}
+                  >
+                    <View style={s.dangerIcon}>
+                      <Text style={{ fontSize: 20 }}>🗑</Text>
+                    </View>
+                    <View style={s.dangerInfo}>
+                      <Text style={s.dangerLabel}>{t("editTrip.deleteTrip")}</Text>
+                      <Text style={s.dangerDesc}>{t("editTrip.deleteTripSubtitle")}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#C04040" />
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <View style={{ height: 48 }} />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+
+      {/* ── Modal formulaire réservation ──────────────────────────────────────── */}
       <BookingForm
         visible={showBookingForm}
-        onClose={() => {
-          setShowBookingForm(false);
-          setEditingBookingIndex(null);
-        }}
+        onClose={closeBookingForm}
         onSave={handleSaveBooking}
-        initialBooking={
-          editingBookingIndex !== null
-            ? bookings[editingBookingIndex]
-            : undefined
-        }
+        initialBooking={editingBookingIndex !== null ? bookings[editingBookingIndex] : undefined}
         tripStartDate={formData.startDate}
         tripEndDate={formData.endDate}
       />
@@ -636,303 +368,110 @@ const EditTripScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: '#FAFAFA',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#666",
-  },
+// ── Styles ────────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  root:             { flex: 1 },
+  safeArea:         { flex: 1 },
+  scroll:           { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText:      { fontSize: 19, fontFamily: F.sans400 },
+
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 22, paddingVertical: 14,
+    borderBottomWidth: 1,
   },
-  backButton: {
-    marginRight: 15,
+  backBtn: {
+    width: 44, height: 44, borderRadius: 22,
+    justifyContent: "center", alignItems: "center",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    flex: 1,
+    flex: 1, textAlign: "center",
+    fontSize: 20, fontFamily: F.sans700,
+    marginHorizontal: 8,
   },
-  headerSpacer: {
-    width: 39, // Pour centrer le titre
+  savePill: {
+    backgroundColor: "#C4714A", borderRadius: 24,
+    paddingHorizontal: 20, paddingVertical: 11,
+    shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35, shadowRadius: 6, elevation: 3,
   },
-  content: {
-    flex: 1,
+  savePillDisabled: { backgroundColor: "#B0A090", shadowOpacity: 0, elevation: 0 },
+  savePillText:     { fontSize: 15, fontFamily: F.sans700, color: "#FFFFFF" },
+
+  cover: {
+    height: 160, marginHorizontal: 16, marginTop: 18, marginBottom: 6,
+    borderRadius: 18, overflow: "hidden",
+    justifyContent: "center", alignItems: "center",
   },
-  formContainer: {
-    padding: 20,
+  coverBtn: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: "rgba(255,255,255,0.90)",
+    paddingHorizontal: 20, paddingVertical: 11, borderRadius: 28,
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  characterCount: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "right",
-    marginTop: 4,
-  },
-  dateRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  dateGroup: {
-    flex: 1,
-    marginRight: 10,
-  },
-  dateButton: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dateText: {
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  pickerModalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    width: "90%",
-    maxWidth: 400,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  pickerModalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  pickerWrapper: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    minHeight: 200,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  pickerButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-    gap: 10,
-  },
-  pickerCancelButton: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  pickerCancelText: {
-    color: "#666",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  pickerConfirmButton: {
-    flex: 1,
-    backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  pickerConfirmText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  visibilityButton: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  visibilityContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  visibilityText: {
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 8,
-  },
-  visibilityDescription: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 4,
-    fontStyle: "italic",
-  },
-  actionContainer: {
-    flexDirection: "row",
-    padding: 20,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#FF3B30",
-    marginRight: 10,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    color: "#FF3B30",
-    fontWeight: "600",
-  },
-  updateButton: {
-    flex: 2,
-    backgroundColor: "#34C759",
-    paddingVertical: 15,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 10,
-  },
-  updateButtonDisabled: {
-    backgroundColor: "#999",
-    opacity: 0.6,
-  },
-  updateButtonText: {
-    fontSize: 16,
-    color: "white",
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  coverBtnEmoji: { fontSize: 18 },
+  coverBtnText:  { fontSize: 15, fontFamily: F.sans600, color: "#2A2318" },
+
+  form: { paddingHorizontal: 18, paddingTop: 16 },
+
+  field: {
+    borderWidth: 1, borderColor: "#D8CCBA",
+    borderRadius: 16,
+    paddingHorizontal: 18, paddingVertical: 14,
     marginBottom: 12,
   },
-  addBookingButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E3F2FD",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+  fieldActive: {
+    borderColor: "#C4714A",
+    shadowColor: "#C4714A", shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.18, shadowRadius: 5, elevation: 2,
   },
-  addBookingText: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "600",
-    marginLeft: 6,
+  fieldNoMargin:  { marginBottom: 0 },
+  fieldLbl: {
+    fontSize: 12, fontFamily: F.sans600, color: "#B0A090",
+    marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5,
   },
-  emptyBookings: {
-    alignItems: "center",
-    paddingVertical: 30,
+  fieldInput:     { fontSize: 18, fontFamily: F.sans400, padding: 0, margin: 0 },
+  fieldMultiline: { minHeight: 90, textAlignVertical: "top" },
+  fieldRow:       { flexDirection: "row", alignItems: "center", gap: 10 },
+  fieldEmoji:     { fontSize: 18 },
+  charCount:      { fontSize: 12, fontFamily: F.sans400, textAlign: "right", marginTop: 5 },
+
+  dateRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
+  dateCol: { flex: 1 },
+  dateVal: { fontSize: 17, fontFamily: F.sans500 },
+
+  sectionLbl: {
+    fontSize: 13, fontFamily: F.sans700,
+    textTransform: "uppercase", letterSpacing: 0.8,
+    marginBottom: 10, marginTop: 10,
   },
-  emptyBookingsText: {
-    fontSize: 14,
-    color: "#999",
-    marginTop: 10,
+
+  membersBtn: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderRadius: 14, borderWidth: 1,
+    padding: 14, marginBottom: 10,
   },
-  bookingsList: {
-    gap: 12,
+  membersBtnIcon: {
+    width: 38, height: 38, borderRadius: 10,
+    backgroundColor: "#DCF0F5", alignItems: "center", justifyContent: "center",
   },
-  bookingItem: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 12,
+  membersBtnLabel: { fontFamily: F.sans600, fontSize: 14 },
+  membersBtnDesc:  { fontFamily: F.sans400, fontSize: 12, marginTop: 2 },
+
+  dangerRow: {
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "rgba(192,64,64,0.18)", borderRadius: 18,
+    flexDirection: "row", alignItems: "center", gap: 14,
+    paddingHorizontal: 18, paddingVertical: 18, marginBottom: 10,
   },
-  bookingHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+  dangerIcon: {
+    width: 50, height: 50, borderRadius: 13,
+    backgroundColor: "rgba(192,64,64,0.12)",
+    justifyContent: "center", alignItems: "center",
   },
-  bookingTypeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  bookingInfo: {
-    flex: 1,
-  },
-  bookingTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
-  },
-  bookingDate: {
-    fontSize: 14,
-    color: "#666",
-  },
-  bookingActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
+  dangerInfo:  { flex: 1 },
+  dangerLabel: { fontSize: 17, fontFamily: F.sans600, color: "#C04040" },
+  dangerDesc:  { fontSize: 13, fontFamily: F.sans400, color: "#C04040", opacity: 0.75, marginTop: 3 },
 });
 
 export default EditTripScreen;

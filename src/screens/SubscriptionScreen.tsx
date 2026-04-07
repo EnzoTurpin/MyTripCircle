@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { 
-  Text, 
-  ScrollView, 
-  StyleSheet, 
-  Alert, 
-  Platform, 
+import {
+  Text,
+  ScrollView,
+  StyleSheet,
+  Alert,
+  Platform,
   View,
   StatusBar,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import PlanCard from "../components/PlanCard";
 import Constants from "expo-constants";
+import { F } from "../theme/fonts";
+import { parseApiError } from "../utils/i18n";
+import { useTheme } from "../contexts/ThemeContext";
 
 // Conditionally import react-native-iap only if not in Expo Go
 let RNIap: any = null;
@@ -45,8 +48,11 @@ interface MockProduct {
   localizedPrice: string;
 }
 
+
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
+  const { colors } = useTheme();
   const [products, setProducts] = useState<MockProduct[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isExpoGo, setIsExpoGo] = useState(!isIapAvailable);
@@ -57,13 +63,13 @@ const SubscriptionScreen: React.FC = () => {
       setProducts([
         {
           productId: "com.myapp.monthly",
-          title: "Abonnement Mensuel",
-          localizedPrice: "9,99 €",
+          title: t("subscription.monthly"),
+          localizedPrice: t("subscription.monthlyPrice"),
         },
         {
           productId: "com.myapp.yearly",
-          title: "Abonnement Annuel",
-          localizedPrice: "99,99 €",
+          title: t("subscription.annual"),
+          localizedPrice: t("subscription.annualPrice"),
         },
       ]);
       return;
@@ -80,13 +86,13 @@ const SubscriptionScreen: React.FC = () => {
         setProducts([
           {
             productId: "com.myapp.monthly",
-            title: "Abonnement Mensuel",
-            localizedPrice: "9,99 €",
+            title: t("subscription.monthly"),
+            localizedPrice: t("subscription.monthlyPrice"),
           },
           {
             productId: "com.myapp.yearly",
-            title: "Abonnement Annuel",
-            localizedPrice: "99,99 €",
+            title: t("subscription.annual"),
+            localizedPrice: t("subscription.annualPrice"),
           },
         ]);
       }
@@ -99,7 +105,7 @@ const SubscriptionScreen: React.FC = () => {
         if (receipt) {
           // TODO: envoyer 'receipt' à votre serveur pour validation
           await RNIap.finishTransaction(purchase);
-          Alert.alert("Merci", "Votre abonnement est activé.");
+          Alert.alert(t("subscription.purchaseSuccessTitle"), t("subscription.purchaseSuccessMessage"), [{ text: t("common.ok") }]);
           setLoadingId(null);
         }
       } catch (err) {
@@ -107,9 +113,21 @@ const SubscriptionScreen: React.FC = () => {
       }
     });
 
-    const purchaseError = RNIap.purchaseErrorListener((err: any) => {
+    const purchaseError = RNIap.purchaseErrorListener((err: unknown) => {
       console.warn("purchase error", err);
-      Alert.alert("Erreur d'achat", err.message || "Une erreur est survenue");
+      const raw =
+        err instanceof Error
+          ? err
+          : new Error(
+              typeof (err as { message?: string })?.message === "string"
+                ? (err as { message: string }).message
+                : "",
+            );
+      Alert.alert(
+        t("subscription.purchaseErrorTitle"),
+        parseApiError(raw) || t("subscription.purchaseErrorMessage"),
+        [{ text: t("common.ok") }],
+      );
       setLoadingId(null);
     });
 
@@ -123,8 +141,9 @@ const SubscriptionScreen: React.FC = () => {
   const onSubscribe = async (productId: string) => {
     if (!isIapAvailable || !RNIap) {
       Alert.alert(
-        "Fonctionnalité non disponible",
-        "Les achats intégrés nécessitent un build de développement. Utilisez EAS Build pour créer un build avec support des modules natifs."
+        t("subscription.purchaseErrorTitle"),
+        t("subscription.demoMessage"),
+        [{ text: t("common.ok") }]
       );
       return;
     }
@@ -134,68 +153,55 @@ const SubscriptionScreen: React.FC = () => {
       await RNIap.requestSubscription(productId);
     } catch (err) {
       console.warn("requestSubscription err", err);
-      Alert.alert("Erreur", "Impossible de démarrer l'achat.");
+      Alert.alert(t("subscription.purchaseErrorTitle"), t("subscription.purchaseErrorMessage"), [{ text: t("common.ok") }]);
       setLoadingId(null);
     }
   };
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView 
+    <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+      <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <LinearGradient 
-          colors={['#2891FF', '#8869FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <TouchableOpacity 
-            style={styles.backButton} 
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: colors.bgMid }]}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          
+
           <View style={styles.headerContent}>
-            <View style={styles.iconContainer}>
-              <LinearGradient
-                colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
-                style={styles.iconGradient}
-              >
-                <Ionicons name="diamond" size={40} color="white" />
-              </LinearGradient>
+            <View style={[styles.iconContainer, { backgroundColor: colors.terraLight, borderColor: colors.bgDark }]}>
+              <Ionicons name="diamond" size={40} color={colors.terra} />
             </View>
-            <Text style={styles.headerTitle}>Abonnement Premium</Text>
-            <Text style={styles.headerSubtitle}>
-              Profitez de tous les avantages de MyTripCircle
-            </Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>{t("subscription.title")}</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textMid }]}>{t("subscription.subtitle")}</Text>
           </View>
-        </LinearGradient>
+        </View>
 
         <View style={styles.content}>
           {isExpoGo && (
             <View style={styles.warningCard}>
               <View style={styles.warningIcon}>
-                <Ionicons name="alert-circle" size={24} color="#FF9800" />
+                <Ionicons name="alert-circle" size={24} color={colors.terra} />
               </View>
               <View style={styles.warningContent}>
-                <Text style={styles.warningTitle}>Mode démo</Text>
-                <Text style={styles.warningText}>
-                  Les achats intégrés ne sont pas disponibles dans Expo Go. Utilisez un build de développement pour tester.
-                </Text>
+                <Text style={[styles.warningTitle, { color: colors.terraDark }]}>{t("subscription.demoMode")}</Text>
+                <Text style={[styles.warningText, { color: colors.textMid }]}>{t("subscription.demoMessage")}</Text>
               </View>
             </View>
           )}
-          
+
           {products.length === 0 ? (
             <View style={styles.loadingContainer}>
-              <Ionicons name="hourglass-outline" size={40} color="#2891FF" />
-              <Text style={styles.loadingText}>Chargement des offres...</Text>
+              <Ionicons name="hourglass-outline" size={40} color={colors.terra} />
+              <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("subscription.loadingOffers")}</Text>
             </View>
           ) : (
             products.map((product, index) => (
@@ -207,17 +213,17 @@ const SubscriptionScreen: React.FC = () => {
                 advantages={
                   index === 0
                     ? [
-                        "Accès illimité aux fonctionnalités premium",
-                        "Support prioritaire par email",
-                        "Sauvegardes automatiques dans le cloud",
-                        "Partagez avec jusqu'à 10 collaborateurs",
+                        t("subscription.monthlyAdvantage1"),
+                        t("subscription.monthlyAdvantage2"),
+                        t("subscription.monthlyAdvantage3"),
+                        t("subscription.monthlyAdvantage4"),
                       ]
                     : [
-                        "Tous les avantages du plan mensuel",
-                        "Support prioritaire 24/7",
-                        "Fonctionnalités exclusives en avant-première",
-                        "Collaborateurs illimités",
-                        "2 mois offerts par an",
+                        t("subscription.annualAdvantage1"),
+                        t("subscription.annualAdvantage2"),
+                        t("subscription.annualAdvantage3"),
+                        t("subscription.annualAdvantage4"),
+                        t("subscription.annualAdvantage5"),
                       ]
                 }
                 onSubscribe={onSubscribe}
@@ -227,20 +233,20 @@ const SubscriptionScreen: React.FC = () => {
             ))
           )}
 
-          <View style={styles.featuresSection}>
-            <Text style={styles.featuresTitle}>Inclus dans tous les plans</Text>
+          <View style={[styles.featuresSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.featuresTitle, { color: colors.text }]}>{t("subscription.includedInAllPlans")}</Text>
             <View style={styles.featuresList}>
               {[
-                { icon: "cloud-upload-outline", text: "Synchronisation cloud" },
-                { icon: "shield-checkmark-outline", text: "Données sécurisées" },
-                { icon: "people-outline", text: "Collaboration en équipe" },
-                { icon: "refresh-outline", text: "Mises à jour gratuites" },
+                { icon: "cloud-upload-outline",      text: t("subscription.featureCloud") },
+                { icon: "shield-checkmark-outline",  text: t("subscription.featureSecure") },
+                { icon: "people-outline",            text: t("subscription.featureTeam") },
+                { icon: "refresh-outline",           text: t("subscription.featureUpdates") },
               ].map((feature, index) => (
                 <View key={index} style={styles.featureItem}>
                   <View style={styles.featureIcon}>
-                    <Ionicons name={feature.icon as any} size={20} color="#2891FF" />
+                    <Ionicons name={feature.icon as any} size={20} color="#6B8C5A" />
                   </View>
-                  <Text style={styles.featureText}>{feature.text}</Text>
+                  <Text style={[styles.featureText, { color: colors.text }]}>{feature.text}</Text>
                 </View>
               ))}
             </View>
@@ -254,71 +260,68 @@ const SubscriptionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#F5F0E8",
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#F5F0E8",
   },
   scrollContent: {
     paddingBottom: 64,
   },
   header: {
     paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
-    paddingBottom: 120,
+    paddingBottom: 32,
     paddingHorizontal: 24,
+    backgroundColor: "#F5F0E8",
   },
   backButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "#EDE5D8",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: -20,
-    marginTop: 5,
-    zIndex: 10,
+    marginBottom: 16,
   },
   headerContent: {
     alignItems: "center",
-    marginTop: 40,
   },
   iconContainer: {
-    marginBottom: 16,
-  },
-  iconGradient: {
     width: 88,
     height: 88,
     borderRadius: 44,
+    backgroundColor: "#F5E5DC",
+    borderWidth: 2,
+    borderColor: "#D8CCBA",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: "700",
-    color: "white",
+    fontFamily: F.sans700,
+    color: "#2A2318",
     marginBottom: 8,
     textAlign: "center",
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "#7A6A58",
     textAlign: "center",
+    fontFamily: F.sans400,
   },
   content: {
-    marginTop: -100,
     paddingHorizontal: 24,
   },
   warningCard: {
     flexDirection: "row",
-    backgroundColor: "#FFF3E0",
+    backgroundColor: "#F5E5DC",
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#FF9800",
+    borderColor: "#C4714A",
   },
   warningIcon: {
     marginRight: 12,
@@ -328,14 +331,15 @@ const styles = StyleSheet.create({
   },
   warningTitle: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#FF9800",
+    fontFamily: F.sans700,
+    color: "#A35830",
     marginBottom: 4,
   },
   warningText: {
     fontSize: 14,
-    color: "#E65100",
+    color: "#7A6A58",
     lineHeight: 20,
+    fontFamily: F.sans400,
   },
   loadingContainer: {
     alignItems: "center",
@@ -343,24 +347,27 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: "#616161",
+    color: "#7A6A58",
     marginTop: 16,
+    fontFamily: F.sans400,
   },
   featuresSection: {
     marginTop: 32,
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "#D8CCBA",
+    shadowColor: "#2A2318",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
   featuresTitle: {
     fontSize: 20,
-    fontWeight: "700",
-    color: "#212121",
+    fontFamily: F.sans700,
+    color: "#2A2318",
     marginBottom: 20,
     textAlign: "center",
   },
@@ -379,7 +386,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#E8F4FF",
+    backgroundColor: "#E2EDD9",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
@@ -387,7 +394,8 @@ const styles = StyleSheet.create({
   featureText: {
     flex: 1,
     fontSize: 14,
-    color: "#212121",
+    color: "#2A2318",
+    fontFamily: F.sans400,
   },
 });
 

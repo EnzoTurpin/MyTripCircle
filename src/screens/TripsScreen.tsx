@@ -1,464 +1,563 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
-  Image,
-  Alert,
-  SafeAreaView,
   StatusBar,
+  Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Trip } from "../types";
 import { useTrips } from "../contexts/TripsContext";
-import { API_URLS } from "../config/api";
+import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { formatDate } from "../utils/i18n";
-import { ModernButton } from "../components/ModernButton";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
+import { F } from "../theme/fonts";
+import { RADIUS } from "../theme";
+import { useTheme } from "../contexts/ThemeContext";
 
-type TripsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Main"
->;
+// Curated travel photos cycling by index
+const HERO_PHOTOS = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&q=80&fit=crop",
+];
+
+const MINI_PHOTOS = [
+  "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=200&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=200&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=200&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=200&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=200&q=80&fit=crop",
+];
+
+type TripsScreenNavigationProp = StackNavigationProp<RootStackParamList, "Main">;
+
+const formatShortDate = (date: Date, monthsShort: string[]): string => {
+  const d = new Date(date);
+  return `${d.getDate()} ${monthsShort[d.getMonth()]}`;
+};
 
 const TripsScreen: React.FC = () => {
   const navigation = useNavigation<TripsScreenNavigationProp>();
   const { trips, loading, refreshData } = useTrips();
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const MONTHS_SHORT = t("trips.months").split(",");
 
-  // Rafraîchir les données quand l'écran reçoit le focus (avec useCallback pour éviter les boucles)
   useFocusEffect(
     useCallback(() => {
       refreshData();
     }, [refreshData])
   );
 
-  // Filtrer les voyages : tous les voyages maintenant
-  const validatedTrips = trips;
-  const draftTrips = trips.filter((trip) => trip.status === "draft");
-  const { t } = useTranslation();
+  const handleCreateTrip = () => navigation.navigate("CreateTrip");
+  const handleTripPress = (trip: Trip) => navigation.navigate("TripDetails", { tripId: trip.id });
 
-  const handleCreateTrip = () => {
-    navigation.navigate("CreateTrip");
+  const getFirstName = () => {
+    if (!user?.name) return "";
+    return user.name.trim().split(" ")[0];
   };
 
-  const handleTripPress = (trip: Trip) => {
-    navigation.navigate("TripDetails", { tripId: trip.id });
+  const daysUntil = (date: Date): number => {
+    const now = new Date();
+    const diffMs = new Date(date).getTime() - now.getTime();
+    return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   };
 
-  const handleInviteFriends = (trip: Trip) => {
-    navigation.navigate("InviteFriends", { tripId: trip.id });
-  };
+  const [showAllTrips, setShowAllTrips] = useState(false);
 
-  const testAPI = async () => {
-    const urls = API_URLS.map((url) => `${url}/test`);
+  const now = new Date();
+  const upcomingTrips = trips.filter((t) => new Date(t.endDate) >= now);
 
-    for (const url of urls) {
-      try {
-        console.log(`[Test] Trying ${url}`);
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        Alert.alert(
-          t("trips.apiTestSuccess"),
-          `URL: ${url}\nResponse: ${JSON.stringify(data, null, 2)}`
-        );
-        return;
-      } catch (error) {
-        console.log(`[Test] Failed ${url}: ${(error as Error).message}`);
-      }
-    }
-
-    Alert.alert(t("trips.apiTestFailed"), t("trips.apiTestError"));
-  };
-
-  const renderTripCard = ({ item }: { item: Trip }) => (
-    <TouchableOpacity
-      style={styles.tripCard}
-      onPress={() => handleTripPress(item)}
-      activeOpacity={0.9}
-    >
-      <LinearGradient
-        colors={item.status === "draft" ? ["#9E9E9E", "#757575"] : ["#2891FF", "#8869FF"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.tripGradient}
-      >
-        {item.status === "draft" && (
-          <View style={styles.draftBadge}>
-            <Text style={styles.draftBadgeText}>Brouillon</Text>
-          </View>
-        )}
-        <View style={styles.tripHeader}>
-          <View style={styles.tripInfo}>
-            <Text style={styles.tripTitle}>{item.title}</Text>
-            <View style={styles.destinationRow}>
-              <Ionicons
-                name="location"
-                size={16}
-                color="rgba(255, 255, 255, 0.9)"
-              />
-              <Text style={styles.tripDestination}>{item.destination}</Text>
-            </View>
-            <View style={styles.datesRow}>
-              <Ionicons
-                name="calendar-outline"
-                size={14}
-                color="rgba(255, 255, 255, 0.8)"
-              />
-              <Text style={styles.tripDates}>
-                {formatDate(item.startDate)} - {formatDate(item.endDate)}
-              </Text>
-            </View>
-          </View>
-          {item.status !== "draft" && (
-            <TouchableOpacity
-              style={styles.inviteButton}
-              onPress={() => handleInviteFriends(item)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="person-add-outline" size={22} color="white" />
-            </TouchableOpacity>
-          )}
-        </View>
-        {item.description && (
-          <Text style={styles.tripDescription} numberOfLines={2}>
-            {item.description}
-          </Text>
-        )}
-        <View style={styles.tripFooter}>
-          <View style={styles.collaboratorsInfo}>
-            <View style={styles.avatarGroup}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={12} color="#2891FF" />
-              </View>
-              {(item.collaborators?.length || 0) > 0 && (
-                <View style={[styles.avatar, styles.avatarOverlap]}>
-                  <Ionicons name="person" size={12} color="#8869FF" />
-                </View>
-              )}
-              {(item.collaborators?.length || 0) > 1 && (
-                <View style={[styles.avatar, styles.avatarOverlap]}>
-                  <Text style={styles.avatarText}>+{item.collaborators!.length - 1}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.collaboratorsText}>
-              {t("trips.members", {
-                count: (item.collaborators?.length || 0) + 1,
-              })}
-            </Text>
-          </View>
-          <View style={styles.arrowContainer}>
-            <Ionicons
-              name="arrow-forward"
-              size={18}
-              color="rgba(255, 255, 255, 0.9)"
-            />
-          </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+  const heroTrip: Trip | null = upcomingTrips.find((t) => t.status !== "draft") ?? upcomingTrips[0] ?? null;
+  const miniTrips: Trip[] = heroTrip ? upcomingTrips.filter((t) => t.id !== heroTrip.id) : [];
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>{t("trips.loading")}</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("trips.loading")}</Text>
       </View>
     );
   }
 
   return (
-    <SwipeToNavigate currentIndex={0} totalTabs={4}>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.container}>
+    <SwipeToNavigate currentIndex={0} totalTabs={5}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
+        <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* ── Header ───────────────────────────────────────────────────── */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>{t("trips.header")}</Text>
+            <View style={styles.headerLeft}>
+              <Image
+                source={require("../../assets/icon.png")}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+              <View>
+                <Text style={[styles.headerEyebrow, { color: colors.textLight }]}>{t("trips.greeting", { name: getFirstName() })}</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{t("trips.header")}</Text>
+              </View>
             </View>
-            <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.testButton} onPress={testAPI} activeOpacity={0.7}>
-                <Ionicons name="bug-outline" size={22} color="#212121" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={handleCreateTrip} activeOpacity={0.7}>
-                <LinearGradient
-                  colors={['#2891FF', '#8869FF']}
-                  style={styles.addButtonGradient}
-                >
-                  <Ionicons name="add" size={26} color="white" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.addTripBtn}
+              onPress={handleCreateTrip}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="add" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
 
-          {validatedTrips.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconContainer}>
-                <Ionicons name="airplane-outline" size={64} color="#7EBDFF" />
+          {upcomingTrips.length === 0 ? (
+            /* ── Empty state ─────────────────────────────────────────────── */
+            <>
+              <View style={styles.emptyContainer}>
+                <View style={[styles.emptyIconCircle, { backgroundColor: colors.terraLight }]}>
+                  <Ionicons name="airplane-outline" size={40} color={colors.terra} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("trips.emptyTitle")}</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textMid }]}>{t("trips.emptySubtitle")}</Text>
               </View>
-              <Text style={styles.emptyTitle}>{t("trips.emptyTitle")}</Text>
-              <Text style={styles.emptySubtitle}>{t("trips.emptySubtitle")}</Text>
-              <ModernButton
-                title={t("trips.createTrip")}
-                onPress={handleCreateTrip}
-                variant="primary"
-                gradient
-                size="large"
-                icon="add-circle-outline"
-                style={styles.createButton}
-              />
-            </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.miniScroll}
+              >
+                <TouchableOpacity style={[styles.dashedCard, { borderColor: colors.bgDark, backgroundColor: colors.bg }]} onPress={handleCreateTrip} activeOpacity={0.8}>
+                  <View style={[styles.dashedAddCircle, { backgroundColor: colors.terraLight }]}>
+                    <Text style={[styles.dashedAddPlus, { color: colors.terra }]}>+</Text>
+                  </View>
+                  <Text style={[styles.dashedNewLabel, { color: colors.textLight }]}>{t("trips.newButton")}</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </>
           ) : (
-            <FlatList
-              data={validatedTrips}
-              renderItem={renderTripCard}
-              keyExtractor={(item, index) => item.id || `trip-${index}`}
-              contentContainerStyle={styles.tripsList}
-              showsVerticalScrollIndicator={false}
-            />
+            <>
+              {/* ── Hero card ─────────────────────────────────────────────── */}
+              {heroTrip && (
+                <>
+                  <TouchableOpacity
+                    style={styles.heroCard}
+                    onPress={() => handleTripPress(heroTrip)}
+                    activeOpacity={0.88}
+                  >
+                    {/* Photo background */}
+                    <Image
+                      source={{ uri: HERO_PHOTOS[trips.indexOf(heroTrip) % HERO_PHOTOS.length] }}
+                      style={StyleSheet.absoluteFillObject}
+                      resizeMode="cover"
+                    />
+
+                    {/* Gradient overlay */}
+                    <LinearGradient
+                      colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.72)"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+
+                    {/* Status badge */}
+                    <View style={styles.heroStatusBadge}>
+                      <Text style={styles.heroStatusText}>
+                        {heroTrip.status === "draft" ? t("trips.statusDraft") : t("trips.statusActive")}
+                      </Text>
+                    </View>
+
+                    {/* Arrow button */}
+                    <View style={styles.heroArrowBtn}>
+                      <Ionicons name="arrow-forward-outline" size={16} color="#A35830" />
+                    </View>
+
+                    {/* Bottom content */}
+                    <View style={styles.heroBottom}>
+                      <Text style={styles.heroTitle} numberOfLines={1}>
+                        {heroTrip.title}
+                      </Text>
+                      <Text style={styles.heroMeta} numberOfLines={1}>
+                        📍 {heroTrip.destination} · {formatShortDate(heroTrip.startDate, MONTHS_SHORT)}–{formatShortDate(heroTrip.endDate, MONTHS_SHORT)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* ── Stats pills ─────────────────────────────────────── */}
+                  <View style={styles.pillsRow}>
+                    <View style={[styles.pill, { backgroundColor: colors.bgMid }]}>
+                      <Text style={[styles.pillValue, { color: colors.terra }]}>{heroTrip.stats?.totalBookings ?? 0}</Text>
+                      <Text style={[styles.pillLabel, { color: colors.textLight }]}>{t("trips.bookingsLabel")}</Text>
+                    </View>
+                    <View style={[styles.pill, { backgroundColor: colors.bgMid }]}>
+                      <Text style={[styles.pillValue, { color: colors.terra }]}>{(heroTrip.collaborators?.length ?? 0) + 1}</Text>
+                      <Text style={[styles.pillLabel, { color: colors.textLight }]}>{t("trips.coTravelers")}</Text>
+                    </View>
+                    <View style={[styles.pill, { backgroundColor: colors.bgMid }]}>
+                      <Text style={[styles.pillValue, { color: colors.terra }]}>{daysUntil(heroTrip.startDate)}j</Text>
+                      <Text style={[styles.pillLabel, { color: colors.textLight }]}>{t("trips.beforeDeparture")}</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {/* ── Section header ──────────────────────────────────────── */}
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("trips.upcomingTrips")}</Text>
+                <TouchableOpacity onPress={() => setShowAllTrips((v) => !v)} activeOpacity={0.7}>
+                  <Text style={[styles.sectionLink, { color: colors.terra }]}>{showAllTrips ? t("trips.showLess") : t("trips.showAll")}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {showAllTrips ? (
+                /* ── All trips vertical list ──────────────────────────────── */
+                <View style={styles.allTripsContainer}>
+                  {miniTrips.map((trip, idx) => (
+                    <TouchableOpacity
+                      key={trip.id ?? `all-${idx}`}
+                      style={[styles.allTripRow, { backgroundColor: colors.surface, borderColor: colors.bgMid }]}
+                      onPress={() => handleTripPress(trip)}
+                      activeOpacity={0.85}
+                    >
+                      <Image
+                        source={{ uri: MINI_PHOTOS[idx % MINI_PHOTOS.length] }}
+                        style={styles.allTripPhoto}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.allTripInfo}>
+                        <Text style={[styles.allTripName, { color: colors.text }]} numberOfLines={1}>{trip.title}</Text>
+                        <Text style={[styles.allTripMeta, { color: colors.textMid }]} numberOfLines={1}>
+                          📍 {trip.destination} · {formatShortDate(trip.startDate, MONTHS_SHORT)}–{formatShortDate(trip.endDate, MONTHS_SHORT)}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={14} color={colors.textLight} />
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity style={[styles.dashedCard, { borderColor: colors.bgDark, backgroundColor: colors.bg }]} onPress={handleCreateTrip} activeOpacity={0.8}>
+                    <View style={[styles.dashedAddCircle, { backgroundColor: colors.terraLight }]}>
+                      <Text style={[styles.dashedAddPlus, { color: colors.terra }]}>+</Text>
+                    </View>
+                    <Text style={[styles.dashedNewLabel, { color: colors.textLight }]}>{t("trips.newButton")}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* ── Mini cards horizontal scroll ─────────────────────────── */
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.miniScroll}
+                >
+                  {miniTrips.map((trip, idx) => (
+                    <TouchableOpacity
+                      key={trip.id ?? `mini-${idx}`}
+                      style={[styles.miniCard, { backgroundColor: colors.bgMid }]}
+                      onPress={() => handleTripPress(trip)}
+                      activeOpacity={0.85}
+                    >
+                      <Image
+                        source={{ uri: MINI_PHOTOS[idx % MINI_PHOTOS.length] }}
+                        style={styles.miniPhoto}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.miniBottom}>
+                        <Text style={[styles.miniName, { color: colors.text }]} numberOfLines={1}>{trip.title}</Text>
+                        <Text style={[styles.miniDate, { color: colors.textLight }]}>{formatShortDate(trip.startDate, MONTHS_SHORT)}–{formatShortDate(trip.endDate, MONTHS_SHORT)}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+
+                  {/* Dashed "Nouveau" card */}
+                  <TouchableOpacity style={[styles.dashedCard, { borderColor: colors.bgDark, backgroundColor: colors.bg }]} onPress={handleCreateTrip} activeOpacity={0.8}>
+                    <View style={[styles.dashedAddCircle, { backgroundColor: colors.terraLight }]}>
+                      <Text style={[styles.dashedAddPlus, { color: colors.terra }]}>+</Text>
+                    </View>
+                    <Text style={[styles.dashedNewLabel, { color: colors.textLight }]}>{t("trips.newButton")}</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              )}
+            </>
           )}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </SwipeToNavigate>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    backgroundColor: '#FAFAFA',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#616161',
-  },
+  safeArea: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 100 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { fontSize: 16, fontFamily: F.sans400 },
+
+  // ── Header ──────────────────────────────────────────────────────────────────
   header: {
-    flexDirection: "row" as const,
+    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center" as const,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
-    backgroundColor: '#FAFAFA',
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 14,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+  },
+  headerEyebrow: {
+    fontSize: 14,
+    fontFamily: F.sans400,
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#212121',
+    fontSize: 26,
+    fontFamily: F.sans700,
   },
-  headerButtons: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 16,
-  },
-  testButton: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 9999,
+  addTripBtn: {
     width: 44,
     height: 44,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+    borderRadius: 22,
+    backgroundColor: "#C4714A",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#A35830",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  addButton: {
-    borderRadius: 9999,
-    width: 44,
-    height: 44,
-    overflow: "hidden",
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  addButtonGradient: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    paddingHorizontal: 48,
-  },
-  emptyIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#E8F4FF',
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#212121',
+
+  // ── Hero card ────────────────────────────────────────────────────────────────
+  heroCard: {
+    aspectRatio: 202 / 128,
+    borderRadius: 18,
+    marginHorizontal: 14,
     marginBottom: 8,
-    textAlign: "center" as const,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#616161',
-    textAlign: "center" as const,
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  createButton: {
-    marginTop: 16,
-  },
-  tripsList: {
-    padding: 24,
-    paddingBottom: 100, // Espace pour la navbar floating
-  },
-  tripCard: {
-    marginBottom: 24,
-    borderRadius: 20,
     overflow: "hidden",
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    justifyContent: "flex-end",
   },
-  tripGradient: {
-    padding: 24,
-  },
-  draftBadge: {
+  heroStatusBadge: {
     position: "absolute",
-    top: 16,
-    right: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    top: 14,
+    left: 14,
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255,255,255,0.35)",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
-  draftBadgeText: {
+  heroStatusText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "white",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: "#FFFFFF",
+    fontFamily: F.sans500,
   },
-  tripHeader: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
+  heroArrowBtn: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  tripInfo: {
-    flex: 1,
-    marginRight: 16,
+  heroBottom: {
+    paddingHorizontal: 16,
+    paddingBottom: 18,
   },
-  tripTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  destinationRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+  heroTitle: {
+    fontSize: 22,
+    fontFamily: F.sans700,
+    color: "#FFFFFF",
     marginBottom: 4,
   },
-  tripDestination: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.95)",
-    marginLeft: 4,
+  heroMeta: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.75)",
+    fontFamily: F.sans400,
   },
-  datesRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+
+  // ── Stats pills ──────────────────────────────────────────────────────────────
+  pillsRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
-  tripDates: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.85)",
-    marginLeft: 4,
-  },
-  inviteButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-    borderRadius: 9999,
-    width: 44,
-    height: 44,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  tripDescription: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  tripFooter: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between",
-    alignItems: "center" as const,
-    marginTop: 8,
-  },
-  collaboratorsInfo: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-  },
-  avatarGroup: {
-    flexDirection: "row" as const,
-    marginRight: 8,
-  },
-  avatar: {
-    width: 24,
-    height: 24,
+  pill: {
+    flex: 1,
     borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    borderWidth: 2,
-    borderColor: '#2891FF',
+    paddingVertical: 12,
+    alignItems: "center",
   },
-  avatarOverlap: {
-    marginLeft: -8,
+  pillValue: {
+    fontSize: 28,
+    fontFamily: F.sans700,
   },
-  avatarText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#2891FF',
+  pillLabel: {
+    fontSize: 13,
+    fontFamily: F.sans400,
+    marginTop: 3,
   },
-  collaboratorsText: {
+
+  // ── Section header ───────────────────────────────────────────────────────────
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontFamily: F.sans700,
+  },
+  sectionLink: {
+    fontSize: 13,
+    fontFamily: F.sans500,
+  },
+
+  // ── Horizontal mini scroll ───────────────────────────────────────────────────
+  miniScroll: {
+    paddingHorizontal: 14,
+    paddingBottom: 16,
+    gap: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  // ── Mini trip card ───────────────────────────────────────────────────────────
+  miniCard: {
+    width: 190,
+    height: 176,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  miniPhoto: {
+    width: 190,
+    height: 112,
+  },
+  miniBottom: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    justifyContent: "center",
+  },
+  miniName: {
+    fontSize: 16,
+    fontFamily: F.sans600,
+  },
+  miniDate: {
+    fontSize: 13,
+    fontFamily: F.sans400,
+    marginTop: 2,
+  },
+
+  // ── All trips vertical list ──────────────────────────────────────────────────
+  allTripsContainer: {
+    paddingHorizontal: 14,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  allTripRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: RADIUS.card,
+    overflow: "hidden",
+    borderWidth: 1,
+  },
+  allTripPhoto: {
+    width: 64,
+    height: 64,
+  },
+  allTripInfo: {
+    flex: 1,
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  allTripName: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
-    fontWeight: '500',
+    fontFamily: F.sans600,
   },
-  arrowContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+  allTripMeta: {
+    fontSize: 12,
+    fontFamily: F.sans400,
+  },
+
+  // ── Dashed "Nouveau" card ────────────────────────────────────────────────────
+  dashedCard: {
+    width: 190,
+    height: 176,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  dashedAddCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dashedAddPlus: {
+    fontSize: 36,
+    lineHeight: 38,
+    fontFamily: F.sans400,
+  },
+  dashedNewLabel: {
+    fontSize: 14,
+    fontFamily: F.sans500,
+  },
+
+  // ── Empty state ──────────────────────────────────────────────────────────────
+  emptyContainer: {
+    alignItems: "center",
+    paddingHorizontal: 48,
+    paddingTop: 60,
+    paddingBottom: 32,
+  },
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: F.sans700,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 8,
+    fontFamily: F.sans400,
   },
 });
 

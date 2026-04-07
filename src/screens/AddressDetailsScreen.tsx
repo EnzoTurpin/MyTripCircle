@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,395 +8,517 @@ import {
   Alert,
   Linking,
   StatusBar,
-  Platform,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RootStackParamList, Address } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
-import { ModernCard } from "../components/ModernCard";
-import { ModernButton } from "../components/ModernButton";
+import { useAuth } from "../contexts/AuthContext";
+import { F } from "../theme/fonts";
+import { RADIUS } from "../theme";
+import { useTheme } from "../contexts/ThemeContext";
+import { geocodeAddress, getCached, GeoCoords } from "../utils/geocoding";
 
-type AddressDetailsScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "AddressDetails"
->;
-type AddressDetailsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "AddressDetails"
->;
+// Chargement conditionnel : react-native-maps nécessite un rebuild du dev client
+let MapView: any = null;
+let Marker: any  = null;
+let mapsAvailable = false;
+try {
+  const RNMaps = require("react-native-maps");
+  MapView       = RNMaps.default;
+  Marker        = RNMaps.Marker;
+  mapsAvailable = true;
+} catch {
+  // Module natif non encore compilé — rebuild nécessaire
+}
 
+type AddressDetailsScreenRouteProp     = RouteProp<RootStackParamList, "AddressDetails">;
+type AddressDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, "AddressDetails">;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+const getHeroGradient = (type: Address["type"]): [string, string, string] => {
+  switch (type) {
+    case "restaurant": return ["#3A1E14", "#1E0E08", "#4A2E1A"];
+    case "hotel":      return ["#1A2C3A", "#0E1C28", "#2A3C4A"];
+    case "activity":   return ["#1A3020", "#0E1E14", "#2A4030"];
+    case "transport":  return ["#2A2A3A", "#14141E", "#3A3A4E"];
+    case "other":      return ["#2A2010", "#14100A", "#3A2E18"];
+    default:           return ["#2A2010", "#14100A", "#3A2E18"];
+  }
+};
+
+const getTypeBadge = (type: Address["type"], t: (k: string) => string): { label: string; emoji: string } => {
+  switch (type) {
+    case "restaurant": return { emoji: "🍽", label: t("addresses.filters.restaurant") };
+    case "hotel":      return { emoji: "🏨", label: t("addresses.filters.hotel") };
+    case "activity":   return { emoji: "🏄", label: t("addresses.filters.activity") };
+    case "transport":  return { emoji: "🚗", label: t("addresses.filters.transport") };
+    case "other":      return { emoji: "📍", label: t("addresses.filters.other") };
+    default:           return { emoji: "📍", label: t("addresses.filters.other") };
+  }
+};
+
+// ─── Component ─────────────────────────────────────────────────────────────────
 const AddressDetailsScreen: React.FC = () => {
-  const route = useRoute<AddressDetailsScreenRouteProp>();
+  const route      = useRoute<AddressDetailsScreenRouteProp>();
   const navigation = useNavigation<AddressDetailsScreenNavigationProp>();
   const { addressId } = route.params;
-  const { t } = useTranslation();
-  const { addresses, loading } = useTrips();
+  const { t }      = useTranslation();
+  const insets     = useSafeAreaInsets();
+  const { addresses, loading, deleteAddress } = useTrips();
+  const { user }   = useAuth();
+  const { colors, satelliteMap } = useTheme();
 
   const [address, setAddress] = useState<Address | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [coords, setCoords]   = useState<GeoCoords | null>(null);
 
   useEffect(() => {
     if (!loading) {
-      const found = addresses.find((item) => item.id === addressId) || null;
+      const found = addresses.find((a) => a.id === addressId) || null;
       setAddress(found);
       setIsReady(true);
     }
   }, [loading, addresses, addressId]);
 
-  const getTypeIcon = (type: Address["type"]) => {
-    switch (type) {
-      case "hotel":
-        return "bed";
-      case "restaurant":
-        return "restaurant";
-      case "activity":
-        return "ticket";
-      case "transport":
-        return "car";
-      case "other":
-        return "location";
-      default:
-        return "location";
-    }
-  };
-
-  const getTypeColor = (type: Address["type"]) => {
-    switch (type) {
-      case "hotel":
-        return "#FF9500";
-      case "restaurant":
-        return "#FF3B30";
-      case "activity":
-        return "#5856D6";
-      case "transport":
-        return "#34C759";
-      case "other":
-        return "#8E8E93";
-      default:
-        return "#8E8E93";
-    }
-  };
-
-  const handleEditAddress = () => {
-    navigation.navigate("AddressForm", { addressId });
-  };
-
-  const handleGetDirections = () => {
+  // Géocodage dès que l'adresse est connue
+  useEffect(() => {
     if (!address) return;
-    const query = encodeURIComponent(
-      `${address.address}, ${address.city}, ${address.country}`
+    let cancelled = false;
+
+    const run = async () => {
+      // Vérifier le cache d'abord (synchrone)
+      const cached = getCached(address.address, address.city, address.country);
+      if (cached !== undefined) {
+        if (!cancelled) setCoords(cached);
+        return;
+      }
+      // Requête réseau
+      const result = await geocodeAddress(address.address, address.city, address.country);
+      if (!cancelled) setCoords(result);
+    };
+
+    run().catch(() => {});
+    return () => { cancelled = true; };
+  }, [address]);
+
+  const handleEditAddress   = () => navigation.navigate("AddressForm", { addressId });
+
+  const handleDeleteAddress = () => {
+    Alert.alert(
+      t("addresses.details.deleteTitle"),
+      t("addresses.details.deleteConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (deleteAddress) await deleteAddress(addressId);
+              navigation.goBack();
+            } catch (err) {
+              console.error("Delete address error:", err);
+            }
+          },
+        },
+      ]
     );
-    const url = `https://maps.google.com/maps?daddr=${query}`;
-    Linking.openURL(url);
   };
 
-  const handleCall = () => {
-    if (address?.phone) {
-      Linking.openURL(`tel:${address.phone}`);
-    }
+  const handleCall    = () => { if (address?.phone)   Linking.openURL(`tel:${address.phone}`); };
+  const handleWebsite = () => { if (address?.website) Linking.openURL(address.website); };
+  const handleMaps    = () => {
+    if (!address) return;
+    const q = encodeURIComponent(`${address.address}, ${address.city}, ${address.country}`);
+    Linking.openURL(`https://maps.google.com/maps?daddr=${q}`);
   };
 
-  const handleVisitWebsite = () => {
-    if (address?.website) {
-      Linking.openURL(address.website);
-    }
-  };
-
-  if (!isReady || loading) {    
+  // ── Guards ─────────────────────────────────────────────────────────────────
+  if (!isReady || loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>{t("addresses.details.loading")}</Text>
+      <View style={[styles.centeredState, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.centeredStateText, { color: colors.textMid }]}>
+          {t("addresses.details.loading")}
+        </Text>
       </View>
     );
   }
 
   if (!address) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{t("addresses.details.notFound")}</Text>
+      <View style={[styles.centeredState, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.centeredStateText, { color: colors.danger }]}>
+          {t("addresses.details.notFound")}
+        </Text>
       </View>
     );
   }
 
+  const gradient = getHeroGradient(address.type);
+  const badge    = getTypeBadge(address.type, t);
+  const isOwner  = address.userId === user?.id;
+
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient 
-          colors={['#2891FF', '#8869FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <TouchableOpacity 
-            style={styles.backButton} 
+    <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      <ScrollView
+        style={[styles.scroll, { backgroundColor: colors.bg }]}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+
+        {/* ── Hero Cover ──────────────────────────────────────────────────── */}
+        <View style={styles.heroCover}>
+          {address.photoUrl ? (
+            <Image
+              source={{ uri: address.photoUrl }}
+              style={StyleSheet.absoluteFillObject}
+              resizeMode="cover"
+            />
+          ) : (
+            <LinearGradient
+              colors={gradient}
+              start={{ x: 0.2, y: 0 }}
+              end={{ x: 0.8, y: 1 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+          )}
+          {/* Gradient overlay sombre en bas pour lisibilité du texte */}
+          <LinearGradient
+            colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.70)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+
+          {/* Bouton retour */}
+          <TouchableOpacity
+            style={[styles.backButton, { top: insets.top + 10 }]}
             onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <View style={styles.headerContent}>
-            <View
-              style={[
-                styles.typeIcon,
-                { backgroundColor: getTypeColor(address.type) },
-              ]}
-            >
-              <Ionicons
-                name={getTypeIcon(address.type) as any}
-                size={32}
-                color="white"
-              />
-            </View>
-            <View style={styles.headerInfo}>
-              <Text style={styles.addressName}>{address.name}</Text>
-              <Text style={styles.addressLocation}>
-                {address.city}, {address.country}
+          {/* Badge + titre en bas du hero */}
+          <View style={styles.heroBottom}>
+            <View style={[styles.typeBadge, { backgroundColor: colors.terraLight }]}>
+              <Text style={[styles.typeBadgeText, { color: colors.terra }]}>
+                {badge.emoji} {badge.label}
               </Text>
             </View>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.content}>
-          <ModernCard variant="elevated" style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("addresses.details.address")}
-            </Text>
-            <View style={styles.addressRow}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="location" size={20} color="#FF6B9D" />
-              </View>
-              <View style={styles.addressInfo}>
-                <Text style={styles.addressText}>{address.address}</Text>
-                <Text style={styles.cityText}>
-                  {address.city}, {address.country}
-                </Text>
-              </View>
-            </View>
-          </ModernCard>
-
-          {(address.phone || address.website) && (
-            <ModernCard variant="elevated" style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                {t("addresses.details.contactInformation")}
-              </Text>
-              {address.phone && (
-                <TouchableOpacity 
-                  style={styles.contactItem} 
-                  onPress={handleCall}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.contactIconContainer}>
-                    <Ionicons name="call" size={20} color="#2891FF" />
-                  </View>
-                  <Text style={styles.contactText}>{address.phone}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
-                </TouchableOpacity>
-              )}
-              {address.website && (
-                <TouchableOpacity
-                  style={styles.contactItem}
-                  onPress={handleVisitWebsite}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.contactIconContainer}>
-                    <Ionicons name="globe" size={20} color="#2891FF" />
-                  </View>
-                  <Text style={styles.contactText}>{address.website}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
-                </TouchableOpacity>
-              )}
-            </ModernCard>
-          )}
-
-          {address.notes && (
-            <ModernCard variant="elevated" style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                {t("addresses.details.notes")}
-              </Text>
-              <Text style={styles.notesText}>{address.notes}</Text>
-            </ModernCard>
-          )}
-
-          <View style={styles.actionsContainer}>
-            <ModernButton
-              title={t("addresses.details.getDirections")}
-              onPress={handleGetDirections}
-              variant="primary"
-              size="medium"
-              icon="navigate"
-              style={styles.actionButton}
-            />
-            <ModernButton
-              title={t("addresses.details.editAddress")}
-              onPress={handleEditAddress}
-              variant="outline"
-              size="medium"
-              icon="create-outline"
-              style={styles.actionButton}
-            />
+            <Text style={styles.heroTitle}>{address.name}</Text>
           </View>
         </View>
+
+        {/* ── Rating + adresse courte ──────────────────────────────────────── */}
+        <View style={styles.ratingRow}>
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map((star) => {
+              const filled = address.rating != null
+                ? star <= Math.round(address.rating)
+                : false;
+              return (
+                <Text key={star} style={[styles.star, !filled && styles.starEmpty]}>★</Text>
+              );
+            })}
+          </View>
+          <Text style={[styles.shortAddress, { color: colors.textMid }]} numberOfLines={1}>
+            📍 {address.address}, {address.city}
+          </Text>
+        </View>
+
+        {/* ── Chips de contact ────────────────────────────────────────────── */}
+        {(address.phone || address.website) ? (
+          <View style={styles.chipsRow}>
+            {address.phone ? (
+              <TouchableOpacity
+                style={[styles.chip, { backgroundColor: colors.bgMid }]}
+                onPress={handleCall}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.chipText, { color: colors.textMid }]}>
+                  📞 {address.phone}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            {address.website ? (
+              <TouchableOpacity
+                style={[styles.chip, styles.chipSky]}
+                onPress={handleWebsite}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.chipTextSky}>
+                  🌐 {t("addresses.details.websiteChip")}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* ── Vignette carte ──────────────────────────────────────────────── */}
+        <View style={styles.mapThumb}>
+          {mapsAvailable && coords ? (
+            <MapView
+              style={StyleSheet.absoluteFill}
+              region={{
+                latitude:      coords.latitude,
+                longitude:     coords.longitude,
+                latitudeDelta:  0.005,
+                longitudeDelta: 0.005,
+              }}
+              mapType={satelliteMap ? "hybrid" : "standard"}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              showsCompass={false}
+              toolbarEnabled={false}
+            >
+              <Marker coordinate={coords} anchor={{ x: 0.5, y: 1 }} tracksViewChanges={false}>
+                <Ionicons name="location" size={28} color={colors.terra} />
+              </Marker>
+            </MapView>
+          ) : (
+            <LinearGradient
+              colors={["#C8D8C0", "#A8C4B0"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+          {/* Pill "Ouvrir dans Maps →" en bas à droite — toujours visible */}
+          <TouchableOpacity
+            style={styles.openMapsBtn}
+            onPress={handleMaps}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.openMapsBtnText, { color: colors.textMid }]}>
+              {t("addresses.details.openInMaps")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Notes ───────────────────────────────────────────────────────── */}
+        <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.notesLabel, { color: colors.textLight }]}>
+            {t("addresses.details.notes")}
+          </Text>
+          <Text style={[styles.notesBody, { color: address.notes ? colors.text : colors.textLight }]}>
+            {address.notes || t("addresses.details.noNotes")}
+          </Text>
+        </View>
+
+        {/* ── Actions ─────────────────────────────────────────────────────── */}
+        {isOwner && (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.actionEdit, { backgroundColor: colors.bgMid }]}
+              onPress={handleEditAddress}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.actionEditText, { color: colors.textMid }]}>
+                {t("addresses.details.editButton")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionDelete, { backgroundColor: colors.dangerLight }]}
+              onPress={handleDeleteAddress}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.actionDeleteText, { color: colors.danger }]}>
+                {t("addresses.details.deleteButton")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
       </ScrollView>
     </View>
   );
 };
 
+// ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    backgroundColor: '#FAFAFA',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#616161',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    backgroundColor: '#FAFAFA',
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#F44336',
-  },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
-    paddingBottom: 120,
-    paddingHorizontal: 24,
+  wrapper:           { flex: 1 },
+  scroll:            { flex: 1 },
+  centeredState:     { flex: 1, justifyContent: "center", alignItems: "center" },
+  centeredStateText: { fontSize: 16, fontFamily: F.sans400 },
+
+  // Hero
+  heroCover: {
+    height: 270,
+    position: "relative",
+    overflow: "hidden",
+    justifyContent: "flex-end",
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginBottom: -20,
-    marginTop: 5,
-    zIndex: 10,
+    position: "absolute",
+    left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  headerContent: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    marginTop: 50,
+  heroBottom: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
   },
-  typeIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginRight: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  addressName: {
-    fontSize: 26,
-    fontWeight: "700" as const,
-    color: "white",
+  typeBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     marginBottom: 8,
   },
-  addressLocation: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
+  typeBadgeText: {
+    fontSize: 13,
+    fontFamily: F.sans600,
   },
-  content: {
-    marginTop: -100,
-    paddingHorizontal: 24,
-    paddingBottom: 64,
+  heroTitle: {
+    fontSize: 28,
+    fontFamily: F.serif700,
+    color: "#FFFFFF",
+    lineHeight: 34,
   },
-  section: {
-    marginBottom: 16,
+
+  // Rating + adresse courte
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 10,
   },
-  sectionTitle: {
+  starsRow: {
+    flexDirection: "row",
+    gap: 3,
+  },
+  star: {
     fontSize: 18,
-    fontWeight: '700' as const,
-    color: '#212121',
-    marginBottom: 16,
+    color: "#C4714A",
   },
-  addressRow: {
-    flexDirection: "row" as const,
-    alignItems: "flex-start",
+  starEmpty: {
+    color: "#D4C4B0",
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FF6B9D' + '15',
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginRight: 12,
-  },
-  addressInfo: {
+  shortAddress: {
     flex: 1,
+    fontSize: 13,
+    fontFamily: F.sans400,
+    textAlign: "right",
+    marginLeft: 12,
   },
-  addressText: {
-    fontSize: 16,
-    color: '#212121',
-    marginBottom: 4,
-    lineHeight: 24,
+
+  // Chips contact
+  chipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingHorizontal: 18,
+    paddingBottom: 14,
   },
-  cityText: {
+  chip: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  chipText: {
     fontSize: 14,
-    color: '#616161',
+    fontFamily: F.sans400,
   },
-  contactItem: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+  chipSky: {
+    backgroundColor: "#DCF0F5",
   },
-  contactIconContainer: {
-    width: 40,
-    height: 40,
+  chipTextSky: {
+    fontSize: 14,
+    fontFamily: F.sans400,
+    color: "#5A8FAA",
+  },
+
+  // Vignette carte
+  mapThumb: {
+    marginHorizontal: 18,
+    marginBottom: 14,
+    height: 160,
+    borderRadius: RADIUS.md,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  openMapsBtn: {
+    position: "absolute",
+    bottom: 10,
+    right: 12,
+    backgroundColor: "rgba(255,255,255,0.88)",
     borderRadius: 20,
-    backgroundColor: '#E8F4FF',
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginRight: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
   },
-  contactText: {
+  openMapsBtnText: {
+    fontSize: 13,
+    fontFamily: F.sans400,
+  },
+
+  // Notes
+  notesCard: {
+    marginHorizontal: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderRadius: RADIUS.card,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  notesLabel: {
+    fontSize: 12,
+    fontFamily: F.sans400,
+    marginBottom: 6,
+  },
+  notesBody: {
     fontSize: 15,
-    color: '#212121',
+    fontFamily: F.sans400,
+    lineHeight: 22,
+  },
+
+  // Actions
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 6,
+    marginTop: 6,
+  },
+  actionEdit: {
     flex: 1,
+    borderRadius: RADIUS.button,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  notesText: {
-    fontSize: 16,
-    color: '#616161',
-    lineHeight: 24,
+  actionEditText: {
+    fontSize: 15,
+    fontFamily: F.sans600,
   },
-  actionsContainer: {
-    flexDirection: "row" as const,
-    gap: 16,
-    marginTop: 24,
-  },
-  actionButton: {
+  actionDelete: {
     flex: 1,
+    borderRadius: RADIUS.button,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionDeleteText: {
+    fontSize: 15,
+    fontFamily: F.sans600,
   },
 });
 

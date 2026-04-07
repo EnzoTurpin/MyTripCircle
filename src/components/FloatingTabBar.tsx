@@ -1,176 +1,169 @@
 import React from 'react';
 import {
   View,
+  Text,
   TouchableOpacity,
   StyleSheet,
   Platform,
-  Dimensions,
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
+import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
 
-const { width } = Dimensions.get('window');
-const TAB_BAR_WIDTH = width - 32; // Marges de 16px de chaque côté
-const TAB_WIDTH = TAB_BAR_WIDTH / 4;
+const TERRA = '#C4714A';
 
 export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
   navigation,
 }) => {
-  const animatedValue = React.useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+
+  const getTabLabel = (routeName: string): string => {
+    const map: Record<string, string> = {
+      Trips:     t('tabs.trips'),
+      Bookings:  t('tabs.bookings'),
+      Addresses: t('tabs.addresses'),
+      Ideas:     t('tabs.ideas'),
+      Profile:   t('tabs.profile'),
+    };
+    return map[routeName] ?? routeName;
+  };
+
+  // One animated value per tab to drive the pip opacity/scale
+  const pipAnimations = React.useRef(
+    state.routes.map((_, i) => new Animated.Value(i === state.index ? 1 : 0)),
+  ).current;
 
   React.useEffect(() => {
-    Animated.spring(animatedValue, {
-      toValue: state.index,
-      useNativeDriver: true,
-      damping: 15,
-      stiffness: 150,
-    }).start();
+    state.routes.forEach((_, i) => {
+      Animated.spring(pipAnimations[i], {
+        toValue: i === state.index ? 1 : 0,
+        useNativeDriver: true,
+        damping: 15,
+        stiffness: 200,
+      }).start();
+    });
   }, [state.index]);
 
   const getIconName = (routeName: string, focused: boolean) => {
-    const iconMap: { [key: string]: { focused: string; unfocused: string } } = {
-      Trips: { focused: 'airplane', unfocused: 'airplane-outline' },
-      Bookings: { focused: 'calendar', unfocused: 'calendar-outline' },
-      Addresses: { focused: 'location', unfocused: 'location-outline' },
-      Profile: { focused: 'person', unfocused: 'person-outline' },
+    const iconMap: Record<string, { focused: string; unfocused: string }> = {
+      Trips:     { focused: 'airplane',     unfocused: 'airplane-outline' },
+      Bookings:  { focused: 'calendar',     unfocused: 'calendar-outline' },
+      Addresses: { focused: 'location',     unfocused: 'location-outline' },
+      Ideas:     { focused: 'bulb',         unfocused: 'bulb-outline' },
+      Profile:   { focused: 'person',       unfocused: 'person-outline' },
     };
-
-    const icons = iconMap[routeName] || {
-      focused: 'help',
-      unfocused: 'help-outline',
-    };
+    const icons = iconMap[routeName] ?? { focused: 'help', unfocused: 'help-outline' };
     return focused ? icons.focused : icons.unfocused;
   };
 
-  const translateX = animatedValue.interpolate({
-    inputRange: [0, 1, 2, 3],
-    outputRange: [8, TAB_WIDTH + 8, TAB_WIDTH * 2 + 8, TAB_WIDTH * 3 + 8],
-  });
+  const paddingBottom = Platform.OS === 'ios' ? insets.bottom : 8;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabBarContainer}>
-        {/* Indicateur de sélection animé */}
-        <Animated.View
-          style={[
-            styles.activeIndicator,
-            {
-              transform: [{ translateX }],
-            },
-          ]}
-        />
+    <View style={[styles.container, { paddingBottom, backgroundColor: colors.bgLight, borderTopColor: colors.bgDark }]}>
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
 
-        {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
+        const onLongPress = () => {
+          navigation.emit({ type: 'tabLongPress', target: route.key });
+        };
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+        const iconName = getIconName(
+          route.name,
+          isFocused,
+        ) as keyof typeof Ionicons.glyphMap;
 
-          const onLongPress = () => {
-            navigation.emit({
-              type: 'tabLongPress',
-              target: route.key,
-            });
-          };
+        const pipScale = pipAnimations[index].interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1],
+        });
 
-          const iconName = getIconName(
-            route.name,
-            isFocused
-          ) as keyof typeof Ionicons.glyphMap;
+        return (
+          <TouchableOpacity
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            testID={(options as any).tabBarTestID}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={styles.tabButton}
+            activeOpacity={0.7}
+          >
+            {/* Terra pip above icon */}
+            <Animated.View
+              style={[
+                styles.pip,
+                {
+                  opacity: pipAnimations[index],
+                  transform: [{ scaleX: pipScale }],
+                },
+              ]}
+            />
 
-          return (
-            <TouchableOpacity
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={(options as any).tabBarTestID}
-              onPress={onPress}
-              onLongPress={onLongPress}
-              style={styles.tabButton}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.iconContainer,
-                  isFocused && styles.iconContainerActive,
-                ]}
-              >
-                <Ionicons
-                  name={iconName}
-                  size={isFocused ? 26 : 24}
-                  color={isFocused ? '#2891FF' : '#9E9E9E'}
-                />
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+            <Ionicons
+              name={iconName}
+              size={28}
+              color={isFocused ? TERRA : colors.textLight}
+            />
+
+            <Text style={[styles.label, { color: colors.textLight }, isFocused && styles.labelActive]}>
+              {getTabLabel(route.name)}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  tabBarContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    width: TAB_BAR_WIDTH,
-    height: 64,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 12,
-    // Effet glassmorphism
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-    overflow: 'hidden',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    top: 8,
-    left: 0,
-    width: TAB_WIDTH - 16,
-    height: 48,
-    backgroundColor: '#E8F4FF',
-    borderRadius: 16,
+    borderTopWidth: 1,
+    paddingTop: 10,
   },
   tabButton: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingBottom: 4,
+    gap: 2,
   },
-  iconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  pip: {
+    position: 'absolute',
+    top: -10,
+    width: 16,
+    height: 2.5,
+    borderRadius: 999,
+    backgroundColor: TERRA,
   },
-  iconContainerActive: {
-    transform: [{ scale: 1.1 }],
+  label: {
+    fontSize: 12,
+    fontFamily: F.sans500,
+    marginTop: 2,
+  },
+  labelActive: {
+    color: TERRA,
+    fontFamily: F.sans600,
   },
 });

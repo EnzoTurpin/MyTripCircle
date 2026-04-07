@@ -1,687 +1,271 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
-  FlatList,
+  ActivityIndicator,
   StatusBar,
-  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList, Trip, User } from "../types";
+import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
-import { useTrips } from "../contexts/TripsContext";
-import { useAuth } from "../contexts/AuthContext";
-import { useFriends } from "../contexts/FriendsContext";
-import { ModernCard } from "../components/ModernCard";
-import { ModernButton } from "../components/ModernButton";
+import { useTheme } from "../contexts/ThemeContext";
+import { useInviteFriends } from "../hooks/useInviteFriends";
+import MemberRow from "../components/inviteFriends/MemberRow";
+import PendingRow from "../components/inviteFriends/PendingRow";
+import MemberActionSheet from "../components/inviteFriends/MemberActionSheet";
+import InvitePanelSheet from "../components/inviteFriends/InvitePanelSheet";
+import { F } from "../theme/fonts";
 
-type InviteFriendsScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "InviteFriends"
->;
-type InviteFriendsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "InviteFriends"
->;
+const daysUntil = (date: Date) =>
+  Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86400000));
+
+type ScreenRouteProp = RouteProp<RootStackParamList, "InviteFriends">;
+type ScreenNavProp = StackNavigationProp<RootStackParamList, "InviteFriends">;
 
 const InviteFriendsScreen: React.FC = () => {
-  const route = useRoute<InviteFriendsScreenRouteProp>();
-  const navigation = useNavigation<InviteFriendsScreenNavigationProp>();
+  const route = useRoute<ScreenRouteProp>();
+  const navigation = useNavigation<ScreenNavProp>();
   const { tripId } = route.params;
   const { t } = useTranslation();
-  const { getTripById, createInvitation } = useTrips();
-  const { user } = useAuth();
-  const { friends: realFriends, loading: friendsLoading } = useFriends();
+  const { colors } = useTheme();
 
-  const [trip, setTrip] = useState<Trip | null>(null);
-  const [friends, setFriends] = useState<User[]>([]);
-  const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
-  const [emailInput, setEmailInput] = useState("");
-  const [phoneInput, setPhoneInput] = useState("");
-  const [inviteType, setInviteType] = useState<'email' | 'phone'>('email');
-  const [loading, setLoading] = useState(true);
-  const [sendingInvitations, setSendingInvitations] = useState(false);
+  const {
+    trip,
+    owner,
+    activeMembers,
+    pendingInvitations,
+    friends,
+    friendsToInvite,
+    alreadyMembers,
+    invitationLink,
+    linkExpiry,
+    loading,
+    actionLoading,
+    showInvitePanel,
+    invitedFriends,
+    emailInput,
+    setEmailInput,
+    sendingInvitations,
+    inviteCount,
+    selectedMember,
+    isOwner,
+    backdropAnim,
+    sheetY,
+    inviteAnim,
+    inviteBackdrop,
+    inviteY,
+    openSheet,
+    closeSheet,
+    openInvitePanel,
+    closeInvitePanel,
+    handleShareLink,
+    handleRenewLink,
+    handleCancelInvitation,
+    handleRemoveMember,
+    handleTransferOwnership,
+    handleViewProfile,
+    toggleFriend,
+    handleSendInvitations,
+  } = useInviteFriends(tripId);
 
-  useEffect(() => {
-    loadData();
-  }, [tripId, realFriends]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      // Charger les données du trip depuis le contexte
-      const tripData = getTripById(tripId);
-      if (tripData) {
-        setTrip(tripData);
-      }
-
-      // Convertir les vrais amis en format User pour la liste
-      const mappedFriends: User[] = realFriends.map((f) => ({
-        id: f.friendId,
-        name: f.name,
-        email: f.email ?? "",
-        avatar: f.avatar,
-        createdAt: f.createdAt,
-      }));
-      setFriends(mappedFriends);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      Alert.alert(t("common.error"), t("inviteFriends.loadingError"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInviteFriend = (friendId: string) => {
-    if (invitedFriends.includes(friendId)) {
-      setInvitedFriends(invitedFriends.filter((id) => id !== friendId));
-    } else {
-      setInvitedFriends([...invitedFriends, friendId]);
-    }
-  };
-
-  const handleInvite = async () => {
-    const input = inviteType === 'email' ? emailInput.trim() : phoneInput.trim();
-    const isValid = inviteType === 'email'
-      ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)
-      : /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/.test(input);
-
-    if (!input) {
-      Alert.alert(t("inviteFriends.error"), inviteType === 'email' ? "Veuillez entrer une adresse email" : "Veuillez entrer un numéro de téléphone");
-      return;
-    }
-
-    if (!isValid) {
-      Alert.alert(t("inviteFriends.error"), inviteType === 'email' ? "Adresse email invalide" : "Numéro de téléphone invalide");
-      return;
-    }
-
-    if (!user || !trip) {
-      Alert.alert(t("common.error"), t("inviteFriends.userNotFound"));
-      return;
-    }
-
-    try {
-      setSendingInvitations(true);
-
-      await createInvitation({
-        tripId: trip.id,
-        inviteeEmail: inviteType === 'email' ? input : undefined,
-        inviteePhone: inviteType === 'phone' ? input : undefined,
-        message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
-        permissions: {
-          role: "editor",
-          canEdit: true,
-          canInvite: false,
-          canDelete: false,
-        },
-      });
-
-      Alert.alert(
-        t("inviteFriends.invitationSent"),
-        `${t("inviteFriends.invitationSentTo")} ${input}`,
-        [{ text: t("common.ok") }],
-      );
-      if (inviteType === 'email') {
-        setEmailInput("");
-      } else {
-        setPhoneInput("");
-      }
-    } catch (error) {
-      console.error("Error sending invitation:", error);
-      Alert.alert(
-        t("common.error"),
-        (error as Error)?.message || t("inviteFriends.invitationError"),
-      );
-    } finally {
-      setSendingInvitations(false);
-    }
-  };
-
-  const handleInviteByEmail = async () => {
-    await handleInvite();
-  };
-
-  const handleInviteByPhone = async () => {
-    await handleInvite();
-  };
-
-  const handleSendInvitations = async () => {
-    if (invitedFriends.length === 0) {
-      Alert.alert(
-        t("inviteFriends.noFriendsSelected"),
-        t("inviteFriends.selectFriendsToInvite"),
-      );
-      return;
-    }
-
-    if (!user || !trip) {
-      Alert.alert(t("common.error"), t("inviteFriends.userNotFound"));
-      return;
-    }
-
-    try {
-      setSendingInvitations(true);
-
-      // Envoyer les invitations en parallèle
-      const invitationPromises = invitedFriends.map((friendId) => {
-        const friend = friends.find((f) => f.id === friendId);
-        if (!friend) return Promise.resolve();
-
-        return createInvitation({
-          tripId: trip.id,
-          inviteeEmail: friend.email || undefined,
-          message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
-          permissions: {
-            role: "editor",
-            canEdit: true,
-            canInvite: false,
-            canDelete: false,
-          },
-        });
-      });
-
-      await Promise.all(invitationPromises);
-
-      Alert.alert(
-        t("inviteFriends.invitationsSent"),
-        `${t("inviteFriends.invitationsSentTo")} ${invitedFriends.length}`,
-        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
-      );
-    } catch (error) {
-      console.error("Error sending invitations:", error);
-      Alert.alert(
-        t("common.error"),
-        (error as Error)?.message || t("inviteFriends.invitationError"),
-      );
-    } finally {
-      setSendingInvitations(false);
-    }
-  };
-
-  const renderFriendItem = ({ item }: { item: User }) => {
-    const isInvited = invitedFriends.includes(item.id);
-    const isAlreadyCollaborator = !!trip?.collaborators?.some(
-      (c) => c.userId === item.id,
-    );
-
+  if (loading) {
     return (
-      <ModernCard
-        variant="outlined"
-        style={[
-          styles.friendCard,
-          isInvited ? styles.friendCardSelected : {},
-          isAlreadyCollaborator ? styles.friendCardDisabled : {},
-        ]}
-        onPress={() => !isAlreadyCollaborator && handleInviteFriend(item.id)}
-        disabled={isAlreadyCollaborator}
-      >
-        <View style={styles.friendRow}>
-          <View style={styles.friendAvatar}>
-            <Ionicons name="person" size={20} color="white" />
-          </View>
-          <View style={styles.friendInfo}>
-            <Text style={styles.friendName}>{item.name}</Text>
-            <Text style={styles.friendEmail}>{item.email}</Text>
-          </View>
-          <View style={styles.friendStatus}>
-            {isAlreadyCollaborator ? (
-              <View style={styles.collaboratorBadge}>
-                <Text style={styles.collaboratorText}>
-                  {t("inviteFriends.member")}
-                </Text>
-              </View>
-            ) : isInvited ? (
-              <Ionicons name="checkmark-circle" size={22} color="#34C759" />
-            ) : (
-              <Ionicons name="add-circle-outline" size={22} color="#2891FF" />
-            )}
-          </View>
+      <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color="#C4714A" />
         </View>
-      </ModernCard>
+      </SafeAreaView>
     );
-  };
+  }
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>{t("inviteFriends.loading")}</Text>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.container}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.containerContent}
+    <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]} edges={["top", "left", "right"]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
+
+      <View style={[s.header, { backgroundColor: colors.bgLight }]}>
+        <TouchableOpacity
+          style={[s.backBtn, { backgroundColor: colors.bgMid }]}
+          onPress={() => navigation.goBack()}
         >
-          <LinearGradient
-            colors={["#2891FF", "#8869FF"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.header}
-          >
-            <View style={styles.headerTop}>
-              <TouchableOpacity
-                style={styles.backButtonHeader}
-                onPress={() => navigation.goBack()}
-              >
-                <Ionicons name="arrow-back" size={24} color="white" />
-              </TouchableOpacity>
-              <View style={{ width: 40 }} />
-            </View>
-            <View style={styles.headerContent}>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="person-add" size={40} color="white" />
-              </View>
-              <Text style={styles.headerTitle}>
-                {t("inviteFriends.header")}
-              </Text>
-              <Text style={styles.headerSubtitle}>
-                {t("inviteFriends.subtitle")} "{trip?.title}"
-              </Text>
-            </View>
-          </LinearGradient>
+          <Ionicons name="chevron-back" size={16} color={colors.textMid} />
+        </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: "center" }}>
+          {trip && (
+            <Text style={[s.headerSub, { color: colors.textLight }]} numberOfLines={1}>
+              {trip.title}
+            </Text>
+          )}
+          <Text style={[s.headerTitle, { color: colors.text }]}>
+            {t("inviteFriends.manageMembers")}
+          </Text>
+        </View>
+        <TouchableOpacity style={s.inviteBtn} onPress={openInvitePanel}>
+          <Text style={s.inviteBtnTxt}>{t("inviteFriends.inviteBtn")}</Text>
+        </TouchableOpacity>
+      </View>
 
-          <View style={styles.content}>
-            <ModernCard variant="elevated" style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>
-                Inviter quelqu'un
-              </Text>
-
-              {/* Sélecteur Email/Téléphone */}
-              <View style={styles.typeSelector}>
-                <TouchableOpacity
-                  style={[styles.typeButton, inviteType === 'email' && styles.typeButtonActive]}
-                  onPress={() => setInviteType('email')}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="mail-outline" size={18} color={inviteType === 'email' ? "white" : "#616161"} />
-                  <Text style={[styles.typeButtonText, inviteType === 'email' && styles.typeButtonTextActive]}>Email</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.typeButton, inviteType === 'phone' && styles.typeButtonActive]}
-                  onPress={() => setInviteType('phone')}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="call-outline" size={18} color={inviteType === 'phone' ? "white" : "#616161"} />
-                  <Text style={[styles.typeButtonText, inviteType === 'phone' && styles.typeButtonTextActive]}>Téléphone</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Input Email */}
-              {inviteType === 'email' ? (
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="mail-outline" size={20} color="#616161" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Entrez l'adresse email"
-                      placeholderTextColor="#9E9E9E"
-                      value={emailInput}
-                      onChangeText={setEmailInput}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.sendButton, sendingInvitations && styles.sendButtonDisabled]}
-                    onPress={handleInviteByEmail}
-                    disabled={sendingInvitations || !emailInput.trim()}
-                    activeOpacity={0.8}
-                  >
-                    {sendingInvitations ? (
-                      <Ionicons name="hourglass" size={18} color="white" />
-                    ) : (
-                      <>
-                        <Ionicons name="send" size={16} color="white" />
-                        <Text style={styles.sendButtonText}>Inviter</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                /* Input Téléphone */
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="call-outline" size={20} color="#616161" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Entrez le numéro de téléphone"
-                      placeholderTextColor="#9E9E9E"
-                      value={phoneInput}
-                      onChangeText={setPhoneInput}
-                      keyboardType="phone-pad"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.sendButton, sendingInvitations && styles.sendButtonDisabled]}
-                    onPress={handleInviteByPhone}
-                    disabled={sendingInvitations || !phoneInput.trim()}
-                    activeOpacity={0.8}
-                  >
-                    {sendingInvitations ? (
-                      <Ionicons name="hourglass" size={18} color="white" />
-                    ) : (
-                      <>
-                        <Ionicons name="send" size={16} color="white" />
-                        <Text style={styles.sendButtonText}>Inviter</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-            </ModernCard>
-
-            <ModernCard variant="elevated" style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>
-                {t("inviteFriends.friends")}
-              </Text>
-              <FlatList
-                data={friends}
-                renderItem={renderFriendItem}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                contentContainerStyle={styles.friendsList}
-              />
-            </ModernCard>
-
-            {invitedFriends.length > 0 && (
-              <ModernCard variant="elevated" style={styles.selectedFriendsCard}>
-                <Text style={styles.selectedFriendsTitle}>
-                  {t("inviteFriends.selectedFriends")} ({invitedFriends.length})
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {invitedFriends.map((friendId) => {
-                    const friend = friends.find((f) => f.id === friendId);
-                    return (
-                      <View key={friendId} style={styles.selectedFriendChip}>
-                        <Text style={styles.selectedFriendText}>
-                          {friend?.name}
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => handleInviteFriend(friendId)}
-                        >
-                          <Ionicons name="close" size={16} color="white" />
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              </ModernCard>
-            )}
-            {invitedFriends.length > 0 && (
-              <View style={styles.bottomActions}>
-                <ModernButton
-                  title={
-                    sendingInvitations
-                      ? t("inviteFriends.sendingInvitations")
-                      : `${t("inviteFriends.sendInvitations")} (${invitedFriends.length})`
-                  }
-                  onPress={handleSendInvitations}
-                  variant="primary"
-                  gradient
-                  size="large"
-                  icon={sendingInvitations ? "hourglass" : "send"}
-                  disabled={sendingInvitations}
-                  fullWidth
-                />
-              </View>
-            )}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={s.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[s.linkCard, { backgroundColor: colors.terraLight, borderColor: colors.border }]}>
+          <Text style={[s.linkTitle, { color: colors.terra }]}>
+            {t("inviteFriends.linkTitle")}
+          </Text>
+          <View style={s.linkRow}>
+            <Text
+              style={[s.linkUrl, { color: colors.textMid, backgroundColor: colors.surface }]}
+              numberOfLines={1}
+            >
+              {invitationLink || t("inviteFriends.linkGenerating")}
+            </Text>
+            <TouchableOpacity
+              style={s.copyBtn}
+              onPress={handleShareLink}
+              disabled={!invitationLink}
+            >
+              <Text style={s.copyBtnTxt}>{t("inviteFriends.linkShare")}</Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
+          {linkExpiry && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
+              <Text style={[s.expiryTxt, { color: colors.terra }]}>
+                {t("inviteFriends.linkExpiry", { count: daysUntil(linkExpiry) })}
+              </Text>
+              <TouchableOpacity onPress={handleRenewLink}>
+                <Text
+                  style={[
+                    s.expiryTxt,
+                    { color: colors.terra, fontFamily: F.sans600, textDecorationLine: "underline" },
+                  ]}
+                >
+                  {t("inviteFriends.linkRenew")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {owner && (
+          <>
+            <Text style={[s.sec, { color: colors.textMid }]}>
+              {t("inviteFriends.sectionOrganizer")}
+            </Text>
+            <MemberRow member={owner} isOwner={isOwner} onPress={openSheet} />
+          </>
+        )}
+
+        {activeMembers.length > 0 && (
+          <>
+            <Text style={[s.sec, { marginTop: 4, color: colors.textMid }]}>
+              {t("inviteFriends.sectionMembers", { count: activeMembers.length })}
+            </Text>
+            {activeMembers.map((m) => (
+              <MemberRow key={m.userId} member={m} isOwner={isOwner} onPress={openSheet} />
+            ))}
+          </>
+        )}
+
+        {pendingInvitations.length > 0 && (
+          <>
+            <Text style={[s.sec, { marginTop: 4, color: colors.textMid }]}>
+              {t("inviteFriends.sectionPending", { count: pendingInvitations.length })}
+            </Text>
+            {pendingInvitations.map((inv) => (
+              <PendingRow
+                key={inv._id || inv.id}
+                invitation={inv}
+                friends={friends}
+                isOwner={isOwner}
+                onCancel={handleCancelInvitation}
+              />
+            ))}
+          </>
+        )}
+
+        <TouchableOpacity
+          style={[s.addBtn, { backgroundColor: colors.bg, borderColor: colors.border }]}
+          onPress={openInvitePanel}
+        >
+          <View style={s.addBtnIcon}>
+            <Text style={{ fontSize: 22, color: "#C4714A" }}>+</Text>
+          </View>
+          <Text style={[s.addBtnTxt, { color: colors.textLight }]}>
+            {t("inviteFriends.inviteFromFriends")}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {actionLoading && (
+        <View style={s.loadingOverlay}>
+          <ActivityIndicator size="large" color="#C4714A" />
+        </View>
       )}
-    </View>
+
+      {selectedMember && (
+        <MemberActionSheet
+          member={selectedMember}
+          isOwner={isOwner}
+          backdropAnim={backdropAnim}
+          sheetY={sheetY}
+          onClose={closeSheet}
+          onViewProfile={handleViewProfile}
+          onTransfer={handleTransferOwnership}
+          onRemove={handleRemoveMember}
+        />
+      )}
+
+      {showInvitePanel && (
+        <InvitePanelSheet
+          inviteAnim={inviteAnim}
+          inviteBackdrop={inviteBackdrop}
+          inviteY={inviteY}
+          friendsToInvite={friendsToInvite}
+          alreadyMembers={alreadyMembers}
+          invitedFriends={invitedFriends}
+          emailInput={emailInput}
+          sendingInvitations={sendingInvitations}
+          inviteCount={inviteCount}
+          onClose={closeInvitePanel}
+          onToggleFriend={toggleFriend}
+          onChangeEmail={setEmailInput}
+          onSend={handleSendInvitations}
+        />
+      )}
+    </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: "#FAFAFA",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#FAFAFA",
-  },
-  containerContent: {
-    paddingBottom: 24,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    backgroundColor: "#FAFAFA",
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#616161",
-  },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 80 : 60,
-    paddingBottom: 120,
-    paddingHorizontal: 24,
-  },
-  headerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  backButtonHeader: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-    borderWidth: 3,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "white",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 0,
-    marginTop: -100,
-    paddingBottom: 24,
-  },
-  sectionCard: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700" as const,
-    color: "#212121",
-    marginBottom: 16,
-  },
-  typeSelector: {
-    flexDirection: "row" as const,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 16,
-  },
-  typeButton: {
-    flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 8,
-  },
-  typeButtonActive: {
-    backgroundColor: "#2891FF",
-  },
-  typeButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#616161",
-  },
-  typeButtonTextActive: {
-    color: "white",
-  },
-  inputContainer: {
-    gap: 12,
-  },
-  inputWrapper: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 16,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#212121",
-  },
-  sendButton: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: "#2891FF",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    gap: 8,
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#BDBDBD",
-  },
-  sendButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "white",
-  },
-  friendsList: {
-    gap: 12,
-  },
-  friendCard: {
-    padding: 16,
-  },
-  friendCardSelected: {
-    backgroundColor: "#E8F4FF",
-    borderColor: "#CFE7FF",
-  },
-  friendCardDisabled: {
-    opacity: 0.5,
-  },
-  friendRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-  },
-  friendAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#2891FF",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginRight: 15,
-    shadowColor: "#2891FF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  friendInfo: {
-    flex: 1,
-  },
-  friendName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  friendEmail: {
-    fontSize: 14,
-    color: "#616161",
-  },
-  friendStatus: {
-    marginLeft: 10,
-  },
-  collaboratorBadge: {
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  collaboratorText: {
-    fontSize: 12,
-    color: "#34C759",
-    fontWeight: "700",
-  },
-  selectedFriendsTitle: {
-    fontSize: 16,
-    fontWeight: "bold" as const,
-    color: "#333",
-    marginBottom: 15,
-  },
-  selectedFriendsCard: {
-    marginBottom: 20,
-  },
-  selectedFriendChip: {
-    backgroundColor: "#007AFF",
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 8,
-  },
-  selectedFriendText: {
-    color: "white",
-    fontSize: 14,
-    marginRight: 8,
-  },
-  bottomActions: {
-    backgroundColor: "white",
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-  },
+const s = StyleSheet.create({
+  safe: { flex: 1 },
+  content: { paddingHorizontal: 20, paddingBottom: 50, paddingTop: 10 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14 },
+  backBtn: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
+  headerSub: { fontFamily: F.sans400, fontSize: 14, textAlign: "center" },
+  headerTitle: { fontFamily: F.sans700, fontSize: 16, textAlign: "center" },
+  inviteBtn: { backgroundColor: "#C4714A", borderRadius: 24, paddingHorizontal: 18, paddingVertical: 10, shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 3 },
+  inviteBtnTxt: { fontFamily: F.sans600, fontSize: 15, color: "#FFFFFF" },
+  linkCard: { borderRadius: 18, borderWidth: 1, padding: 18, marginBottom: 18 },
+  linkTitle: { fontFamily: F.sans600, fontSize: 14, marginBottom: 10 },
+  linkRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  linkUrl: { flex: 1, fontFamily: F.sans400, fontSize: 13, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
+  copyBtn: { backgroundColor: "#C4714A", borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
+  copyBtnTxt: { fontFamily: F.sans600, fontSize: 13, color: "#FFFFFF" },
+  expiryTxt: { fontFamily: F.sans400, fontSize: 12 },
+  sec: { fontFamily: F.sans700, fontSize: 16, textTransform: "uppercase", letterSpacing: 1.2, paddingTop: 10, paddingBottom: 10 },
+  addBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, borderWidth: 2, borderStyle: "dashed", borderRadius: 18, paddingVertical: 16, paddingHorizontal: 16, marginTop: 8 },
+  addBtnIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F5E5DC", alignItems: "center", justifyContent: "center" },
+  addBtnTxt: { fontFamily: F.sans400, fontSize: 15 },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(253,250,245,0.65)", alignItems: "center", justifyContent: "center" },
 });
 
 export default InviteFriendsScreen;

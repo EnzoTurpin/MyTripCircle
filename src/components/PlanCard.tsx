@@ -2,7 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { ModernButton } from "./ModernButton";
+import { F } from "../theme/fonts";
 
 type Props = {
   id: string;
@@ -23,6 +25,7 @@ const PlanCard: React.FC<Props> = ({
   loading,
   recommended = false,
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={[styles.card, recommended && styles.recommendedCard]}>
       {recommended && (
@@ -34,7 +37,7 @@ const PlanCard: React.FC<Props> = ({
             style={styles.badgeGradient}
           >
             <Ionicons name="star" size={12} color="white" />
-            <Text style={styles.badgeText}>Recommandé</Text>
+            <Text style={styles.badgeText}>{t("subscription.recommended")}</Text>
           </LinearGradient>
         </View>
       )}
@@ -44,7 +47,7 @@ const PlanCard: React.FC<Props> = ({
         {price && (
           <View style={styles.priceContainer}>
             <Text style={styles.price}>{price}</Text>
-            <Text style={styles.priceUnit}>/mois</Text>
+            <Text style={styles.priceUnit}>{t("subscription.perMonth")}</Text>
           </View>
         )}
       </View>
@@ -61,7 +64,7 @@ const PlanCard: React.FC<Props> = ({
       </View>
 
       <ModernButton
-        title={loading ? "Chargement..." : "S'abonner"}
+        title={loading ? t("common.loading") : t("settings.subscribe")}
         onPress={() => onSubscribe(id)}
         variant={recommended ? "primary" : "outline"}
         gradient={recommended}
@@ -110,14 +113,14 @@ const styles = StyleSheet.create({
   badgeText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: F.sans700,
   },
   header: {
     marginBottom: 24,
   },
   title: { 
     fontSize: 24,
-    fontWeight: "700",
+    fontFamily: F.sans700,
     color: "#212121",
     marginBottom: 12,
   },
@@ -127,14 +130,15 @@ const styles = StyleSheet.create({
   },
   price: { 
     fontSize: 32,
-    fontWeight: "700",
+    fontFamily: F.sans700,
     color: "#2891FF",
   },
   priceUnit: {
     fontSize: 16,
     color: "#616161",
     marginLeft: 4,
-  },
+    fontFamily: F.sans400,
+},
   advantagesList: {
     marginBottom: 24,
   },
@@ -157,7 +161,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#212121",
     lineHeight: 24,
-  },
+    fontFamily: F.sans400,
+},
 });
 
 export default PlanCard;

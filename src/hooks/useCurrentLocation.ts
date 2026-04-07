@@ -11,7 +11,7 @@ export const useCurrentLocation = (): Coords | null => {
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.getForegroundPermissionsAsync();
       if (status !== "granted") return;
 
       const pos = await Location.getCurrentPositionAsync({

@@ -16,7 +16,7 @@ export const SwipeToNavigate: React.FC<SwipeToNavigateProps> = ({
   const navigation = useNavigation();
 
   // Ordre des onglets
-  const tabs = ["Trips", "Bookings", "Addresses", "Profile"];
+  const tabs = ["Trips", "Bookings", "Ideas", "Addresses", "Profile"];
 
   const handleSwipe = (translationX: number) => {
     const threshold = 50; // Distance minimale pour un swipe

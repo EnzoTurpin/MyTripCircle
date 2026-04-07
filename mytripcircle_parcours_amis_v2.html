@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MyTripCircle — Parcours Amis (cohérent)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#F5F0E8;--sand-light:#FDFAF5;--sand-mid:#EDE5D8;--sand-dark:#D8CCBA;
+  --terra:#C4714A;--terra-light:#F5E5DC;--terra-dark:#A35830;
+  --moss:#6B8C5A;--moss-light:#E2EDD9;
+  --sky:#5A8FAA;--sky-light:#DCF0F5;
+  --ink:#2A2318;--ink-mid:#7A6A58;--ink-light:#B0A090;
+  --danger:#C04040;--danger-light:#FDEAEA;
+}
+body{font-family:'Sora',sans-serif;background:#E0D8CC;padding:28px 16px 60px}
+
+.page-title{text-align:center;margin-bottom:26px}
+.page-title h1{font-family:'Lora',serif;font-size:22px;color:var(--ink);font-weight:700}
+.page-title p{font-size:11px;color:var(--ink-mid);margin-top:5px;line-height:1.6}
+
+/* Flow section */
+.flow{margin-bottom:44px}
+.flow-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.flow-lbl::after{content:'';flex:1;height:1px;background:var(--sand-dark)}
+.flow-row{display:flex;gap:0;flex-wrap:wrap;align-items:flex-start}
+
+/* Step wrapper */
+.sw{display:flex;flex-direction:column;align-items:center}
+.sn{font-size:8.5px;font-weight:600;color:var(--terra);background:var(--terra-light);border-radius:20px;padding:2px 9px;margin-bottom:7px}
+
+/* Arrow between screens */
+.arr{display:flex;align-items:center;padding:0 5px;color:var(--sand-dark);font-size:22px;margin-top:188px;flex-shrink:0}
+
+/* Phone */
+.ph{width:216px;height:450px;background:var(--sand-light);border-radius:38px;overflow:hidden;border:1.5px solid var(--sand-dark);flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 2px 0 rgba(255,255,255,.9) inset,0 22px 48px rgba(42,35,24,.22),0 6px 14px rgba(42,35,24,.1)}
+.pl{text-align:center;font-size:9.5px;font-weight:600;color:var(--ink-mid);margin-top:8px;line-height:1.3}
+.pl small{display:block;font-size:8px;font-weight:400;color:var(--ink-light);margin-top:1px}
+
+/* Common UI */
+.sb{display:flex;justify-content:space-between;align-items:center;padding:9px 14px 4px;font-size:8.5px;color:var(--ink-light);flex-shrink:0}
+.sb.w{color:rgba(255,255,255,.8)}
+.si{display:flex;gap:3px}.sd{width:4px;height:4px;border-radius:50%;background:currentColor}
+.sc{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.bn{display:flex;background:var(--sand-light);border-top:1px solid var(--sand-dark);padding:6px 0 9px;flex-shrink:0}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nl{font-size:6.5px;color:var(--ink-light)}.ni.a .nl{color:var(--terra);font-weight:600}
+.np{width:13px;height:2.5px;background:var(--terra);border-radius:2px;margin-bottom:1px}
+.ns{width:13px;height:13px}
+.bk{width:24px;height:24px;background:var(--sand-mid);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
+.tp{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:6.5px;font-weight:500}
+.fc{margin:0 12px 5px;background:#fff;border:1px solid var(--sand-dark);border-radius:10px;padding:6px 9px;display:flex;align-items:center;gap:7px}
+.fn{font-size:8.5px;font-weight:600;color:var(--ink)}.fs{font-size:6.5px;color:var(--ink-light)}
+.sec{padding:2px 12px 4px;font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>MyTripCircle — Parcours Amis complet</h1>
+  <p>
+    Profil → Hub amis → Recherche → Profil utilisateur → Envoyer demande<br/>
+    + Onglet Demandes reçues · Onglet Suggestions · Profil ami existant · Suppression
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════
+  FLOW 1 — PROFIL → HUB → RECHERCHE → ENVOI
+════════════════════════════════════════ -->
+<div class="flow">
+<div class="flow-lbl">Flow principal — Ajouter un nouvel ami</div>
+<div class="flow-row">
+
+<!-- ① PROFIL — point d'entrée -->
+<div class="sw">
+  <div class="sn">① Profil</div>
+  <div class="ph">
+    <div class="sb w" style="position:absolute;top:0;left:0;right:0;z-index:10"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc" style="position:relative">
+      <!-- Cover -->
+      <div style="height:82px;flex-shrink:0;position:relative;overflow:hidden">
+        <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,4,0,.1),rgba(8,4,0,.62))"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:7px 12px;display:flex;align-items:flex-end;gap:8px">
+          <div class="av" style="width:36px;height:36px;font-size:12px;background:var(--terra);border:2.5px solid #fff">ET</div>
+          <div><div style="font-family:'Lora',serif;font-size:12px;font-weight:700;color:#fff">Enzo Turpin</div><div style="font-size:6.5px;color:rgba(255,255,255,.7)">enzoturpin@gmail.com</div></div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div style="display:flex;margin:6px 12px;gap:4px">
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">7</div><div style="font-size:5.5px;color:var(--ink-light)">Voyages</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">5</div><div style="font-size:5.5px;color:var(--ink-light)">Amis</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">24</div><div style="font-size:5.5px;color:var(--ink-light)">Résas</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">12</div><div style="font-size:5.5px;color:var(--ink-light)">Adresses</div></div>
+      </div>
+      <!-- Compte -->
+      <div style="margin:0 12px 5px">
+        <div style="font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px">Mon compte</div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:10px;overflow:hidden">
+          <div style="padding:6px 9px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--sand)"><span style="font-size:9px;width:13px">👤</span><div style="font-size:7.5px;color:var(--ink);flex:1">Informations personnelles</div><div style="font-size:9px;color:var(--sand-dark)">›</div></div>
+          <!-- 👥 Mes amis — en surbrillance -->
+          <div style="padding:6px 9px;display:flex;align-items:center;gap:6px;background:var(--terra-light);border-bottom:1px solid rgba(196,113,74,.2)">
+            <span style="font-size:9px;width:13px">👥</span>
+            <div style="font-size:7.5px;font-weight:600;color:var(--terra);flex:1">Mes amis</div>
+            <div style="font-size:6.5px;background:var(--terra);color:#fff;padding:1px 5px;border-radius:10px">5</div>
+            <div style="font-size:9px;color:var(--terra)">›</div>
+          </div>
+          <div style="padding:6px 9px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--sand)"><span style="font-size:9px;width:13px">🔔</span><div style="font-size:7.5px;color:var(--ink);flex:1">Notifications</div><div style="font-size:9px;color:var(--sand-dark)">›</div></div>
+          <div style="padding:6px 9px;display:flex;align-items:center;gap:6px"><span style="font-size:9px;width:13px">⚙️</span><div style="font-size:7.5px;color:var(--ink);flex:1">Paramètres</div><div style="font-size:9px;color:var(--sand-dark)">›</div></div>
+        </div>
+      </div>
+      <!-- Invitations badge -->
+      <div style="margin:4px 12px 0;background:#fff;border:1.5px solid rgba(196,113,74,.35);border-radius:10px;padding:6px 9px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:10px">✉️</span>
+        <div style="flex:1"><div style="font-size:7.5px;font-weight:600;color:var(--ink)">Invitations reçues</div><div style="font-size:6.5px;color:var(--ink-light)">2 en attente</div></div>
+        <div style="background:var(--terra);color:#fff;font-size:6.5px;font-weight:600;padding:1px 6px;border-radius:20px">2</div>
+        <div style="font-size:9px;color:var(--terra)">›</div>
+      </div>
+    </div>
+    <div class="bn">
+      <div class="ni"><svg class="ns" viewBox="0 0 16 16" fill="none"><rect x="1" y="8" width="6" height="7" rx="1.5" stroke="#B0A090" stroke-width="1.2"/><rect x="9" y="4" width="6" height="11" rx="1.5" stroke="#B0A090" stroke-width="1.2"/></svg><div class="nl">Voyages</div></div>
+      <div class="ni"><svg class="ns" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#B0A090" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="#B0A090" stroke-width="1"/></svg><div class="nl">Résas</div></div>
+      <div class="ni"><svg class="ns" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="5" stroke="#B0A090" stroke-width="1.2"/></svg><div class="nl">Idées</div></div>
+      <div class="ni"><svg class="ns" viewBox="0 0 16 16" fill="none"><path d="M8 2C5.8 2 4 3.8 4 6c0 3.5 4 8 4 8s4-4.5 4-8c0-2.2-1.8-4-4-4z" stroke="#B0A090" stroke-width="1.2"/><circle cx="8" cy="6" r="1.5" stroke="#B0A090" stroke-width="1"/></svg><div class="nl">Adresses</div></div>
+      <div class="ni a"><div class="np"></div><svg class="ns" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" fill="#C4714A"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#C4714A" stroke-width="1.2"/></svg><div class="nl" style="color:var(--terra)">Profil</div></div>
+    </div>
+  </div>
+  <div class="pl">Profil<small>tap "Mes amis"</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ② HUB SOCIAL — liste + onglets -->
+<div class="sw">
+  <div class="sn">② Hub social</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <div style="padding:7px 12px 5px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:8px;color:var(--ink-light)">Réseau social</div>
+          <div style="font-family:'Lora',serif;font-size:16px;font-weight:700;color:var(--ink)">Mes Amis</div>
+        </div>
+        <!-- Bouton + clair -->
+        <div style="width:30px;height:30px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:300;box-shadow:0 3px 10px rgba(196,113,74,.4)">+</div>
+      </div>
+      <!-- Onglets -->
+      <div style="display:flex;border-bottom:1px solid var(--sand-dark);margin:0 12px 8px">
+        <div style="flex:1;text-align:center;padding:5px 0;font-size:7.5px;font-weight:600;color:var(--terra);border-bottom:2px solid var(--terra)">Amis (5)</div>
+        <div style="flex:1;text-align:center;padding:5px 0;font-size:7.5px;color:var(--ink-light);position:relative">
+          Demandes
+          <div style="position:absolute;top:3px;right:6px;width:14px;height:14px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#fff">2</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:5px 0;font-size:7.5px;color:var(--ink-light)">Suggestions</div>
+      </div>
+      <!-- Search bar (passive) -->
+      <div style="margin:0 12px 7px;background:#fff;border:1px solid var(--sand-dark);border-radius:20px;padding:5px 11px;display:flex;align-items:center;gap:5px">
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><circle cx="4" cy="4" r="3" stroke="#B0A090" stroke-width="1.2"/><path d="M6.5 6.5l2 2" stroke="#B0A090" stroke-width="1.2"/></svg>
+        <div style="font-size:7.5px;color:var(--ink-light)">Rechercher un ami...</div>
+      </div>
+      <!-- Liste -->
+      <div class="fc"><div class="av" style="width:30px;height:30px;font-size:10px;background:var(--sky)">DM</div><div style="flex:1"><div class="fn">Daryl Matro</div><div class="fs">2 voyages en commun</div></div><div style="font-size:9px;color:var(--ink-light)">›</div></div>
+      <div class="fc"><div class="av" style="width:30px;height:30px;font-size:10px;background:#8B70C0">MB</div><div style="flex:1"><div class="fn">Maria Bouchene</div><div class="fs">1 voyage en commun</div></div><div style="font-size:9px;color:var(--ink-light)">›</div></div>
+      <div class="fc"><div class="av" style="width:30px;height:30px;font-size:10px;background:var(--moss)">FA</div><div style="flex:1"><div class="fn">Ferréol Avimadje</div><div class="fs">0 voyage en commun</div></div><div style="font-size:9px;color:var(--ink-light)">›</div></div>
+      <div class="fc"><div class="av" style="width:30px;height:30px;font-size:10px;background:var(--terra)">GV</div><div style="flex:1"><div class="fn">Guillaume Viel</div><div class="fs">3 voyages en commun</div></div><div style="font-size:9px;color:var(--ink-light)">›</div></div>
+      <div class="fc"><div class="av" style="width:30px;height:30px;font-size:10px;background:#C0A040">ES</div><div style="flex:1"><div class="fn">Elias Sellincourt</div><div class="fs">1 voyage en commun</div></div><div style="font-size:9px;color:var(--ink-light)">›</div></div>
+    </div>
+  </div>
+  <div class="pl">Hub social — onglet Amis<small>tap "+" pour chercher</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ③ RECHERCHER UN AMI (tap sur +) -->
+<div class="sw">
+  <div class="sn">③ Rechercher</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <div style="padding:7px 12px 6px;display:flex;align-items:center;gap:8px">
+        <div class="bk"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="#7A6A58" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink)">Ajouter un ami</div>
+      </div>
+      <!-- Search bar ACTIVE -->
+      <div style="margin:0 12px 8px;background:#fff;border:1.5px solid var(--terra);border-radius:20px;padding:7px 11px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(196,113,74,.15)">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="4" cy="4" r="3" stroke="#C4714A" stroke-width="1.2"/><path d="M6.5 6.5l2 2" stroke="#C4714A" stroke-width="1.2"/></svg>
+        <div style="font-size:8.5px;color:var(--ink);flex:1">lucas.andre@gmail.com</div>
+        <div style="width:15px;height:15px;background:var(--sand-mid);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--ink-light)">✕</div>
+      </div>
+      <!-- Résultat trouvé -->
+      <div class="sec">Résultat</div>
+      <div style="margin:3px 12px 10px;background:#fff;border:1.5px solid var(--terra);border-radius:13px;padding:10px;box-shadow:0 3px 12px rgba(196,113,74,.1)">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+          <div class="av" style="width:40px;height:40px;font-size:14px;background:var(--terra)">LA</div>
+          <div style="flex:1">
+            <div style="font-size:10.5px;font-weight:600;color:var(--ink)">Lucas André</div>
+            <div style="font-size:7px;color:var(--ink-light)">lucas.andre@gmail.com</div>
+          </div>
+          <!-- Lien vers son profil -->
+          <div style="font-size:7.5px;color:var(--terra);font-weight:600">Voir profil ›</div>
+        </div>
+        <!-- Stats -->
+        <div style="display:flex;gap:5px;margin-bottom:9px">
+          <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">12</div><div style="font-size:6px;color:var(--ink-light)">Voyages</div></div>
+          <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">8</div><div style="font-size:6px;color:var(--ink-light)">Pays</div></div>
+          <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:4px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">3</div><div style="font-size:6px;color:var(--ink-light)">Amis comm.</div></div>
+        </div>
+        <div style="background:var(--terra);border-radius:9px;padding:9px;text-align:center;font-size:9px;font-weight:600;color:#fff;box-shadow:0 3px 10px rgba(196,113,74,.3)">👥 Envoyer une demande d'ami</div>
+      </div>
+      <!-- Suggestions -->
+      <div class="sec">Tu connais peut-être…</div>
+      <div class="fc"><div class="av" style="width:28px;height:28px;font-size:9px;background:#5A6A9A">TM</div><div style="flex:1"><div class="fn">Thomas Martin</div><div class="fs">2 amis en commun</div></div><div style="font-size:7px;background:var(--terra);color:#fff;padding:2px 7px;border-radius:20px;font-weight:600">+ Ajouter</div></div>
+      <div class="fc"><div class="av" style="width:28px;height:28px;font-size:9px;background:#A06890">LM</div><div style="flex:1"><div class="fn">Laura Mercier</div><div class="fs">1 ami en commun</div></div><div style="font-size:7px;background:var(--terra);color:#fff;padding:2px 7px;border-radius:20px;font-weight:600">+ Ajouter</div></div>
+    </div>
+  </div>
+  <div class="pl">Recherche d'un ami<small>search active + résultat</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ④ PROFIL D'UN AUTRE UTILISATEUR (pas encore ami) -->
+<div class="sw">
+  <div class="sn">④ Profil utilisateur</div>
+  <div class="ph">
+    <div class="sb w" style="position:absolute;top:0;left:0;right:0;z-index:10"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc" style="position:relative">
+      <!-- Cover photo immersive -->
+      <div style="height:155px;flex-shrink:0;position:relative;overflow:hidden">
+        <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.0) 30%,rgba(0,0,0,.72) 100%)"></div>
+        <div style="position:absolute;top:22px;left:11px">
+          <div class="bk" style="background:rgba(255,255,255,.25);backdrop-filter:blur(4px)"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        </div>
+        <!-- Badge "pas encore ami" -->
+        <div style="position:absolute;top:22px;right:11px">
+          <div class="tp" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px)">👤 Utilisateur</div>
+        </div>
+        <!-- Identité -->
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;display:flex;align-items:flex-end;gap:10px">
+          <div class="av" style="width:44px;height:44px;font-size:15px;background:var(--terra);border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3)">LA</div>
+          <div>
+            <div style="font-family:'Lora',serif;font-size:16px;font-weight:700;color:#fff">Lucas André</div>
+            <div style="font-size:7.5px;color:rgba(255,255,255,.7)">Membre depuis Fév 2025</div>
+          </div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div style="display:flex;gap:4px;padding:8px 12px">
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--terra)">12</div><div style="font-size:5.5px;color:var(--ink-light)">Voyages</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--terra)">8</div><div style="font-size:5.5px;color:var(--ink-light)">Pays</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--terra)">3</div><div style="font-size:5.5px;color:var(--ink-light)">Amis comm.</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--terra)">42</div><div style="font-size:5.5px;color:var(--ink-light)">Résas</div></div>
+      </div>
+      <!-- Voyages publics -->
+      <div class="sec">Voyages récents</div>
+      <div style="display:flex;gap:6px;padding:3px 12px 8px;overflow:hidden">
+        <div style="width:70px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;position:relative">
+          <img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=200&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65),transparent 55%)"></div>
+          <div style="position:absolute;bottom:4px;left:5px;font-size:7px;font-weight:600;color:#fff">Kyoto</div>
+        </div>
+        <div style="width:70px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;position:relative">
+          <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?w=200&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65),transparent 55%)"></div>
+          <div style="position:absolute;bottom:4px;left:5px;font-size:7px;font-weight:600;color:#fff">Santorin</div>
+        </div>
+        <div style="width:70px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;position:relative">
+          <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=200&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65),transparent 55%)"></div>
+          <div style="position:absolute;bottom:4px;left:5px;font-size:7px;font-weight:600;color:#fff">Bali</div>
+        </div>
+      </div>
+      <!-- Amis en commun -->
+      <div class="sec">3 amis en commun</div>
+      <div style="display:flex;align-items:center;gap:6px;padding:3px 12px 10px">
+        <div style="display:flex">
+          <div class="av" style="width:24px;height:24px;font-size:8px;background:var(--sky);border:2px solid var(--sand-light)">DM</div>
+          <div class="av" style="width:24px;height:24px;font-size:8px;background:var(--moss);border:2px solid var(--sand-light);margin-left:-7px">FA</div>
+          <div class="av" style="width:24px;height:24px;font-size:8px;background:#8B70C0;border:2px solid var(--sand-light);margin-left:-7px">MB</div>
+        </div>
+        <div style="font-size:7.5px;color:var(--ink-mid)">Daryl, Ferréol, Maria</div>
+      </div>
+      <!-- CTA principal -->
+      <div style="padding:0 12px;margin-top:auto">
+        <div style="background:var(--terra);border-radius:12px;padding:11px;text-align:center;font-size:9.5px;font-weight:600;color:#fff;box-shadow:0 4px 14px rgba(196,113,74,.35)">👥 Envoyer une demande d'ami</div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+  </div>
+  <div class="pl">Profil utilisateur<small>pas encore ami</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ⑤ DEMANDE ENVOYÉE — confirmation -->
+<div class="sw">
+  <div class="sn">⑤ Confirmation</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;text-align:center">
+        <div style="width:66px;height:66px;background:var(--terra-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border:3px solid var(--terra)">
+          <span style="font-size:28px">👥</span>
+        </div>
+        <div style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:5px">Demande envoyée !</div>
+        <div style="font-size:8.5px;color:var(--ink-mid);line-height:1.7;margin-bottom:18px"><span style="font-weight:600;color:var(--ink)">Lucas André</span> recevra<br/>une notification</div>
+        <!-- Profil en attente -->
+        <div style="width:100%;background:#fff;border:1px solid var(--sand-dark);border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:9px;margin-bottom:16px;box-shadow:0 3px 10px rgba(42,35,24,.08)">
+          <div class="av" style="width:38px;height:38px;font-size:13px;background:var(--terra)">LA</div>
+          <div style="flex:1;text-align:left">
+            <div style="font-size:10px;font-weight:600;color:var(--ink)">Lucas André</div>
+            <div style="font-size:7px;color:var(--ink-light)">lucas.andre@gmail.com</div>
+          </div>
+          <div class="tp" style="background:var(--terra-light);color:var(--terra)">⏳ En attente</div>
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:7px">
+          <div style="background:var(--terra);border-radius:12px;padding:10px;text-align:center;font-size:9.5px;font-weight:600;color:#fff;box-shadow:0 4px 12px rgba(196,113,74,.3)">Ajouter un autre ami</div>
+          <div style="background:var(--sand-mid);border-radius:12px;padding:9px;text-align:center;font-size:9.5px;font-weight:600;color:var(--ink-mid)">Retour à mes amis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pl">Confirmation<small>demande en attente</small></div>
+</div>
+
+</div><!-- end flow-row -->
+</div><!-- end flow -->
+
+<!-- ═══════════════════════════════════════
+  FLOW 2 — ONGLET DEMANDES + PROFIL AMI EXISTANT
+════════════════════════════════════════ -->
+<div class="flow">
+<div class="flow-lbl">Flow secondaire — Demandes reçues &amp; Profil ami existant</div>
+<div class="flow-row">
+
+<!-- ⑥ ONGLET DEMANDES -->
+<div class="sw">
+  <div class="sn">⑥ Onglet Demandes</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <div style="padding:7px 12px 5px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:8px;color:var(--ink-light)">Réseau social</div><div style="font-family:'Lora',serif;font-size:16px;font-weight:700;color:var(--ink)">Mes Amis</div></div>
+        <div style="width:30px;height:30px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:300;box-shadow:0 3px 10px rgba(196,113,74,.4)">+</div>
+      </div>
+      <!-- Onglet Demandes actif -->
+      <div style="display:flex;border-bottom:1px solid var(--sand-dark);margin:0 12px 8px">
+        <div style="flex:1;text-align:center;padding:5px 0;font-size:7.5px;color:var(--ink-light)">Amis (5)</div>
+        <div style="flex:1;text-align:center;padding:5px 0;font-size:7.5px;font-weight:600;color:var(--terra);border-bottom:2px solid var(--terra)">
+          Demandes <span style="background:var(--terra);color:#fff;border-radius:20px;padding:0 5px;font-size:6px;font-weight:700;margin-left:1px">2</span>
+        </div>
+        <div style="flex:1;text-align:center;padding:5px 0;font-size:7.5px;color:var(--ink-light)">Suggestions</div>
+      </div>
+      <!-- Reçues -->
+      <div class="sec">Reçues (2)</div>
+      <div style="margin:3px 12px 6px;background:#fff;border:1.5px solid rgba(196,113,74,.35);border-radius:12px;padding:8px 9px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--terra)">LA</div>
+          <div style="flex:1"><div class="fn">Lucas André</div><div class="fs">Reçue il y a 2h · 3 amis en commun</div></div>
+          <!-- tap nom = voir son profil -->
+          <div style="font-size:7px;color:var(--terra)">›</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <div style="flex:1;background:var(--terra);border-radius:8px;padding:6px;text-align:center;font-size:8px;font-weight:600;color:#fff">✓ Accepter</div>
+          <div style="flex:1;background:var(--sand-mid);border-radius:8px;padding:6px;text-align:center;font-size:8px;font-weight:600;color:var(--ink-mid)">✕ Refuser</div>
+        </div>
+      </div>
+      <div style="margin:0 12px 8px;background:#fff;border:1px solid var(--sand-dark);border-radius:12px;padding:8px 9px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          <div class="av" style="width:32px;height:32px;font-size:11px;background:#5A8C6A">SB</div>
+          <div style="flex:1"><div class="fn">Sophie Bernard</div><div class="fs">Reçue hier · 1 ami en commun</div></div>
+          <div style="font-size:7px;color:var(--terra)">›</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <div style="flex:1;background:var(--terra);border-radius:8px;padding:6px;text-align:center;font-size:8px;font-weight:600;color:#fff">✓ Accepter</div>
+          <div style="flex:1;background:var(--sand-mid);border-radius:8px;padding:6px;text-align:center;font-size:8px;font-weight:600;color:var(--ink-mid)">✕ Refuser</div>
+        </div>
+      </div>
+      <!-- Envoyées -->
+      <div class="sec">Envoyées (1)</div>
+      <div class="fc">
+        <div class="av" style="width:28px;height:28px;font-size:9px;background:#A0709A">CP</div>
+        <div style="flex:1"><div class="fn">Camille Petit</div><div class="fs">Envoyée il y a 3 jours</div></div>
+        <div class="tp" style="background:var(--sand-mid);color:var(--ink-mid)">En attente</div>
+        <div style="font-size:9px;color:var(--danger);margin-left:3px">✕</div>
+      </div>
+    </div>
+  </div>
+  <div class="pl">Onglet Demandes reçues<small>accepter / refuser / voir profil</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ⑦ PROFIL AMI EXISTANT (tap depuis liste) -->
+<div class="sw">
+  <div class="sn">⑦ Profil ami</div>
+  <div class="ph">
+    <div class="sb w" style="position:absolute;top:0;left:0;right:0;z-index:10"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc" style="position:relative">
+      <div style="height:120px;flex-shrink:0;position:relative;overflow:hidden">
+        <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.08),rgba(0,0,0,.7))"></div>
+        <div style="position:absolute;top:22px;left:11px"><div class="bk" style="background:rgba(255,255,255,.25);backdrop-filter:blur(4px)"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg></div></div>
+        <!-- Badge "Ami" visible -->
+        <div style="position:absolute;top:22px;right:11px">
+          <div class="tp" style="background:rgba(107,140,90,.8);color:#fff;border:1px solid rgba(255,255,255,.3)">✓ Ami</div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:9px 12px;display:flex;align-items:flex-end;gap:9px">
+          <div class="av" style="width:42px;height:42px;font-size:14px;background:var(--sky);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">DM</div>
+          <div>
+            <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:#fff">Daryl Matro</div>
+            <div style="font-size:7px;color:rgba(255,255,255,.7)">Ami depuis Jan 2026</div>
+          </div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div style="display:flex;gap:4px;padding:7px 12px">
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">2</div><div style="font-size:5.5px;color:var(--ink-light)">Voyages<br/>commun</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">8</div><div style="font-size:5.5px;color:var(--ink-light)">Total<br/>voyages</div></div>
+        <div style="flex:1;background:var(--sand-mid);border-radius:7px;padding:5px 3px;text-align:center"><div style="font-size:12px;font-weight:700;color:var(--terra)">14</div><div style="font-size:5.5px;color:var(--ink-light)">Pays<br/>visités</div></div>
+      </div>
+      <!-- Voyages communs -->
+      <div class="sec">Voyages en commun</div>
+      <div style="margin:3px 12px 5px;background:#fff;border:1px solid var(--sand-dark);border-radius:10px;padding:7px 9px;display:flex;align-items:center;gap:8px">
+        <div style="width:36px;height:36px;border-radius:8px;overflow:hidden;flex-shrink:0"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/></div>
+        <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:var(--ink)">Road Trip Atlantique</div><div style="font-size:6.5px;color:var(--ink-light)">14–21 Avr 2026 · En cours</div></div>
+        <div class="tp" style="background:var(--moss-light);color:var(--moss)">En cours</div>
+      </div>
+      <div style="margin:0 12px 5px;background:#fff;border:1px solid var(--sand-dark);border-radius:10px;padding:7px 9px;display:flex;align-items:center;gap:8px">
+        <div style="width:36px;height:36px;border-radius:8px;overflow:hidden;flex-shrink:0"><img src="https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=100&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/></div>
+        <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:var(--ink)">Weekend Lisbonne</div><div style="font-size:6.5px;color:var(--ink-light)">Nov 2025 · Terminé</div></div>
+        <div class="tp" style="background:var(--sand-mid);color:var(--ink-mid)">Passé</div>
+      </div>
+      <!-- Actions -->
+      <div style="display:flex;gap:7px;padding:6px 12px;margin-top:auto">
+        <div style="flex:1;background:var(--terra);border-radius:10px;padding:8px;text-align:center;font-size:8px;font-weight:600;color:#fff">✈️ Inviter au voyage</div>
+        <div style="width:34px;background:var(--danger-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--danger)">🗑</div>
+      </div>
+    </div>
+  </div>
+  <div class="pl">Profil ami existant<small>voyages communs + actions</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ⑧ MODALE SUPPRESSION AMI -->
+<div class="sw">
+  <div class="sn">⑧ Supprimer ami</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <div style="flex:1;position:relative;overflow:hidden">
+        <!-- Fond flou -->
+        <div style="opacity:.28;padding:10px 12px 0">
+          <div style="height:80px;border-radius:12px;overflow:hidden;margin-bottom:8px"><img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/></div>
+          <div class="fc" style="opacity:.5"><div class="av" style="width:28px;height:28px;font-size:9px;background:var(--sky)">DM</div><div style="flex:1"><div class="fn">Daryl Matro</div></div></div>
+        </div>
+        <!-- Modale -->
+        <div style="position:absolute;inset:0;background:rgba(42,35,24,.45);display:flex;align-items:center;justify-content:center;padding:18px">
+          <div style="background:var(--sand-light);border-radius:20px;padding:20px 15px;width:100%;box-shadow:0 8px 32px rgba(42,35,24,.3)">
+            <div style="width:52px;height:52px;background:var(--danger-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;border:2px solid rgba(192,64,64,.2)"><span style="font-size:22px">🗑</span></div>
+            <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:6px">Supprimer cet ami ?</div>
+            <div style="font-size:8px;color:var(--ink-mid);text-align:center;line-height:1.55;margin-bottom:14px"><span style="font-weight:600;color:var(--ink)">Daryl Matro</span> ne sera plus dans ta liste. Tu pourras toujours lui renvoyer une demande plus tard.</div>
+            <div style="background:var(--danger);border-radius:11px;padding:10px;text-align:center;font-size:9.5px;font-weight:600;color:#fff;margin-bottom:7px">Supprimer</div>
+            <div style="background:var(--sand-mid);border-radius:11px;padding:9px;text-align:center;font-size:9.5px;font-weight:600;color:var(--ink-mid)">Annuler</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pl">Supprimer un ami<small>modale de confirmation</small></div>
+</div>
+
+</div><!-- end flow-row -->
+</div><!-- end flow -->
+
+</body>
+</html>

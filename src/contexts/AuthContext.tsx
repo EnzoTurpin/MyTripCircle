@@ -9,6 +9,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
 import ApiService from "../services/ApiService";
+import i18n, { parseApiError as translateApiMessage } from "../utils/i18n";
 
 export type AuthField = "email" | "password" | "name" | "phone";
 export type AuthResult =
@@ -25,8 +26,17 @@ interface AuthContextType {
     password: string,
     phone?: string,
   ) => Promise<AuthResult & { userId?: string }>;
+  loginWithGoogle: (accessToken: string) => Promise<AuthResult>;
+  loginWithApple: (
+    identityToken: string,
+    email?: string,
+    fullName?: { givenName?: string | null; familyName?: string | null } | null,
+  ) => Promise<AuthResult>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<boolean>;
   updateUser: (userData: Partial<User>) => Promise<void>;
+  updateAvatar: (avatar: string) => Promise<void>;
+  updateSettings: (data: { isPublicProfile: boolean }) => Promise<void>;
   verifyOtp: (
     userId: string,
     otp: string,
@@ -35,6 +45,7 @@ interface AuthContextType {
     currentPassword: string,
     newPassword: string,
   ) => Promise<boolean>;
+  loginWithToken: (token: string, user: User) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,7 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const parseApiError = (
     error: unknown,
   ): { message: string; field?: AuthField; requiresOtp?: boolean; userId?: string } => {
-    const defaultMessage = "An unexpected error occurred";
+    const defaultMessage = i18n.t("common.unexpectedError");
 
     const raw = error instanceof Error ? error.message : String(error);
     try {
@@ -107,11 +118,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Check if user needs to verify OTP first
       if (res && res.requiresOtp && res.userId) {
-        return { success: false, error: res.error || "Please verify your account", requiresOtp: true, userId: res.userId };
+        return {
+          success: false,
+          error: res.error || i18n.t("common.requiresOtp"),
+          requiresOtp: true,
+          userId: res.userId,
+        };
       }
 
       if (!res?.success || !res?.token || !res?.user) {
-        return { success: false, error: "Login failed" };
+        return { success: false, error: i18n.t("common.loginFailed") };
       }
 
       await AsyncStorage.setItem("token", res.token);
@@ -141,7 +157,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await ApiService.register({ name, email, password, phone });
       if (!res?.success) {
-        return { success: false, error: res?.error || "Registration failed" };
+        if (res?.requiresOtp && res?.userId) {
+          return {
+            success: false,
+            error: res.error || i18n.t("common.requiresOtp"),
+            requiresOtp: true,
+            userId: res.userId,
+          };
+        }
+        return {
+          success: false,
+          error: res?.error || i18n.t("common.registerFailed"),
+        };
       }
 
       // If OTP is required, return userId for OTP verification
@@ -163,7 +190,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error("Registration error:", error);
       const parsed = parseApiError(error);
+      if (parsed.requiresOtp && parsed.userId) {
+        return { success: false, error: parsed.message, requiresOtp: true, userId: parsed.userId };
+      }
       return { success: false, error: parsed.message, field: parsed.field };
+    }
+  };
+
+  const loginWithGoogle = async (accessToken: string): Promise<AuthResult> => {
+    try {
+      const res = await ApiService.loginWithGoogle({ accessToken });
+      if (!res?.success || !res?.token || !res?.user) {
+        return {
+          success: false,
+          error: res?.error || i18n.t("apiErrors.googleAuthFailed"),
+        };
+      }
+      await AsyncStorage.setItem("token", res.token);
+      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      setUser({ ...res.user, createdAt: new Date(res.user.createdAt) });
+      return { success: true };
+    } catch (error) {
+      console.error("Google login error:", error);
+      const parsed = parseApiError(error);
+      return { success: false, error: parsed.message };
+    }
+  };
+
+  const loginWithApple = async (
+    identityToken: string,
+    email?: string,
+    fullName?: { givenName?: string | null; familyName?: string | null } | null,
+  ): Promise<AuthResult> => {
+    try {
+      const res = await ApiService.loginWithApple({ identityToken, email, fullName });
+      if (!res?.success || !res?.token || !res?.user) {
+        return {
+          success: false,
+          error: res?.error || i18n.t("apiErrors.appleAuthFailed"),
+        };
+      }
+      await AsyncStorage.setItem("token", res.token);
+      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      setUser({ ...res.user, createdAt: new Date(res.user.createdAt) });
+      return { success: true };
+    } catch (error) {
+      console.error("Apple login error:", error);
+      const parsed = parseApiError(error);
+      return { success: false, error: parsed.message };
     }
   };
 
@@ -178,8 +252,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateUser = async (userData: Partial<User>): Promise<void> => {
-    const token = await AsyncStorage.getItem("token");
-
     const filteredData = Object.fromEntries(
       Object.entries(userData).filter(([, value]) => value !== undefined),
     ) as { name?: string; email?: string };
@@ -188,6 +260,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       filteredData as { name: string; email: string },
     );
 
+    if (res.success) {
+      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      setUser(res.user);
+    }
+  };
+
+  const updateAvatar = async (avatar: string): Promise<void> => {
+    const res = await ApiService.uploadAvatar(avatar);
+    if (res.success) {
+      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      setUser(res.user);
+    }
+  };
+
+  const updateSettings = async (data: { isPublicProfile: boolean }): Promise<void> => {
+    const res = await ApiService.updateSettings(data);
     if (res.success) {
       await AsyncStorage.setItem("user", JSON.stringify(res.user));
       setUser(res.user);
@@ -203,7 +291,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!res?.success) {
         return {
           success: false,
-          error: res?.error || "OTP verification failed",
+          error: res?.error || i18n.t("otp.genericVerifyError"),
         };
       }
 
@@ -219,8 +307,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error("OTP verification error:", error);
-      const parsed = parseApiError(error);
-      return { success: false, error: parsed.message };
+      return { success: false, error: translateApiMessage(error) };
+    }
+  };
+
+  const loginWithToken = async (token: string, user: User): Promise<void> => {
+    await AsyncStorage.setItem("token", token);
+    await AsyncStorage.setItem("user", JSON.stringify(user));
+    setUser({ ...user, createdAt: new Date(user.createdAt) });
+  };
+
+  const deleteAccount = async (): Promise<boolean> => {
+    try {
+      await ApiService.deleteAccount();
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+      setUser(null);
+      return true;
+    } catch (error) {
+      console.error("Delete account error:", error);
+      return false;
     }
   };
 
@@ -247,10 +353,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       loading,
       login,
       register,
+      loginWithGoogle,
+      loginWithApple,
       logout,
+      deleteAccount,
       updateUser,
+      updateAvatar,
+      updateSettings,
       changePassword,
       verifyOtp,
+      loginWithToken,
     }),
     [user, loading]
   );

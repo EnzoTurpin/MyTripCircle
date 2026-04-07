@@ -10,7 +10,6 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
@@ -18,8 +17,11 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types";
 import ApiService from "../services/ApiService";
-import { ModernCard } from "../components/ModernCard";
-import { ModernButton } from "../components/ModernButton";
+import { useAuth } from "../contexts/AuthContext";
+import { F } from "../theme/fonts";
+import { COLORS as C } from "../theme/colors";
+import { parseApiError } from "../utils/i18n";
+import { useTheme } from "../contexts/ThemeContext";
 
 type ForgotPasswordScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -30,21 +32,136 @@ type ForgotPasswordScreenNavigationProp = StackNavigationProp<
   "ForgotPassword"
 >;
 
+// ─── Labelled input ───────────────────────────────────────────────────────────
+interface LabelledInputProps {
+  label: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  keyboardType?: "default" | "email-address";
+  secureTextEntry?: boolean;
+  showToggle?: boolean;
+  showValue?: boolean;
+  onToggleShow?: () => void;
+  hasError?: boolean;
+  errorText?: string;
+}
+
+const LabelledInput: React.FC<LabelledInputProps> = ({
+  label,
+  value,
+  onChangeText,
+  onBlur,
+  placeholder,
+  keyboardType = "default",
+  secureTextEntry = false,
+  showToggle = false,
+  showValue = false,
+  onToggleShow,
+  hasError = false,
+  errorText,
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View style={inputStyles.wrapper}>
+      <View style={[inputStyles.box, { backgroundColor: colors.surface, borderColor: colors.border }, hasError && inputStyles.boxError]}>
+        <Text style={[inputStyles.label, { color: colors.textLight }]}>{label}</Text>
+        <View style={inputStyles.row}>
+          <TextInput
+            style={[inputStyles.value, { color: colors.text }]}
+            value={value}
+            onChangeText={onChangeText}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            placeholderTextColor={colors.textLight}
+            keyboardType={keyboardType}
+            autoCapitalize="none"
+            secureTextEntry={secureTextEntry && !showValue}
+          />
+          {showToggle && onToggleShow && (
+            <TouchableOpacity onPress={onToggleShow} style={inputStyles.eye}>
+              <Ionicons
+                name={showValue ? "eye-outline" : "eye-off-outline"}
+                size={16}
+                color={colors.textLight}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+      {hasError && errorText ? (
+        <Text style={inputStyles.error}>{errorText}</Text>
+      ) : null}
+    </View>
+  );
+};
+
+const inputStyles = StyleSheet.create({
+  wrapper: { marginBottom: 16 },
+  box: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#D8CCBA",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  boxError: { borderColor: "#C04040" },
+  label: {
+    fontSize: 11,
+    color: "#B0A090",
+    marginBottom: 2,
+    fontFamily: F.sans500,
+  },
+  row: { flexDirection: "row", alignItems: "center" },
+  value: {
+    flex: 1,
+    fontSize: 14,
+    color: "#2A2318",
+    paddingVertical: 2,
+    fontFamily: F.sans400,
+  },
+  eye: { padding: 4, marginLeft: 4 },
+  error: {
+    fontSize: 12,
+    color: "#C04040",
+    marginTop: 4,
+    marginLeft: 2,
+    fontFamily: F.sans400,
+  },
+});
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 const ForgotPasswordScreen: React.FC = () => {
   const route = useRoute<ForgotPasswordScreenRouteProp>();
   const navigation = useNavigation<ForgotPasswordScreenNavigationProp>();
   const { t } = useTranslation();
-  const { token } = route.params || {};
+  const { loginWithToken } = useAuth();
+  const { colors } = useTheme();
+  const resetToken = route.params?.token || "";
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [resetToken, setResetToken] = useState(token || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [tokenInvalid, setTokenInvalid] = useState(false);
+  const [tokenChecking, setTokenChecking] = useState(!!resetToken);
+
+  React.useEffect(() => {
+    if (!resetToken) return;
+    ApiService.verifyResetToken(resetToken)
+      .then((res) => { if (!res.success) setTokenInvalid(true); })
+      .catch(() => setTokenInvalid(true))
+      .finally(() => setTokenChecking(false));
+  }, [resetToken]);
 
   const validateEmail = (emailValue: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,7 +182,6 @@ const ForgotPasswordScreen: React.FC = () => {
       setPasswordError(t("common.fillAllFields"));
       return false;
     }
-    // min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character
     const strongPasswordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!strongPasswordRegex.test(passwordValue)) {
@@ -78,9 +194,7 @@ const ForgotPasswordScreen: React.FC = () => {
 
   const handleRequestReset = async () => {
     setEmailError("");
-    if (!validateEmail(email)) {
-      return;
-    }
+    if (!validateEmail(email)) return;
 
     setLoading(true);
     try {
@@ -92,9 +206,9 @@ const ForgotPasswordScreen: React.FC = () => {
       );
     } catch (error) {
       console.error("Error requesting password reset:", error);
-      const errorMessage =
-        (error as Error)?.message || t("forgotPassword.requestError");
-      setEmailError(errorMessage);
+      setEmailError(
+        parseApiError(error) || t("forgotPassword.requestError"),
+      );
     } finally {
       setLoading(false);
     }
@@ -105,9 +219,7 @@ const ForgotPasswordScreen: React.FC = () => {
     setConfirmPasswordError("");
 
     let isValid = true;
-    if (!validatePasswordStrong(newPassword)) {
-      isValid = false;
-    }
+    if (!validatePasswordStrong(newPassword)) isValid = false;
 
     if (!confirmPassword) {
       setConfirmPasswordError(t("common.fillAllFields"));
@@ -117,28 +229,26 @@ const ForgotPasswordScreen: React.FC = () => {
       isValid = false;
     }
 
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
     setLoading(true);
     try {
-      await ApiService.resetPassword(resetToken, newPassword);
-      Alert.alert(
-        t("forgotPassword.successTitle"),
-        t("forgotPassword.successMessage"),
-        [
-          {
-            text: t("common.ok"),
-            onPress: () => navigation.navigate("Auth"),
-          },
-        ],
-      );
+      const res = await ApiService.resetPassword(resetToken, newPassword);
+      if (res.token && res.user) {
+        await loginWithToken(res.token, res.user);
+      } else {
+        Alert.alert(
+          t("forgotPassword.successTitle"),
+          t("forgotPassword.successMessage"),
+          [{ text: t("common.ok"), onPress: () => navigation.navigate("Auth") }],
+        );
+      }
     } catch (error) {
       console.error("Error resetting password:", error);
-      const errorMessage =
-        (error as Error)?.message || t("forgotPassword.resetError");
-      Alert.alert(t("common.error"), errorMessage);
+      Alert.alert(
+        t("common.error"),
+        parseApiError(error) || t("forgotPassword.resetError"),
+      );
     } finally {
       setLoading(false);
     }
@@ -147,341 +257,286 @@ const ForgotPasswordScreen: React.FC = () => {
   const isResetMode = !!resetToken;
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#2891FF", "#8869FF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Back button */}
+        <TouchableOpacity
+          style={[styles.backButton, { backgroundColor: colors.bgDark }]}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
+          <Ionicons name="chevron-back" size={20} color={colors.text} />
+        </TouchableOpacity>
 
-          <View style={styles.headerContent}>
-            <View style={styles.iconContainer}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.3)",
-                  "rgba(255, 255, 255, 0.1)",
-                ]}
-                style={styles.iconGradient}
-              >
-                <Ionicons
-                  name={isResetMode ? "key" : "mail"}
-                  size={40}
-                  color="white"
-                />
-              </LinearGradient>
+        {/* Center block */}
+        <View style={styles.centerBlock}>
+          <Text style={styles.emoji}>🔑</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {isResetMode
+              ? t("forgotPassword.resetPasswordTitle")
+              : t("forgotPassword.title")}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textMid }]}>
+            {isResetMode
+              ? t("forgotPassword.resetPasswordSubtitle")
+              : t("forgotPassword.subtitle")}
+          </Text>
+        </View>
+
+        {isResetMode && tokenChecking ? (
+            <View style={styles.successContainer}>
+              <Text style={styles.successTitle}>{t("forgotPassword.verifyingToken")}</Text>
             </View>
-            <Text style={styles.headerTitle}>
-              {isResetMode
-                ? t("forgotPassword.resetPasswordTitle")
-                : t("forgotPassword.title")}
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              {isResetMode
-                ? t("forgotPassword.resetPasswordSubtitle")
-                : t("forgotPassword.subtitle")}
-            </Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.content}>
-          {!isResetMode ? (
-            <ModernCard variant="elevated" style={styles.formCard}>
-              {emailSent ? (
-                <View style={styles.successContainer}>
-                  <View style={styles.successIconContainer}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={64}
-                      color="#34C759"
-                    />
-                  </View>
-                  <Text style={styles.successTitle}>
-                    {t("forgotPassword.emailSentTitle")}
-                  </Text>
-                  <Text style={styles.successMessage}>
-                    {t("forgotPassword.emailSentMessage", { email })}
-                  </Text>
-                  <Text style={styles.successHint}>
+          ) : isResetMode && tokenInvalid ? (
+            <View style={styles.successContainer}>
+              <Ionicons name="lock-closed" size={56} color={colors.danger} />
+              <Text style={[styles.successTitle, { color: colors.danger }]}>
+                {t("forgotPassword.invalidLinkTitle")}
+              </Text>
+              <Text style={[styles.successMessage, { color: colors.textMid }]}>
+                {t("forgotPassword.invalidLinkMessage")}
+              </Text>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate("Auth")}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.primaryButtonText}>{t("forgotPassword.backToLogin")}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : !isResetMode ? (
+            emailSent ? (
+              // ── Success state ──
+              <View style={styles.successContainer}>
+                <Ionicons name="checkmark-circle" size={56} color={colors.terra} />
+                <Text style={[styles.successTitle, { color: colors.text }]}>
+                  {t("forgotPassword.emailSentTitle")}
+                </Text>
+                <Text style={[styles.successMessage, { color: colors.textMid }]}>
+                  {t("forgotPassword.emailSentMessage", { email })}
+                </Text>
+                {/* Hint box */}
+                <View style={styles.hintBox}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={16}
+                    color={C.moss}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.hintText}>
                     {t("forgotPassword.checkEmailHint")}
                   </Text>
                 </View>
-              ) : (
-                <>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>{t("common.email")}</Text>
-                    <View
-                      style={[
-                        styles.inputContainer,
-                        emailError && styles.inputContainerError,
-                      ]}
-                    >
-                      <Ionicons
-                        name="mail-outline"
-                        size={20}
-                        color={emailError ? "#FF3B30" : "#616161"}
-                        style={styles.inputIcon}
-                      />
-                      <TextInput
-                        style={styles.input}
-                        placeholder={t("forgotPassword.emailPlaceholder")}
-                        placeholderTextColor="#9E9E9E"
-                        value={email}
-                        onChangeText={(text) => {
-                          setEmail(text);
-                          if (emailError) setEmailError("");
-                        }}
-                        onBlur={() => validateEmail(email)}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </View>
-                    {emailError ? (
-                      <Text style={styles.errorText}>{emailError}</Text>
-                    ) : null}
-                  </View>
+              </View>
+            ) : (
+              // ── Request reset form ──
+              <>
+                <LabelledInput
+                  label={t("common.email")}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (emailError) setEmailError("");
+                  }}
+                  onBlur={() => validateEmail(email)}
+                  placeholder={t("forgotPassword.emailPlaceholder")}
+                  keyboardType="email-address"
+                  hasError={!!emailError}
+                  errorText={emailError}
+                />
 
-                  <ModernButton
-                    title={t("forgotPassword.sendResetLink")}
-                    onPress={handleRequestReset}
-                    variant="primary"
-                    gradient
-                    size="large"
-                    fullWidth
-                    icon={loading ? "hourglass" : "send"}
-                    disabled={loading}
-                    loading={loading}
-                    style={styles.submitButton}
+                <TouchableOpacity
+                  style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+                  onPress={handleRequestReset}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {loading
+                      ? t("common.pleaseWait")
+                      : t("forgotPassword.sendResetLink")}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Hint box */}
+                <View style={styles.hintBox}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={16}
+                    color={C.moss}
+                    style={{ marginRight: 6 }}
                   />
-                </>
-              )}
-            </ModernCard>
+                  <Text style={styles.hintText}>
+                    {t("forgotPassword.spamHint")}
+                  </Text>
+                </View>
+              </>
+            )
           ) : (
-            <ModernCard variant="elevated" style={styles.formCard}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  {t("forgotPassword.newPasswordLabel")}
-                </Text>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    passwordError && styles.inputContainerError,
-                  ]}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={passwordError ? "#FF3B30" : "#616161"}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    placeholder={t("forgotPassword.newPasswordPlaceholder")}
-                    placeholderTextColor="#9E9E9E"
-                    secureTextEntry
-                    value={newPassword}
-                    onChangeText={(text) => {
-                      setNewPassword(text);
-                      if (passwordError) setPasswordError("");
-                    }}
-                    onBlur={() => validatePasswordStrong(newPassword)}
-                    style={styles.input}
-                  />
-                </View>
-                {passwordError ? (
-                  <Text style={styles.errorText}>{passwordError}</Text>
-                ) : null}
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  {t("forgotPassword.confirmPasswordLabel")}
-                </Text>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    confirmPasswordError && styles.inputContainerError,
-                  ]}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={confirmPasswordError ? "#FF3B30" : "#616161"}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    placeholder={t("forgotPassword.confirmPasswordPlaceholder")}
-                    placeholderTextColor="#9E9E9E"
-                    secureTextEntry
-                    value={confirmPassword}
-                    onChangeText={(text) => {
-                      setConfirmPassword(text);
-                      if (confirmPasswordError) setConfirmPasswordError("");
-                    }}
-                    style={styles.input}
-                  />
-                </View>
-                {confirmPasswordError ? (
-                  <Text style={styles.errorText}>{confirmPasswordError}</Text>
-                ) : null}
-              </View>
-
-              <ModernButton
-                title={t("forgotPassword.resetPassword")}
-                onPress={handleResetPassword}
-                variant="primary"
-                gradient
-                size="large"
-                fullWidth
-                icon={loading ? "hourglass" : "checkmark-circle"}
-                disabled={loading}
-                loading={loading}
-                style={styles.submitButton}
+            // ── Reset password form ──
+            <>
+              <LabelledInput
+                label={t("forgotPassword.newPasswordLabel")}
+                value={newPassword}
+                onChangeText={(text) => {
+                  setNewPassword(text);
+                  if (passwordError) setPasswordError("");
+                }}
+                onBlur={() => validatePasswordStrong(newPassword)}
+                placeholder={t("forgotPassword.newPasswordPlaceholder")}
+                secureTextEntry
+                showToggle
+                showValue={showPassword}
+                onToggleShow={() => setShowPassword(!showPassword)}
+                hasError={!!passwordError}
+                errorText={passwordError}
               />
-            </ModernCard>
+
+              <LabelledInput
+                label={t("forgotPassword.confirmPasswordLabel")}
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (confirmPasswordError) setConfirmPasswordError("");
+                }}
+                placeholder={t("forgotPassword.confirmPasswordPlaceholder")}
+                secureTextEntry
+                showToggle
+                showValue={showConfirmPassword}
+                onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
+                hasError={!!confirmPasswordError}
+                errorText={confirmPasswordError}
+              />
+
+              <TouchableOpacity
+                style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+                onPress={handleResetPassword}
+                disabled={loading}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {loading
+                    ? t("common.pleaseWait")
+                    : t("forgotPassword.resetPassword")}
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
-        </View>
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: "#FAFAFA",
-  },
   container: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#F5F0E8",
   },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
-    paddingBottom: 120,
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: Platform.OS === "ios" ? 80 : 60,
+    paddingBottom: 48,
+    justifyContent: "center",
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    position: "absolute",
+    top: Platform.OS === "ios" ? 56 : 24,
+    left: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#D8CCBA",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: -20,
-    marginTop: 5,
     zIndex: 10,
   },
-  headerContent: {
+  centerBlock: {
     alignItems: "center",
-    marginTop: 40,
+    marginBottom: 28,
   },
-  iconContainer: {
+  emoji: {
+    fontSize: 52,
     marginBottom: 16,
   },
-  iconGradient: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "white",
-    marginBottom: 8,
+  title: {
+    fontSize: 22,
+    fontFamily: F.sans700,
+    color: "#2A2318",
     textAlign: "center",
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-  },
-  content: {
-    marginTop: -100,
-    paddingHorizontal: 24,
-    paddingBottom: 64,
-  },
-  formCard: {
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212121",
     marginBottom: 8,
   },
-  inputContainer: {
+  subtitle: {
+    fontSize: 14,
+    color: "#7A6A58",
+    textAlign: "center",
+    lineHeight: 20,
+    fontFamily: F.sans400,
+  },
+  card: {
+  },
+  // Hint box (green)
+  hintBox: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 16,
+    alignItems: "flex-start",
+    backgroundColor: "#E2EDD9",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 16,
+    marginBottom: 0,
   },
-  inputContainerError: {
-    borderColor: "#FF3B30",
-    backgroundColor: "#FFF5F5",
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
+  hintText: {
     flex: 1,
-    paddingVertical: 14,
+    fontSize: 13,
+    color: "#6B8C5A",
+    lineHeight: 18,
+    fontFamily: F.sans400,
+  },
+  // Primary button
+  primaryButton: {
+    backgroundColor: "#C4714A",
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: "center",
+    shadowColor: "#C4714A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
+  primaryButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
-    color: "#212121",
+    fontFamily: F.sans700,
   },
-  errorText: {
-    color: "#FF3B30",
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-  },
-  submitButton: {
-    marginTop: 8,
-  },
+  // Success
   successContainer: {
     alignItems: "center",
-    paddingVertical: 20,
-  },
-  successIconContainer: {
-    marginBottom: 16,
+    paddingVertical: 12,
   },
   successTitle: {
     fontSize: 20,
-    fontWeight: "700",
-    color: "#212121",
+    fontFamily: F.sans700,
+    color: "#2A2318",
+    marginTop: 16,
     marginBottom: 8,
     textAlign: "center",
   },
   successMessage: {
-    fontSize: 16,
-    color: "#616161",
-    textAlign: "center",
-    marginBottom: 8,
-    lineHeight: 22,
-  },
-  successHint: {
     fontSize: 14,
-    color: "#9E9E9E",
+    color: "#7A6A58",
     textAlign: "center",
-    marginTop: 8,
-    fontStyle: "italic",
+    lineHeight: 20,
+    marginBottom: 20,
+    fontFamily: F.sans400,
   },
 });
 

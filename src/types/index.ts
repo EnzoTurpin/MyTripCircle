@@ -6,6 +6,7 @@ export interface User {
   avatar?: string;
   createdAt: Date;
   verified?: boolean;
+  isPublicProfile?: boolean;
 }
 
 export interface Trip {
@@ -16,6 +17,7 @@ export interface Trip {
   endDate: Date;
   destination: string;
   coverImage?: string;
+  tags?: string[];
   ownerId: string;
   collaborators: Collaborator[];
   isPublic: boolean;
@@ -23,7 +25,6 @@ export interface Trip {
   status: "draft" | "validated";
   stats: TripStats;
   location: GeoLocation;
-  tags: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +54,7 @@ export interface GeoLocation {
 
 export interface Booking {
   id: string;
+  _id?: string;
   tripId: string;
   type: "flight" | "train" | "hotel" | "restaurant" | "activity";
   title: string;
@@ -81,6 +83,8 @@ export interface Address {
   phone?: string;
   website?: string;
   notes?: string;
+  rating?: number; // Note Google Maps (0–5)
+  photoUrl?: string; // Photo du lieu via Google Places
   tripId?: string; // Lien optionnel avec un voyage
   userId?: string; // Lien avec l'utilisateur créateur
   createdAt: Date;
@@ -92,11 +96,22 @@ export interface FriendRequest {
   senderId: string;
   senderName: string;
   senderEmail?: string;
+  recipientId?: string;
+  recipientName?: string;
   recipientEmail?: string;
   recipientPhone?: string;
   status: "pending" | "accepted" | "declined";
   createdAt: Date;
   respondedAt?: Date;
+  commonFriends?: number;
+}
+
+export interface FriendSuggestion {
+  id: string;
+  name: string;
+  email?: string;
+  avatar?: string | null;
+  commonFriends: number;
 }
 
 export interface Friend {
@@ -120,6 +135,7 @@ export interface TripInvitation {
   token: string;
   expiresAt: Date;
   createdAt: Date;
+  read?: boolean;
   trip?: {
     _id: string;
     title: string;
@@ -167,18 +183,32 @@ export interface Subscription {
 }
 
 export type RootStackParamList = {
-  Auth: undefined;
+  Welcome: undefined;
+  Auth: { initialMode?: "login" | "register" } | undefined;
   Main: undefined;
-  Otp: { userId: string };
-  TripDetails: { tripId: string; showValidateButton?: boolean };
-  BookingDetails: { bookingId: string };
+  Otp: { userId: string; email?: string };
+  TripDetails: { tripId: string; showValidateButton?: boolean; showToast?: boolean };
+  BookingDetails: { bookingId: string; readOnly?: boolean };
   AddressDetails: { addressId: string };
   AddressForm: { addressId?: string } | undefined;
+  FullMap: undefined;
   InviteFriends: { tripId: string };
   Invitation: { token?: string };
   Friends: undefined;
   CreateTrip: undefined;
   EditTrip: { tripId: string };
+  TripActions: {
+    tripId: string;
+    tripTitle: string;
+    destination: string;
+    startDate: string;
+    endDate: string;
+    coverImage?: string;
+    totalBookings: number;
+    totalAddresses: number;
+    budget: number;
+    isOwner: boolean;
+  };
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
@@ -186,12 +216,23 @@ export type RootStackParamList = {
   ForgotPassword: { token?: string };
   HelpSupport: undefined;
   Subscription: undefined;
+  Terms: undefined;
+  Privacy: undefined;
+  Notifications: undefined;
+  FriendProfile: { friendId: string; friendName: string };
+  TripPublicView: { tripId: string; invitationToken?: string };
+  TripMembers: { tripId: string };
+  AddFriend: undefined;
+  FriendRequestConfirmation: { recipientName: string; recipientEmail?: string; autoAccepted?: boolean };
+  FriendInvitation: { token: string };
+  IdeaDetail: { ideaId: string };
 };
 
 export type MainTabParamList = {
   Trips: undefined;
   Bookings: undefined;
   Addresses: undefined;
+  Ideas: undefined;
   Profile: undefined;
 };
 

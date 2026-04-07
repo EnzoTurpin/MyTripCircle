@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TripInvitation } from "../types";
 import { useTrips } from "./TripsContext";
 import { useAuth } from "./AuthContext";
@@ -13,6 +13,7 @@ import { useAuth } from "./AuthContext";
 interface NotificationContextType {
   invitations: TripInvitation[];
   unreadCount: number;
+  readIds: Set<string>;
   loadInvitations: () => Promise<void>;
   markAsRead: (invitationId: string) => void;
   markAllAsRead: () => void;
@@ -37,39 +38,85 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
+const readStorageKey = (userId: string) => `notifications_read_${userId}`;
+
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
 }) => {
   const [invitations, setInvitations] = useState<TripInvitation[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const { getUserInvitations } = useTrips();
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
-      loadInvitations();
+      loadPersistedReadIds().then(() => loadInvitations());
+    } else {
+      // Reset all state on logout so the next user starts fresh
+      setInvitations([]);
+      setUnreadCount(0);
+      setReadIds(new Set());
     }
   }, [user]);
+
+  const loadPersistedReadIds = async () => {
+    if (!user) return;
+    try {
+      const stored = await AsyncStorage.getItem(readStorageKey(user.id));
+      if (stored) {
+        setReadIds(new Set(JSON.parse(stored)));
+      }
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const persistReadIds = async (ids: Set<string>) => {
+    if (!user) return;
+    try {
+      await AsyncStorage.setItem(
+        readStorageKey(user.id),
+        JSON.stringify(Array.from(ids))
+      );
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const invId = (inv: any): string =>
+    inv._id ?? inv.id ?? inv.token ?? "";
 
   const loadInvitations = async () => {
     if (!user) return;
 
     try {
-      const pendingInvitations = await getUserInvitations(
-        user.email,
-        "pending"
-      );
-      setInvitations(pendingInvitations);
-      setUnreadCount(pendingInvitations.length);
+      const pendingInvitations = await getUserInvitations(user.email, "pending");
+      // Snapshot readIds from current state to avoid stale-closure issues
+      setReadIds((currentReadIds) => {
+        const markedInvitations = pendingInvitations.map((inv: TripInvitation) => ({
+          ...inv,
+          read: currentReadIds.has(invId(inv)),
+        }));
+        setInvitations(markedInvitations);
+        const unread = markedInvitations.filter((inv: TripInvitation) => !inv.read).length;
+        setUnreadCount(unread);
+        return currentReadIds;
+      });
     } catch (error) {
       console.error("Error loading invitations:", error);
     }
   };
 
   const markAsRead = (invitationId: string) => {
+    const updated = new Set(readIds);
+    updated.add(invitationId);
+    setReadIds(updated);
+    persistReadIds(updated);
+
     setInvitations((prev) =>
       prev.map((invitation) =>
-        invitation.id === invitationId
+        invId(invitation) === invitationId
           ? { ...invitation, read: true }
           : invitation
       )
@@ -78,6 +125,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const markAllAsRead = () => {
+    const updated = new Set(readIds);
+    invitations.forEach((inv) => updated.add(invId(inv)));
+    setReadIds(updated);
+    persistReadIds(updated);
+
     setInvitations((prev) =>
       prev.map((invitation) => ({ ...invitation, read: true }))
     );
@@ -88,30 +140,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     await loadInvitations();
   };
 
-  // Fonction pour afficher une notification d'invitation
-  const showInvitationNotification = (invitation: TripInvitation) => {
-    Alert.alert(
-      "Nouvelle invitation",
-      `Vous avez été invité à collaborer sur un voyage`,
-      [
-        {
-          text: "Voir plus tard",
-          style: "cancel",
-        },
-        {
-          text: "Voir l'invitation",
-          onPress: () => {
-            // Ici vous pourriez naviguer vers l'écran d'invitation
-            // navigation.navigate("Invitation", { token: invitation.token });
-          },
-        },
-      ]
-    );
-  };
-
   const value: NotificationContextType = {
     invitations,
     unreadCount,
+    readIds,
     loadInvitations,
     markAsRead,
     markAllAsRead,
