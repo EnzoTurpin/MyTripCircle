@@ -26,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 
 const daysUntil = (date: Date) => {
@@ -369,9 +370,34 @@ const TripMembersScreen: React.FC = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]}>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={colors.terra} />
+      <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]} edges={["top", "left", "right"]}>
+        <View style={{ paddingHorizontal: 14, paddingTop: 16, gap: 16 }}>
+          {/* Header */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <SkeletonBox width={36} height={36} borderRadius={18} />
+            <SkeletonBox width={180} height={20} borderRadius={8} />
+          </View>
+
+          {/* Section label */}
+          <SkeletonBox width={100} height={14} borderRadius={6} />
+
+          {/* Member rows */}
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
+              <SkeletonBox width={44} height={44} borderRadius={22} />
+              <View style={{ flex: 1, gap: 8 }}>
+                <SkeletonBox width="55%" height={14} borderRadius={6} />
+                <SkeletonBox width="35%" height={12} borderRadius={5} />
+              </View>
+              <SkeletonBox width={28} height={28} borderRadius={14} />
+            </View>
+          ))}
+
+          {/* Invite link block */}
+          <View style={{ marginTop: 8, gap: 10 }}>
+            <SkeletonBox width={140} height={14} borderRadius={6} />
+            <SkeletonBox width="100%" height={48} borderRadius={12} />
+          </View>
         </View>
       </SafeAreaView>
     );

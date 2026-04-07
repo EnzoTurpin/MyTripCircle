@@ -21,6 +21,7 @@ import { RADIUS } from "../theme";
 import { useTranslation } from "react-i18next";
 import i18n, { parseApiError } from "../utils/i18n";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -163,8 +164,20 @@ const NotificationsScreen: React.FC = () => {
 
       {/* ── Content ── */}
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.terra} />
+        <View style={{ paddingHorizontal: 14, paddingTop: 12, gap: 14 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View key={i} style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+              <SkeletonBox width={44} height={44} borderRadius={22} />
+              <View style={{ flex: 1, gap: 8, paddingTop: 4 }}>
+                <SkeletonBox width="75%" height={14} borderRadius={6} />
+                <SkeletonBox width="50%" height={12} borderRadius={5} />
+                <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+                  <SkeletonBox width={90} height={30} borderRadius={8} />
+                  <SkeletonBox width={90} height={30} borderRadius={8} />
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <ScrollView

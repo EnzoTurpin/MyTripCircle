@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { DISABLED_OPACITY } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 import { useAddressForm } from "../hooks/useAddressForm";
 import AddressTypeSelector from "../components/addressForm/AddressTypeSelector";
 import AddressAutocompleteField from "../components/addressForm/AddressAutocompleteField";
@@ -42,9 +43,50 @@ const AddressFormScreen: React.FC = () => {
 
   if (!initialized && contextLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator size="large" color={colors.terra} />
-        <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("common.loading")}</Text>
+      <View style={[styles.root, { backgroundColor: colors.bg }]}>
+        {/* Top bar */}
+        <View style={[styles.topBar, { backgroundColor: colors.bg, borderBottomColor: colors.bgMid, flexDirection: "row", alignItems: "center", gap: 12 }]}>
+          <SkeletonBox width={36} height={36} borderRadius={18} />
+          <SkeletonBox width={160} height={18} borderRadius={7} />
+        </View>
+
+        <ScrollView scrollEnabled={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+          {/* Address type selector */}
+          <View style={{ gap: 8 }}>
+            <SkeletonBox width={110} height={12} borderRadius={5} />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <SkeletonBox key={i} width={56} height={56} borderRadius={10} />
+              ))}
+            </View>
+          </View>
+
+          {/* Autocomplete / address field */}
+          <View style={{ gap: 8 }}>
+            <SkeletonBox width={90} height={12} borderRadius={5} />
+            <SkeletonBox width="100%" height={52} borderRadius={10} />
+          </View>
+
+          {/* Name, city, country */}
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ gap: 8 }}>
+              <SkeletonBox width={80} height={12} borderRadius={5} />
+              <SkeletonBox width="100%" height={52} borderRadius={10} />
+            </View>
+          ))}
+
+          {/* Notes */}
+          <View style={{ gap: 8 }}>
+            <SkeletonBox width={60} height={12} borderRadius={5} />
+            <SkeletonBox width="100%" height={90} borderRadius={10} />
+          </View>
+
+          {/* Footer buttons */}
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+            <SkeletonBox height={50} borderRadius={12} style={{ flex: 1 }} />
+            <SkeletonBox height={50} borderRadius={12} style={{ flex: 1 }} />
+          </View>
+        </ScrollView>
       </View>
     );
   }

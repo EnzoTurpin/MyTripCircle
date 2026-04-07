@@ -21,6 +21,7 @@ import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 // Curated travel photos cycling by index
 const HERO_PHOTOS = [
@@ -83,9 +84,47 @@ const TripsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("trips.loading")}</Text>
-      </View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
+        <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} scrollEnabled={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <SkeletonBox width={44} height={44} borderRadius={12} />
+              <View style={{ gap: 6 }}>
+                <SkeletonBox width={120} height={12} borderRadius={6} />
+                <SkeletonBox width={160} height={20} borderRadius={8} />
+              </View>
+            </View>
+            <SkeletonBox width={44} height={44} borderRadius={22} />
+          </View>
+
+          {/* Hero card */}
+          <View style={{ marginHorizontal: 14, marginBottom: 8 }}>
+            <SkeletonBox width="100%" height={180} borderRadius={18} />
+          </View>
+
+          {/* Pills row */}
+          <View style={[styles.pillsRow, { paddingTop: 12 }]}>
+            {[0, 1, 2].map((i) => (
+              <SkeletonBox key={i} height={72} borderRadius={12} style={{ flex: 1 }} />
+            ))}
+          </View>
+
+          {/* Section header */}
+          <View style={[styles.sectionHeader, { paddingTop: 12 }]}>
+            <SkeletonBox width={160} height={22} borderRadius={8} />
+            <SkeletonBox width={60} height={14} borderRadius={6} />
+          </View>
+
+          {/* Mini cards */}
+          <View style={{ flexDirection: "row", paddingHorizontal: 14, gap: 12 }}>
+            {[0, 1].map((i) => (
+              <SkeletonBox key={i} width={190} height={176} borderRadius={16} />
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 

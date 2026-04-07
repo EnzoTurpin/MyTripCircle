@@ -28,6 +28,7 @@ import AddressesTab from "../components/tripDetails/AddressesTab";
 import MembersTab from "../components/tripDetails/MembersTab";
 import { F } from "../theme/fonts";
 import { RADIUS, SHADOW } from "../theme";
+import SkeletonBox from "../components/SkeletonBox";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 
@@ -70,8 +71,48 @@ const TripDetailsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[s.loadingContainer, { backgroundColor: colors.bg }]}>
-        <Text style={[s.loadingText, { color: colors.textMid }]}>{t("tripDetails.loading")}</Text>
+      <View style={[s.wrapper, { backgroundColor: colors.bg }]}>
+        <StatusBar barStyle="light-content" translucent />
+        <ScrollView scrollEnabled={false} contentContainerStyle={s.scrollContent}>
+          {/* Hero */}
+          <SkeletonBox width="100%" height={220} borderRadius={0} />
+
+          {/* Back button area */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 14 }}>
+            {/* Trip title */}
+            <SkeletonBox width="65%" height={26} borderRadius={8} />
+            <SkeletonBox width="45%" height={14} borderRadius={6} />
+
+            {/* Stats row */}
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              {[0, 1, 2].map((i) => (
+                <SkeletonBox key={i} height={80} borderRadius={14} style={{ flex: 1 }} />
+              ))}
+            </View>
+
+            {/* Progress bar */}
+            <SkeletonBox width="100%" height={8} borderRadius={4} />
+
+            {/* Tab bar */}
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+              {[0, 1, 2].map((i) => (
+                <SkeletonBox key={i} height={36} borderRadius={10} style={{ flex: 1 }} />
+              ))}
+            </View>
+
+            {/* List items */}
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={{ flexDirection: "row", gap: 12, alignItems: "center", paddingVertical: 4 }}>
+                <SkeletonBox width={44} height={44} borderRadius={12} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <SkeletonBox width="60%" height={14} borderRadius={6} />
+                  <SkeletonBox width="40%" height={12} borderRadius={5} />
+                </View>
+                <SkeletonBox width={60} height={22} borderRadius={10} />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
   }
