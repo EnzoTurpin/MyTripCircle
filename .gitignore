@@ -46,3 +46,6 @@ yarn-error.*
 
 #claude
 .claude
+
+# notes locales
+TODO.md
