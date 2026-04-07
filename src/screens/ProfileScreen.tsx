@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-  SafeAreaView,
   StatusBar,
-  Platform,
+  Image,
+  FlatList,
 } from "react-native";
+import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
@@ -17,22 +18,21 @@ import { useNotifications } from "../contexts/NotificationContext";
 import { useTrips } from "../contexts/TripsContext";
 import { useFriends } from "../contexts/FriendsContext";
 import { useTranslation } from "react-i18next";
-import {
-  changeLanguage,
-  getCurrentLanguage,
-  testDateFormatting,
-} from "../utils/i18n";
 import { useNavigation } from "@react-navigation/native";
-import { ModernCard } from "../components/ModernCard";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
+import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
+
+const COVER_H = 210;
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
-  const { invitations, unreadCount, refreshInvitations } = useNotifications();
-  const { trips, bookings, addresses } = useTrips();
-  const { friends } = useFriends();
+  const { unreadCount } = useNotifications();
+  const { trips, bookings, addresses, loading: tripsLoading } = useTrips();
+  const { friends, loading: friendsLoading } = useFriends();
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
 
   const handleLogout = () => {
     Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
@@ -41,405 +41,304 @@ const ProfileScreen: React.FC = () => {
     ]);
   };
 
-  const handleEditProfile = () => {
-    navigation.navigate("EditProfile");
-  };
-
-  const handleSettings = () => {
-    navigation.navigate("Settings");
-  };
-
-  const handleHelp = () => {
-    navigation.navigate("HelpSupport");
-  };
-
-  const handleAbout = () => {
-    Alert.alert(t("profile.aboutTitle"), t("profile.aboutBody"), [
-      { text: t("common.ok") },
-    ]);
-  };
-
-  const handleInvitations = () => {
-    navigation.navigate("Invitation");
-  };
-
-  const handleChangeLanguage = () => {
-    const currentLang = getCurrentLanguage();
-    const newLang = currentLang === "fr" ? "en" : "fr";
-    changeLanguage(newLang);
-    Alert.alert(
-      "Language Changed",
-      `Language changed to ${newLang === "fr" ? "French" : "English"}`,
-      [{ text: "OK" }]
-    );
-  };
-
-  const handleTestDateFormatting = () => {
-    const result = testDateFormatting();
-    Alert.alert(
-      "Date Formatting Test",
-      `Language: ${result.language}\nShort: ${result.shortDate}\nLong: ${result.longDate}\nTime: ${result.time}`,
-      [{ text: "OK" }]
-    );
-  };
-
-  const menuItems = [
-    {
-      icon: "person-outline",
-      title: t("profile.editProfile"),
-      onPress: handleEditProfile,
-    },
-    {
-      icon: "people-outline",
-      title: "Amis",
-      onPress: () => navigation.navigate("Friends" as never),
-    },
-    {
-      icon: "mail-outline",
-      title: t("profile.invitations"),
-      onPress: handleInvitations,
-      badge: unreadCount > 0 ? unreadCount : undefined,
-    },
-    {
-      icon: "settings-outline",
-      title: t("profile.settings"),
-      onPress: handleSettings,
-    },
-    {
-      icon: "help-circle-outline",
-      title: t("profile.helpSupport"),
-      onPress: handleHelp,
-    },
-    {
-      icon: "language-outline",
-      title: `Language (${
-        getCurrentLanguage() === "fr" ? "Français" : "English"
-      })`,
-      onPress: handleChangeLanguage,
-    },
-    {
-      icon: "calendar-outline",
-      title: "Test Date Formatting",
-      onPress: handleTestDateFormatting,
-    },
-    {
-      icon: "information-circle-outline",
-      title: t("profile.about"),
-      onPress: handleAbout,
-    },
-    {
-      icon: "card-outline",
-      title: "S’abonner",
-      onPress: () => navigation.navigate("Subscription"),
-    },
-    {
-      icon: "log-out-outline",
-      title: t("profile.logoutTitle"),
-      onPress: handleLogout,
-      color: "#FF3B30",
-    },
-  ];
+  const initials = getInitials(user?.name || "");
+  const avatarColor = getAvatarColor(user?.name || "");
 
   return (
-    <SwipeToNavigate currentIndex={3} totalTabs={4}>
-      <View style={styles.wrapper}>
-        <StatusBar barStyle="light-content" />
+    <SwipeToNavigate currentIndex={4} totalTabs={5}>
+      <View style={[styles.root, { backgroundColor: colors.bg }]}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
         <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <LinearGradient
-            colors={['#2891FF', '#8869FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerGradient}
-          >
-            <View style={styles.header}>
-              <View style={styles.profileSection}>
-                <View style={styles.avatarContainer}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
-                    style={styles.avatarGradient}
-                  >
-                    <Ionicons name="person" size={48} color="white" />
-                  </LinearGradient>
-                </View>
-                <Text style={styles.userName}>
-                  {user?.name || t("profile.userFallbackName")}
-                </Text>
-                <Text style={styles.userEmail}>
-                  {user?.email || t("profile.userFallbackEmail")}
-                </Text>
-              </View>
-            </View>
-          </LinearGradient>
+          {/* ── Cover ── */}
+          <View style={styles.cover}>
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80&fit=crop" }}
+              style={StyleSheet.absoluteFill as any}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={["rgba(8,4,0,0.2)", "rgba(8,4,0,0.58)"]}
+              style={StyleSheet.absoluteFill as any}
+            />
 
-          <View style={styles.contentContainer}>
-            <ModernCard variant="elevated" style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#E8F4FF' }]}>
-                  <Ionicons name="airplane" size={20} color="#2891FF" />
-                </View>
-                <Text style={styles.statNumber}>{trips.length}</Text>
-                <Text style={styles.statLabel}>{t("profile.stats.trips")}</Text>
+            <View style={styles.coverContent}>
+              {/* Avatar */}
+              <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
+                {user?.avatar ? (
+                  <Image source={{ uri: user.avatar }} style={styles.avatarPhoto} />
+                ) : (
+                  <Text style={styles.avatarText}>{initials}</Text>
+                )}
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#F3F0FF' }]}>
-                  <Ionicons name="calendar" size={20} color="#8869FF" />
-                </View>
-                <Text style={styles.statNumber}>{bookings.length}</Text>
-                <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
-                  {t("profile.stats.bookings")}
-                </Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#FFE8F0' }]}>
-                  <Ionicons name="location" size={20} color="#FF6B9D" />
-                </View>
-                <Text style={styles.statNumber}>{addresses.length}</Text>
-                <Text style={styles.statLabel}>{t("profile.stats.addresses")}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#E8F5E9' }]}>
-                  <Ionicons name="people" size={20} color="#4CAF50" />
-                </View>
-                <Text style={styles.statNumber}>{friends.length}</Text>
-                <Text style={styles.statLabel}>{t("profile.stats.friends")}</Text>
-              </View>
-            </ModernCard>
 
-            <View style={styles.menuContainer}>
-              {menuItems.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.menuItem}
-                  onPress={item.onPress}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.menuItemLeft}>
-                    <View style={[
-                      styles.menuIconContainer,
-                      item.color && { backgroundColor: item.color + '15' }
-                    ]}>
-                      <Ionicons
-                        name={item.icon as any}
-                        size={22}
-                        color={item.color || '#212121'}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.menuItemText,
-                        item.color && { color: item.color },
-                      ]}
-                    >
-                      {item.title}
-                    </Text>
+              {/* Name + email + badge privé */}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.profileName}>{user?.name}</Text>
+                <Text style={styles.profileEmail}>{user?.email}</Text>
+                {!user?.isPublicProfile && (
+                  <View style={styles.privatePill}>
+                    <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.7)" style={{ marginRight: 4 }} />
+                    <Text style={styles.privatePillText}>{t("profile.privateLabel")}</Text>
                   </View>
-                  <View style={styles.menuItemRight}>
-                    {item.badge && (
-                      <View style={styles.badge}>
-                        <Text style={styles.badgeText}>{item.badge}</Text>
-                      </View>
-                    )}
-                    <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+                )}
+              </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{t("profile.footerVersion")}</Text>
-              <Text style={styles.footerSubtext}>
-                {t("profile.footerMadeWithLove")}
-              </Text>
+              {/* Edit pill */}
+              <TouchableOpacity
+                style={styles.editPill}
+                onPress={() => navigation.navigate("EditProfile")}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.editPillText}>{t("profile.edit")}</Text>
+              </TouchableOpacity>
             </View>
           </View>
+
+          {/* ── Stats ── */}
+          <View style={styles.statsRow}>
+            {[
+              { value: tripsLoading ? "…" : trips.length,     label: t("profile.stats.trips") },
+              { value: tripsLoading ? "…" : bookings.length,  label: t("profile.stats.bookings") },
+              { value: friendsLoading ? "…" : friends.length, label: t("profile.stats.friends") },
+              { value: tripsLoading ? "…" : addresses.length, label: t("profile.stats.addresses") },
+            ].map((s, i) => (
+              <View key={i} style={[styles.stat, { backgroundColor: colors.bgMid }]}>
+                <Text style={[styles.statVal, { color: colors.terra }]}>{s.value}</Text>
+                <Text style={[styles.statLbl, { color: colors.textLight }]}>{s.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* ── Mon compte ── */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textLight }]}>{t("profile.sections.account")}</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Row
+                icon="person-outline"
+                label={t("profile.personalInfo")}
+                onPress={() => navigation.navigate("EditProfile")}
+              />
+              <Divider />
+              <Row
+                icon="people-outline"
+                label={t("profile.myFriends")}
+                badge={friends.length > 0 ? friends.length : undefined}
+                onPress={() => navigation.navigate("Friends" as never)}
+              />
+              <Divider />
+              <Row
+                icon="mail-outline"
+                label={t("profile.invitations")}
+                badge={unreadCount > 0 ? unreadCount : undefined}
+                onPress={() => navigation.navigate("Invitation")}
+              />
+              <Divider />
+              <Row
+                icon="notifications-outline"
+                label={t("profile.notifications")}
+                onPress={() => navigation.navigate("Notifications")}
+              />
+            </View>
+          </View>
+
+          {/* ── Préférences ── */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textLight }]}>{t("profile.sections.preferences")}</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Row
+                icon="settings-outline"
+                label={t("common.settings")}
+                onPress={() => navigation.navigate("Settings")}
+              />
+              <Divider />
+              <Row
+                icon="help-circle-outline"
+                label={t("common.helpSupport")}
+                onPress={() => navigation.navigate("HelpSupport")}
+              />
+              <Divider />
+              <Row
+                icon="card-outline"
+                label={t("profile.subscribe")}
+                tinted
+                onPress={() => navigation.navigate("Subscription")}
+              />
+            </View>
+          </View>
+
+          {/* ── Mes voyages publics ── */}
+          {(() => {
+            if (!user?.isPublicProfile) return null;
+            const publicTrips = trips.filter((t: any) => t.visibility === "public" || (t.isPublic && !t.visibility));
+            if (!publicTrips.length) return null;
+            return (
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textLight }]}>{t("profile.sections.publicTrips")}</Text>
+                <View style={{ gap: 8 }}>
+                  {publicTrips.map((trip: any) => (
+                    <View key={trip.id || trip._id} style={[styles.tripCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <View style={styles.tripCardLeft}>
+                        <Ionicons name="earth-outline" size={18} color={colors.terra} style={{ marginTop: 1 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.tripCardTitle, { color: colors.text }]} numberOfLines={1}>{trip.title}</Text>
+                          {trip.destination ? (
+                            <Text style={[styles.tripCardSub, { color: colors.textLight }]}>{trip.destination}</Text>
+                          ) : null}
+                        </View>
+                      </View>
+                      <View style={styles.publicPill}>
+                        <Text style={styles.publicPillText}>{t("createTrip.public")}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          })()}
+
+          {/* ── Déconnexion ── */}
+          <TouchableOpacity style={[styles.logoutRow, { backgroundColor: colors.dangerLight, borderColor: colors.danger + "40" }]} onPress={handleLogout} activeOpacity={0.8}>
+            <Ionicons name="log-out-outline" size={22} color={colors.danger} style={{ marginRight: 12 }} />
+            <Text style={[styles.logoutText, { color: colors.danger }]}>{t("profile.logout")}</Text>
+          </TouchableOpacity>
+
+          {/* ── Footer ── */}
+          <View style={styles.footer}>
+            <Text style={[styles.footerText, { color: colors.textLight }]}>{t("profile.footerVersion")}</Text>
+            <Text style={[styles.footerSub, { color: colors.textLight }]}>{t("profile.footerMadeWithLove")}</Text>
+          </View>
         </ScrollView>
-        {/* Fond opaque pour cacher le contenu sous la navbar */}
-        <View style={styles.bottomOverlay} />
       </View>
     </SwipeToNavigate>
   );
 };
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+interface RowProps {
+  icon: string;
+  label: string;
+  value?: string;
+  badge?: number;
+  danger?: boolean;
+  tinted?: boolean;
+  onPress: () => void;
+}
+
+const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, onPress }) => {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+      <Ionicons
+        name={icon as any}
+        size={22}
+        color={danger ? colors.danger : tinted ? colors.terra : colors.textMid}
+        style={styles.rowIcon}
+      />
+      <Text style={[styles.rowLabel, { color: colors.text }, danger && { color: colors.danger }, tinted && { color: colors.terra }]}>
+        {label}
+      </Text>
+      <View style={styles.rowRight}>
+        {value ? <Text style={[styles.rowValue, { color: colors.textLight }]}>{value}</Text> : null}
+        {badge !== undefined ? (
+          <View style={[styles.badge, { backgroundColor: colors.terraLight }]}>
+            <Text style={[styles.badgeText, { color: colors.terra }]}>{badge}</Text>
+          </View>
+        ) : null}
+        <Ionicons name="chevron-forward" size={16} color={colors.bgDark} />
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const Divider = () => {
+  const { colors } = useTheme();
+  return <View style={[styles.divider, { backgroundColor: colors.bg }]} />;
+};
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
+  root: { flex: 1 },
+  scrollContent: { paddingBottom: 40 },
+
+  // Cover
+  cover: { height: COVER_H, position: "relative", justifyContent: "flex-end" },
+  coverContent: { flexDirection: "row", alignItems: "flex-end", gap: 12, paddingHorizontal: 20, paddingBottom: 16 },
+  avatar: {
+    width: 68, height: 68, borderRadius: 34,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2.5, borderColor: "#FFFFFF",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3, shadowRadius: 6, elevation: 5, overflow: "hidden",
   },
-  headerGradient: {
-    width: '100%',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  avatarPhoto: { width: 68, height: 68, borderRadius: 34 },
+  avatarText: { color: "#FFFFFF", fontSize: 22, fontFamily: F.sans700 },
+  profileName: {
+    fontSize: 22, fontFamily: F.sans600, color: "#FFFFFF",
+    textShadowColor: "rgba(0,0,0,0.5)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
+  profileEmail: { fontSize: 13, fontFamily: F.sans400, color: "rgba(255,255,255,0.7)", marginTop: 3 },
+  editPill: {
+    alignSelf: "flex-start", marginBottom: 4, paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 20, backgroundColor: "rgba(255,255,255,0.22)", borderWidth: 1, borderColor: "rgba(255,255,255,0.4)",
   },
-  scrollContent: {
-    paddingBottom: 120, // Espace pour la navbar floating
+  editPillText: { fontSize: 13, fontFamily: F.sans600, color: "#FFFFFF" },
+
+  // Stats
+  statsRow: { flexDirection: "row", gap: 8, marginHorizontal: 20, marginTop: 16, marginBottom: 20 },
+  stat: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  statVal: { fontSize: 26, fontFamily: F.sans700, marginBottom: 3 },
+  statLbl: { fontSize: 12, fontFamily: F.sans400 },
+
+  // Private pill
+  privatePill: {
+    flexDirection: "row", alignItems: "center", alignSelf: "flex-start", marginTop: 5,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.35)", borderWidth: 1, borderColor: "rgba(255,255,255,0.25)",
   },
-  header: {
-    marginTop: 24,
-    paddingTop: 0,
-    paddingBottom: 64,
-    paddingHorizontal: 24,
+  privatePillText: { fontSize: 11, fontFamily: F.sans500, color: "rgba(255,255,255,0.75)" },
+
+  // Section
+  section: { marginHorizontal: 20, marginBottom: 16 },
+  sectionTitle: { fontSize: 13, fontFamily: F.sans600, letterSpacing: 0.8, marginBottom: 10, marginLeft: 2 },
+  card: { borderRadius: 16, borderWidth: 1, overflow: "hidden" },
+
+  // Row
+  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingVertical: 18 },
+  rowIcon: { marginRight: 16, width: 24, textAlign: "center" },
+  rowLabel: { flex: 1, fontSize: 17, fontFamily: F.sans500 },
+  rowRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  rowValue: { fontSize: 14, fontFamily: F.sans400 },
+  divider: { height: 1, marginLeft: 52 },
+  badge: { borderRadius: 999, minWidth: 22, height: 22, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
+  badgeText: { fontSize: 11, fontFamily: F.sans700 },
+
+  // Trip card
+  tripCard: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12,
   },
-  profileSection: {
-    alignItems: "center",
+  tripCardLeft: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 10, marginRight: 8 },
+  tripCardTitle: { fontSize: 15, fontFamily: F.sans600 },
+  tripCardSub: { fontSize: 12, fontFamily: F.sans400, marginTop: 2 },
+  publicPill: { backgroundColor: "#DCF0F5", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  publicPillText: { fontSize: 11, fontFamily: F.sans600, color: "#5A8FAA" },
+
+  // Logout
+  logoutRow: {
+    flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 8,
+    borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16,
   },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  avatarGradient: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 50,
-    justifyContent: "center" as const,
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.85)",
-  },
-  contentContainer: {
-    marginTop: -64,
-    paddingHorizontal: 24,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    marginBottom: 24,
-    paddingVertical: 24,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center" as const,
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#EEEEEE',
-    marginHorizontal: 4,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#212121',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#616161',
-    textAlign: "center" as const,
-    minHeight: 14,
-  },
-  menuContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  menuItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
-    justifyContent: "center" as const,
-    alignItems: "center",
-  },
-  menuItemRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  badge: {
-    backgroundColor: '#F44336',
-    borderRadius: 9999,
-    minWidth: 22,
-    height: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#212121',
-    marginLeft: 16,
-    fontWeight: '500',
-  },
-  footer: {
-    alignItems: "center",
-    paddingVertical: 32,
-    marginTop: 24,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#9E9E9E',
-    marginBottom: 4,
-  },
-  footerSubtext: {
-    fontSize: 12,
-    color: '#9E9E9E',
-  },
-  bottomOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: Platform.OS === 'ios' ? 74 : 70,
-    backgroundColor: '#FAFAFA',
-    pointerEvents: 'none',
-  },
+  logoutText: { fontSize: 17, fontFamily: F.sans500 },
+
+  // Footer
+  footer: { alignItems: "center", paddingVertical: 24, marginTop: 8 },
+  footerText: { fontSize: 12, fontFamily: F.sans400, marginBottom: 2 },
+  footerSub: { fontSize: 11, fontFamily: F.sans400 },
 });
 
 export default ProfileScreen;

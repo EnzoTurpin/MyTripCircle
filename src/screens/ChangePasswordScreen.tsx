@@ -10,13 +10,82 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
-import { ModernCard } from "../components/ModernCard";
+import { F } from "../theme/fonts";
+import { useTheme, AppColors } from "../contexts/ThemeContext";
 
+// ─── Labelled password input ──────────────────────────────────────────────────
+interface PasswordInputProps {
+  label: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder?: string;
+  colors: AppColors;
+}
+
+const PasswordInput: React.FC<PasswordInputProps> = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  colors,
+}) => {
+  const [show, setShow] = useState(false);
+  return (
+    <View style={inputStyles.wrapper}>
+      <View style={[inputStyles.box, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text style={[inputStyles.label, { color: colors.textLight }]}>{label}</Text>
+        <View style={inputStyles.row}>
+          <TextInput
+            style={[inputStyles.value, { color: colors.text }]}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={colors.textLight}
+            secureTextEntry={!show}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity onPress={() => setShow(!show)} style={inputStyles.eye}>
+            <Ionicons
+              name={show ? "eye-outline" : "eye-off-outline"}
+              size={18}
+              color={colors.textLight}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const inputStyles = StyleSheet.create({
+  wrapper: { marginBottom: 16 },
+  box: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  label: {
+    fontSize: 13,
+    marginBottom: 2,
+    fontFamily: F.sans500,
+  },
+  row: { flexDirection: "row", alignItems: "center" },
+  value: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 4,
+    fontFamily: F.sans400,
+  },
+  eye: { padding: 4, marginLeft: 4 },
+});
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
@@ -25,6 +94,7 @@ const ChangePasswordScreen: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { changePassword } = useAuth();
+  const { colors } = useTheme();
 
   const handleSubmit = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -74,124 +144,68 @@ const ChangePasswordScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#2891FF", "#8869FF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Back button */}
+        <TouchableOpacity
+          style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+
+        {/* Header */}
+        <View style={styles.headerBlock}>
+          <Text style={[styles.title, { color: colors.text }]}>{t("changePassword.title")}</Text>
+          <Text style={[styles.subtitle, { color: colors.textMid }]}>{t("changePassword.subtitle")}</Text>
+        </View>
+
+        {/* Form card */}
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <PasswordInput
+            label={t("changePassword.currentPasswordLabel")}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder={t("changePassword.currentPasswordPlaceholder")}
+            colors={colors}
+          />
+
+          <PasswordInput
+            label={t("changePassword.newPasswordLabel")}
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder={t("changePassword.newPasswordPlaceholder")}
+            colors={colors}
+          />
+
+          <PasswordInput
+            label={t("changePassword.confirmPasswordLabel")}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder={t("changePassword.confirmPasswordPlaceholder")}
+            colors={colors}
+          />
+
+          {/* Save button */}
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-
-          <View style={styles.headerContent}>
-            <View style={styles.iconContainer}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.3)",
-                  "rgba(255, 255, 255, 0.1)",
-                ]}
-                style={styles.iconGradient}
-              >
-                <Ionicons name="lock-closed" size={40} color="white" />
-              </LinearGradient>
-            </View>
-            <Text style={styles.headerTitle}>{t("changePassword.title")}</Text>
-            <Text style={styles.headerSubtitle}>
-              {t("changePassword.subtitle")}
-            </Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.content}>
-          <ModernCard variant="elevated" style={styles.formCard}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("changePassword.currentPasswordLabel")}
-              </Text>
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color="#616161"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  placeholder={t("changePassword.currentPasswordPlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                  secureTextEntry
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  style={styles.input}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("changePassword.newPasswordLabel")}
-              </Text>
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="key-outline"
-                  size={20}
-                  color="#616161"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  placeholder={t("changePassword.newPasswordPlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                  secureTextEntry
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  style={styles.input}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("changePassword.confirmPasswordLabel")}
-              </Text>
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="key-outline"
-                  size={20}
-                  color="#616161"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  placeholder={t("changePassword.confirmPasswordPlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                  secureTextEntry
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  style={styles.input}
-                />
-              </View>
-            </View>
-          </ModernCard>
-
-          <TouchableOpacity
-            style={[styles.saveButton, loading && { opacity: 0.7 }]}
+            style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
             onPress={handleSubmit}
-            activeOpacity={0.7}
             disabled={loading}
+            activeOpacity={0.85}
           >
             <Ionicons
               name="checkmark-circle"
-              size={20}
-              color="white"
+              size={18}
+              color="#FFFFFF"
               style={{ marginRight: 8 }}
             />
-            <Text style={styles.saveButtonText}>
+            <Text style={styles.primaryButtonText}>
               {loading
                 ? t("changePassword.saving")
                 : t("changePassword.saveButton")}
@@ -204,109 +218,68 @@ const ChangePasswordScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: "#FAFAFA",
-  },
   container: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
   },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
-    paddingBottom: 120,
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
+    paddingBottom: 48,
+    paddingTop: Platform.OS === "ios" ? 56 : 24,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: -20,
-    marginTop: 5,
-    zIndex: 10,
-  },
-  headerContent: {
-    alignItems: "center",
-    marginTop: 40,
-  },
-  iconContainer: {
-    marginBottom: 16,
-  },
-  iconGradient: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "white",
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-  },
-  content: {
-    marginTop: -100,
-    paddingHorizontal: 24,
-    paddingBottom: 64,
-  },
-  formCard: {
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 16,
+    marginBottom: 32,
   },
-  inputIcon: {
-    marginRight: 12,
+  headerBlock: {
+    marginBottom: 24,
   },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
+  title: {
+    fontSize: 26,
+    fontFamily: F.sans700,
+    marginBottom: 6,
+  },
+  subtitle: {
     fontSize: 16,
-    color: "#212121",
+    lineHeight: 24,
+    fontFamily: F.sans400,
   },
-  saveButton: {
-    backgroundColor: "#2891FF",
-    paddingVertical: 16,
+  card: {
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  // Primary button
+  primaryButton: {
+    backgroundColor: "#C4714A", // terra — identique light/dark
     borderRadius: 12,
+    paddingVertical: 18,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    marginTop: 8,
-    shadowColor: "#2891FF",
+    marginTop: 4,
+    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
+  primaryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontFamily: F.sans700,
   },
 });
 

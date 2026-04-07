@@ -9,20 +9,26 @@ import {
   ScrollView,
   StatusBar,
   Platform,
+  Image,
+  ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
-import { ModernCard } from "../components/ModernCard";
+import { F } from "../theme/fonts";
+import * as ImagePicker from "expo-image-picker";
+import { getInitials, getAvatarColor } from "../utils/avatarUtils";
+import { useTheme } from "../contexts/ThemeContext";
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, updateAvatar } = useAuth();
+  const { colors } = useTheme();
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const handleSave = async () => {
     try {
@@ -38,124 +44,140 @@ const EditProfileScreen: React.FC = () => {
     }
   };
 
+  const handlePickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(t("common.error"), t("editProfile.photoPermissionDenied"));
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    if (result.canceled || !result.assets?.[0]?.base64) return;
+    const asset = result.assets[0];
+    const mimeType = asset.mimeType || "image/jpeg";
+    const dataUri = `data:${mimeType};base64,${asset.base64}`;
+    try {
+      setUploadingAvatar(true);
+      await updateAvatar(dataUri);
+    } catch (error) {
+      Alert.alert(t("common.error"), t("editProfile.photoUploadError"));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#2891FF", "#8869FF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
+    <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header bar ── */}
+        <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
           <TouchableOpacity
-            style={styles.backButton}
+            style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t("editProfile.personalInfo")}</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-          <View style={styles.headerContent}>
-            <View style={styles.avatarContainer}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.3)",
-                  "rgba(255, 255, 255, 0.1)",
-                ]}
-                style={styles.avatarGradient}
-              >
-                <Ionicons name="person" size={48} color="white" />
-              </LinearGradient>
-            </View>
-            <Text style={styles.headerTitle}>{t("editProfile.title")}</Text>
-            <Text style={styles.headerSubtitle}>
-              {t("editProfile.subtitle")}
-            </Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.content}>
-          <ModernCard variant="elevated" style={styles.formContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("common.fullName")}</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="person-outline"
-                  size={20}
-                  color="#616161"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  style={styles.input}
-                  placeholder={t("editProfile.namePlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                />
+        {/* ── Avatar section ── */}
+        <View style={styles.avatarSection}>
+          <TouchableOpacity onPress={handlePickPhoto} activeOpacity={0.85} disabled={uploadingAvatar}>
+            <View style={[styles.avatarCircle, { backgroundColor: getAvatarColor(name || user?.name || "") }]}>
+              {user?.avatar ? (
+                <Image source={{ uri: user.avatar }} style={styles.avatarPhoto} />
+              ) : (
+                <Text style={styles.avatarInitials}>{getInitials(name || user?.name || "")}</Text>
+              )}
+              <View style={styles.cameraOverlay}>
+                {uploadingAvatar ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Ionicons name="camera" size={16} color="#FFFFFF" />
+                )}
               </View>
             </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("common.email")}</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color="#616161"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  style={styles.input}
-                  placeholder={t("editProfile.emailPlaceholder")}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholderTextColor="#9E9E9E"
-                />
-              </View>
-            </View>
-          </ModernCard>
-
-          <ModernCard variant="elevated" style={styles.securitySection}>
-            <TouchableOpacity
-              style={styles.settingItem}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate("ChangePassword")}
-            >
-              <View style={styles.settingLeft}>
-                <View style={styles.settingIcon}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={22}
-                    color="#007AFF"
-                  />
-                </View>
-                <Text style={styles.settingTitle}>
-                  {t("editProfile.changePassword")}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward-outline" size={18} color="#ccc" />
-            </TouchableOpacity>
-          </ModernCard>
-
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSave}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color="white"
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.saveButtonText}>
-              {t("editProfile.saveChanges")}
-            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePickPhoto} activeOpacity={0.7} disabled={uploadingAvatar}>
+            <Text style={styles.changeAvatarLink}>{t("editProfile.changePhoto")}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* ── Form card ── */}
+        <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {/* Name field */}
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("common.fullName")}</Text>
+            <View style={styles.inputRow}>
+              <Ionicons name="person-outline" size={18} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                style={[styles.input, { color: colors.text }]}
+                placeholder={t("editProfile.namePlaceholder")}
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
+
+          <View style={[styles.fieldDivider, { backgroundColor: colors.bgMid }]} />
+
+          {/* Email field */}
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("common.email")}</Text>
+            <View style={styles.inputRow}>
+              <Ionicons name="mail-outline" size={18} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                style={[styles.input, { color: colors.text }]}
+                placeholder={t("editProfile.emailPlaceholder")}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* ── Security card ── */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={styles.securityRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("ChangePassword")}
+          >
+            <View style={styles.securityLeft}>
+              <View style={styles.securityIconBg}>
+                <Ionicons name="lock-closed-outline" size={20} color="#C4714A" />
+              </View>
+              <Text style={[styles.securityLabel, { color: colors.text }]}>{t("editProfile.changePassword")}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Save button ── */}
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+          <Text style={styles.saveButtonText}>{t("editProfile.saveChanges")}</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -164,135 +186,190 @@ const EditProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#F5F0E8",
   },
   container: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
   },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
-    paddingBottom: 120,
-    paddingHorizontal: 24,
+  scrollContent: {
+    paddingBottom: 48,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: -20,
-    marginTop: 5,
-    zIndex: 10,
-  },
-  headerContent: {
-    alignItems: "center",
-    marginTop: 40,
-  },
-  avatarContainer: {
-    marginBottom: 16,
-  },
-  avatarGradient: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "white",
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-  },
-  content: {
-    marginTop: -100,
-    paddingHorizontal: 24,
-    paddingBottom: 64,
-  },
-  formContainer: {
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  inputContainer: {
+
+  // Header bar
+  headerBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    justifyContent: "space-between",
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
     paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: "#F5F0E8",
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#EDE5D8",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontFamily: F.sans700,
+    color: "#2A2318",
+    textAlign: "center",
+    flex: 1,
+  },
+
+  // Avatar
+  avatarSection: {
+    alignItems: "center",
+    paddingVertical: 24,
+  },
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    shadowColor: "#2A2318",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  avatarPhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  avatarInitials: {
+    color: "#FFFFFF",
+    fontSize: 26,
+    fontFamily: F.sans700,
+    letterSpacing: 1,
+  },
+  cameraOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#C4714A",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  changeAvatarLink: {
+    fontSize: 14,
+    color: "#C4714A",
+    fontFamily: F.sans600,
+  },
+
+  // Form card
+  formCard: {
+    marginHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#D8CCBA",
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  fieldGroup: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    color: "#B0A090",
+    fontFamily: F.sans600,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#212121",
+    fontSize: 15,
+    color: "#2A2318",
+    paddingVertical: 0,
+    fontFamily: F.sans400,
   },
-  saveButton: {
-    backgroundColor: "#2891FF",
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    marginTop: 8,
-    shadowColor: "#2891FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+  fieldDivider: {
+    height: 1,
+    backgroundColor: "#EDE5D8",
+    marginHorizontal: 16,
   },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  securitySection: {
+
+  // Security card
+  sectionCard: {
+    marginHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#D8CCBA",
     marginBottom: 24,
+    overflow: "hidden",
   },
-  settingItem: {
+  securityRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  settingLeft: {
+  securityLeft: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
-  settingIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  securityIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F5E5DC",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
-    backgroundColor: "rgba(0, 122, 255, 0.08)",
+    marginRight: 12,
   },
-  settingTitle: {
+  securityLabel: {
+    fontSize: 15,
+    fontFamily: F.sans600,
+    color: "#2A2318",
+  },
+
+  // Save button
+  saveButton: {
+    marginHorizontal: 16,
+    backgroundColor: "#C4714A",
+    borderRadius: 10,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#A35830",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  saveButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
+    fontFamily: F.sans700,
   },
 });
 

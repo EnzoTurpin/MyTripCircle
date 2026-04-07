@@ -1,0 +1,49 @@
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Address } from "../../types";
+import { getTypeIcon, getIconColors, getTagColors, getTagLabel } from "./addressHelpers";
+import { styles } from "./addressStyles";
+
+interface AddressCardProps {
+  item: Address;
+  colors: any;
+  t: (k: string) => string;
+  onPress: (address: Address) => void;
+}
+
+const AddressCard: React.FC<AddressCardProps> = ({ item, colors, t, onPress }) => {
+  const ic = getIconColors(item.type);
+  const tag = getTagColors(item.type);
+  const iconBg = ic.bg ?? colors.bgMid;
+  const iconColor = ic.icon ?? colors.textMid;
+  const tagBg = tag.bg ?? colors.bgMid;
+  const tagText = tag.text ?? colors.textMid;
+
+  return (
+    <TouchableOpacity
+      style={[styles.addressCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      onPress={() => onPress(item)}
+      activeOpacity={0.85}
+    >
+      <View style={[styles.addressIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={getTypeIcon(item.type) as any} size={26} color={iconColor} />
+      </View>
+      <View style={styles.addressInfo}>
+        <Text style={[styles.addressName, { color: colors.text }]} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={[styles.addressDetail, { color: colors.textLight }]} numberOfLines={1}>
+          {item.city}, {item.country}
+        </Text>
+      </View>
+      <View style={[styles.tagPill, { backgroundColor: tagBg }]}>
+        <Text style={[styles.tagText, { color: tagText }]}>
+          {getTagLabel(item.type, t)}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+export default AddressCard;

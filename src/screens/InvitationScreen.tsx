@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
@@ -6,192 +7,294 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
   StatusBar,
-  Platform,
+  ActivityIndicator,
+  RefreshControl,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList, TripInvitation } from "../types";
+import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
-import { formatDate } from "../utils/i18n";
-import { ModernCard } from "../components/ModernCard";
-import { ModernButton } from "../components/ModernButton";
+import { parseApiError } from "../utils/i18n";
+import { F } from "../theme/fonts";
+import { RADIUS } from "../theme";
+import { useTheme } from "../contexts/ThemeContext";
+import { TabKey } from "../utils/invitationUtils";
+import InvitationCard from "../components/invitations/InvitationCard";
+import SentCard from "../components/invitations/SentCard";
+import EmptyState from "../components/invitations/EmptyState";
+import DeclineModal from "../components/invitations/DeclineModal";
+import AcceptedToast from "../components/invitations/AcceptedToast";
+import InvitationDetailView from "../components/invitations/InvitationDetailView";
 
 type InvitationScreenRouteProp = RouteProp<RootStackParamList, "Invitation">;
 
-type InvitationScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Invitation"
->;
-
 const InvitationScreen: React.FC = () => {
-  const route = useRoute<InvitationScreenRouteProp>();
-  const navigation = useNavigation<InvitationScreenNavigationProp>();
+  const route      = useRoute<InvitationScreenRouteProp>();
+  const navigation = useNavigation<any>();
+  const { t }      = useTranslation();
+
+  const { respondToInvitation, getInvitationByToken, getUserInvitations, getSentInvitations, cancelInvitation } = useTrips();
+  const { user }          = useAuth();
+  const { markAllAsRead } = useNotifications();
+  const { colors }        = useTheme();
+
   const initialToken = route.params?.token;
-  const { t } = useTranslation();
-  const { respondToInvitation, getInvitationByToken, getUserInvitations } = useTrips();
-  const { user } = useAuth();
-
   const [currentToken, setCurrentToken] = useState<string | undefined>(initialToken);
+
+  // ── Deep-link mode state ──
   const [invitation, setInvitation] = useState<any>(null);
-  const [enrichedInvitations, setEnrichedInvitations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
 
-  useEffect(() => {
-    if (currentToken) {
-      loadInvitation();
-    } else {
-      loadAllInvitations();
-    }
-  }, [currentToken]);
+  // ── List mode state ──
+  const [invitations, setInvitations]         = useState<any[]>([]);
+  const [sentInvitations, setSentInvitations] = useState<any[]>([]);
+  const [loading, setLoading]                 = useState(true);
+  const [refreshing, setRefreshing]           = useState(false);
+  const [tab, setTab]                         = useState<TabKey>("all");
 
-  // Mettre à jour le token quand les paramètres de route changent (deep link)
+  // Decline modal
+  const [declineTarget, setDeclineTarget] = useState<any | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
+  const [declining, setDeclining]         = useState(false);
+
+  // Accept loading (per token)
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+
+  // Toast
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const [toastTrip, setToastTrip] = useState<{ name: string; id: string } | null>(null);
+
+  // ── Deep-link token sync ──
   useEffect(() => {
     if (route.params?.token && route.params.token !== currentToken) {
       setCurrentToken(route.params.token);
     }
   }, [route.params?.token]);
 
-  const loadAllInvitations = async () => {
-    try {
-      setLoading(true);
-      // Récupérer les invitations enrichies depuis l'API
-      if (user?.email) {
-        const invitations = await getUserInvitations(user.email);
-        // Trier: pending > accepted > declined
-        const sortedInvitations = invitations.sort((a: any, b: any) => {
-          const statusOrder = { pending: 0, accepted: 1, declined: 2 };
-          const statusA = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
-          const statusB = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
-          if (statusA !== statusB) {
-            return statusA - statusB;
-          }
-          // Si même statut, trier par date (plus récent en premier)
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-        setEnrichedInvitations(sortedInvitations);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading invitations:", error);
-      setLoading(false);
+  useEffect(() => {
+    if (currentToken) {
+      loadSingleInvitation();
+    } else {
+      loadAllInvitations();
     }
-  };
+  }, [currentToken]);
 
-  const loadInvitation = async () => {
+  // ── Loaders ──
+
+  const loadAllInvitations = useCallback(async () => {
+    if (!user?.email) return;
+    try {
+      const data = await getUserInvitations(user.email);
+      const sorted = [...data].sort((a: any, b: any) => {
+        const order: Record<string, number> = { pending: 0, accepted: 1, declined: 2, expired: 3 };
+        const diff = (order[a.status] ?? 4) - (order[b.status] ?? 4);
+        if (diff !== 0) return diff;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      setInvitations(sorted);
+      markAllAsRead();
+    } catch (e) {
+      console.error("InvitationScreen loadAll error:", e);
+    }
+  }, [user?.email]);
+
+  const loadSentInvitations = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const data = await getSentInvitations(user.id);
+      const sorted = [...data].sort((a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setSentInvitations(sorted);
+    } catch (e) {
+      console.error("InvitationScreen loadSent error:", e);
+    }
+  }, [user?.id]);
+
+  const loadSingleInvitation = async () => {
     try {
       setLoading(true);
-
-      // Appel API pour récupérer l'invitation par token
-      const invitationData = await getInvitationByToken(currentToken!);
-
-      setInvitation(invitationData);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading invitation:", error);
+      const data = await getInvitationByToken(currentToken!);
+      const tripId = data?.tripId ?? data?.trip?._id;
+      if (tripId) {
+        setLoading(false);
+        setCurrentToken(undefined);
+        navigation.navigate("TripPublicView", { tripId, invitationToken: currentToken });
+      } else {
+        setInvitation(data);
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error("InvitationScreen loadSingle error:", e);
       Alert.alert(t("common.error"), t("invitation.loadingError"));
       setLoading(false);
     }
   };
 
-  const handleAcceptInvitation = async () => {
-    if (!invitation) return;
-
-    // Si l'utilisateur n'est pas connecté, rediriger vers l'authentification
-    if (!user) {
-      Alert.alert(
-        t("common.loginRequired"),
-        t("invitation.loginToAccept"),
-        [
-          {
-            text: t("common.cancel"),
-            style: "cancel",
-          },
-          {
-            text: t("common.login"),
-            onPress: () => navigation.navigate("Auth" as never),
-          },
-        ]
+  useEffect(() => {
+    if (!currentToken) {
+      Promise.all([loadAllInvitations(), loadSentInvitations()]).finally(() =>
+        setLoading(false)
       );
+    }
+  }, [loadAllInvitations, loadSentInvitations]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadAllInvitations(), loadSentInvitations()]);
+    setRefreshing(false);
+  };
+
+  // ── Toast ──
+
+  const showToast = (tripName: string, tripId: string) => {
+    setToastTrip({ name: tripName, id: tripId });
+    Animated.sequence([
+      Animated.timing(toastAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(3500),
+      Animated.timing(toastAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start(() => setToastTrip(null));
+  };
+
+  // ── Accept / Decline (list) ──
+
+  const handleAccept = async (inv: any) => {
+    setAcceptingId(inv.token);
+    try {
+      const ok = await respondToInvitation(inv.token, "accept", user?.id);
+      if (ok) {
+        await loadAllInvitations();
+        const name = inv.tripName ?? inv.trip?.title ?? t("invitation.thisTripRef");
+        const id   = inv.tripId   ?? inv.trip?._id;
+        showToast(name, id);
+      } else {
+        Alert.alert(t("common.error"), t("invitation.acceptError2"));
+      }
+    } catch (e) {
+      Alert.alert(t("common.error"), parseApiError(e) || t("invitation.unexpectedError"));
+    } finally {
+      setAcceptingId(null);
+    }
+  };
+
+  const openDecline = (inv: any) => {
+    setDeclineTarget(inv);
+    setDeclineReason("");
+  };
+
+  const confirmDecline = async () => {
+    if (!declineTarget) return;
+    setDeclining(true);
+    try {
+      const ok = await respondToInvitation(declineTarget.token, "decline", user?.id);
+      if (ok) {
+        setDeclineTarget(null);
+        await loadAllInvitations();
+      } else {
+        Alert.alert(t("common.error"), t("invitation.declineError2"));
+      }
+    } catch (e) {
+      Alert.alert(t("common.error"), parseApiError(e) || t("invitation.unexpectedError"));
+    } finally {
+      setDeclining(false);
+    }
+  };
+
+  // ── Cancel sent invitation ──
+
+  const handleCancelInvitation = (inv: any) => {
+    const invitee  = inv.inviteeEmail ?? inv.inviteePhone ?? t("invitation.someoneRef");
+    const tripName = inv.trip?.title ?? t("invitation.thisTripRef");
+    Alert.alert(
+      t("invitation.cancelInvitationTitle"),
+      t("invitation.cancelInvitationMessage", { invitee, tripName }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.confirm"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const id = inv._id ?? inv.id;
+              const ok = await cancelInvitation(id);
+              if (ok) {
+                await loadSentInvitations();
+              } else {
+                Alert.alert(t("common.error"), t("invitation.cancelError"));
+              }
+            } catch (e) {
+              Alert.alert(t("common.error"), parseApiError(e) || t("invitation.unexpectedError"));
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // ── Accept / Decline (deep-link single view) ──
+
+  const handleAcceptSingle = async () => {
+    if (!invitation) return;
+    if (!user) {
+      Alert.alert(t("invitation.loginRequired"), t("invitation.loginToAccept"), [
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("invitation.login"), onPress: () => navigation.navigate("Auth") },
+      ]);
       return;
     }
-
     try {
       setResponding(true);
-
-      const success = await respondToInvitation(currentToken!, "accept", user.id);
-
-      if (success) {
-        Alert.alert(t("invitation.accepted"), t("invitation.acceptedMessage"), [
-          {
+      const ok = await respondToInvitation(currentToken!, "accept", user.id);
+      if (ok) {
+        Alert.alert(
+          invitation.type === "link" ? t("invitation.tripJoined") : t("invitation.accepted"),
+          invitation.type === "link" ? t("invitation.tripJoinedMessage") : t("invitation.acceptedMessage"),
+          [{
             text: t("common.ok"),
-            onPress: () => navigation.navigate("Main" as never),
-          },
-        ]);
+            onPress: () => {
+              if (invitation.tripId) {
+                navigation.navigate("TripDetails", { tripId: invitation.tripId });
+              } else {
+                navigation.navigate("Main");
+              }
+            },
+          }]
+        );
       } else {
         Alert.alert(t("common.error"), t("invitation.acceptError"));
       }
-    } catch (error) {
-      console.error("Error accepting invitation:", error);
-      Alert.alert(
-        t("common.error"),
-        (error as Error).message || t("invitation.acceptError")
-      );
+    } catch (e) {
+      Alert.alert(t("common.error"), parseApiError(e) || t("invitation.acceptError"));
     } finally {
       setResponding(false);
     }
   };
 
-  const handleDeclineInvitation = async () => {
-    if (!invitation) return;
-
+  const handleDeclineSingle = () => {
     Alert.alert(t("invitation.declineTitle"), t("invitation.declineMessage"), [
-      {
-        text: t("common.cancel"),
-        style: "cancel",
-      },
+      { text: t("common.cancel"), style: "cancel" },
       {
         text: t("invitation.decline"),
         style: "destructive",
         onPress: async () => {
           try {
             setResponding(true);
-
-            const success = await respondToInvitation(
-              currentToken!,
-              "decline",
-              user?.id
-            );
-
-            if (success) {
-              Alert.alert(
-                t("invitation.declined"),
-                t("invitation.declinedMessage"),
-                [
-                  {
-                    text: t("common.ok"),
-                    onPress: () => navigation.navigate("Main" as never),
-                  },
-                ]
-              );
+            const ok = await respondToInvitation(currentToken!, "decline", user?.id);
+            if (ok) {
+              Alert.alert(t("invitation.declined"), t("invitation.declinedMessage"), [
+                { text: t("common.ok"), onPress: () => navigation.navigate("Main") },
+              ]);
             } else {
               Alert.alert(t("common.error"), t("invitation.declineError"));
             }
-          } catch (error) {
-            console.error("Error declining invitation:", error);
-            Alert.alert(
-              t("common.error"),
-              (error as Error).message || t("invitation.declineError")
-            );
+          } catch (e) {
+            Alert.alert(t("common.error"), parseApiError(e) || t("invitation.declineError"));
           } finally {
             setResponding(false);
           }
@@ -200,774 +303,172 @@ const InvitationScreen: React.FC = () => {
     ]);
   };
 
-  // Si pas de token, afficher la liste des invitations
-  if (!currentToken) {
+  // ── Derived lists ──
+
+  const pending   = invitations.filter((i) => i.status === "pending");
+  const displayed =
+    tab === "pending" ? pending         :
+    tab === "sent"    ? sentInvitations :
+    invitations;
+
+  // ── Deep-link mode ──
+
+  if (currentToken) {
     return (
-      <View style={styles.wrapper}>
-        <StatusBar barStyle="light-content" />
-        <LinearGradient 
-          colors={['#2891FF', '#8869FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButtonHeader}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <View style={{ width: 40 }} />
-          </View>
-          <View style={styles.headerContent}>
-            <View style={styles.headerIconContainer}>
-              <Ionicons name="mail" size={40} color="white" />
-            </View>
-            <Text style={styles.headerTitle}>{t("profile.invitations")}</Text>
-            <Text style={styles.headerSubtitle}>
-              {enrichedInvitations.length} {enrichedInvitations.length > 1 ? 'invitations' : 'invitation'}
-            </Text>
-          </View>
-        </LinearGradient>
-
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={{ paddingTop: 24 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>{t("common.loading")}</Text>
-            </View>
-          ) : enrichedInvitations.length === 0 ? (
-            <ModernCard variant="elevated" style={styles.emptyCard}>
-              <Ionicons name="mail-outline" size={64} color="#BDBDBD" />
-              <Text style={styles.emptyTitle}>{t("profile.noInvitations")}</Text>
-              <Text style={styles.emptyMessage}>
-                Vous n'avez aucune invitation en attente pour le moment.
-              </Text>
-            </ModernCard>
-          ) : (
-            <>
-              {/* Filtres */}
-              <View style={styles.filtersContainer}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === 'all' && styles.filterButtonActive]}
-                    onPress={() => setStatusFilter('all')}
-                  >
-                    <Text style={[styles.filterButtonText, statusFilter === 'all' && styles.filterButtonTextActive]}>
-                      Toutes
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === 'pending' && styles.filterButtonActive]}
-                    onPress={() => setStatusFilter('pending')}
-                  >
-                    <Text style={[styles.filterButtonText, statusFilter === 'pending' && styles.filterButtonTextActive]}>
-                      En attente
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === 'accepted' && styles.filterButtonActive]}
-                    onPress={() => setStatusFilter('accepted')}
-                  >
-                    <Text style={[styles.filterButtonText, statusFilter === 'accepted' && styles.filterButtonTextActive]}>
-                      Acceptées
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === 'declined' && styles.filterButtonActive]}
-                    onPress={() => setStatusFilter('declined')}
-                  >
-                    <Text style={[styles.filterButtonText, statusFilter === 'declined' && styles.filterButtonTextActive]}>
-                      Refusées
-                    </Text>
-                  </TouchableOpacity>
-                </ScrollView>
-              </View>
-
-              {/* Liste des invitations filtrées */}
-              {enrichedInvitations
-                .filter(inv => statusFilter === 'all' || inv.status === statusFilter)
-                .map((inv) => (
-              <ModernCard key={inv.id || inv._id} variant="elevated" style={styles.invitationListItem}>
-                {/* En-tête avec inviteur et statut */}
-                <View style={styles.listItemHeader}>
-                  <View style={styles.inviterAvatarSmall}>
-                    <Ionicons name="person" size={20} color="white" />
-                  </View>
-                  <View style={styles.listItemInfo}>
-                    <Text style={styles.listItemInviter}>
-                      {inv.inviter?.name || "Quelqu'un"}
-                    </Text>
-                    <Text style={styles.listItemDate}>vous a invité • {formatDate(inv.createdAt)}</Text>
-                  </View>
-                  <View style={[styles.statusBadge,
-                    inv.status === 'accepted' && styles.statusBadgeAccepted,
-                    inv.status === 'declined' && styles.statusBadgeDeclined,
-                  ]}>
-                    <Text style={[
-                      styles.statusBadgeText,
-                      inv.status === 'accepted' && styles.statusBadgeTextAccepted,
-                      inv.status === 'declined' && styles.statusBadgeTextDeclined,
-                    ]}>
-                      {inv.status === 'pending' ? 'En attente' :
-                       inv.status === 'accepted' ? 'Acceptée' : 'Refusée'}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Infos du voyage */}
-                {inv.trip && (
-                  <View style={styles.tripPreview}>
-                    <View style={styles.tripPreviewHeader}>
-                      <Ionicons name="airplane" size={18} color="#2891FF" />
-                      <Text style={styles.tripPreviewTitle}>{inv.trip.title}</Text>
-                    </View>
-                    <View style={styles.tripPreviewDetails}>
-                      <View style={styles.tripPreviewDetailRow}>
-                        <Ionicons name="location" size={14} color="#666" />
-                        <Text style={styles.tripPreviewDetailText}>{inv.trip.destination}</Text>
-                      </View>
-                      {inv.trip.startDate && inv.trip.endDate && (
-                        <View style={styles.tripPreviewDetailRow}>
-                          <Ionicons name="calendar" size={14} color="#666" />
-                          <Text style={styles.tripPreviewDetailText}>
-                            {formatDate(new Date(inv.trip.startDate))} - {formatDate(new Date(inv.trip.endDate))}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                )}
-
-                {/* Actions rapides si en attente */}
-                {inv.status === 'pending' && (
-                  <View style={styles.quickActions}>
-                    <TouchableOpacity
-                      style={styles.quickActionDecline}
-                      onPress={() => {
-                        setCurrentToken(inv.token);
-                      }}
-                    >
-                      <Ionicons name="close-circle" size={18} color="#FF3B30" />
-                      <Text style={styles.quickActionDeclineText}>Refuser</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.quickActionAccept}
-                      onPress={() => {
-                        setCurrentToken(inv.token);
-                      }}
-                    >
-                      <Ionicons name="checkmark-circle" size={18} color="white" />
-                      <Text style={styles.quickActionAcceptText}>Voir & Accepter</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </ModernCard>
-              ))}
-              {enrichedInvitations.filter(inv => statusFilter === 'all' || inv.status === statusFilter).length === 0 && (
-                <ModernCard variant="elevated" style={styles.emptyCard}>
-                  <Ionicons name="mail-outline" size={64} color="#BDBDBD" />
-                  <Text style={styles.emptyTitle}>Aucune invitation</Text>
-                  <Text style={styles.emptyMessage}>
-                    {statusFilter === 'pending' ? 'Aucune invitation en attente.' :
-                     statusFilter === 'accepted' ? 'Aucune invitation acceptée.' :
-                     statusFilter === 'declined' ? 'Aucune invitation refusée.' :
-                     'Vous n\'avez aucune invitation.'}
-                  </Text>
-                </ModernCard>
-              )}
-            </>
-          )}
-        </ScrollView>
-      </View>
+      <InvitationDetailView
+        invitation={invitation}
+        loading={loading}
+        currentToken={currentToken}
+        initialToken={initialToken}
+        responding={responding}
+        onBack={() => {
+          if (initialToken) {
+            navigation.goBack();
+          } else {
+            setCurrentToken(undefined);
+          }
+        }}
+        onAccept={handleAcceptSingle}
+        onDecline={handleDeclineSingle}
+        onNavigateToTrip={(tripId) => navigation.navigate("TripDetails", { tripId })}
+        onNavigateBack={() => navigation.goBack()}
+      />
     );
   }
 
-  // Sinon, afficher les détails d'une invitation spécifique
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>{t("invitation.loading")}</Text>
-      </View>
-    );
-  }
-
-  if (!invitation) {
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle" size={64} color="#FF3B30" />
-        <Text style={styles.errorTitle}>{t("invitation.notFound")}</Text>
-        <Text style={styles.errorMessage}>
-          {t("invitation.notFoundMessage")}
-        </Text>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>{t("common.back")}</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const isExpired = new Date() > invitation.expiresAt;
-  const canRespond = invitation.status === "pending" && !isExpired;
+  // ── List mode ──
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <LinearGradient
-          colors={['#2891FF', '#8869FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButtonHeader}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <View style={{ width: 40 }} />
-          </View>
-          <View style={styles.headerContent}>
-            <View style={styles.headerIconContainer}>
-              <Ionicons name="mail-open" size={40} color="white" />
-            </View>
-            <Text style={styles.headerTitle}>{t("invitation.title")}</Text>
-          </View>
-        </LinearGradient>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
 
-        <View style={styles.cardContainer}>
-          <ModernCard variant="elevated" style={styles.invitationCard}>
-          <View style={styles.invitationHeader}>
-            <View style={styles.inviterAvatar}>
-              <Ionicons name="person" size={32} color="white" />
-            </View>
-            <View style={styles.inviterInfo}>
-              <Text style={styles.inviterName}>
-                {invitation.inviter?.name || t("invitation.someone")}
-              </Text>
-              <Text style={styles.inviterEmail}>
-                {invitation.inviter?.email || ""}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.invitationContent}>
-            <Text style={styles.invitationTitle}>
-              {t("invitation.invitationTitle")}
-            </Text>
-            <Text style={styles.tripTitle}>
-              {invitation.trip?.title || t("invitation.trip")}
-            </Text>
-            <Text style={styles.tripDestination}>
-              {invitation.trip?.destination || ""}
-            </Text>
-            {invitation.trip?.startDate && invitation.trip?.endDate && (
-              <Text style={styles.tripDates}>
-                {formatDate(new Date(invitation.trip.startDate))} -{" "}
-                {formatDate(new Date(invitation.trip.endDate))}
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.invitationDetails}>
-            <View style={styles.detailRow}>
-              <Ionicons name="mail" size={20} color="#2891FF" />
-              <Text style={styles.detailText}>
-                {t("invitation.sentTo")} {user?.name || invitation.inviteeEmail}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Ionicons name="time" size={20} color="#8869FF" />
-              <Text style={styles.detailText}>
-                {t("invitation.sentOn")} {formatDate(invitation.createdAt)}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Ionicons name="hourglass" size={20} color="#FF9500" />
-              <Text style={styles.detailText}>
-                {t("invitation.expiresOn")} {formatDate(invitation.expiresAt)}
-              </Text>
-            </View>
-          </View>
-
-          {isExpired && (
-            <View style={styles.expiredBanner}>
-              <Ionicons name="time" size={20} color="#FF3B30" />
-              <Text style={styles.expiredText}>{t("invitation.expired")}</Text>
-            </View>
-          )}
-
-          {invitation.status !== "pending" && (
-            <View style={styles.statusBanner}>
-              <Ionicons
-                name={
-                  invitation.status === "accepted"
-                    ? "checkmark-circle"
-                    : "close-circle"
-                }
-                size={20}
-                color={invitation.status === "accepted" ? "#34C759" : "#FF3B30"}
-              />
-              <Text
-                style={[
-                  styles.statusText,
-                  {
-                    color:
-                      invitation.status === "accepted" ? "#34C759" : "#FF3B30",
-                  },
-                ]}
-              >
-                {invitation.status === "accepted"
-                  ? t("invitation.statusAccepted")
-                  : t("invitation.statusDeclined")}
-              </Text>
-            </View>
-          )}
-        </ModernCard>
-
-        {canRespond && (
-          <View style={styles.actionsContainer}>
-            <ModernButton
-              title={responding ? t("invitation.processing") : t("invitation.decline")}
-              onPress={handleDeclineInvitation}
-              variant="outline"
-              size="large"
-              icon="close-circle-outline"
-              disabled={responding}
-              style={styles.actionButton}
-            />
-            <ModernButton
-              title={responding ? t("invitation.processing") : t("invitation.accept")}
-              onPress={handleAcceptInvitation}
-              variant="primary"
-              gradient
-              size="large"
-              icon="checkmark-circle-outline"
-              disabled={responding}
-              style={styles.actionButton}
-            />
-          </View>
-        )}
+      {/* ── Header ── */}
+      <View style={[styles.header, { backgroundColor: colors.bg }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t("invitation.myInvitations")}</Text>
         </View>
-      </ScrollView>
-    </View>
+        <View style={{ width: 40 }} />
+      </View>
+
+      {/* ── Tabs ── */}
+      <View style={[styles.tabBar, { backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
+        {([
+          { key: "all",     label: t("invitation.tabAll",     { count: invitations.length })    },
+          { key: "pending", label: t("invitation.tabPending", { count: pending.length })         },
+          { key: "sent",    label: t("invitation.tabSent",    { count: sentInvitations.length }) },
+        ] as { key: TabKey; label: string }[]).map(({ key, label }) => (
+          <TouchableOpacity
+            key={key}
+            style={[styles.tabItem, tab === key && styles.tabItemActive]}
+            onPress={() => setTab(key)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, { color: colors.textLight }, tab === key && styles.tabTextActive]}>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* ── Content ── */}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#C4714A" />
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scroll, displayed.length === 0 && styles.scrollEmpty]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#C4714A" />
+          }
+        >
+          {displayed.length === 0 ? (
+            <EmptyState tab={tab} />
+          ) : tab === "sent" ? (
+            displayed.map((inv) => (
+              <SentCard
+                key={inv._id ?? inv.token ?? inv.id}
+                invitation={inv}
+                onViewTrip={() => {
+                  const id = inv.tripId ?? inv.trip?._id;
+                  if (id) navigation.navigate("TripDetails", { tripId: id });
+                }}
+                onCancel={() => handleCancelInvitation(inv)}
+              />
+            ))
+          ) : (
+            displayed.map((inv) => (
+              <InvitationCard
+                key={inv._id ?? inv.token}
+                invitation={inv}
+                expanded={tab === "pending"}
+                accepting={acceptingId === inv.token}
+                onAccept={() => handleAccept(inv)}
+                onDecline={() => openDecline(inv)}
+                onDetail={() => {
+                  const tripId = inv.tripId ?? inv.trip?._id;
+                  if (tripId) {
+                    navigation.navigate("TripPublicView", { tripId, invitationToken: inv.token });
+                  } else {
+                    setCurrentToken(inv.token);
+                  }
+                }}
+                onViewTrip={() => {
+                  const id = inv.tripId ?? inv.trip?._id;
+                  if (id) navigation.navigate("TripDetails", { tripId: id });
+                }}
+              />
+            ))
+          )}
+        </ScrollView>
+      )}
+
+      <DeclineModal
+        visible={!!declineTarget}
+        declineTarget={declineTarget}
+        declineReason={declineReason}
+        declining={declining}
+        onConfirm={confirmDecline}
+        onCancel={() => setDeclineTarget(null)}
+        onChangeReason={setDeclineReason}
+      />
+
+      <AcceptedToast
+        toastTrip={toastTrip}
+        toastAnim={toastAnim}
+        onView={(tripId) => navigation.navigate("TripDetails", { tripId })}
+      />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: '#FAFAFA',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#616161',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FAFAFA",
-    padding: 32,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#212121",
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: "#616161",
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  backButton: {
-    backgroundColor: "#2891FF",
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    shadowColor: "#2891FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  backButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  root:         { flex: 1 },
   header: {
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 20, paddingVertical: 14,
   },
-  headerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
+  backBtn:      { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },
+  headerCenter: { flex: 1, marginLeft: 14 },
+  headerTitle:  { fontSize: 34, fontFamily: F.sans700, color: "#2A2318" },
+  tabBar: {
+    flexDirection: "row", borderBottomWidth: 1,
+    marginHorizontal: 20,
   },
-  backButtonHeader: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
+  tabItem: {
+    flex: 1, alignItems: "center", justifyContent: "center",
+    paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: "transparent",
   },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-    borderWidth: 3,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "white",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-  },
-  content: {
-    flex: 1,
-  },
-  cardContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  invitationCard: {
-    marginBottom: 20,
-  },
-  invitationHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  inviterAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#2891FF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-    shadowColor: "#2891FF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  inviterInfo: {
-    flex: 1,
-  },
-  inviterName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  inviterEmail: {
-    fontSize: 14,
-    color: "#616161",
-  },
-  invitationContent: {
-    marginBottom: 20,
-  },
-  invitationTitle: {
-    fontSize: 16,
-    color: "#616161",
-    marginBottom: 12,
-    fontWeight: "500",
-  },
-  tripTitle: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  tripDestination: {
-    fontSize: 16,
-    color: "#616161",
-    marginBottom: 8,
-  },
-  tripDates: {
-    fontSize: 14,
-    color: "#9E9E9E",
-  },
-  invitationDetails: {
-    borderTopWidth: 1,
-    borderTopColor: "#F5F5F5",
-    paddingTop: 20,
-    marginTop: 20,
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 14,
-    backgroundColor: "#F8F9FA",
-    padding: 12,
-    borderRadius: 10,
-  },
-  detailText: {
-    fontSize: 14,
-    color: "#212121",
-    marginLeft: 12,
-    flex: 1,
-  },
-  expiredBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFEBEE",
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: "#FF3B30",
-  },
-  expiredText: {
-    fontSize: 14,
-    color: "#FF3B30",
-    marginLeft: 12,
-    fontWeight: "600",
-    flex: 1,
-  },
-  statusBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  statusText: {
-    fontSize: 14,
-    marginLeft: 12,
-    fontWeight: "600",
-    flex: 1,
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 32,
-    paddingHorizontal: 4,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  // Styles pour la liste des invitations
-  emptyCard: {
-    alignItems: "center",
-    padding: 40,
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#212121",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyMessage: {
-    fontSize: 15,
-    color: "#616161",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  invitationListItem: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  listItemHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  inviterAvatarSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#2891FF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  listItemInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  listItemTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  listItemDate: {
-    fontSize: 13,
-    color: "#616161",
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: "#FFF3E0",
-  },
-  statusBadgeAccepted: {
-    backgroundColor: "#E8F5E9",
-  },
-  statusBadgeDeclined: {
-    backgroundColor: "#FFEBEE",
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#FF9500",
-  },
-  statusBadgeTextAccepted: {
-    color: "#34C759",
-  },
-  statusBadgeTextDeclined: {
-    color: "#FF3B30",
-  },
-  listItemInviter: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
-  },
-  tripPreview: {
-    backgroundColor: "#F8F9FA",
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 12,
-  },
-  tripPreviewHeader: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    marginBottom: 8,
-  },
-  tripPreviewTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#2891FF",
-    marginLeft: 6,
-  },
-  tripPreviewDetails: {
-    gap: 4,
-  },
-  tripPreviewDetailRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-  },
-  tripPreviewDetailText: {
-    fontSize: 13,
-    color: "#666",
-    marginLeft: 6,
-  },
-  quickActions: {
-    flexDirection: "row" as const,
-    gap: 10,
-    marginTop: 12,
-  },
-  quickActionDecline: {
-    flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: "#FFF5F5",
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#FFEBEE",
-  },
-  quickActionDeclineText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FF3B30",
-    marginLeft: 6,
-  },
-  quickActionAccept: {
-    flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: "#2891FF",
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  quickActionAcceptText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "white",
-    marginLeft: 6,
-  },
-  viewDetailsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-  },
-  viewDetailsText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2891FF",
-    marginRight: 4,
-  },
-  // Styles pour les filtres
-  filtersContainer: {
-    marginBottom: 16,
-  },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
-    marginRight: 8,
-  },
-  filterButtonActive: {
-    backgroundColor: '#2891FF',
-  },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#616161',
-  },
-  filterButtonTextActive: {
-    color: 'white',
-  },
+  tabItemActive: { borderBottomColor: "#C4714A" },
+  tabText:       { fontSize: 15, fontFamily: F.sans600, color: "#B0A090" },
+  tabTextActive: { color: "#C4714A" },
+  scroll:        { padding: 16, gap: 14 },
+  scrollEmpty:   { flex: 1 },
+  center:        { flex: 1, alignItems: "center", justifyContent: "center" },
 });
 
 export default InvitationScreen;

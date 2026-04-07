@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -10,24 +10,80 @@ import {
   Alert,
   Platform,
   Image,
-  Animated,
   FlatList,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
 import { Booking } from "../types";
 import { formatDate } from "../utils/i18n";
+import TicketScannerModal from "./TicketScannerModal";
 import i18n from "i18next";
-import {
-  getAddressSuggestions,
-  hasGooglePlacesApiKey,
-  type AddressSuggestion,
-} from "../services/PlacesService";
-import { useCurrentLocation } from "../hooks/useCurrentLocation";
+import { F } from "../theme/fonts";
+import { RADIUS, SHADOW } from "../theme";
+import { useTheme } from "../contexts/ThemeContext";
+import { useBookingForm, needsEndDate } from "../hooks/useBookingForm";
+
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
+const getTypeLabels = (t: (key: string) => string): Record<string, string> => ({
+  flight:     t("bookings.typeLabels.flight"),
+  hotel:      t("bookings.typeLabels.hotel"),
+  train:      t("bookings.typeLabels.train"),
+  restaurant: t("bookings.typeLabels.restaurant"),
+  activity:   t("bookings.typeLabels.activity"),
+});
+
+const TYPE_COLORS: Record<string, { border: string; bg: string; text: string }> = {
+  flight:     { border: "#5A8FAA", bg: "#DCF0F5", text: "#5A8FAA" },
+  hotel:      { border: "#6B8C5A", bg: "#E2EDD9", text: "#6B8C5A" },
+  train:      { border: "#C4714A", bg: "#F5E5DC", text: "#C4714A" },
+  restaurant: { border: "#C4714A", bg: "#F5E5DC", text: "#C4714A" },
+  activity:   { border: "#8B70C0", bg: "#EDE8F5", text: "#8B70C0" },
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  confirmed: "#6B8C5A",
+  pending:   "#FF9500",
+  cancelled: "#C04040",
+};
+
+// ─── Sub-component : modal picker iOS ────────────────────────────────────────
+
+interface PickerModalProps {
+  visible: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  colors: any;
+  t: (key: string) => string;
+}
+
+const PickerModal: React.FC<PickerModalProps> = ({ visible, title, onClose, children, colors, t }) => (
+  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <TouchableOpacity style={styles.pickerModalOverlay} activeOpacity={1} onPress={onClose}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={(e) => e.stopPropagation()}
+        style={[styles.pickerModalContent, { backgroundColor: colors.surface }]}
+      >
+        <Text style={[styles.pickerModalTitle, { color: colors.text }]}>{title}</Text>
+        <View style={styles.pickerWrapper}>{children}</View>
+        <View style={styles.pickerButtons}>
+          <TouchableOpacity style={styles.pickerCancelButton} onPress={onClose}>
+            <Text style={styles.pickerCancelText}>{t("common.cancel")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.pickerConfirmButton} onPress={onClose}>
+            <Text style={styles.pickerConfirmText}>{t("common.confirm")}</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  </Modal>
+);
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BookingFormProps {
   visible: boolean;
@@ -36,1623 +92,416 @@ interface BookingFormProps {
   initialBooking?: Partial<Booking>;
   tripStartDate?: Date;
   tripEndDate?: Date;
+  preselectedTripId?: string;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({
-  visible,
-  onClose,
-  onSave,
-  initialBooking,
-  tripStartDate,
-  tripEndDate,
-}) => {
-  const { t } = useTranslation();
-  const currentLocation = useCurrentLocation();
-  
-  // S'assurer que les dates sont des objets Date valides
-  const getValidDate = (date: Date | string | undefined, fallback: Date): Date => {
-    if (!date) {
-      return fallback;
-    }
-    if (date instanceof Date && !isNaN(date.getTime())) {
-      return date;
-    }
-    const parsed = new Date(date);
-    return isNaN(parsed.getTime()) ? fallback : parsed;
-  };
-  
-  // Calculer les dates valides (avec valeurs par défaut si non fournies)
-  const getValidTripDates = () => {
-    const now = new Date();
-    const defaultEnd = new Date(now);
-    defaultEnd.setFullYear(now.getFullYear() + 1); // 1 an à partir d'aujourd'hui par défaut
+// ─── Composant principal ──────────────────────────────────────────────────────
 
-    const start = tripStartDate ? getValidDate(tripStartDate, now) : now;
-    const end = tripEndDate ? getValidDate(tripEndDate, defaultEnd) : defaultEnd;
+const BookingForm: React.FC<BookingFormProps> = (props) => {
+  const { visible, onClose, initialBooking } = props;
+  const { t }      = useTranslation();
+  const { colors } = useTheme();
+  const insets     = useSafeAreaInsets();
+  const TYPE_LABELS = getTypeLabels(t);
 
-    return { start, end };
-  };
+  const form = useBookingForm(props);
 
-  const getInitialFormData = () => {
-    const { start: validTripStartDate } = getValidTripDates();
-    const validInitialDate = initialBooking?.date
-      ? getValidDate(initialBooking.date, validTripStartDate)
-      : validTripStartDate;
+  const BOOKING_TYPES: Booking["type"][] = ["flight", "train", "hotel", "restaurant", "activity"];
+  const STATUSES: Booking["status"][]    = ["confirmed", "pending", "cancelled"];
 
-    // Pour les hôtels, initialiser la date de fin (par défaut, 1 jour après la date de début)
-    const validEndDate = (initialBooking as any)?.endDate
-      ? getValidDate((initialBooking as any).endDate, new Date(validInitialDate.getTime() + 24 * 60 * 60 * 1000))
-      : new Date(validInitialDate.getTime() + 24 * 60 * 60 * 1000);
+  const statusLabel = (s: Booking["status"]) =>
+    t(`bookings.status.${s}`) || s;
 
-    return {
-      type: (initialBooking?.type || "flight") as Booking["type"],
-      title: initialBooking?.title || "",
-      description: initialBooking?.description || "",
-      date: validInitialDate,
-      endDate: validEndDate,
-      time: initialBooking?.time || "",
-      address: initialBooking?.address || "",
-      confirmationNumber: initialBooking?.confirmationNumber || "",
-      price: initialBooking?.price?.toString() || "",
-      currency: initialBooking?.currency || "EUR",
-      status: (initialBooking?.status || "pending") as Booking["status"],
-    };
-  };
-
-  const [formData, setFormData] = useState(() => {
-    return getInitialFormData();
-  });
-  
-  // État pour les pièces jointes (fichiers)
-  const [attachments, setAttachments] = useState<Array<{ uri: string; name: string; type: 'image' | 'pdf' }>>([]);
-
-  // État pour le modal de renommage
-  const [renamingIndex, setRenamingIndex] = useState<number | null>(null);
-  const [renameValue, setRenameValue] = useState("");
-
-  // État pour les suggestions d'adresses
-  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
-  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
-
-  // Réinitialiser les données quand le modal s'ouvre
-  React.useEffect(() => {
-    if (visible) {
-      // Réinitialiser les pièces jointes avec celles de la réservation initiale si elle existe
-      if (initialBooking?.attachments) {
-        setAttachments(
-          initialBooking.attachments.map(entry => {
-            const [name, uri] = entry.includes("::") ? entry.split("::") : [entry.split("/").pop() || entry, entry];
-            return {
-              uri,
-              name,
-              type: name.toLowerCase().endsWith(".pdf") ? "pdf" as const : "image" as const,
-            };
-          })
-        );
-      } else {
-        setAttachments([]);
-      }
-      // Réinitialiser la devise sélectionnée
-      setSelectedCurrency("");
-      // Réinitialiser les suggestions d'adresses
-      setAddressSuggestions([]);
-      setShowAddressSuggestions(false);
-    }
-  }, [visible, initialBooking]);
-
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("");
-  
-  // Animation pour le slide du modal
-  const slideAnim = useRef(new Animated.Value(1000)).current;
-  
-  useEffect(() => {
-    if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    } else {
-      slideAnim.setValue(1000);
-    }
-  }, [visible]);
-
-  // Déterminer si le type de réservation nécessite une date de fin
-  const needsEndDate = (type: Booking["type"]): boolean => {
-    return type === "hotel";
-  };
-
-  // Gérer les suggestions d'adresses
-  const handleAddressChange = async (text: string) => {
-    handleInputChange("address", text);
-
-    if (!hasGooglePlacesApiKey || !text.trim()) {
-      setAddressSuggestions([]);
-      setShowAddressSuggestions(false);
-      return;
-    }
-
-    try {
-      const controller = new AbortController();
-      const results = await getAddressSuggestions(text.trim(), controller.signal, currentLocation ?? undefined);
-      setAddressSuggestions(results);
-      setShowAddressSuggestions(results.length > 0);
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") {
-        console.error("Address suggestions error:", error);
-      }
-    }
-  };
-
-  const handleSelectAddressSuggestion = (suggestion: AddressSuggestion) => {
-    setFormData((prev) => ({ ...prev, address: suggestion.description }));
-    setAddressSuggestions([]);
-    setShowAddressSuggestions(false);
-  };
-
-  // Liste des devises courantes
-  const currencies = [
-    { code: "EUR", name: "Euro (EUR)" },
-    { code: "USD", name: "US Dollar (USD)" },
-    { code: "GBP", name: "British Pound (GBP)" },
-    { code: "JPY", name: "Japanese Yen (JPY)" },
-    { code: "CHF", name: "Swiss Franc (CHF)" },
-    { code: "CAD", name: "Canadian Dollar (CAD)" },
-    { code: "AUD", name: "Australian Dollar (AUD)" },
-    { code: "CNY", name: "Chinese Yuan (CNY)" },
-    { code: "INR", name: "Indian Rupee (INR)" },
-    { code: "BRL", name: "Brazilian Real (BRL)" },
-    { code: "MXN", name: "Mexican Peso (MXN)" },
-    { code: "RUB", name: "Russian Ruble (RUB)" },
-    { code: "KRW", name: "South Korean Won (KRW)" },
-    { code: "SGD", name: "Singapore Dollar (SGD)" },
-    { code: "HKD", name: "Hong Kong Dollar (HKD)" },
-    { code: "NZD", name: "New Zealand Dollar (NZD)" },
-    { code: "SEK", name: "Swedish Krona (SEK)" },
-    { code: "NOK", name: "Norwegian Krone (NOK)" },
-    { code: "DKK", name: "Danish Krone (DKK)" },
-    { code: "PLN", name: "Polish Zloty (PLN)" },
-    { code: "TRY", name: "Turkish Lira (TRY)" },
-    { code: "ZAR", name: "South African Rand (ZAR)" },
-    { code: "AED", name: "UAE Dirham (AED)" },
-    { code: "SAR", name: "Saudi Riyal (SAR)" },
-    { code: "THB", name: "Thai Baht (THB)" },
-    { code: "MYR", name: "Malaysian Ringgit (MYR)" },
-    { code: "IDR", name: "Indonesian Rupiah (IDR)" },
-    { code: "PHP", name: "Philippine Peso (PHP)" },
-    { code: "VND", name: "Vietnamese Dong (VND)" },
-    { code: "ILS", name: "Israeli Shekel (ILS)" },
-  ];
-
-  const bookingTypes: Booking["type"][] = [
-    "flight",
-    "train",
-    "hotel",
-    "restaurant",
-    "activity",
-  ];
-
-  const statuses: Booking["status"][] = ["confirmed", "pending", "cancelled"];
-
-  const getStatusLabel = (status: Booking["status"]): string => {
-    switch (status) {
-      case "confirmed":
-        return t("bookings.status.confirmed");
-      case "pending":
-        return t("bookings.status.pending");
-      case "cancelled":
-        return t("bookings.status.cancelled");
-      default:
-        return status;
-    }
-  };
-
-  const getTypeIcon = (type: Booking["type"]) => {
-    switch (type) {
-      case "flight":
-        return "airplane";
-      case "train":
-        return "train";
-      case "hotel":
-        return "bed";
-      case "restaurant":
-        return "restaurant";
-      case "activity":
-        return "ticket";
-      default:
-        return "receipt";
-    }
-  };
-
-  const getStatusColor = (status: Booking["status"]) => {
-    switch (status) {
-      case "confirmed":
-        return "#34C759"; // Vert
-      case "pending":
-        return "#FF9500"; // Orange
-      case "cancelled":
-        return "#FF3B30"; // Rouge
-      default:
-        return "#8E8E93"; // Gris
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => {
-      const updated: any = { ...prev, [field]: value };
-      // Si on change le type et qu'on passe d'un type avec date de fin à un sans, supprimer endDate
-      if (field === "type" && !needsEndDate(value as Booking["type"]) && prev.endDate) {
-        updated.endDate = undefined;
-      }
-      // Si on change le type et qu'on passe à un type avec date de fin, initialiser endDate
-      if (field === "type" && needsEndDate(value as Booking["type"]) && !prev.endDate) {
-        updated.endDate = new Date(prev.date.getTime() + 24 * 60 * 60 * 1000); // 1 jour après
-      }
-      return updated;
-    });
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date, dateType: "start" | "end" = "start") => {
-    if (Platform.OS === "android") {
-      if (dateType === "start") {
-        setShowDatePicker(false);
-      } else {
-        setShowEndDatePicker(false);
-      }
-    }
-    if (selectedDate) {
-      // S'assurer que la date est valide
-      const date = selectedDate instanceof Date ? selectedDate : new Date(selectedDate);
-      
-      if (isNaN(date.getTime())) {
-        console.error("[BookingForm] handleDateChange - Invalid date selected:", selectedDate);
-        return;
-      }
-      
-      if (dateType === "start") {
-        // Si on change la date de début et qu'il y a une date de fin, s'assurer que la date de fin n'est pas avant
-        setFormData((prev) => {
-          if (prev.endDate && date > prev.endDate) {
-            // Si la nouvelle date de début est après la date de fin, ajuster la date de fin
-            const newEndDate = new Date(date.getTime() + 24 * 60 * 60 * 1000); // 1 jour après
-            return { ...prev, date: date, endDate: newEndDate };
-          }
-          return { ...prev, date: date };
-        });
-      } else {
-        // Date de fin
-        setFormData((prev) => {
-          // S'assurer que la date de fin n'est pas avant la date de début
-          if (date < prev.date) {
-            Alert.alert(
-              t("common.error"),
-              t("bookings.endDateBeforeStart") || "La date de fin doit être après la date de début"
-            );
-            return prev;
-          }
-          return { ...prev, endDate: date };
-        });
-      }
-      // Sur iOS, on ne ferme pas automatiquement la popup, l'utilisateur doit cliquer sur Confirmer/Annuler
-    } else if (Platform.OS === "ios" && event.type === "dismissed") {
-      if (dateType === "start") {
-        setShowDatePicker(false);
-      } else {
-        setShowEndDatePicker(false);
-      }
-    }
-  };
-
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    if (Platform.OS === "android") {
-      setShowTimePicker(false);
-    }
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, "0");
-      const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
-      setFormData((prev) => ({ ...prev, time: `${hours}:${minutes}` }));
-      // Sur iOS, on ne ferme pas automatiquement la popup, l'utilisateur doit cliquer sur Confirmer/Annuler
-    } else if (Platform.OS === "ios" && event.type === "dismissed") {
-      setShowTimePicker(false);
-    }
-  };
-
-  const getTimePickerValue = (): Date => {
-    // Utiliser la date de la réservation comme base
-    const baseDate = new Date(formData.date);
-    
-    if (formData.time) {
-      const [hours, minutes] = formData.time.split(":");
-      baseDate.setHours(parseInt(hours, 10));
-      baseDate.setMinutes(parseInt(minutes, 10));
-      baseDate.setSeconds(0);
-      baseDate.setMilliseconds(0);
-      return baseDate;
-    }
-    // Par défaut, utiliser midi (12:00) pour éviter les problèmes de fuseau horaire
-    baseDate.setHours(12, 0, 0, 0);
-    return baseDate;
-  };
-
-  const validateForm = () => {
-    if (!formData.title.trim()) {
-      Alert.alert(t("common.error"), t("bookings.titleRequired") || "Le titre est requis");
-      return false;
-    }
-
-    // Valider que la date de fin est après la date de début si elle existe
-    if (needsEndDate(formData.type) && formData.endDate) {
-      if (formData.endDate < formData.date) {
-        Alert.alert(
-          t("common.error"),
-          t("bookings.endDateBeforeStart") || "La date de fin doit être après la date de début"
-        );
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const handlePickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          t("common.error"),
-          t("bookings.permissionDenied") || "Permission d'accès à la galerie refusée"
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets) {
-        const newAttachments = result.assets.map(asset => ({
-          uri: asset.uri,
-          name: asset.fileName || `image_${Date.now()}.jpg`,
-          type: 'image' as const,
-        }));
-        setAttachments(prev => {
-          const startIndex = prev.length;
-          if (newAttachments.length === 1) {
-            setRenameValue("");
-            setRenamingIndex(startIndex);
-          }
-          return [...prev, ...newAttachments];
-        });
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      Alert.alert(t("common.error"), t("bookings.imagePickerError") || "Erreur lors de la sélection de l'image");
-    }
-  };
-
-  const handlePickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*'],
-        multiple: true,
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets) {
-        const newAttachments = result.assets.map(asset => ({
-          uri: asset.uri,
-          name: asset.name,
-          type: asset.mimeType?.includes('pdf') ? 'pdf' as const : 'image' as const,
-        }));
-        setAttachments(prev => {
-          const startIndex = prev.length;
-          if (newAttachments.length === 1) {
-            setRenameValue("");
-            setRenamingIndex(startIndex);
-          }
-          return [...prev, ...newAttachments];
-        });
-      }
-    } catch (error) {
-      console.error("Error picking document:", error);
-      Alert.alert(t("common.error"), t("bookings.documentPickerError") || "Erreur lors de la sélection du document");
-    }
-  };
-
-  const handleOpenRename = (index: number) => {
-    setRenameValue("");
-    setRenamingIndex(index);
-  };
-
-  const handleConfirmRename = () => {
-    if (renamingIndex === null) return;
-    const trimmed = renameValue.trim();
-    if (!trimmed) return;
-    const ext = attachments[renamingIndex].name.match(/\.[^.]+$/)?.[0] || "";
-    setAttachments(prev =>
-      prev.map((a, i) => i === renamingIndex ? { ...a, name: trimmed + ext } : a)
+  const renderTypePill = (type: Booking["type"]) => {
+    const isSelected  = form.formData.type === type;
+    const typeColor   = TYPE_COLORS[type];
+    return (
+      <TouchableOpacity
+        key={type}
+        style={[
+          styles.typePill,
+          isSelected
+            ? { backgroundColor: typeColor.bg, borderColor: typeColor.border, borderWidth: 1.5 }
+            : { backgroundColor: colors.bgMid, borderColor: colors.border, borderWidth: 1 },
+        ]}
+        onPress={() => form.handleInputChange("type", type)}
+        activeOpacity={0.7}
+      >
+        <Text style={[styles.typePillText, { color: isSelected ? typeColor.text : colors.textMid }]}>
+          {TYPE_LABELS[type]}
+        </Text>
+      </TouchableOpacity>
     );
-    setRenamingIndex(null);
-  };
-
-  const handleRemoveAttachment = (index: number) => {
-    Alert.alert(
-      t("common.confirm"),
-      t("bookings.removeAttachmentConfirm") || "Supprimer ce fichier ?",
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.delete"),
-          style: "destructive",
-          onPress: () => {
-            setAttachments(prev => prev.filter((_, i) => i !== index));
-          },
-        },
-      ]
-    );
-  };
-
-  const handleSave = () => {
-    if (!validateForm()) return;
-
-    const booking: Omit<Booking, "id" | "createdAt" | "updatedAt"> = {
-      tripId: "", // Sera défini par le parent
-      type: formData.type,
-      title: formData.title.trim(),
-      description: formData.description.trim() || undefined,
-      date: formData.date,
-      endDate: needsEndDate(formData.type) && formData.endDate ? formData.endDate : undefined,
-      time: formData.time || undefined,
-      address: formData.address.trim() || undefined,
-      confirmationNumber: formData.confirmationNumber.trim() || undefined,
-      price: formData.price ? parseFloat(formData.price) : undefined,
-      currency: formData.currency,
-      status: formData.status,
-      attachments: attachments.length > 0 ? attachments.map(att => `${att.name}::${att.uri}`) : undefined,
-    };
-
-    onSave(booking);
-    onClose();
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent>
-      <View style={styles.modalOverlay}>
-        <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }] }]}>
-          <LinearGradient
-            colors={['#2891FF', '#8869FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.modalHeader}
+    <Modal visible={visible} animationType="slide" transparent={false}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["bottom", "left", "right"]}>
+
+        {/* ── Header ── */}
+        <View style={[styles.header, { paddingTop: insets.top + 6, backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
+          <TouchableOpacity style={[styles.headerBackBtn, { backgroundColor: colors.bgMid }]} onPress={onClose} activeOpacity={0.7}>
+            <Ionicons name="chevron-back" size={20} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            {initialBooking ? t("bookings.editBooking") : t("bookings.newBooking")}
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+          {/* ── Scan ── */}
+          <TouchableOpacity
+            style={[styles.scanButton, { backgroundColor: colors.bgMid, borderColor: colors.border }]}
+            onPress={() => form.setShowScanner(true)}
+            activeOpacity={0.75}
           >
-            <View style={styles.headerIcon}>
-              <Ionicons name="receipt" size={24} color="white" />
+            <Ionicons name="scan-outline" size={20} color="#5A8FAA" style={{ marginRight: 8 }} />
+            <Text style={[styles.scanButtonText, { color: "#5A8FAA" }]}>{t("bookings.scanTicketButton")}</Text>
+          </TouchableOpacity>
+
+          {/* ── Type ── */}
+          <View style={styles.typePillsContainer}>
+            <View style={styles.typePillsRow}>
+              {(["flight", "train", "hotel"] as Booking["type"][]).map(renderTypePill)}
             </View>
-            <Text style={styles.modalTitle}>
-              {initialBooking ? t("bookings.editBooking") : t("bookings.addBooking")}
-            </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="white" />
-            </TouchableOpacity>
-          </LinearGradient>
-
-          <ScrollView style={styles.formContainer}>
-            {/* Type de réservation */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.type")}</Text>
-              <View style={styles.typeContainer}>
-                {bookingTypes.map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.typeButton,
-                      formData.type === type && styles.typeButtonSelected,
-                    ]}
-                    onPress={() => handleInputChange("type", type)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[
-                      styles.typeIconContainer,
-                      formData.type === type && styles.typeIconContainerSelected
-                    ]}>
-                      <Ionicons
-                        name={getTypeIcon(type) as any}
-                        size={22}
-                        color={formData.type === type ? "#FFFFFF" : "#2891FF"}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.typeText,
-                        formData.type === type && styles.typeTextSelected,
-                      ]}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                    >
-                      {t(`bookings.filters.${type}`)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            <View style={styles.typePillsRow}>
+              {(["restaurant", "activity"] as Booking["type"][]).map(renderTypePill)}
             </View>
+          </View>
 
-            {/* Titre */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.title")} *</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="text-outline" size={20} color="#616161" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={formData.title}
-                  onChangeText={(value) => handleInputChange("title", value)}
-                  placeholder={t("bookings.titlePlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                />
-              </View>
-            </View>
+          {/* ── Titre ── */}
+          <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.title ? styles.fieldBoxError : null]}>
+            <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.title")} *</Text>
+            <TextInput
+              style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.title ? styles.fieldInputError : null]}
+              value={form.formData.title}
+              onChangeText={(v) => { form.handleInputChange("title", v); if (form.fieldErrors.title) form.setFieldErrors((e) => ({ ...e, title: undefined })); }}
+              placeholder={t("bookings.titlePlaceholder")}
+              placeholderTextColor={colors.textLight}
+            />
+            {form.fieldErrors.title ? <Text style={styles.inlineError}>{form.fieldErrors.title}</Text> : null}
+          </View>
 
-            {/* Date */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {needsEndDate(formData.type) 
-                  ? (t("bookings.startDate") || "Date de début")
-                  : t("bookings.date")
-                } *
-              </Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Ionicons name="calendar" size={20} color="#616161" />
-                <Text style={styles.dateText}>
-                  {formatDate(formData.date)}
-                </Text>
-              </TouchableOpacity>
-              {Platform.OS === "ios" && showDatePicker && (
-                <Modal
-                  visible={showDatePicker}
-                  transparent={true}
-                  animationType="fade"
-                  onRequestClose={() => setShowDatePicker(false)}
-                >
-                  <TouchableOpacity
-                    style={styles.pickerModalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setShowDatePicker(false)}
-                  >
-                    <TouchableOpacity
-                      activeOpacity={1}
-                      onPress={(e) => e.stopPropagation()}
-                      style={styles.pickerModalContent}
-                    >
-                      <Text style={styles.pickerModalTitle}>
-                        {needsEndDate(formData.type) 
-                          ? (t("bookings.startDate") || "Date de début")
-                          : t("bookings.date")
-                        }
-                      </Text>
-                      <View style={styles.pickerWrapper}>
-                        <DateTimePicker
-                          value={formData.date instanceof Date && !isNaN(formData.date.getTime()) ? formData.date : new Date()}
-                          mode="date"
-                          display="spinner"
-                          onChange={(event, date) => handleDateChange(event, date, "start")}
-                          textColor="#000000"
-                          locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
-                        />
-                      </View>
-                      <View style={styles.pickerButtons}>
-                        <TouchableOpacity
-                          style={styles.pickerCancelButton}
-                          onPress={() => setShowDatePicker(false)}
-                        >
-                          <Text style={styles.pickerCancelText}>
-                            {t("common.cancel")}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.pickerConfirmButton}
-                          onPress={() => setShowDatePicker(false)}
-                        >
-                          <Text style={styles.pickerConfirmText}>
-                            {t("common.confirm")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-            </View>
-
-            {/* Date de fin (uniquement pour les hôtels) */}
-            {needsEndDate(formData.type) && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t("bookings.endDate") || "Date de fin"} *</Text>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => setShowEndDatePicker(true)}
-                >
-                  <Ionicons name="calendar" size={20} color="#616161" />
-                  <Text style={styles.dateText}>
-                    {formatDate(formData.endDate || new Date())}
-                  </Text>
-                </TouchableOpacity>
-                {Platform.OS === "ios" && showEndDatePicker && (
-                  <Modal
-                    visible={showEndDatePicker}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowEndDatePicker(false)}
-                  >
-                    <TouchableOpacity
-                      style={styles.pickerModalOverlay}
-                      activeOpacity={1}
-                      onPress={() => setShowEndDatePicker(false)}
-                    >
-                      <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={(e) => e.stopPropagation()}
-                        style={styles.pickerModalContent}
-                      >
-                        <Text style={styles.pickerModalTitle}>
-                          {t("bookings.endDate") || "Date de fin"}
-                        </Text>
-                        <View style={styles.pickerWrapper}>
-                          <DateTimePicker
-                            value={formData.endDate instanceof Date && !isNaN(formData.endDate.getTime()) ? formData.endDate : new Date()}
-                            mode="date"
-                            display="spinner"
-                            onChange={(event, date) => handleDateChange(event, date, "end")}
-                            textColor="#000000"
-                            locale={i18n.language === "fr" ? "fr_FR" : "en_US"}
-                          />
-                        </View>
-                        <View style={styles.pickerButtons}>
-                          <TouchableOpacity
-                            style={styles.pickerCancelButton}
-                            onPress={() => setShowEndDatePicker(false)}
-                          >
-                            <Text style={styles.pickerCancelText}>
-                              {t("common.cancel")}
-                            </Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.pickerConfirmButton}
-                            onPress={() => setShowEndDatePicker(false)}
-                          >
-                            <Text style={styles.pickerConfirmText}>
-                              {t("common.confirm")}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  </Modal>
-                )}
-              </View>
-            )}
-
-            {/* Heure */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.time")}</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Ionicons name="time" size={20} color="#616161" />
-                <Text style={[styles.dateText, !formData.time && styles.placeholderText]}>
-                  {formData.time || t("bookings.selectTime")}
-                </Text>
-              </TouchableOpacity>
-              {Platform.OS === "ios" && showTimePicker && (
-                <Modal
-                  visible={showTimePicker}
-                  transparent={true}
-                  animationType="fade"
-                  onRequestClose={() => setShowTimePicker(false)}
-                >
-                  <TouchableOpacity
-                    style={styles.pickerModalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setShowTimePicker(false)}
-                  >
-                    <TouchableOpacity
-                      activeOpacity={1}
-                      onPress={(e) => e.stopPropagation()}
-                      style={styles.pickerModalContent}
-                    >
-                      <Text style={styles.pickerModalTitle}>
-                        {t("bookings.time")}
-                      </Text>
-                      <View style={styles.pickerWrapper}>
-                        <DateTimePicker
-                          value={getTimePickerValue()}
-                          mode="time"
-                          display="spinner"
-                          onChange={handleTimeChange}
-                          textColor="#000000"
-                        />
-                      </View>
-                      <View style={styles.pickerButtons}>
-                        <TouchableOpacity
-                          style={styles.pickerCancelButton}
-                          onPress={() => setShowTimePicker(false)}
-                        >
-                          <Text style={styles.pickerCancelText}>
-                            {t("common.cancel")}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.pickerConfirmButton}
-                          onPress={() => setShowTimePicker(false)}
-                        >
-                          <Text style={styles.pickerConfirmText}>
-                            {t("common.confirm")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-            </View>
-
-            {/* Adresse */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.address")}</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="location-outline" size={20} color="#616161" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={formData.address}
-                  onChangeText={handleAddressChange}
-                  placeholder={t("bookings.addressPlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                />
-              </View>
-              {/* Suggestions d'adresses */}
-              {showAddressSuggestions && addressSuggestions.length > 0 && (
-                <View style={styles.suggestionsContainer}>
-                  <FlatList
-                    data={addressSuggestions}
-                    keyExtractor={(item) => item.placeId}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={styles.suggestionItem}
-                        onPress={() => handleSelectAddressSuggestion(item)}
-                      >
-                        <Ionicons name="location" size={16} color="#666" style={styles.suggestionIcon} />
-                        <Text style={styles.suggestionText}>{item.description}</Text>
-                      </TouchableOpacity>
-                    )}
-                    scrollEnabled={false}
-                    style={styles.suggestionsList}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Description */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.description")}</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="document-text-outline" size={20} color="#616161" style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={formData.description}
-                  onChangeText={(value) => handleInputChange("description", value)}
-                  placeholder={t("bookings.descriptionPlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-            </View>
-
-            {/* Numéro de confirmation */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("bookings.confirmationNumber")}
-              </Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#616161" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={formData.confirmationNumber}
-                  onChangeText={(value) =>
-                    handleInputChange("confirmationNumber", value)
-                  }
-                  placeholder={t("bookings.confirmationNumberPlaceholder")}
-                  placeholderTextColor="#9E9E9E"
-                />
-              </View>
-            </View>
-
-            {/* Prix */}
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 2, marginRight: 10 }]}>
-                <Text style={styles.label}>{t("bookings.price")}</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="cash-outline" size={20} color="#616161" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    value={formData.price}
-                    onChangeText={(value) => handleInputChange("price", value)}
-                    placeholder="0.00"
-                    placeholderTextColor="#9E9E9E"
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>{t("bookings.currency")}</Text>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => setShowCurrencyPicker(true)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.dateText, { marginLeft: 0 }]}>
-                    {formData.currency || "EUR"}
-                  </Text>
-                  <Ionicons name="chevron-down" size={16} color="#616161" />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Statut */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.statusLabel")}</Text>
-              <View style={styles.statusContainer}>
-                {statuses.map((status) => {
-                  const statusColor = getStatusColor(status);
-                  const isSelected = formData.status === status;
-                  return (
-                    <TouchableOpacity
-                      key={status}
-                      style={[
-                        styles.statusButton,
-                        {
-                          backgroundColor: isSelected
-                            ? `${statusColor}20`
-                            : "#F5F5F5",
-                          borderColor: isSelected ? statusColor : "#E0E0E0",
-                        },
-                      ]}
-                      onPress={() => handleInputChange("status", status)}
-                    >
-                      <Text
-                        style={[
-                          styles.statusText,
-                          {
-                            color: isSelected ? statusColor : "#666",
-                            fontWeight: isSelected ? "600" : "400",
-                          },
-                        ]}
-                        >
-                        {getStatusLabel(status)}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Pièces jointes */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("bookings.attachments")}</Text>
-              <View style={styles.attachmentsContainer}>
-                <TouchableOpacity
-                  style={styles.addAttachmentButton}
-                  onPress={handlePickImage}
-                >
-                  <Ionicons name="image" size={20} color="#2891FF" />
-                  <Text style={styles.addAttachmentText}>
-                    {t("bookings.addImage") || "Ajouter une image"}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.addAttachmentButton}
-                  onPress={handlePickDocument}
-                >
-                  <Ionicons name="document" size={20} color="#2891FF" />
-                  <Text style={styles.addAttachmentText}>
-                    {t("bookings.addDocument") || "Ajouter un PDF"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Liste des pièces jointes */}
-              {attachments.length > 0 && (
-                <View style={styles.attachmentsList}>
-                  {attachments.map((attachment, index) => (
-                    <View key={index} style={styles.attachmentItem}>
-                      {attachment.type === 'image' && (attachment.uri.startsWith('file://') || attachment.uri.startsWith('content://') || attachment.uri.startsWith('ph://')) ? (
-                        <Image
-                          source={{ uri: attachment.uri }}
-                          style={styles.attachmentThumbnail}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View style={styles.attachmentIcon}>
-                          <Ionicons
-                            name={attachment.type === 'pdf' ? 'document' : 'image'}
-                            size={24}
-                            color="#2891FF"
-                          />
-                        </View>
-                      )}
-                      <Text style={styles.attachmentName} numberOfLines={1}>
-                        {attachment.name}
-                      </Text>
-                      <TouchableOpacity
-                        style={styles.renameAttachmentButton}
-                        onPress={() => handleOpenRename(index)}
-                      >
-                        <Ionicons name="pencil" size={18} color="#2891FF" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.removeAttachmentButton}
-                        onPress={() => handleRemoveAttachment(index)}
-                      >
-                        <Ionicons name="close-circle" size={24} color="#FF3B30" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
+          {/* ── Date + Heure ── */}
+          <View style={styles.dateRow}>
             <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
+              style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => form.setShowDatePicker(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textLight }]}>
+                {needsEndDate(form.formData.type) ? t("bookings.startDate") : t("bookings.date")}
+              </Text>
+              <Text style={[styles.fieldValue, { color: colors.text }]}>{formatDate(form.formData.date)}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
+              style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => form.setShowTimePicker(true)}
               activeOpacity={0.7}
             >
-              <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
-              <Text style={styles.saveButtonText}>{t("common.save")}</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.time")}</Text>
+              <Text style={[styles.fieldValue, { color: form.formData.time ? colors.text : colors.textLight }]}>
+                {form.formData.time || "12:00"}
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Date Picker Android */}
-          {Platform.OS === "android" && showDatePicker && (
-            <DateTimePicker
-              value={formData.date instanceof Date && !isNaN(formData.date.getTime()) ? formData.date : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, date) => handleDateChange(event, date, "start")}
-            />
+          {/* iOS pickers */}
+          {Platform.OS === "ios" && (
+            <>
+              <PickerModal visible={form.showDatePicker} title={needsEndDate(form.formData.type) ? t("bookings.startDate") : t("bookings.date")} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
+                <DateTimePicker value={form.formData.date instanceof Date && !isNaN(form.formData.date.getTime()) ? form.formData.date : new Date()} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
+              </PickerModal>
+              <PickerModal visible={form.showTimePicker} title={t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
+                <DateTimePicker value={form.getTimePickerValue()} mode="time" display="spinner" onChange={form.handleTimeChange} textColor={colors.text} />
+              </PickerModal>
+            </>
           )}
 
-          {/* End Date Picker Android */}
-          {Platform.OS === "android" && showEndDatePicker && (
-            <DateTimePicker
-              value={formData.endDate instanceof Date && !isNaN(formData.endDate.getTime()) ? formData.endDate : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, date) => handleDateChange(event, date, "end")}
-            />
+          {/* ── Date de fin (hôtel) ── */}
+          {needsEndDate(form.formData.type) && (
+            <TouchableOpacity
+              style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.endDate ? styles.fieldBoxError : null]}
+              onPress={() => form.setShowEndDatePicker(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.endDate")} *</Text>
+              <Text style={[styles.fieldValue, { color: colors.text }]}>{formatDate(form.formData.endDate || new Date())}</Text>
+              {form.fieldErrors.endDate ? <Text style={styles.inlineError}>{form.fieldErrors.endDate}</Text> : null}
+            </TouchableOpacity>
+          )}
+          {Platform.OS === "ios" && (
+            <PickerModal visible={form.showEndDatePicker} title={t("bookings.endDate")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
+              <DateTimePicker value={form.formData.endDate instanceof Date && !isNaN(form.formData.endDate.getTime()) ? form.formData.endDate : new Date()} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
+            </PickerModal>
           )}
 
-          {/* Time Picker Android */}
-          {Platform.OS === "android" && showTimePicker && (
-            <DateTimePicker
-              value={getTimePickerValue()}
-              mode="time"
-              display="default"
-              onChange={handleTimeChange}
-            />
-          )}
-
-          {/* Rename Attachment Modal */}
-          <Modal visible={renamingIndex !== null} transparent animationType="fade">
-            <View style={styles.renameOverlay}>
-              <View style={styles.renameModal}>
-                <Text style={styles.renameTitle}>Nommer le fichier</Text>
-                <Text style={styles.renameSubtitle}>
-                  L'extension sera conservée automatiquement
-                </Text>
-                <TextInput
-                  style={styles.renameInput}
-                  value={renameValue}
-                  onChangeText={setRenameValue}
-                  placeholder="Ex: Billet avion, Confirmation hôtel..."
-                  placeholderTextColor="#9E9E9E"
-                  autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={handleConfirmRename}
+          {/* ── Adresse ── */}
+          <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.address")}</Text>
+            <TextInput style={[styles.fieldInput, { color: colors.text }]} value={form.formData.address} onChangeText={form.handleAddressChange} placeholder={t("bookings.addressPlaceholder")} placeholderTextColor={colors.textLight} />
+            {form.showAddressSuggestions && form.addressSuggestions.length > 0 && (
+              <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <FlatList
+                  data={form.addressSuggestions}
+                  keyExtractor={(item) => item.placeId}
+                  scrollEnabled={false}
+                  style={styles.suggestionsList}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectAddress(item)}>
+                      <Ionicons name="location" size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                      <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
+                    </TouchableOpacity>
+                  )}
                 />
-                <View style={styles.renameButtons}>
+              </View>
+            )}
+          </View>
+
+          {/* ── Statut ── */}
+          <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.statusLabel")}</Text>
+            <View style={styles.statusRow}>
+              {STATUSES.map((status) => {
+                const color = STATUS_COLORS[status] || "#7A6A58";
+                const isSelected = form.formData.status === status;
+                return (
                   <TouchableOpacity
-                    style={styles.renameCancelBtn}
-                    onPress={() => setRenamingIndex(null)}
+                    key={status}
+                    style={[styles.statusPill, { backgroundColor: isSelected ? `${color}20` : colors.bgMid, borderColor: isSelected ? color : colors.border, borderWidth: isSelected ? 1.5 : 1 }]}
+                    onPress={() => form.handleInputChange("status", status)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.renameCancelText}>Annuler</Text>
+                    <Text style={[styles.statusPillText, { color: isSelected ? color : colors.textMid, fontFamily: isSelected ? F.sans600 : F.sans400 }]}>
+                      {statusLabel(status)}
+                    </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.renameConfirmBtn, !renameValue.trim() && { opacity: 0.5 }]}
-                    onPress={handleConfirmRename}
-                    disabled={!renameValue.trim()}
-                  >
-                    <Text style={styles.renameConfirmText}>Confirmer</Text>
-                  </TouchableOpacity>
-                </View>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* ── Pièces jointes ── */}
+          <View style={styles.attachmentSection}>
+            {form.attachments.map((attachment, index) => (
+              <View key={index} style={[styles.attachmentItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {attachment.type === "image" && (attachment.uri.startsWith("file://") || attachment.uri.startsWith("content://") || attachment.uri.startsWith("ph://")) ? (
+                  <Image source={{ uri: attachment.uri }} style={styles.attachmentThumbnail} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.attachmentIcon, { backgroundColor: colors.bgLight }]}>
+                    <Ionicons name={attachment.type === "pdf" ? "document" : "image"} size={22} color="#C4714A" />
+                  </View>
+                )}
+                <Text style={[styles.attachmentName, { color: colors.text }]} numberOfLines={1}>{attachment.name}</Text>
+                <TouchableOpacity style={styles.renameAttachmentButton} onPress={() => form.handleOpenRename(index)}>
+                  <Ionicons name="pencil" size={16} color="#C4714A" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.removeAttachmentButton} onPress={() => form.handleRemoveAttachment(index)}>
+                  <Ionicons name="close-circle" size={22} color="#C04040" />
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity
+              style={styles.attachmentDashedBox}
+              onPress={() => Alert.alert(t("bookings.attachmentTitle"), t("bookings.chooseFileType"), [
+                { text: t("bookings.imageOption"), onPress: form.handlePickImage },
+                { text: t("bookings.pdfOption"),   onPress: form.handlePickDocument },
+                { text: t("common.cancel"), style: "cancel" },
+              ])}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.attachmentDashedText}>{t("bookings.addAttachment")}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Bouton principal ── */}
+          <TouchableOpacity style={styles.primaryButton} onPress={form.handleSave} activeOpacity={0.8}>
+            <Text style={styles.primaryButtonText}>
+              {initialBooking ? t("common.save") : t("bookings.newBooking")}
+            </Text>
+          </TouchableOpacity>
+
+        </ScrollView>
+
+        {/* Android pickers */}
+        {Platform.OS === "android" && form.showDatePicker && (
+          <DateTimePicker value={form.formData.date instanceof Date && !isNaN(form.formData.date.getTime()) ? form.formData.date : new Date()} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "start")} />
+        )}
+        {Platform.OS === "android" && form.showEndDatePicker && (
+          <DateTimePicker value={form.formData.endDate instanceof Date && !isNaN(form.formData.endDate.getTime()) ? form.formData.endDate : new Date()} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "end")} />
+        )}
+        {Platform.OS === "android" && form.showTimePicker && (
+          <DateTimePicker value={form.getTimePickerValue()} mode="time" display="default" onChange={form.handleTimeChange} />
+        )}
+
+        {/* Scanner */}
+        <TicketScannerModal visible={form.showScanner} onClose={() => form.setShowScanner(false)} onFill={form.handleScanFill} />
+
+        {/* Modal renommage pièce jointe */}
+        <Modal visible={form.renamingIndex !== null} transparent animationType="fade">
+          <View style={styles.renameOverlay}>
+            <View style={[styles.renameModal, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.renameTitle, { color: colors.text }]}>{t("bookings.renameFileTitle")}</Text>
+              <Text style={[styles.renameSubtitle, { color: colors.textLight }]}>{t("bookings.renameFileSubtitle")}</Text>
+              <TextInput
+                style={[styles.renameInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                value={form.renameValue}
+                onChangeText={form.setRenameValue}
+                placeholder={t("bookings.renamePlaceholder")}
+                placeholderTextColor={colors.textLight}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={form.handleConfirmRename}
+              />
+              <View style={styles.renameButtons}>
+                <TouchableOpacity style={styles.renameCancelBtn} onPress={() => form.setRenamingIndex(null)}>
+                  <Text style={styles.renameCancelText}>{t("common.cancel")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.renameConfirmBtn, !form.renameValue.trim() && { opacity: 0.5 }]} onPress={form.handleConfirmRename} disabled={!form.renameValue.trim()}>
+                  <Text style={styles.renameConfirmText}>{t("common.confirm")}</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </Modal>
+          </View>
+        </Modal>
 
-          {/* Currency Picker Modal */}
-          <Modal
-            visible={showCurrencyPicker}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowCurrencyPicker(false)}
-          >
-            <TouchableOpacity
-              style={styles.pickerModalOverlay}
-              activeOpacity={1}
-              onPress={() => setShowCurrencyPicker(false)}
-            >
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={(e) => e.stopPropagation()}
-                style={styles.pickerModalContent}
-              >
-                <Text style={styles.pickerModalTitle}>
-                  {t("bookings.currency")}
-                </Text>
-                <ScrollView style={styles.currencyList} showsVerticalScrollIndicator={true}>
-                  {currencies.map((currency) => (
-                    <TouchableOpacity
-                      key={currency.code}
-                      style={[
-                        styles.currencyItem,
-                        (selectedCurrency || formData.currency) === currency.code && styles.currencyItemSelected,
-                      ]}
-                      onPress={() => {
-                        setSelectedCurrency(currency.code);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.currencyText,
-                          (selectedCurrency || formData.currency) === currency.code && styles.currencyTextSelected,
-                        ]}
-                      >
-                        {currency.name}
-                      </Text>
-                      {(selectedCurrency || formData.currency) === currency.code && (
-                        <Ionicons name="checkmark" size={20} color="#2891FF" />
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                <View style={styles.pickerButtons}>
-                  <TouchableOpacity
-                    style={styles.pickerCancelButton}
-                    onPress={() => {
-                      setShowCurrencyPicker(false);
-                      setSelectedCurrency("");
-                    }}
-                  >
-                    <Text style={styles.pickerCancelText}>
-                      {t("common.cancel")}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.pickerConfirmButton}
-                    onPress={() => {
-                      if (selectedCurrency) {
-                        handleInputChange("currency", selectedCurrency);
-                      }
-                      setShowCurrencyPicker(false);
-                      setSelectedCurrency("");
-                    }}
-                  >
-                    <Text style={styles.pickerConfirmText}>
-                      {t("common.confirm")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          </Modal>
-        </Animated.View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  pickerModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
+  header: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+  },
+  headerBackBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: "center", justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 22, fontFamily: F.sans700,
+    flex: 1, textAlign: "center", marginHorizontal: 8,
+  },
+  scrollContent: { paddingBottom: 40 },
+  scanButton: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    marginTop: 20, marginBottom: 4, marginHorizontal: 20,
+    paddingVertical: 13, paddingHorizontal: 20,
+    borderRadius: 14, borderWidth: 1.5, borderStyle: "dashed",
+  },
+  scanButtonText: { fontSize: 15, fontFamily: F.sans600 },
+  typePillsContainer: { marginTop: 20, marginBottom: 8, gap: 12 },
+  typePillsRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 12 },
+  typePill: { borderRadius: 24, paddingVertical: 11, paddingHorizontal: 20 },
+  typePillText: { fontSize: 16, fontFamily: F.sans600 },
+  fieldBox: {
+    backgroundColor: "#FFFFFF", borderRadius: RADIUS.card, borderWidth: 1,
+    paddingHorizontal: 18, paddingVertical: 16, marginHorizontal: 20, marginBottom: 12,
+  },
+  fieldLabel: { fontSize: 13, fontFamily: F.sans400, marginBottom: 6 },
+  fieldValue: { fontSize: 18, fontFamily: F.sans400 },
+  fieldInput: { fontSize: 18, fontFamily: F.sans400, padding: 0, margin: 0 },
+  fieldBoxError: { borderColor: "#C04040", borderWidth: 1.5 },
+  fieldInputError: { color: "#C04040" },
+  inlineError: { fontSize: 12, color: "#C04040", marginTop: 4, fontFamily: F.sans400 },
+  dateRow: { flexDirection: "row", marginHorizontal: 20, marginBottom: 0, gap: 10 },
+  dateRowItem: { flex: 1, marginHorizontal: 0, marginBottom: 10 },
+  statusRow: { flexDirection: "row", gap: 8, marginTop: 4 },
+  statusPill: { flex: 1, borderRadius: 20, paddingVertical: 13, alignItems: "center" },
+  statusPillText: { fontSize: 15 },
+  attachmentSection: { marginHorizontal: 20, marginBottom: 10 },
+  attachmentDashedBox: {
+    borderRadius: 16, borderWidth: 1.5, borderColor: "#D8CCBA", borderStyle: "dashed",
+    padding: 20, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8,
+  },
+  attachmentDashedText: { fontSize: 16, fontFamily: F.sans400, color: "#B0A090" },
+  attachmentItem: {
+    flexDirection: "row", alignItems: "center", borderRadius: RADIUS.button,
+    padding: 12, marginBottom: 10, borderWidth: 1,
+  },
+  attachmentThumbnail: { width: 50, height: 50, borderRadius: 8, marginRight: 12 },
+  attachmentIcon: {
+    width: 50, height: 50, borderRadius: 8,
+    justifyContent: "center", alignItems: "center", marginRight: 12,
+  },
+  attachmentName: { flex: 1, fontSize: 14, fontFamily: F.sans400, marginRight: 8 },
+  renameAttachmentButton: { padding: 4, marginRight: 4 },
+  removeAttachmentButton: { padding: 4 },
+  primaryButton: {
+    backgroundColor: "#C4714A", borderRadius: RADIUS.card,
+    paddingVertical: 19, marginHorizontal: 20, marginTop: 14,
+    alignItems: "center", ...SHADOW.medium,
+  },
+  primaryButtonText: { fontSize: 19, fontFamily: F.sans700, color: "#FFFFFF" },
+  pickerModalOverlay: {
+    flex: 1, backgroundColor: "rgba(42, 35, 24, 0.5)",
+    justifyContent: "center", alignItems: "center",
   },
   pickerModalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    width: "90%",
-    maxWidth: 400,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderRadius: 20, padding: 20, width: "90%", maxWidth: 400,
+    shadowColor: "#2A2318", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5,
   },
-  pickerModalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#212121",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "90%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 24,
-    paddingTop: 28,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  headerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "white",
-    flex: 1,
-    marginLeft: 12,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  formContainer: {
-    padding: 24,
-    maxHeight: 500,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 16,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#212121",
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: "top",
-    paddingTop: 14,
-  },
-  dateButton: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dateText: {
-    fontSize: 16,
-    color: "#212121",
-    flex: 1,
-    marginLeft: 12,
-  },
-  placeholderText: {
-    color: "#9E9E9E",
-  },
-  typeContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 10,
-  },
-  typeButton: {
-    flexDirection: "column",
-    alignItems: "center",
-    backgroundColor: "#F8F9FA",
-    borderRadius: 16,
-    padding: 12,
-    paddingHorizontal: 14,
-    minWidth: 90,
-    borderWidth: 1,
-    borderColor: "#E8E8E8",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  typeButtonSelected: {
-    backgroundColor: "#2891FF",
-    borderColor: "#2891FF",
-    shadowColor: "#2891FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  typeIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  typeIconContainerSelected: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-  },
-  typeText: {
-    fontSize: 12,
-    color: "#616161",
-    textAlign: "center",
-    fontWeight: "500",
-  },
-  typeTextSelected: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  statusContainer: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  statusButton: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    borderWidth: 2,
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  row: {
-    flexDirection: "row",
-  },
-  modalFooter: {
-    flexDirection: "row",
-    padding: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    gap: 12,
-    backgroundColor: "#FAFAFA",
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: "#E0E0E0",
-  },
-  cancelButtonText: {
-    color: "#616161",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: "#2891FF",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    shadowColor: "#2891FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  pickerModalTitle: { fontSize: 20, fontFamily: F.sans700, marginBottom: 15, textAlign: "center" },
   pickerWrapper: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    minHeight: 200,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#FDFAF5", borderRadius: 12, padding: 10,
+    borderWidth: 1, borderColor: "#D8CCBA", minHeight: 200,
+    justifyContent: "center", alignItems: "center",
   },
-  pickerButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 16,
-    gap: 12,
-  },
+  pickerButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, gap: 12 },
   pickerCancelButton: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
+    flex: 1, backgroundColor: "#FFFFFF", paddingVertical: 14,
+    borderRadius: RADIUS.button, alignItems: "center", borderWidth: 2, borderColor: "#D8CCBA",
   },
-  pickerCancelText: {
-    color: "#616161",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  pickerCancelText: { color: "#7A6A58", fontSize: 16, fontFamily: F.sans600 },
   pickerConfirmButton: {
-    flex: 1,
-    backgroundColor: "#2891FF",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
+    flex: 1, backgroundColor: "#C4714A", paddingVertical: 14,
+    borderRadius: RADIUS.button, alignItems: "center",
   },
-  pickerConfirmText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  attachmentsContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 15,
-  },
-  addAttachmentButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#E8F4FF",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderWidth: 2,
-    borderColor: "#2891FF",
-    borderStyle: "dashed",
-  },
-  addAttachmentText: {
-    fontSize: 14,
-    color: "#2891FF",
-    marginLeft: 8,
-    fontWeight: "600",
-  },
-  attachmentsList: {
-    marginTop: 10,
-  },
-  attachmentItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  attachmentThumbnail: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  attachmentIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    backgroundColor: "#E8F4FF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  attachmentName: {
-    flex: 1,
-    fontSize: 14,
-    color: "#212121",
-    marginRight: 8,
-  },
-  renameAttachmentButton: {
-    padding: 4,
-    marginRight: 4,
-  },
-  removeAttachmentButton: {
-    padding: 4,
-  },
+  pickerConfirmText: { color: "white", fontSize: 16, fontFamily: F.sans700 },
   renameOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
+    flex: 1, backgroundColor: "rgba(42, 35, 24, 0.5)",
+    justifyContent: "center", alignItems: "center", padding: 24,
   },
-  renameModal: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 24,
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  renameTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  renameSubtitle: {
-    fontSize: 13,
-    color: "#9E9E9E",
-    marginBottom: 16,
-  },
+  renameModal: { borderRadius: 20, padding: 24, width: "100%", ...SHADOW.strong },
+  renameTitle: { fontSize: 18, fontFamily: F.sans700, marginBottom: 4 },
+  renameSubtitle: { fontSize: 13, fontFamily: F.sans400, marginBottom: 16 },
   renameInput: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#212121",
-    marginBottom: 16,
+    borderRadius: RADIUS.button, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 16, fontFamily: F.sans400, marginBottom: 16,
   },
-  renameButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
+  renameButtons: { flexDirection: "row", gap: 12 },
   renameCancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#E0E0E0",
-    alignItems: "center",
+    flex: 1, paddingVertical: 12, borderRadius: RADIUS.button,
+    borderWidth: 1.5, borderColor: "#D8CCBA", alignItems: "center",
   },
-  renameCancelText: {
-    fontSize: 15,
-    color: "#616161",
-    fontWeight: "600",
-  },
+  renameCancelText: { fontSize: 15, fontFamily: F.sans600, color: "#7A6A58" },
   renameConfirmBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: "#2891FF",
-    alignItems: "center",
+    flex: 1, paddingVertical: 12, borderRadius: RADIUS.button,
+    backgroundColor: "#C4714A", alignItems: "center",
   },
-  renameConfirmText: {
-    fontSize: 15,
-    color: "white",
-    fontWeight: "700",
-  },
-  currencyList: {
-    maxHeight: 300,
-    marginVertical: 10,
-  },
-  currencyItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
-  },
-  currencyItemSelected: {
-    backgroundColor: "#E8F4FF",
-  },
-  currencyText: {
-    fontSize: 16,
-    color: "#212121",
-  },
-  currencyTextSelected: {
-    color: "#2891FF",
-    fontWeight: "600",
-  },
+  renameConfirmText: { fontSize: 15, fontFamily: F.sans700, color: "white" },
   suggestionsContainer: {
-    marginTop: 8,
-    backgroundColor: "white",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    zIndex: 10,
+    marginTop: 8, borderRadius: RADIUS.button, borderWidth: 1,
+    shadowColor: "#2A2318", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, zIndex: 10,
   },
-  suggestionsList: {
-    maxHeight: 150,
-  },
+  suggestionsList: { maxHeight: 150 },
   suggestionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
+    flexDirection: "row", alignItems: "center",
+    paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1,
   },
-  suggestionIcon: {
-    marginRight: 12,
-  },
-  suggestionText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#333",
-  },
+  suggestionIcon: { marginRight: 12 },
+  suggestionText: { flex: 1, fontSize: 14, fontFamily: F.sans400 },
 });
 
 export default BookingForm;
-

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MyTripCircle — Gérer membres &amp; Partager voyage</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#F5F0E8;--sand-light:#FDFAF5;--sand-mid:#EDE5D8;--sand-dark:#D8CCBA;
+  --terra:#C4714A;--terra-light:#F5E5DC;--terra-dark:#A35830;
+  --moss:#6B8C5A;--moss-light:#E2EDD9;
+  --sky:#5A8FAA;--sky-light:#DCF0F5;
+  --ink:#2A2318;--ink-mid:#7A6A58;--ink-light:#B0A090;
+  --danger:#C04040;--danger-light:#FDEAEA;
+}
+body{font-family:'Sora',sans-serif;background:#E0D8CC;padding:32px 20px 60px}
+.page-title{text-align:center;margin-bottom:28px}
+.page-title h1{font-family:'Lora',serif;font-size:22px;color:var(--ink);font-weight:700}
+.page-title p{font-size:11px;color:var(--ink-mid);margin-top:5px;line-height:1.6}
+
+.grp{margin-bottom:44px}
+.grp-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.grp-lbl::after{content:'';flex:1;height:1px;background:var(--sand-dark)}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+
+.sw{display:flex;flex-direction:column;align-items:center}
+.sn{font-size:8.5px;font-weight:600;color:var(--terra);background:var(--terra-light);border-radius:20px;padding:2px 9px;margin-bottom:7px}
+.arr{display:flex;align-items:center;padding:0 4px;color:var(--sand-dark);font-size:22px;margin-top:190px;flex-shrink:0}
+
+.ph{width:224px;height:460px;background:var(--sand-light);border-radius:40px;overflow:hidden;border:1.5px solid var(--sand-dark);flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 2px 0 rgba(255,255,255,.9) inset,0 26px 52px rgba(42,35,24,.22),0 7px 18px rgba(42,35,24,.1)}
+.pl{text-align:center;font-size:10px;font-weight:600;color:var(--ink-mid);margin-top:9px;line-height:1.3}
+.pl small{display:block;font-size:8px;font-weight:400;color:var(--ink-light);margin-top:1px}
+
+.sb{display:flex;justify-content:space-between;align-items:center;padding:10px 15px 4px;font-size:8.5px;color:var(--ink-light);flex-shrink:0}
+.sb.w{color:rgba(255,255,255,.8)}
+.si{display:flex;gap:3px}.sd{width:4px;height:4px;border-radius:50%;background:currentColor}
+.sc{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.bk{width:26px;height:26px;background:var(--sand-mid);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
+.tp{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:6.5px;font-weight:500}
+.if{background:#fff;border:1px solid var(--sand-dark);border-radius:10px;padding:7px 11px;margin:0 14px 6px;display:flex;flex-direction:column;gap:2px}
+.il{font-size:6.5px;color:var(--ink-light)}.iv{font-size:9px;color:var(--ink)}.ip{font-size:9px;color:var(--ink-light)}
+.sec{padding:2px 13px 4px;font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em}
+.mc{margin:0 13px 5px;background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:8px}
+.mn{font-size:8.5px;font-weight:600;color:var(--ink)}.ms{font-size:6.5px;color:var(--ink-light)}
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>MyTripCircle — Gérer membres &amp; Partager</h1>
+  <p>Deux flows accessibles depuis le menu ··· du détail voyage</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FLOW 1 — GÉRER LES MEMBRES
+══════════════════════════════════════════ -->
+<div class="grp">
+<div class="grp-lbl">👥 Gérer les membres</div>
+<div class="row">
+
+<!-- ① LISTE DES MEMBRES + ACTIONS -->
+<div class="sw">
+  <div class="sn">① Liste membres</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+
+      <!-- Header -->
+      <div style="padding:8px 14px 8px;display:flex;justify-content:space-between;align-items:center">
+        <div class="bk"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="#7A6A58" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div>
+          <div style="font-size:8px;color:var(--ink-light);text-align:center">Road Trip Atlantique</div>
+          <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink);text-align:center">Gérer les membres</div>
+        </div>
+        <!-- Bouton inviter -->
+        <div style="background:var(--terra);border-radius:20px;padding:4px 10px;font-size:7.5px;font-weight:600;color:#fff;box-shadow:0 2px 8px rgba(196,113,74,.35)">+ Inviter</div>
+      </div>
+
+      <!-- Lien d'invitation rapide -->
+      <div style="margin:0 13px 9px;background:var(--terra-light);border:1px solid rgba(196,113,74,.25);border-radius:11px;padding:8px 10px">
+        <div style="font-size:7px;font-weight:600;color:var(--terra);margin-bottom:4px">🔗 Lien d'invitation actif</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;background:rgba(255,255,255,.8);border-radius:7px;padding:4px 8px;font-size:7px;color:var(--ink-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">mytripcircle.app/invite/xTk9p2...</div>
+          <div style="background:var(--terra);border-radius:7px;padding:3px 9px;font-size:7px;color:#fff;font-weight:600;flex-shrink:0">Copier</div>
+        </div>
+        <!-- Expire dans... -->
+        <div style="font-size:6.5px;color:var(--terra-dark);margin-top:4px;display:flex;align-items:center;gap:4px">
+          <span>⏱</span> Expire dans 6 jours · <span style="font-weight:600;text-decoration:underline">Renouveler</span>
+        </div>
+      </div>
+
+      <!-- Organisateur -->
+      <div class="sec">Organisateur</div>
+      <div class="mc">
+        <div class="av" style="width:34px;height:34px;font-size:12px;background:var(--terra);border:2px solid var(--terra-light)">ET</div>
+        <div style="flex:1">
+          <div class="mn">Enzo Turpin</div>
+          <div class="ms">👑 Organisateur · Toi</div>
+        </div>
+        <div class="tp" style="background:var(--terra-light);color:var(--terra)">Moi</div>
+      </div>
+
+      <!-- Membres actifs -->
+      <div class="sec" style="margin-top:3px">Membres (2)</div>
+      <!-- Membre 1 avec menu contextuel -->
+      <div class="mc">
+        <div class="av" style="width:34px;height:34px;font-size:12px;background:var(--sky)">DM</div>
+        <div style="flex:1">
+          <div class="mn">Daryl Matro</div>
+          <div class="ms">✈️ Participant · Accepté</div>
+        </div>
+        <!-- 3 points d'action -->
+        <div style="display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:6px;background:var(--sand-mid)">
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ink-mid)"></div>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ink-mid)"></div>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ink-mid)"></div>
+        </div>
+      </div>
+      <div class="mc">
+        <div class="av" style="width:34px;height:34px;font-size:12px;background:#8B70C0">MB</div>
+        <div style="flex:1">
+          <div class="mn">Maria Bouchene</div>
+          <div class="ms">✈️ Participante · Acceptée</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:6px;background:var(--sand-mid)">
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ink-mid)"></div>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ink-mid)"></div>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ink-mid)"></div>
+        </div>
+      </div>
+
+      <!-- En attente -->
+      <div class="sec" style="margin-top:3px">En attente (1)</div>
+      <div class="mc" style="opacity:.75">
+        <div class="av" style="width:34px;height:34px;font-size:12px;background:var(--sand-dark);color:var(--ink-mid)">FA</div>
+        <div style="flex:1">
+          <div class="mn">Ferréol Avimadje</div>
+          <div class="ms">⏳ Invitation envoyée · il y a 2j</div>
+        </div>
+        <!-- Annuler invitation -->
+        <div style="font-size:7px;color:var(--danger);font-weight:600">Annuler</div>
+      </div>
+
+      <!-- Bouton ajouter depuis contacts/amis -->
+      <div style="margin:6px 13px 0;border:1.5px dashed var(--sand-dark);border-radius:11px;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--sand)">
+        <div style="width:22px;height:22px;background:var(--terra-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--terra)">+</div>
+        <div style="font-size:8px;color:var(--ink-light)">Inviter depuis mes amis</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="pl">Gérer les membres<small>liste + lien + inviter</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ② MENU CONTEXTUEL D'UN MEMBRE (tap sur ···) -->
+<div class="sw">
+  <div class="sn">② Menu membre</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <!-- Fond de la liste (floutée) -->
+      <div style="flex:1;position:relative;overflow:hidden">
+        <div style="opacity:.3;padding:10px 13px 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+            <div style="font-family:'Lora',serif;font-size:14px;font-weight:700;color:var(--ink)">Gérer les membres</div>
+            <div style="background:var(--terra);border-radius:20px;padding:3px 9px;font-size:7px;color:#fff">+ Inviter</div>
+          </div>
+          <div class="mc" style="opacity:.6">
+            <div class="av" style="width:30px;height:30px;font-size:10px;background:var(--terra)">ET</div>
+            <div style="flex:1"><div class="mn">Enzo Turpin</div><div class="ms">Organisateur</div></div>
+          </div>
+          <!-- Daryl en surbrillance légère (celui qu'on a tapé) -->
+          <div style="margin:0 0 4px;background:rgba(196,113,74,.06);border:1.5px solid rgba(196,113,74,.3);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:7px">
+            <div class="av" style="width:30px;height:30px;font-size:10px;background:var(--sky)">DM</div>
+            <div style="flex:1"><div class="mn">Daryl Matro</div><div class="ms">Participant</div></div>
+          </div>
+        </div>
+
+        <!-- ─── BOTTOM SHEET ACTIONS MEMBRE ─── -->
+        <div style="position:absolute;bottom:0;left:0;right:0;background:var(--sand-light);border-radius:20px 20px 0 0;padding:12px 14px 16px;box-shadow:0 -6px 28px rgba(42,35,24,.18)">
+          <!-- Handle -->
+          <div style="width:32px;height:3px;background:var(--sand-dark);border-radius:20px;margin:0 auto 12px"></div>
+
+          <!-- Identité du membre -->
+          <div style="display:flex;align-items:center;gap:9px;padding-bottom:10px;border-bottom:1px solid var(--sand-dark);margin-bottom:10px">
+            <div class="av" style="width:38px;height:38px;font-size:13px;background:var(--sky)">DM</div>
+            <div>
+              <div style="font-size:10px;font-weight:600;color:var(--ink)">Daryl Matro</div>
+              <div style="font-size:7px;color:var(--ink-light)">Participant · Accepté</div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="background:var(--sand-mid);border-radius:11px;padding:9px 11px;display:flex;align-items:center;gap:9px">
+              <div style="width:28px;height:28px;background:var(--sky-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">👤</div>
+              <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:var(--ink)">Voir son profil</div></div>
+              <div style="font-size:10px;color:var(--sand-dark)">›</div>
+            </div>
+            <div style="background:var(--sand-mid);border-radius:11px;padding:9px 11px;display:flex;align-items:center;gap:9px">
+              <div style="width:28px;height:28px;background:var(--terra-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">👑</div>
+              <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:var(--ink)">Nommer organisateur</div><div style="font-size:6.5px;color:var(--ink-light)">Lui transférer la gestion du voyage</div></div>
+            </div>
+            <div style="background:var(--danger-light);border:1px solid rgba(192,64,64,.15);border-radius:11px;padding:9px 11px;display:flex;align-items:center;gap:9px">
+              <div style="width:28px;height:28px;background:rgba(192,64,64,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🚪</div>
+              <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:var(--danger)">Retirer du voyage</div><div style="font-size:6.5px;color:var(--danger);opacity:.7">Il perdra accès aux résas et adresses</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pl">Menu membre<small>bottom sheet ··· actions</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ③ INVITER DEPUIS MES AMIS -->
+<div class="sw">
+  <div class="sn">③ Inviter un ami</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+
+      <div style="padding:8px 14px 8px;display:flex;justify-content:space-between;align-items:center">
+        <div class="bk"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="#7A6A58" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div style="font-family:'Lora',serif;font-size:14px;font-weight:700;color:var(--ink)">Inviter au voyage</div>
+        <div style="width:26px"></div>
+      </div>
+
+      <!-- Voyage ciblé -->
+      <div style="margin:0 13px 9px;background:#fff;border:1px solid var(--sand-dark);border-radius:11px;overflow:hidden">
+        <div style="height:42px;position:relative;overflow:hidden">
+          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;gap:6px">
+            <div style="font-size:9px;font-weight:600;color:#fff;font-family:'Lora',serif">Road Trip Atlantique</div>
+            <div class="tp" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)">14–21 Avr</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barre recherche -->
+      <div style="margin:0 13px 7px;background:#fff;border:1px solid var(--sand-dark);border-radius:20px;padding:5px 11px;display:flex;align-items:center;gap:5px">
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><circle cx="4" cy="4" r="3" stroke="#B0A090" stroke-width="1.2"/><path d="M6.5 6.5l2 2" stroke="#B0A090" stroke-width="1.2"/></svg>
+        <div style="font-size:7.5px;color:var(--ink-light)">Rechercher parmi mes amis...</div>
+      </div>
+
+      <!-- Mes amis (non encore membres) -->
+      <div class="sec">Mes amis — pas encore membres</div>
+
+      <!-- Ami 1 — Sélectionnable -->
+      <div style="margin:3px 13px 5px;background:#fff;border:1.5px solid rgba(196,113,74,.35);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:8px">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--moss)">FA</div>
+        <div style="flex:1">
+          <div style="font-size:8.5px;font-weight:600;color:var(--ink)">Ferréol Avimadje</div>
+          <div style="font-size:6.5px;color:var(--ink-light)">0 voyage en commun</div>
+        </div>
+        <!-- Checkbox cochée -->
+        <div style="width:18px;height:18px;background:var(--terra);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+      <!-- Ami 2 -->
+      <div style="margin:0 13px 5px;background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:8px">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--terra)">GV</div>
+        <div style="flex:1">
+          <div style="font-size:8.5px;font-weight:600;color:var(--ink)">Guillaume Viel</div>
+          <div style="font-size:6.5px;color:var(--ink-light)">3 voyages en commun</div>
+        </div>
+        <div style="width:18px;height:18px;border:1.5px solid var(--sand-dark);border-radius:5px;flex-shrink:0"></div>
+      </div>
+
+      <!-- Ami 3 -->
+      <div style="margin:0 13px 5px;background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:8px">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:#C0A040">ES</div>
+        <div style="flex:1">
+          <div style="font-size:8.5px;font-weight:600;color:var(--ink)">Elias Sellincourt</div>
+          <div style="font-size:6.5px;color:var(--ink-light)">1 voyage en commun</div>
+        </div>
+        <div style="width:18px;height:18px;border:1.5px solid var(--sand-dark);border-radius:5px;flex-shrink:0"></div>
+      </div>
+
+      <!-- Déjà membres (grisés) -->
+      <div class="sec" style="margin-top:4px">Déjà dans le voyage</div>
+      <div style="margin:3px 13px 0;background:var(--sand);border:1px solid var(--sand-dark);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:8px;opacity:.55">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--sky)">DM</div>
+        <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:var(--ink)">Daryl Matro</div><div style="font-size:6.5px;color:var(--ink-light)">Déjà membre</div></div>
+        <div class="tp" style="background:var(--moss-light);color:var(--moss)">✓ Membre</div>
+      </div>
+
+      <!-- CTA -->
+      <div style="margin:7px 13px 0;background:var(--terra);border-radius:12px;padding:10px;text-align:center;font-size:9.5px;font-weight:600;color:#fff;box-shadow:0 4px 12px rgba(196,113,74,.3)">Envoyer l'invitation (1)</div>
+
+    </div>
+  </div>
+  <div class="pl">Inviter depuis mes amis<small>checkboxes + CTA</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ④ CONFIRMATION INVITATION ENVOYÉE -->
+<div class="sw">
+  <div class="sn">④ Invitation envoyée ✓</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+      <!-- Retour liste membres avec toast -->
+      <div style="padding:8px 14px 8px;display:flex;justify-content:space-between;align-items:center">
+        <div class="bk"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="#7A6A58" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div style="text-align:center">
+          <div style="font-size:8px;color:var(--ink-light)">Road Trip Atlantique</div>
+          <div style="font-family:'Lora',serif;font-size:14px;font-weight:700;color:var(--ink)">Gérer les membres</div>
+        </div>
+        <div style="background:var(--terra);border-radius:20px;padding:4px 10px;font-size:7.5px;font-weight:600;color:#fff">+ Inviter</div>
+      </div>
+      <!-- Lien invitation -->
+      <div style="margin:0 13px 8px;background:var(--terra-light);border:1px solid rgba(196,113,74,.25);border-radius:11px;padding:7px 10px">
+        <div style="font-size:7px;font-weight:600;color:var(--terra);margin-bottom:3px">🔗 Lien d'invitation actif</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;background:rgba(255,255,255,.8);border-radius:7px;padding:3px 8px;font-size:7px;color:var(--ink-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">mytripcircle.app/invite/xTk9p2...</div>
+          <div style="background:var(--terra);border-radius:7px;padding:3px 9px;font-size:7px;color:#fff;font-weight:600">Copier</div>
+        </div>
+      </div>
+      <!-- Organisateur -->
+      <div class="sec">Organisateur</div>
+      <div class="mc">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--terra)">ET</div>
+        <div style="flex:1"><div class="mn">Enzo Turpin</div><div class="ms">👑 Organisateur · Toi</div></div>
+        <div class="tp" style="background:var(--terra-light);color:var(--terra)">Moi</div>
+      </div>
+      <div class="sec" style="margin-top:3px">Membres (2)</div>
+      <div class="mc">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--sky)">DM</div>
+        <div style="flex:1"><div class="mn">Daryl Matro</div><div class="ms">✈️ Participant · Accepté</div></div>
+      </div>
+      <div class="mc">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:#8B70C0">MB</div>
+        <div style="flex:1"><div class="mn">Maria Bouchene</div><div class="ms">✈️ Participante · Acceptée</div></div>
+      </div>
+      <!-- Ferréol NOUVEAU en attente, mis en évidence -->
+      <div class="sec" style="margin-top:3px">En attente (2)</div>
+      <div style="margin:3px 13px 5px;background:#fff;border:1.5px solid rgba(107,140,90,.4);border-radius:11px;padding:7px 10px;display:flex;align-items:center;gap:8px">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--moss)">FA</div>
+        <div style="flex:1"><div class="mn">Ferréol Avimadje</div><div class="ms">⏳ Invitation envoyée · à l'instant</div></div>
+        <div class="tp" style="background:var(--moss-light);color:var(--moss)">Nouveau ✨</div>
+      </div>
+      <div class="mc" style="opacity:.7">
+        <div class="av" style="width:32px;height:32px;font-size:11px;background:var(--sand-dark);color:var(--ink-mid)">FA</div>
+        <div style="flex:1"><div class="mn">Ancien invité</div><div class="ms">⏳ il y a 2 jours</div></div>
+        <div style="font-size:7px;color:var(--danger)">Annuler</div>
+      </div>
+
+      <!-- Toast succès -->
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 13px 12px" >
+        <div style="background:#2A2318;border-radius:14px;padding:9px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(42,35,24,.35)">
+          <div style="width:26px;height:26px;background:var(--moss);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✓</div>
+          <div style="flex:1"><div style="font-size:8.5px;font-weight:600;color:#fff">Invitation envoyée à Ferréol</div><div style="font-size:6.5px;color:rgba(255,255,255,.5)">Il recevra un email d'invitation</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="pl">Retour membres — toast ✓<small>nouveau membre en attente</small></div>
+</div>
+
+</div><!-- end row -->
+</div><!-- end grp -->
+
+
+<!-- ══════════════════════════════════════════
+     FLOW 2 — PARTAGER LE VOYAGE
+══════════════════════════════════════════ -->
+<div class="grp">
+<div class="grp-lbl">🔗 Partager le voyage</div>
+<div class="row">
+
+<!-- ① PAGE PARTAGER PRINCIPALE -->
+<div class="sw">
+  <div class="sn">① Partager le voyage</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc">
+
+      <div style="padding:8px 14px 8px;display:flex;justify-content:space-between;align-items:center">
+        <div class="bk"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="#7A6A58" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink)">Partager le voyage</div>
+        <div style="width:26px"></div>
+      </div>
+
+      <!-- Aperçu de la carte du voyage -->
+      <div style="margin:0 13px 10px;background:#fff;border:1px solid var(--sand-dark);border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(42,35,24,.1)">
+        <div style="height:90px;position:relative;overflow:hidden">
+          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+          <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.65))"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 11px">
+            <div style="font-family:'Lora',serif;font-size:13px;font-weight:700;color:#fff">Road Trip Atlantique</div>
+            <div style="font-size:7.5px;color:rgba(255,255,255,.75)">📍 Bordeaux → Biarritz · 14–21 Avr 2026</div>
+          </div>
+        </div>
+        <div style="padding:7px 11px;display:flex;gap:8px">
+          <div style="flex:1;text-align:center"><div style="font-size:7px;color:var(--ink-light)">Membres</div><div style="font-size:10px;font-weight:600;color:var(--terra)">3</div></div>
+          <div style="width:1px;background:var(--sand-dark)"></div>
+          <div style="flex:1;text-align:center"><div style="font-size:7px;color:var(--ink-light)">Résas</div><div style="font-size:10px;font-weight:600;color:var(--terra)">4</div></div>
+          <div style="width:1px;background:var(--sand-dark)"></div>
+          <div style="flex:1;text-align:center"><div style="font-size:7px;color:var(--ink-light)">Visibilité</div><div style="font-size:10px;font-weight:600;color:var(--ink)">🔒 Privé</div></div>
+        </div>
+      </div>
+
+      <!-- Lien d'invitation (principal) -->
+      <div style="padding:0 13px 5px;font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em">Lien d'invitation</div>
+      <div style="margin:0 13px 10px;background:#fff;border:1.5px solid var(--terra);border-radius:12px;padding:9px 10px;box-shadow:0 2px 8px rgba(196,113,74,.12)">
+        <!-- URL affichée -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+          <div style="flex:1;background:var(--sand);border-radius:8px;padding:6px 9px;font-size:8px;color:var(--ink-mid);font-family:monospace">mytripcircle.app/invite/xTk9p2</div>
+          <div style="background:var(--terra);border-radius:8px;padding:5px 10px;font-size:8px;color:#fff;font-weight:600;flex-shrink:0">Copier</div>
+        </div>
+        <!-- Expiration + renouveler -->
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:7px;color:var(--ink-light);display:flex;align-items:center;gap:4px"><span>⏱</span> Expire dans 6 jours</div>
+          <div style="font-size:7px;color:var(--terra);font-weight:600">Renouveler</div>
+        </div>
+      </div>
+
+      <!-- QR Code -->
+      <div style="padding:0 13px 5px;font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em">QR Code</div>
+      <div style="margin:0 13px 10px;background:#fff;border:1px solid var(--sand-dark);border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:10px">
+        <!-- QR code simulé -->
+        <div style="width:48px;height:48px;flex-shrink:0;background:var(--sand-mid);border-radius:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:5px">
+          <div style="background:var(--ink);border-radius:1px"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:var(--ink);border-radius:1px"></div>
+          <div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div>
+          <div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div>
+          <div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:var(--ink);border-radius:1px"></div>
+          <div style="background:var(--ink);border-radius:1px"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:transparent"></div><div style="background:var(--ink);border-radius:1px"></div><div style="background:var(--ink);border-radius:1px"></div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:8.5px;font-weight:600;color:var(--ink);margin-bottom:2px">Scanner pour rejoindre</div>
+          <div style="font-size:7px;color:var(--ink-light);line-height:1.4">Partage ce QR code pour que quelqu'un rejoigne directement</div>
+        </div>
+        <div style="font-size:8px;color:var(--terra);font-weight:600;flex-shrink:0">Télécharger</div>
+      </div>
+
+      <!-- Partager via applis -->
+      <div style="padding:0 13px 5px;font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em">Partager via</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 13px">
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:8px 4px;text-align:center"><div style="font-size:16px;margin-bottom:2px">💬</div><div style="font-size:7px;font-weight:500;color:var(--ink)">Message</div></div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:8px 4px;text-align:center"><div style="font-size:16px;margin-bottom:2px">✉️</div><div style="font-size:7px;font-weight:500;color:var(--ink)">Email</div></div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:8px 4px;text-align:center"><div style="font-size:16px;margin-bottom:2px">📸</div><div style="font-size:7px;font-weight:500;color:var(--ink)">Instagram</div></div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:8px 4px;text-align:center"><div style="font-size:16px;margin-bottom:2px">📤</div><div style="font-size:7px;font-weight:500;color:var(--ink)">Autres</div></div>
+      </div>
+
+    </div>
+  </div>
+  <div class="pl">Partager le voyage<small>lien + QR code + applis</small></div>
+</div>
+
+<div class="arr">›</div>
+
+<!-- ② LIEN COPIÉ (feedback visuel) -->
+<div class="sw">
+  <div class="sn">② Lien copié</div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><div class="si"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div></div>
+    <div class="sc" style="position:relative">
+
+      <div style="padding:8px 14px 8px;display:flex;justify-content:space-between;align-items:center">
+        <div class="bk"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2 4l3 2.5" stroke="#7A6A58" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink)">Partager le voyage</div>
+        <div style="width:26px"></div>
+      </div>
+
+      <!-- Carte voyage condensée -->
+      <div style="margin:0 13px 9px;background:#fff;border:1px solid var(--sand-dark);border-radius:14px;overflow:hidden">
+        <div style="height:60px;position:relative;overflow:hidden">
+          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover"/>
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,.4)"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 11px"><div style="font-family:'Lora',serif;font-size:12px;font-weight:700;color:#fff">Road Trip Atlantique</div></div>
+        </div>
+      </div>
+
+      <!-- Lien avec état "Copié" -->
+      <div style="padding:0 13px 5px;font-size:7px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em">Lien d'invitation</div>
+      <div style="margin:0 13px 10px;background:#fff;border:1.5px solid var(--moss);border-radius:12px;padding:9px 10px;box-shadow:0 2px 8px rgba(107,140,90,.15)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+          <div style="flex:1;background:var(--sand);border-radius:8px;padding:6px 9px;font-size:8px;color:var(--ink-mid);font-family:monospace">mytripcircle.app/invite/xTk9p2</div>
+          <!-- Bouton copié (vert) -->
+          <div style="background:var(--moss);border-radius:8px;padding:5px 10px;font-size:8px;color:#fff;font-weight:600;flex-shrink:0;display:flex;align-items:center;gap:3px">
+            <svg width="8" height="7" viewBox="0 0 8 7" fill="none"><path d="M1 3.5l2.5 2.5 4-5" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Copié !
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:7px;color:var(--ink-light)">⏱ Expire dans 6 jours</div>
+          <div style="font-size:7px;color:var(--terra);font-weight:600">Renouveler</div>
+        </div>
+      </div>
+
+      <!-- QR code condensé -->
+      <div style="margin:0 13px 10px;background:#fff;border:1px solid var(--sand-dark);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:10px">
+        <div style="width:42px;height:42px;flex-shrink:0;background:var(--sand-mid);border-radius:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:4px">
+          <div style="background:var(--ink)"></div><div style="background:var(--ink)"></div><div style="background:transparent"></div><div style="background:var(--ink)"></div><div style="background:var(--ink)"></div>
+          <div style="background:var(--ink)"></div><div style="background:transparent"></div><div style="background:var(--ink)"></div><div style="background:transparent"></div><div style="background:var(--ink)"></div>
+          <div style="background:transparent"></div><div style="background:var(--ink)"></div><div style="background:transparent"></div><div style="background:var(--ink)"></div><div style="background:transparent"></div>
+          <div style="background:var(--ink)"></div><div style="background:transparent"></div><div style="background:var(--ink)"></div><div style="background:var(--ink)"></div><div style="background:var(--ink)"></div>
+          <div style="background:var(--ink)"></div><div style="background:var(--ink)"></div><div style="background:transparent"></div><div style="background:var(--ink)"></div><div style="background:var(--ink)"></div>
+        </div>
+        <div style="flex:1"><div style="font-size:8px;font-weight:600;color:var(--ink)">Scanner pour rejoindre</div><div style="font-size:6.5px;color:var(--ink-light);margin-top:1px">Partage ce QR code</div></div>
+        <div style="font-size:7.5px;color:var(--terra);font-weight:600">Télécharger</div>
+      </div>
+
+      <!-- Partager via -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 13px">
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 4px;text-align:center"><div style="font-size:15px;margin-bottom:2px">💬</div><div style="font-size:7px;color:var(--ink)">Message</div></div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 4px;text-align:center"><div style="font-size:15px;margin-bottom:2px">✉️</div><div style="font-size:7px;color:var(--ink)">Email</div></div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 4px;text-align:center"><div style="font-size:15px;margin-bottom:2px">📸</div><div style="font-size:7px;color:var(--ink)">Instagram</div></div>
+        <div style="background:#fff;border:1px solid var(--sand-dark);border-radius:11px;padding:7px 4px;text-align:center"><div style="font-size:15px;margin-bottom:2px">📤</div><div style="font-size:7px;color:var(--ink)">Autres</div></div>
+      </div>
+
+      <!-- Toast "Lien copié" -->
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 13px 12px">
+        <div style="background:#2A2318;border-radius:14px;padding:9px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(42,35,24,.35)">
+          <div style="width:24px;height:24px;background:var(--moss);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">📋</div>
+          <div style="font-size:8.5px;font-weight:600;color:#fff">Lien copié dans le presse-papier !</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="pl">Feedback — lien copié<small>bouton vert + toast</small></div>
+</div>
+
+</div><!-- end row -->
+</div><!-- end grp -->
+
+</body>
+</html>

@@ -2,23 +2,35 @@ import React from "react";
 import {
   TouchableOpacity,
   Text,
+  View,
   StyleSheet,
   TouchableOpacityProps,
   ViewStyle,
   TextStyle,
   ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS, RADIUS, DISABLED_OPACITY } from "../theme";
+import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
+
+// Design-system tokens (invariants entre thèmes)
+const TERRA        = COLORS.terra;
+const TERRA_SHADOW = "rgba(196,113,74,0.30)";
+const INK_MID      = COLORS.inkMid;
+const SAND_MID     = COLORS.sandMid;
+const DANGER       = COLORS.danger;
+const DANGER_LIGHT = COLORS.dangerLight;
 
 interface ModernButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: "primary" | "secondary" | "outline" | "ghost";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
   size?: "small" | "medium" | "large";
   icon?: keyof typeof Ionicons.glyphMap;
   iconPosition?: "left" | "right";
   loading?: boolean;
   fullWidth?: boolean;
+  /** Kept for API compatibility — no longer renders a gradient. */
   gradient?: boolean;
 }
 
@@ -30,70 +42,55 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
   iconPosition = "left",
   loading = false,
   fullWidth = false,
-  gradient = false,
+  gradient: _gradient = false, // accepted but ignored
   style,
   disabled,
   ...props
 }) => {
-  const buttonStyle = [
-    styles.button,
-    styles[size],
-    fullWidth && styles.fullWidth,
-    disabled && styles.disabled,
-    style,
-  ].filter(Boolean);
-
-  // Needed to keep gradient buttons perfectly rounded on all platforms.
-  const resolvedButtonStyle = StyleSheet.flatten(
-    buttonStyle as any,
-  ) as ViewStyle;
-  const borderRadius =
-    (resolvedButtonStyle?.borderRadius as number | undefined) ?? 12;
-
-  const textStyle: TextStyle[] = [
-    styles.text,
-    styles[`${size}Text` as keyof typeof styles],
-    styles[`${variant}Text` as keyof typeof styles],
-  ];
-
   const iconSize = size === "small" ? 16 : size === "medium" ? 18 : 24;
+
+  const iconColor = (() => {
+    switch (variant) {
+      case "primary":
+        return "#FFFFFF";
+      case "secondary":
+        return INK_MID;
+      case "danger":
+        return DANGER;
+      default:
+        return TERRA; // outline / ghost
+    }
+  })();
 
   const renderContent = () => (
     <>
       {loading ? (
-        <ActivityIndicator
-          color={
-            variant === "primary" || variant === "secondary"
-              ? "#FFFFFF"
-              : "#2891FF"
-          }
-        />
+        <ActivityIndicator color={iconColor} />
       ) : (
         <>
           {icon && iconPosition === "left" && (
             <Ionicons
               name={icon}
               size={iconSize}
-              color={
-                variant === "primary" || variant === "secondary"
-                  ? "#FFFFFF"
-                  : "#2891FF"
-              }
+              color={iconColor}
               style={styles.iconLeft}
             />
           )}
-          <Text style={textStyle} numberOfLines={1}>
+          <Text
+            style={[
+              styles.text,
+              styles[`${size}Text` as keyof typeof styles] as TextStyle,
+              styles[`${variant}Text` as keyof typeof styles] as TextStyle,
+            ]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           {icon && iconPosition === "right" && (
             <Ionicons
               name={icon}
               size={iconSize}
-              color={
-                variant === "primary" || variant === "secondary"
-                  ? "#FFFFFF"
-                  : "#2891FF"
-              }
+              color={iconColor}
               style={styles.iconRight}
             />
           )}
@@ -102,33 +99,18 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
     </>
   );
 
-  if (variant === "primary" && gradient) {
-    return (
-      <TouchableOpacity
-        style={buttonStyle}
-        activeOpacity={0.8}
-        disabled={disabled || loading}
-        {...props}
-      >
-        <LinearGradient
-          colors={["#2891FF", "#8869FF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[
-            styles.gradient,
-            styles[size],
-            { borderRadius, overflow: "hidden" },
-          ]}
-        >
-          {renderContent()}
-        </LinearGradient>
-      </TouchableOpacity>
-    );
-  }
+  const buttonStyle = [
+    styles.button,
+    styles[size],
+    styles[variant],
+    fullWidth && styles.fullWidth,
+    disabled && styles.disabled,
+    style,
+  ].filter(Boolean) as ViewStyle[];
 
   return (
     <TouchableOpacity
-      style={[buttonStyle, styles[variant]]}
+      style={buttonStyle}
       activeOpacity={0.8}
       disabled={disabled || loading}
       {...props}
@@ -139,55 +121,53 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
 };
 
 const styles = StyleSheet.create({
+  // ── Base ──────────────────────────────────────────────────────────────────
   button: {
-    borderRadius: 12,
+    borderRadius: RADIUS.button,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  gradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  fullWidth: {
     width: "100%",
   },
+  disabled: {
+    opacity: DISABLED_OPACITY,
+  },
+
+  // ── Variants ──────────────────────────────────────────────────────────────
   primary: {
-    backgroundColor: "#2891FF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: TERRA,
+    shadowColor: TERRA_SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1, // opacity is already baked into TERRA_SHADOW rgba
+    shadowRadius: 8,
+    elevation: 4,
   },
   secondary: {
-    backgroundColor: "#8869FF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: SAND_MID,
   },
   outline: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#2891FF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: TERRA,
   },
   ghost: {
     backgroundColor: "transparent",
   },
+  danger: {
+    backgroundColor: DANGER_LIGHT,
+  },
+
+  // ── Sizes ─────────────────────────────────────────────────────────────────
   small: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 36,
   },
   medium: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 20,
     paddingVertical: 14,
     minHeight: 48,
   },
@@ -196,14 +176,10 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     minHeight: 60,
   },
-  fullWidth: {
-    width: "100%",
-  },
-  disabled: {
-    opacity: 0.5,
-  },
+
+  // ── Text base ─────────────────────────────────────────────────────────────
   text: {
-    fontWeight: "600",
+    fontFamily: F.sans600,
     textAlign: "center",
     flex: 1,
   },
@@ -216,18 +192,25 @@ const styles = StyleSheet.create({
   largeText: {
     fontSize: 17,
   },
+
+  // ── Text per variant ──────────────────────────────────────────────────────
   primaryText: {
     color: "#FFFFFF",
   },
   secondaryText: {
-    color: "#FFFFFF",
+    color: INK_MID,
   },
   outlineText: {
-    color: "#2891FF",
+    color: TERRA,
   },
   ghostText: {
-    color: "#2891FF",
+    color: TERRA,
   },
+  dangerText: {
+    color: DANGER,
+  },
+
+  // ── Icons ─────────────────────────────────────────────────────────────────
   iconLeft: {
     marginRight: 6,
   },

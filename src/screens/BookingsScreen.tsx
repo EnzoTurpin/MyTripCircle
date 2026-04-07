@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,30 +7,74 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-  SafeAreaView,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
-import { formatDate, getBookingStatusTranslation } from "../utils/i18n";
+import {
+  formatDate,
+  getBookingStatusTranslation,
+  parseApiError,
+} from "../utils/i18n";
 import BookingForm from "../components/BookingForm";
-import { ModernCard } from "../components/ModernCard";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
+import { F } from "../theme/fonts";
+import { COLORS as C } from "../theme/colors";
+import { useTheme } from "../contexts/ThemeContext";
+
+// ─── Couleurs non-thémifiables ─────────────────────────────────────────────────
+const MOSS       = '#6B8C5A';
+const MOSS_LIGHT = '#E2EDD9';
+const SKY        = '#5A8FAA';
+const SKY_LIGHT  = '#DCF0F5';
 
 type BookingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Main"
 >;
 
+const getTypeIcon = (type: Booking["type"]) => {
+  switch (type) {
+    case "flight":      return "airplane";
+    case "train":       return "train";
+    case "hotel":       return "bed";
+    case "restaurant":  return "restaurant";
+    case "activity":    return "ticket";
+    default:            return "receipt";
+  }
+};
+
+const getTypeColors = (type: Booking["type"]): { stripe: string; bg: string } | null => {
+  switch (type) {
+    case "flight":     return { stripe: SKY,       bg: SKY_LIGHT };
+    case "hotel":      return { stripe: MOSS,      bg: MOSS_LIGHT };
+    case "train":      return { stripe: '#C4714A', bg: '#F5E5DC' }; // terra/terraLight
+    case "restaurant": return { stripe: '#C4714A', bg: '#F5E5DC' };
+    case "activity":   return { stripe: '#8B70C0', bg: '#EDE8F5' };
+    default:           return null;
+  }
+};
+
+const getStatusColors = (status: Booking["status"]): { color: string; bg: string } | null => {
+  switch (status) {
+    case "confirmed": return { color: MOSS,      bg: MOSS_LIGHT };
+    case "pending":   return { color: '#C4714A', bg: '#F5E5DC' };
+    case "cancelled": return { color: '#C04040', bg: '#FDEAEA' };
+    default:          return null;
+  }
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 const BookingsScreen: React.FC = () => {
   const navigation = useNavigation<BookingsScreenNavigationProp>();
   const { bookings, loading, createBooking, refreshData } = useTrips();
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "flight" | "train" | "hotel" | "restaurant" | "activity"
   >("all");
@@ -43,53 +87,6 @@ const BookingsScreen: React.FC = () => {
     }, [refreshData])
   );
 
-  const getTypeIcon = (type: Booking["type"]) => {
-    switch (type) {
-      case "flight":
-        return "airplane";
-      case "train":
-        return "train";
-      case "hotel":
-        return "bed";
-      case "restaurant":
-        return "restaurant";
-      case "activity":
-        return "ticket";
-      default:
-        return "receipt";
-    }
-  };
-
-  const getTypeColor = (type: Booking["type"]) => {
-    switch (type) {
-      case "flight":
-        return "#007AFF";
-      case "train":
-        return "#34C759";
-      case "hotel":
-        return "#FF9500";
-      case "restaurant":
-        return "#FF3B30";
-      case "activity":
-        return "#5856D6";
-      default:
-        return "#8E8E93";
-    }
-  };
-
-  const getStatusColor = (status: Booking["status"]) => {
-    switch (status) {
-      case "confirmed":
-        return "#34C759";
-      case "pending":
-        return "#FF9500";
-      case "cancelled":
-        return "#FF3B30";
-      default:
-        return "#8E8E93";
-    }
-  };
-
   const filteredBookings = bookings.filter(
     (booking) => selectedFilter === "all" || booking.type === selectedFilter
   );
@@ -99,7 +96,6 @@ const BookingsScreen: React.FC = () => {
   };
 
   const handleAddBooking = () => {
-    // Ouvrir directement le formulaire de réservation
     setShowBookingForm(true);
   };
 
@@ -107,190 +103,170 @@ const BookingsScreen: React.FC = () => {
     booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
   ) => {
     try {
-      // Créer la réservation avec un tripId vide (sera associé plus tard si nécessaire)
       await createBooking({
         ...booking,
         tripId: booking.tripId || "",
       });
-      // Rafraîchir les données pour afficher la nouvelle réservation
       await refreshData();
       setShowBookingForm(false);
     } catch (error) {
       console.error("Error creating booking:", error);
       Alert.alert(
         t("common.error"),
-        (error as Error).message || t("bookings.saveError") || "Erreur lors de la création de la réservation"
+        parseApiError(error) ||
+          t("bookings.saveError") ||
+          t("bookings.createBookingError")
       );
     }
   };
 
-  const renderBookingCard = ({ item }: { item: Booking }) => (
-    <ModernCard
-      variant="elevated"
-      style={styles.bookingCard}
-      onPress={() => handleBookingPress(item)}
-    >
-      <View style={styles.bookingHeader}>
-        <View
-          style={[
-            styles.typeIcon,
-            { backgroundColor: getTypeColor(item.type) + '15' },
-          ]}
-        >
-          <Ionicons
-            name={getTypeIcon(item.type) as any}
-            size={24}
-            color={getTypeColor(item.type)}
-          />
-        </View>
-        <View style={styles.bookingInfo}>
-          <Text style={styles.bookingTitle}>{item.title}</Text>
-          <View style={styles.dateRow}>
-            <Ionicons 
-              name="time-outline" 
-              size={14} 
-              color={"#616161"} 
-            />
-            <Text style={styles.bookingDate}>
-              {formatDate(item.date)}
-              {item.time && ` • ${item.time}`}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.bookingStatus}>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(item.status) + '15' },
-          ]}
-        >
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: getStatusColor(item.status) },
-            ]}
-          />
-          <Text
-            style={[styles.statusText, { color: getStatusColor(item.status) }]}
-          >
-            {item.status
-              ? getBookingStatusTranslation(item.status)
-              : t("common.unknown")}
-          </Text>
-        </View>
-      </View>
-
-      {item.description && (
-        <Text style={styles.bookingDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-      )}
-
-      {item.address && (
-        <View style={styles.addressContainer}>
-          <Ionicons 
-            name="location" 
-            size={16} 
-            color={"#FF6B9D"} 
-          />
-          <Text style={styles.addressText} numberOfLines={1}>
-            {item.address}
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.bookingFooter}>
-        {item.confirmationNumber && (
-          <View style={styles.confirmationContainer}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={14} 
-              color={"#4CAF50"} 
-            />
-            <Text style={styles.confirmationText}>
-              {item.confirmationNumber}
-            </Text>
-          </View>
-        )}
-        {item.price && (
-          <Text style={styles.priceText}>
-            {item.currency} {item.price}
-          </Text>
-        )}
-      </View>
-    </ModernCard>
-  );
-
-  const renderFilterButton = (filter: typeof selectedFilter, label: string) => (
-    <TouchableOpacity
-      style={[
-        styles.filterButton,
-        selectedFilter === filter && styles.filterButtonActive,
-      ]}
-      onPress={() => setSelectedFilter(filter)}
-    >
-      <Text
-        style={[
-          styles.filterButtonText,
-          selectedFilter === filter && styles.filterButtonTextActive,
-        ]}
+  // ─── Booking card ────────────────────────────────────────────────────────────
+  const renderBookingCard = ({ item }: { item: Booking }) => {
+    const typeC   = getTypeColors(item.type);
+    const statusC = getStatusColors(item.status);
+    const stripeColor = typeC?.stripe ?? colors.textMid;
+    const typeBg = typeC?.bg ?? colors.bgMid;
+    const statusBgColor = statusC?.bg ?? colors.bgMid;
+    const statusTextColor = statusC?.color ?? colors.textMid;
+    return (
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        onPress={() => handleBookingPress(item)}
+        activeOpacity={0.85}
       >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+        {/* Left colour stripe */}
+        <View style={[styles.cardStripe, { backgroundColor: stripeColor }]} />
 
+        {/* Card body */}
+        <View style={styles.cardBody}>
+          {/* Top row: icon + info + status */}
+          <View style={styles.cardTopRow}>
+            <View style={[styles.typeIconCircle, { backgroundColor: typeBg }]}>
+              <Ionicons
+                name={getTypeIcon(item.type) as any}
+                size={24}
+                color={stripeColor}
+              />
+            </View>
+
+            <View style={styles.cardInfo}>
+              <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+              <Text style={[styles.cardSubtitle, { color: colors.textLight }]} numberOfLines={1}>
+                {formatDate(item.date)}
+                {item.time ? ` · ${item.time}` : ""}
+              </Text>
+            </View>
+
+            <View style={styles.cardRight}>
+              {/* Status badge */}
+              <View style={[styles.statusBadge, { backgroundColor: statusBgColor }]}>
+                <Text style={[styles.statusBadgeText, { color: statusTextColor }]}>
+                  {item.status ? getBookingStatusTranslation(item.status) : t("common.unknown")}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Optional description */}
+          {item.description ? (
+            <Text style={[styles.cardDescription, { color: colors.textMid }]} numberOfLines={2}>
+              {item.description}
+            </Text>
+          ) : null}
+
+          {/* Optional address */}
+          {item.address ? (
+            <View style={styles.cardAddressRow}>
+              <Ionicons name="location-outline" size={16} color={colors.textLight} />
+              <Text style={[styles.cardAddressText, { color: colors.textLight }]} numberOfLines={1}>{item.address}</Text>
+            </View>
+          ) : null}
+
+          {/* Confirmation number */}
+          {item.confirmationNumber ? (
+            <View style={styles.cardConfRow}>
+              <Ionicons name="checkmark-circle-outline" size={16} color={MOSS} />
+              <Text style={[styles.cardConfText, { color: colors.textMid }]}>{item.confirmationNumber}</Text>
+            </View>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  // ─── Filter pill ─────────────────────────────────────────────────────────────
+  const renderFilterButton = (filter: typeof selectedFilter, label: string) => {
+    const active = selectedFilter === filter;
+    return (
+      <TouchableOpacity
+        key={filter}
+        style={[styles.filterPill, { backgroundColor: colors.bgMid }, active && styles.filterPillActive]}
+        onPress={() => setSelectedFilter(filter)}
+        activeOpacity={0.75}
+      >
+        <Text style={[styles.filterPillText, { color: colors.textMid }, active && styles.filterPillTextActive]}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  // ─── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>{t("bookings.loading")}</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("bookings.loading")}</Text>
       </View>
     );
   }
 
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <SwipeToNavigate currentIndex={1} totalTabs={4}>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.container}>
-          <View style={styles.header}>
+    <SwipeToNavigate currentIndex={1} totalTabs={5}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
+        <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+        <View style={[styles.container, { backgroundColor: colors.bg }]}>
+
+          {/* ── Header ── */}
+          <View style={[styles.header, { backgroundColor: colors.bg }]}>
             <View>
-              <Text style={styles.headerTitle}>{t("bookings.header")}</Text>
+              <Text style={[styles.headerEyebrow, { color: colors.textLight }]}>{t("bookings.myBookingsHeader")}</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>{t("bookings.header")}</Text>
             </View>
-            <TouchableOpacity style={styles.addButton} onPress={handleAddBooking} activeOpacity={0.7}>
-              <LinearGradient
-                colors={['#2891FF', '#8869FF']}
-                style={styles.addButtonGradient}
-              >
-                <Ionicons name="add" size={26} color="white" />
-              </LinearGradient>
+            {/* Add booking button */}
+            <TouchableOpacity
+              style={[styles.filterIconBtn, { backgroundColor: colors.terraLight }]}
+              onPress={handleAddBooking}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="add" size={24} color={colors.terra} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.filtersContainer}>
+          {/* Filter tabs */}
+          <View style={styles.filtersWrapper}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filtersScroll}
             >
-              {renderFilterButton("all", t("bookings.filters.all"))}
-              {renderFilterButton("flight", t("bookings.filters.flight"))}
-              {renderFilterButton("train", t("bookings.filters.train"))}
-              {renderFilterButton("hotel", t("bookings.filters.hotel"))}
+              {renderFilterButton("all",        t("bookings.filters.all"))}
+              {renderFilterButton("flight",     t("bookings.filters.flight"))}
+              {renderFilterButton("train",      t("bookings.filters.train"))}
+              {renderFilterButton("hotel",      t("bookings.filters.hotel"))}
               {renderFilterButton("restaurant", t("bookings.filters.restaurant"))}
-              {renderFilterButton("activity", t("bookings.filters.activity"))}
+              {renderFilterButton("activity",   t("bookings.filters.activity"))}
             </ScrollView>
           </View>
 
+          {/* Empty state */}
           {filteredBookings.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconContainer}>
-                <Ionicons name="calendar-outline" size={64} color={"#7EBDFF"} />
+              <View style={[styles.emptyIconCircle, { backgroundColor: colors.terraLight }]}>
+                <Ionicons name="calendar-outline" size={44} color={colors.terra} />
               </View>
-              <Text style={styles.emptyTitle}>{t("bookings.emptyTitle")}</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("bookings.emptyTitle")}</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textMid }]}>
                 {selectedFilter === "all"
                   ? t("bookings.emptyAll")
                   : t("bookings.emptyFiltered", {
@@ -298,29 +274,33 @@ const BookingsScreen: React.FC = () => {
                     })}
               </Text>
               <TouchableOpacity
-                style={styles.createButton}
+                style={styles.emptyAddButton}
                 onPress={handleAddBooking}
                 activeOpacity={0.8}
               >
-                <LinearGradient
-                  colors={['#2891FF', '#8869FF']}
-                  style={styles.createButtonGradient}
-                >
-                  <Ionicons name="add-circle-outline" size={20} color="white" style={{ marginRight: 8 }} />
-                  <Text style={styles.createButtonText}>
-                    {t("bookings.addBooking")}
-                  </Text>
-                </LinearGradient>
+                <Ionicons name="add-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+                <Text style={styles.emptyAddButtonText}>{t("bookings.addBooking")}</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <FlatList
-              data={filteredBookings}
-              renderItem={renderBookingCard}
-              keyExtractor={(item, index) => item.id || `booking-${index}`}
-              contentContainerStyle={styles.bookingsList}
-              showsVerticalScrollIndicator={false}
-            />
+            <View style={styles.listWrapper}>
+              <FlatList
+                data={filteredBookings}
+                renderItem={renderBookingCard}
+                keyExtractor={(item, index) => item.id || `booking-${index}`}
+                contentContainerStyle={styles.bookingsList}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
+          )}
+
+          {/* Total bar — fixed above navbar */}
+          {filteredBookings.length > 0 && (
+            <View style={[styles.totalBar, { backgroundColor: colors.bgMid, borderTopColor: colors.border }]}>
+              <Text style={[styles.totalBarLabel, { color: colors.textMid }]}>
+                {t("bookings.totalCount", { count: filteredBookings.length })}
+              </Text>
+            </View>
           )}
 
           {/* Booking Form Modal */}
@@ -335,229 +315,256 @@ const BookingsScreen: React.FC = () => {
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: '#FAFAFA',
   },
   loadingText: {
     fontSize: 16,
-    color: '#616161',
+    fontFamily: F.sans400,
   },
+
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center" as const,
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 24,
-    backgroundColor: '#FAFAFA',
+    paddingBottom: 20,
+  },
+  headerEyebrow: {
+    fontFamily: F.sans400,
+    fontSize: 13,
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#212121',
+    fontFamily: F.sans700,
+    fontSize: 28,
   },
-  addButton: {
-    borderRadius: 9999,
-    width: 44,
-    height: 44,
-    overflow: "hidden",
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4,
+  filterIconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  addButtonGradient: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-  },
-  filtersContainer: {
-    paddingVertical: 16,
-    backgroundColor: '#FAFAFA',
+
+  // Filters
+  filtersWrapper: {
+    paddingBottom: 14,
   },
   filtersScroll: {
     paddingHorizontal: 24,
+    gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
   },
-  filterButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 9999,
-    marginRight: 8,
-    backgroundColor: '#FFFFFF',
+  filterPill: {
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    borderRadius: 20,
+    marginRight: 0,
+  },
+  filterPillActive: {
+    backgroundColor: "#C4714A", // terra — identique light/dark
+  },
+  filterPillText: {
+    fontFamily: F.sans600,
+    fontSize: 15,
+  },
+  filterPillTextActive: {
+    fontFamily: F.sans600,
+    fontSize: 15,
+    color: "white",
+  },
+
+  // List wrapper (relative container for FAB)
+  listWrapper: {
+    flex: 1,
+  },
+
+  // List
+  bookingsList: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 20,
+  },
+
+  // FAB
+  fab: {
+    position: "absolute",
+    bottom: 24,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: C.terra,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: C.terraDark,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+
+  // Card
+  card: {
+    flexDirection: "row",
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    marginBottom: 14,
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingLeft: 12,
   },
-  filterButtonActive: {
-    backgroundColor: '#2891FF',
-    borderColor: '#2891FF',
+  cardStripe: {
+    width: 5,
+    height: 48,
+    borderRadius: 3,
+    marginRight: 4,
+    flexShrink: 0,
   },
-  filterButtonText: {
+  cardBody: {
+    flex: 1,
+    paddingRight: 14,
+  },
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  typeIconCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 12,
+    marginRight: 12,
+  },
+  cardInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontFamily: F.sans600,
+    marginBottom: 3,
+  },
+  cardSubtitle: {
     fontSize: 14,
-    color: '#212121',
-    fontWeight: '500',
+    fontFamily: F.sans400,
   },
-  filterButtonTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  cardRight: {
+    alignItems: "flex-end",
+    gap: 6,
   },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  statusBadgeText: {
+    fontSize: 13,
+    fontFamily: F.sans600,
+  },
+  cardDescription: {
+    fontSize: 14,
+    marginTop: 10,
+    lineHeight: 20,
+    fontFamily: F.sans400,
+  },
+  cardAddressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    gap: 5,
+  },
+  cardAddressText: {
+    fontSize: 13,
+    flex: 1,
+    fontFamily: F.sans400,
+  },
+  cardConfRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    gap: 5,
+  },
+  cardConfText: {
+    fontSize: 13,
+    fontFamily: F.sans500,
+  },
+
+  // Total bar
+  totalBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  totalBarLabel: {
+    fontSize: 17,
+    fontFamily: F.sans500,
+  },
+
+  // Empty state
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 48,
   },
-  emptyIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#E8F4FF',
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+  emptyIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#212121',
+    fontSize: 22,
+    fontFamily: F.sans700,
     marginBottom: 8,
-    textAlign: "center" as const,
+    textAlign: "center",
   },
   emptySubtitle: {
-    fontSize: 16,
-    color: '#616161',
+    fontSize: 15,
     textAlign: "center",
     marginBottom: 32,
-    lineHeight: 24,
+    lineHeight: 22,
+    fontFamily: F.sans400,
   },
-  createButton: {
-    borderRadius: 9999,
-    overflow: "hidden",
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4,
-  },
-  createButtonGradient: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  bookingsList: {
-    padding: 24,
-    paddingBottom: 100, // Espace pour la navbar floating
-  },
-  bookingCard: {
-    marginBottom: 16,
-  },
-  bookingHeader: {
+  emptyAddButton: {
     flexDirection: "row",
-    alignItems: "center" as const,
-    marginBottom: 16,
-  },
-  typeIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    backgroundColor: "#C4714A", // terra — identique light/dark
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 24,
+    shadowColor: "#A35830",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  bookingInfo: {
-    flex: 1,
-  },
-  bookingTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#212121',
-    marginBottom: 4,
-  },
-  dateRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-  },
-  bookingDate: {
-    fontSize: 14,
-    color: '#616161',
-    marginLeft: 4,
-  },
-  bookingStatus: {
-    marginBottom: 8,
-  },
-  statusBadge: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    alignSelf: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 9999,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  bookingDescription: {
-    fontSize: 14,
-    color: '#616161',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  addressContainer: {
-    flexDirection: "row",
-    alignItems: "center" as const,
-    marginBottom: 8,
-    backgroundColor: '#FAFAFA',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  addressText: {
-    fontSize: 14,
-    color: '#212121',
-    marginLeft: 4,
-    flex: 1,
-    fontWeight: '500',
-  },
-  bookingFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center" as const,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
-  },
-  confirmationContainer: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-  },
-  confirmationText: {
-    fontSize: 12,
-    color: '#616161',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  priceText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2891FF',
+  emptyAddButtonText: {
+    color: "white",
+    fontSize: 15,
+    fontFamily: F.sans600,
   },
 });
 

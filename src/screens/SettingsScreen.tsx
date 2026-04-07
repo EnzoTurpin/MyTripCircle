@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   View,
   Text,
@@ -6,281 +8,371 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
-  Platform,
+  Alert,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { ModernCard } from "../components/ModernCard";
+import { useTranslation } from "react-i18next";
+import { changeLanguage } from "../utils/i18n";
+import { F } from "../theme/fonts";
 
+// ─── Custom toggle pill ───────────────────────────────────────────────────────
+interface ToggleProps {
+  value: boolean;
+  onToggle: (v: boolean) => void;
+  disabled?: boolean;
+  trackColor?: string;
+}
+
+const Toggle: React.FC<ToggleProps> = ({ value, onToggle, disabled = false, trackColor }) => (
+  <TouchableOpacity
+    onPress={() => !disabled && onToggle(!value)}
+    activeOpacity={disabled ? 1 : 0.8}
+    style={[
+      toggleStyles.track,
+      { backgroundColor: value ? (trackColor ?? "#C4714A") : "#D8CCBA" },
+    ]}
+  >
+    <View
+      style={[
+        toggleStyles.knob,
+        { transform: [{ translateX: value ? 24 : 0 }] },
+      ]}
+    />
+  </TouchableOpacity>
+);
+
+const toggleStyles = StyleSheet.create({
+  track: {
+    width: 54,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  knob: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
+  },
+});
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { user, updateSettings, deleteAccount } = useAuth();
+  const { t, i18n } = useTranslation();
+  const { isDark, colors, toggleTheme, satelliteMap, toggleSatelliteMap } = useTheme();
 
-  const settingsOptions = [
-    {
-      icon: "moon-outline",
-      title: "Mode sombre",
-      value: "Bientôt disponible",
-      color: "#8869FF",
-    },
-    {
-      icon: "notifications-outline",
-      title: "Notifications",
-      value: "Activées",
-      color: "#2891FF",
-    },
-    {
-      icon: "language-outline",
-      title: "Langue",
-      value: "Français",
-      color: "#FF6B9D",
-    },
-    {
-      icon: "lock-closed-outline",
-      title: "Confidentialité",
-      value: "Gérer",
-      color: "#4CAF50",
-    },
-    {
-      icon: "shield-checkmark-outline",
-      title: "Sécurité",
-      value: "Configurer",
-      color: "#FF9800",
-    },
-  ];
+  const NOTIF_KEYS = {
+    push: "@mytripcircle_notif_push",
+    email: "@mytripcircle_notif_email",
+    friends: "@mytripcircle_notif_friends",
+  };
 
-  const accountOptions = [
-    {
-      icon: "lock-closed-outline",
-      title: "Change Password",
-      action: "change-password",
-    },
-  ];
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [emailReminders, setEmailReminders] = useState(true);
+  const [friendInvitations, setFriendInvitations] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      AsyncStorage.getItem(NOTIF_KEYS.push),
+      AsyncStorage.getItem(NOTIF_KEYS.email),
+      AsyncStorage.getItem(NOTIF_KEYS.friends),
+    ]).then(([push, email, friends]) => {
+      if (push !== null) setPushNotifications(push === "true");
+      if (email !== null) setEmailReminders(email === "true");
+      if (friends !== null) setFriendInvitations(friends === "true");
+    });
+  }, []);
+
+  const handlePushToggle = (value: boolean) => {
+    setPushNotifications(value);
+    AsyncStorage.setItem(NOTIF_KEYS.push, String(value));
+  };
+
+  const handleEmailToggle = (value: boolean) => {
+    setEmailReminders(value);
+    AsyncStorage.setItem(NOTIF_KEYS.email, String(value));
+  };
+
+  const handleFriendsToggle = (value: boolean) => {
+    setFriendInvitations(value);
+    AsyncStorage.setItem(NOTIF_KEYS.friends, String(value));
+  };
+  const [publicProfile, setPublicProfile] = useState(user?.isPublicProfile === true);
+  const handlePublicProfileToggle = async (value: boolean) => {
+    setPublicProfile(value);
+    try {
+      await updateSettings({ isPublicProfile: value });
+    } catch {
+      // Rollback en cas d'erreur réseau
+      setPublicProfile(!value);
+    }
+  };
+
+  const currentLangLabel =
+    i18n.language === "fr"
+      ? t("settings.languageFr")
+      : t("settings.languageEn");
+
+  const handleLanguagePress = () => {
+    Alert.alert(t("settings.languageSelectTitle"), t("settings.languageSelectMessage"), [
+      {
+        text: t("settings.languageFr"),
+        onPress: () => changeLanguage("fr"),
+      },
+      {
+        text: t("settings.languageEn"),
+        onPress: () => changeLanguage("en"),
+      },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  };
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#2891FF", "#8869FF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+
+      {/* ── Header ── */}
+      <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
+        <TouchableOpacity
+          style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t("settings.title")}</Text>
+        <View style={{ width: 38 }} />
+      </View>
 
-          <View style={styles.headerContent}>
-            <View style={styles.iconContainer}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.3)",
-                  "rgba(255, 255, 255, 0.1)",
-                ]}
-                style={styles.iconGradient}
-              >
-                <Ionicons name="settings" size={40} color="white" />
-              </LinearGradient>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Section: NOTIFICATIONS ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("settings.sections.notifications")}</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>🔔</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.pushNotifications")}</Text>
             </View>
-            <Text style={styles.headerTitle}>Paramètres</Text>
-            <Text style={styles.headerSubtitle}>
-              Personnalisez votre expérience
-            </Text>
+            <Toggle value={pushNotifications} onToggle={handlePushToggle} trackColor={colors.terra} />
           </View>
-        </LinearGradient>
 
-        <View style={styles.content}>
-          <ModernCard variant="elevated">
-            {settingsOptions.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.settingItem,
-                  index !== settingsOptions.length - 1 &&
-                    styles.settingItemBorder,
-                ]}
-                activeOpacity={0.7}
-              >
-                <View style={styles.settingLeft}>
-                  <View
-                    style={[
-                      styles.settingIcon,
-                      { backgroundColor: item.color + "15" },
-                    ]}
-                  >
-                    <Ionicons
-                      name={item.icon as any}
-                      size={22}
-                      color={item.color}
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.settingTitle}>{item.title}</Text>
-                    <Text style={styles.settingValue}>{item.value}</Text>
-                  </View>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
-              </TouchableOpacity>
-            ))}
-          </ModernCard>
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
 
-          <ModernCard variant="elevated" style={styles.aboutSection}>
-            <Text style={styles.aboutTitle}>À propos</Text>
-            <View style={styles.aboutRow}>
-              <Text style={styles.aboutLabel}>Version</Text>
-              <Text style={styles.aboutValue}>1.0.0</Text>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>✉️</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.emailReminders")}</Text>
             </View>
-            <View style={styles.aboutRow}>
-              <Text style={styles.aboutLabel}>Build</Text>
-              <Text style={styles.aboutValue}>2026.01.25</Text>
+            <Toggle value={emailReminders} onToggle={handleEmailToggle} trackColor={colors.terra} />
+          </View>
+
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
+
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>👥</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.friendInvitations")}</Text>
             </View>
-          </ModernCard>
-          <View style={styles.settingsContainer}>
-            {accountOptions.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.settingItem}
-                onPress={() => navigation.navigate("ChangePassword")}
-              >
-                <View style={styles.settingLeft}>
-                  <Ionicons name={item.icon as any} size={22} color="#007AFF" />
-                  <Text style={styles.settingTitle}>{item.title}</Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={18}
-                  color="#ccc"
-                />
-              </TouchableOpacity>
-            ))}
+            <Toggle value={friendInvitations} onToggle={handleFriendsToggle} trackColor={colors.terra} />
           </View>
         </View>
+
+        {/* ── Section: PRIVACY ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("settings.sections.privacy")}</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>🔒</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.publicProfile")}</Text>
+            </View>
+            <Toggle value={publicProfile} onToggle={handlePublicProfileToggle} trackColor={colors.terra} />
+          </View>
+        </View>
+
+        {/* ── Section: APPEARANCE ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("settings.sections.appearance")}</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>{isDark ? "🌙" : "☀️"}</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.darkMode")}</Text>
+            </View>
+            <Toggle value={isDark} onToggle={() => toggleTheme()} trackColor={colors.terra} />
+          </View>
+
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
+
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>🛰️</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.satelliteMap")}</Text>
+            </View>
+            <Toggle value={satelliteMap} onToggle={() => toggleSatelliteMap()} trackColor={colors.terra} />
+          </View>
+
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
+
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.7}
+            onPress={handleLanguagePress}
+          >
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>🌐</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.language")}</Text>
+            </View>
+            <View style={styles.rowRight}>
+              <Text style={[styles.rowValue, { color: colors.textLight }]}>{currentLangLabel}</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Delete account ── */}
+        <TouchableOpacity
+          style={[styles.deleteRow, { backgroundColor: colors.dangerLight, borderColor: isDark ? "#4A2020" : "#F0D0C8" }]}
+          activeOpacity={0.7}
+          onPress={() =>
+            Alert.alert(
+              t("settings.deleteAccountTitle"),
+              t("settings.deleteAccountMessage"),
+              [
+                { text: t("common.cancel"), style: "cancel" },
+                {
+                  text: t("common.delete"),
+                  style: "destructive",
+                  onPress: async () => {
+                    const ok = await deleteAccount();
+                    if (!ok) {
+                      Alert.alert(t("common.error"), t("settings.deleteAccountError"));
+                    }
+                  },
+                },
+              ]
+            )
+          }
+        >
+          <Text style={styles.deleteEmoji}>🗑</Text>
+          <Text style={[styles.deleteText, { color: colors.danger }]}>{t("settings.deleteAccount")}</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
   },
-  container: {
+  scroll: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
   },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 64 + 10 : 24,
-    paddingBottom: 120,
-    paddingHorizontal: 24,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: -20,
-    marginTop: 5,
-    zIndex: 10,
-  },
-  headerContent: {
-    alignItems: "center",
-    marginTop: 40,
-  },
-  iconContainer: {
-    marginBottom: 16,
-  },
-  iconGradient: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "white",
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-  },
-  content: {
-    marginTop: -100,
-    paddingHorizontal: 24,
+  scrollContent: {
     paddingBottom: 64,
   },
-  settingItem: {
+
+  // Header
+  headerBar: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
   },
-  settingItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
-  },
-  settingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  settingIcon: {
+  backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
   },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 2,
+  headerTitle: {
+    fontFamily: F.sans700,
+    fontSize: 26,
+    textAlign: "center",
   },
-  settingValue: {
-    color: "#616161",
+
+  // Section label
+  sectionLabel: {
+    fontFamily: F.sans600,
     fontSize: 13,
+    letterSpacing: 1.4,
+    marginHorizontal: 18,
+    marginBottom: 6,
+    marginTop: 20,
   },
-  aboutSection: {
-    marginTop: 16,
+
+  // Card
+  card: {
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginHorizontal: 18,
   },
-  aboutTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#212121",
-    marginBottom: 16,
-  },
-  aboutRow: {
+
+  // Row
+  row: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   },
-  aboutLabel: {
-    fontSize: 15,
-    color: "#616161",
+  rowDivider: {
+    height: 1,
+    marginHorizontal: 16,
   },
-  aboutValue: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212121",
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 14,
   },
-  settingsContainer: {
-    marginTop: 16,
+  rowRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  rowEmoji: {
+    fontSize: 26,
+  },
+  rowTitle: {
+    fontFamily: F.sans500,
+    fontSize: 19,
+  },
+  rowValue: {
+    fontFamily: F.sans400,
+    fontSize: 17,
+  },
+
+  // Delete account row
+  deleteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 18,
+    marginTop: 20,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  deleteEmoji: {
+    fontSize: 24,
+  },
+  deleteText: {
+    fontFamily: F.sans500,
+    fontSize: 18,
   },
 });
 

@@ -1,6 +1,6 @@
 import { API_URLS } from "../config/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { FriendRequest, Friend } from "../types";
+import { FriendRequest, Friend, FriendSuggestion } from "../types";
 // import { updateProfile } from "../controllers/userController";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -104,11 +104,31 @@ export const ApiService = {
       user?: any;
       userId?: string;
       error?: string;
+      requiresOtp?: boolean;
     }>("/users/register", "POST", data),
+
+  loginWithGoogle: (data: { accessToken: string }) =>
+    request<{ success: boolean; token?: string; user?: any; error?: string }>(
+      "/users/google",
+      "POST",
+      data,
+    ),
+
+  loginWithApple: (data: {
+    identityToken: string;
+    email?: string;
+    fullName?: { givenName?: string | null; familyName?: string | null } | null;
+  }) =>
+    request<{ success: boolean; token?: string; user?: any; error?: string }>(
+      "/users/apple",
+      "POST",
+      data,
+    ),
 
   getTrips: () => request<any[]>("/trips"),
   getTripById: (id: string) => request<any>(`/trips/${id}`),
   getBookings: () => request<any[]>("/bookings"),
+  getBookingById: (id: string) => request<any>(`/bookings/${id}`),
   getBookingsByTripId: (tripId: string) =>
     request<any[]>(`/bookings/trip/${tripId}`),
   getAddresses: () => request<any[]>("/addresses"),
@@ -147,6 +167,10 @@ export const ApiService = {
       startDate?: Date;
       endDate?: Date;
       isPublic?: boolean;
+      visibility?: "private" | "friends" | "public";
+      status?: "draft" | "validated";
+      coverImage?: string;
+      tags?: string[];
     },
   ) => request<any>(`/trips/${tripId}`, "PUT", updates),
 
@@ -225,26 +249,53 @@ export const ApiService = {
     userId?: string,
   ) => request<any>(`/invitations/${token}`, "PUT", { action, userId }),
 
+  getTripInvitationLink: (tripId: string, force = false) =>
+    request<{ token: string; link: string }>(`/invitations/trip-link/${tripId}`, "POST", { force }),
+
   // Amis
   sendFriendRequest: (data: {
     recipientEmail?: string;
     recipientPhone?: string;
-  }) => request<FriendRequest>("/friends/request", "POST", data),
+    recipientId?: string;
+  }) => request<{ autoAccepted?: boolean }>("/friends/request", "POST", data),
 
   getFriendRequests: () => request<FriendRequest[]>("/friends/requests", "GET"),
 
   respondToFriendRequest: (requestId: string, action: "accept" | "decline") =>
     request<{ success: boolean }>(`/friends/requests/${requestId}`, "PUT", { action }),
 
+  cancelFriendRequest: (requestId: string) =>
+    request<{ success: boolean }>(`/friends/requests/${requestId}`, "DELETE"),
+
   getFriends: () => request<Friend[]>("/friends", "GET"),
 
   removeFriend: (friendId: string) => request<{ success: boolean }>(`/friends/${friendId}`, "DELETE"),
 
+  getFriendSuggestions: () => request<FriendSuggestion[]>("/friends/suggestions", "GET"),
+
+  getFriendProfile: (friendId: string) => request<any>(`/friends/${friendId}/profile`, "GET"),
+
+  lookupUser: (params: { email?: string; phone?: string }) => {
+    const qs = params.email ? `email=${encodeURIComponent(params.email)}` : `phone=${encodeURIComponent(params.phone!)}`;
+    return request<any>(`/users/lookup?${qs}`, "GET");
+  },
+
   updateProfile: (data: { name: string; email: string }) =>
     request<{ success: boolean; user: any }>("/users/me", "PUT", data),
 
+  updateSettings: (data: { isPublicProfile: boolean }) =>
+    request<{ success: boolean; user: any }>("/users/settings", "PUT", data),
+
+  uploadAvatar: (avatar: string) =>
+    request<{ success: boolean; user: any }>("/users/avatar", "PUT", { avatar }),
+
+  updateLanguage: (language: "en" | "fr") =>
+    request<{ success: boolean; language: string }>("/users/language", "PUT", { language }),
+
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     request<{ success: boolean }>("/users/change-password", "PUT", data),
+
+  deleteAccount: () => request<{ success: boolean }>("/users/me", "DELETE"),
 
   requestPasswordReset: (email: string) =>
     request<{ success: boolean; message?: string }>(
@@ -253,8 +304,11 @@ export const ApiService = {
       { email },
     ),
 
+  verifyResetToken: (token: string) =>
+    request<{ success: boolean; error?: string }>(`/users/verify-reset-token?token=${encodeURIComponent(token)}`, "GET"),
+
   resetPassword: (token: string, newPassword: string) =>
-    request<{ success: boolean }>("/users/reset-password", "POST", {
+    request<{ success: boolean; token?: string; user?: any }>("/users/reset-password", "POST", {
       token,
       newPassword,
     }),
@@ -265,6 +319,9 @@ export const ApiService = {
       "POST",
       data,
     ),
+
+  resendOtp: (userId: string) =>
+    request<{ success: boolean }>("/users/resend-otp", "POST", { userId }),
 
   // Batch get users by IDs
   getUsersByIds: (ids: string[]) =>
@@ -280,6 +337,7 @@ export const ApiService = {
     phone?: string;
     website?: string;
     notes?: string;
+    rating?: number;
     tripId?: string;
   }) => request<any>("/addresses", "POST", address),
 
@@ -294,8 +352,12 @@ export const ApiService = {
       phone?: string;
       website?: string;
       notes?: string;
+      rating?: number;
     },
   ) => request<any>(`/addresses/${addressId}`, "PUT", updates),
+
+  deleteAddress: (addressId: string) =>
+    request<any>(`/addresses/${addressId}`, "DELETE"),
 
   // Subscription
   getSubscription: () => request<any>("/subscriptions/me"),
@@ -309,6 +371,29 @@ export const ApiService = {
 
   cancelSubscription: () =>
     request<{ success: boolean; message?: string }>("/subscriptions/cancel", "POST"),
+
+  // Gestion des membres d'un voyage
+  removeTripCollaborator: (tripId: string, userId: string) =>
+    request<{ success: boolean }>(`/trips/${tripId}/collaborators/${userId}`, "DELETE"),
+
+  transferTripOwnership: (tripId: string, newOwnerId: string) =>
+    request<{ success: boolean }>(`/trips/${tripId}/transfer-ownership`, "PUT", { newOwnerId }),
+
+  cancelInvitation: (invitationId: string) =>
+    request<{ success: boolean }>(`/invitations/${invitationId}`, "DELETE"),
+
+  // Liens d'invitation ami
+  getFriendInviteLink: () =>
+    request<{ token: string; link: string }>("/friends/invite-link", "POST"),
+
+  getFriendInviteByToken: (token: string) =>
+    request<{ userId: string; name: string; avatar: string | null }>(`/friends/invite-link/${token}`),
+
+  acceptFriendInviteLink: (token: string) =>
+    request<{ success: boolean }>(`/friends/invite-link/${token}/accept`, "POST"),
+
+  generateItinerary: (data: { city: string; days: number }) =>
+    request<{ cached: boolean; itinerary: any }>("/itinerary/generate", "POST", data),
 };
 
 export default ApiService;
