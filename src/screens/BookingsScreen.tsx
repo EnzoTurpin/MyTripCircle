@@ -26,6 +26,7 @@ import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { COLORS as C } from "../theme/colors";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 // ─── Couleurs non-thémifiables ─────────────────────────────────────────────────
 const MOSS       = '#6B8C5A';
@@ -214,9 +215,42 @@ const BookingsScreen: React.FC = () => {
   // ─── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("bookings.loading")}</Text>
-      </View>
+      <SwipeToNavigate currentIndex={1} totalTabs={5}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
+          <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+          <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: 100 }}>
+            {/* Header */}
+            <View style={[styles.header, { paddingHorizontal: 14, paddingTop: 20, paddingBottom: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+              <SkeletonBox width={160} height={28} borderRadius={8} />
+              <SkeletonBox width={44} height={44} borderRadius={22} />
+            </View>
+
+            {/* Filter pills */}
+            <View style={{ flexDirection: "row", paddingHorizontal: 14, gap: 8, marginBottom: 16 }}>
+              {[80, 60, 60, 80, 70].map((w, i) => (
+                <SkeletonBox key={i} width={w} height={34} borderRadius={20} />
+              ))}
+            </View>
+
+            {/* Booking cards */}
+            <View style={{ paddingHorizontal: 14, gap: 12 }}>
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i} style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row" }}>
+                  <SkeletonBox width={6} height={96} borderRadius={0} style={{ borderRadius: 0 }} />
+                  <View style={{ flex: 1, backgroundColor: colors.bgMid, padding: 14, gap: 10 }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                      <SkeletonBox width={130} height={16} borderRadius={6} />
+                      <SkeletonBox width={70} height={22} borderRadius={10} />
+                    </View>
+                    <SkeletonBox width="80%" height={12} borderRadius={5} />
+                    <SkeletonBox width="50%" height={12} borderRadius={5} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </SwipeToNavigate>
     );
   }
 

@@ -16,6 +16,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 import { useInviteFriends } from "../hooks/useInviteFriends";
 import MemberRow from "../components/inviteFriends/MemberRow";
 import PendingRow from "../components/inviteFriends/PendingRow";
@@ -77,9 +78,34 @@ const InviteFriendsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]}>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color="#C4714A" />
+      <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]} edges={["top", "left", "right"]}>
+        <View style={{ paddingHorizontal: 14, paddingTop: 16, gap: 16 }}>
+          {/* Header */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <SkeletonBox width={36} height={36} borderRadius={18} />
+            <SkeletonBox width={180} height={20} borderRadius={8} />
+          </View>
+
+          {/* Trip info card */}
+          <SkeletonBox width="100%" height={80} borderRadius={12} />
+
+          {/* Invite link */}
+          <SkeletonBox width="100%" height={52} borderRadius={12} />
+
+          {/* Section label */}
+          <SkeletonBox width={120} height={14} borderRadius={6} />
+
+          {/* Member rows */}
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 2 }}>
+              <SkeletonBox width={44} height={44} borderRadius={22} />
+              <View style={{ flex: 1, gap: 8 }}>
+                <SkeletonBox width="55%" height={14} borderRadius={6} />
+                <SkeletonBox width="35%" height={12} borderRadius={5} />
+              </View>
+              <SkeletonBox width={72} height={30} borderRadius={15} />
+            </View>
+          ))}
         </View>
       </SafeAreaView>
     );

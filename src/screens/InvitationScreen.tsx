@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Alert,
   StatusBar,
-  ActivityIndicator,
   RefreshControl,
   Animated,
 } from "react-native";
@@ -24,6 +23,7 @@ import { parseApiError } from "../utils/i18n";
 import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 import { TabKey } from "../utils/invitationUtils";
 import InvitationCard from "../components/invitations/InvitationCard";
 import SentCard from "../components/invitations/SentCard";
@@ -375,8 +375,23 @@ const InvitationScreen: React.FC = () => {
 
       {/* ── Content ── */}
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#C4714A" />
+        <View style={{ paddingHorizontal: 14, paddingTop: 12, gap: 14 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ borderRadius: 14, backgroundColor: colors.bgMid, padding: 14, gap: 10 }}>
+              <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+                <SkeletonBox width={40} height={40} borderRadius={20} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <SkeletonBox width="65%" height={14} borderRadius={6} />
+                  <SkeletonBox width="45%" height={12} borderRadius={5} />
+                </View>
+                <SkeletonBox width={60} height={22} borderRadius={10} />
+              </View>
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+                <SkeletonBox height={36} borderRadius={10} style={{ flex: 1 }} />
+                <SkeletonBox height={36} borderRadius={10} style={{ flex: 1 }} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <ScrollView

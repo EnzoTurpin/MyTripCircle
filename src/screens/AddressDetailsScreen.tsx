@@ -23,6 +23,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 import { geocodeAddress, getCached, GeoCoords } from "../utils/geocoding";
 
 // Chargement conditionnel : react-native-maps nécessite un rebuild du dev client
@@ -143,10 +144,54 @@ const AddressDetailsScreen: React.FC = () => {
   // ── Guards ─────────────────────────────────────────────────────────────────
   if (!isReady || loading) {
     return (
-      <View style={[styles.centeredState, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.centeredStateText, { color: colors.textMid }]}>
-          {t("addresses.details.loading")}
-        </Text>
+      <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
+        <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: 40 }}>
+          {/* Hero gradient area */}
+          <SkeletonBox width="100%" height={270} borderRadius={0} />
+
+          <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 16 }}>
+            {/* Type badge */}
+            <SkeletonBox width={90} height={24} borderRadius={20} />
+
+            {/* Name */}
+            <SkeletonBox width="65%" height={24} borderRadius={8} />
+
+            {/* Address line */}
+            <SkeletonBox width="80%" height={14} borderRadius={6} />
+
+            {/* Rating row */}
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <SkeletonBox key={i} width={20} height={20} borderRadius={4} />
+              ))}
+              <SkeletonBox width={40} height={14} borderRadius={5} />
+            </View>
+
+            {/* Chips row */}
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {[80, 70, 90].map((w, i) => (
+                <SkeletonBox key={i} width={w} height={30} borderRadius={999} />
+              ))}
+            </View>
+
+            {/* Map thumbnail */}
+            <SkeletonBox width="100%" height={160} borderRadius={14} />
+
+            {/* Action buttons */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <SkeletonBox height={48} borderRadius={12} style={{ flex: 1 }} />
+              <SkeletonBox height={48} borderRadius={12} style={{ flex: 1 }} />
+            </View>
+
+            {/* Info rows */}
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+                <SkeletonBox width={20} height={20} borderRadius={4} />
+                <SkeletonBox width="70%" height={14} borderRadius={6} />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
   }

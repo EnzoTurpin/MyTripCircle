@@ -22,6 +22,7 @@ import { useNavigation } from "@react-navigation/native";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 const COVER_H = 210;
 
@@ -43,6 +44,46 @@ const ProfileScreen: React.FC = () => {
 
   const initials = getInitials(user?.name || "");
   const avatarColor = getAvatarColor(user?.name || "");
+
+  if (tripsLoading && friendsLoading) {
+    return (
+      <SwipeToNavigate currentIndex={4} totalTabs={5}>
+        <View style={[styles.root, { backgroundColor: colors.bg }]}>
+          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+          <ScrollView scrollEnabled={false} contentContainerStyle={styles.scrollContent}>
+            {/* Cover */}
+            <SkeletonBox width="100%" height={COVER_H} borderRadius={0} />
+
+            <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
+              {/* Avatar + name */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+                <SkeletonBox width={72} height={72} borderRadius={36} />
+                <View style={{ flex: 1, gap: 10 }}>
+                  <SkeletonBox width="55%" height={18} borderRadius={7} />
+                  <SkeletonBox width="70%" height={13} borderRadius={5} />
+                </View>
+              </View>
+
+              {/* Stats row */}
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <SkeletonBox key={i} height={64} borderRadius={12} style={{ flex: 1 }} />
+                ))}
+              </View>
+
+              {/* Section card */}
+              <SkeletonBox width={120} height={12} borderRadius={5} />
+              <SkeletonBox width="100%" height={180} borderRadius={14} />
+
+              {/* Section card 2 */}
+              <SkeletonBox width={110} height={12} borderRadius={5} />
+              <SkeletonBox width="100%" height={120} borderRadius={14} />
+            </View>
+          </ScrollView>
+        </View>
+      </SwipeToNavigate>
+    );
+  }
 
   return (
     <SwipeToNavigate currentIndex={4} totalTabs={5}>

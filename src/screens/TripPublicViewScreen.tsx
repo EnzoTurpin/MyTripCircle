@@ -21,6 +21,7 @@ import { useAuth } from "../contexts/AuthContext";
 import i18n, { parseApiError } from "../utils/i18n";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const getLocale = () => (i18n.language === "fr" ? "fr-FR" : "en-US");
@@ -157,8 +158,44 @@ const TripPublicViewScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.loaderFull, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color="#C4714A" size="large" />
+      <View style={[styles.root, { backgroundColor: colors.bg }]}>
+        <ScrollView scrollEnabled={false}>
+          {/* Hero */}
+          <SkeletonBox width="100%" height={280} borderRadius={0} />
+
+          <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 14 }}>
+            {/* Destination + dates */}
+            <SkeletonBox width="55%" height={26} borderRadius={8} />
+            <SkeletonBox width="40%" height={14} borderRadius={6} />
+
+            {/* Stats pills */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              {[0, 1, 2].map((i) => (
+                <SkeletonBox key={i} height={64} borderRadius={12} style={{ flex: 1 }} />
+              ))}
+            </View>
+
+            {/* Members */}
+            <SkeletonBox width={120} height={14} borderRadius={6} style={{ marginTop: 4 }} />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {[0, 1, 2].map((i) => (
+                <SkeletonBox key={i} width={40} height={40} borderRadius={20} />
+              ))}
+            </View>
+
+            {/* Booking list */}
+            <SkeletonBox width={100} height={14} borderRadius={6} style={{ marginTop: 8 }} />
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+                <SkeletonBox width={40} height={40} borderRadius={10} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <SkeletonBox width="60%" height={14} borderRadius={6} />
+                  <SkeletonBox width="40%" height={12} borderRadius={5} />
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
   }

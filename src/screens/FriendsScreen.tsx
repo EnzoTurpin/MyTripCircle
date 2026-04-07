@@ -26,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import i18n, { parseApiError } from "../utils/i18n";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 
 const timeAgo = (date: Date | string): string => {
@@ -431,8 +432,17 @@ const FriendsScreen: React.FC = () => {
 
         {/* ── Content ── */}
         {loading ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>{t("friends.loading")}</Text>
+          <View style={{ paddingHorizontal: 14, paddingTop: 8, gap: 12 }}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
+                <SkeletonBox width={48} height={48} borderRadius={24} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <SkeletonBox width="60%" height={14} borderRadius={6} />
+                  <SkeletonBox width="40%" height={12} borderRadius={5} />
+                </View>
+                <SkeletonBox width={80} height={32} borderRadius={16} />
+              </View>
+            ))}
           </View>
 
         ) : activeTab === "friends" ? (

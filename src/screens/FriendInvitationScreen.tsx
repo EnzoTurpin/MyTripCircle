@@ -19,6 +19,7 @@ import { F } from "../theme/fonts";
 import { parseApiError } from "../utils/i18n";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 
 type RouteT = RouteProp<RootStackParamList, "FriendInvitation">;
@@ -97,8 +98,10 @@ const FriendInvitationScreen: React.FC = () => {
       case "loading":
         return (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color="#C4714A" />
-            <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("friendInvitation.loading")}</Text>
+            <SkeletonBox width={100} height={100} borderRadius={50} style={{ marginBottom: 20 }} />
+            <SkeletonBox width={180} height={22} borderRadius={8} style={{ marginBottom: 10 }} />
+            <SkeletonBox width={130} height={14} borderRadius={6} style={{ marginBottom: 32 }} />
+            <SkeletonBox width={260} height={50} borderRadius={14} />
           </View>
         );
 

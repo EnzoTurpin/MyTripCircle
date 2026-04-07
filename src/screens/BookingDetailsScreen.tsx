@@ -29,6 +29,7 @@ import BookingForm from "../components/BookingForm";
 import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
+import SkeletonBox from "../components/SkeletonBox";
 
 // ─── Couleurs non-thémifiables ─────────────────────────────────────────────────
 const MOSS = '#6B8C5A';
@@ -231,8 +232,43 @@ const BookingDetailsScreen: React.FC = () => {
   // ─── Loading / error states ───────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={[styles.centeredState, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.centeredStateText, { color: colors.textMid }]}>{t("bookings.details.loading")}</Text>
+      <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
+        <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: 40 }}>
+          {/* Hero */}
+          <SkeletonBox width="100%" height={200} borderRadius={0} />
+
+          <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 16 }}>
+            {/* Type badge + title */}
+            <SkeletonBox width={80} height={22} borderRadius={20} />
+            <SkeletonBox width="70%" height={24} borderRadius={8} />
+            <SkeletonBox width="45%" height={14} borderRadius={6} />
+
+            {/* Info grid */}
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              {[0, 1, 2].map((i) => (
+                <SkeletonBox key={i} height={72} borderRadius={12} style={{ flex: 1 }} />
+              ))}
+            </View>
+
+            {/* Confirmation card */}
+            <SkeletonBox width="100%" height={64} borderRadius={12} />
+
+            {/* Description */}
+            <View style={{ gap: 8 }}>
+              <SkeletonBox width="100%" height={14} borderRadius={5} />
+              <SkeletonBox width="80%" height={14} borderRadius={5} />
+              <SkeletonBox width="60%" height={14} borderRadius={5} />
+            </View>
+
+            {/* Attachments section */}
+            <SkeletonBox width={120} height={14} borderRadius={6} />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              {[0, 1].map((i) => (
+                <SkeletonBox key={i} width={100} height={80} borderRadius={10} />
+              ))}
+            </View>
+          </View>
+        </ScrollView>
       </View>
     );
   }
