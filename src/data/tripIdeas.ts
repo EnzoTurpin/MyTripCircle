@@ -46,7 +46,7 @@ export function parseCityCountry(
 ): { city: string; country: string } {
   const parts = formattedAddress.split(",").map((p) => p.trim()).filter(Boolean);
   if (parts.length >= 2) {
-    const rawCountry = parts[parts.length - 1];
+    const rawCountry = parts.at(-1);
     // Chercher une partie qui ressemble à une ville (ni code postal, ni état abrégé)
     const cityCandidate = parts.find(
       (p, i) => i > 0 && i < parts.length - 1 && !/^\d/.test(p) && p.length > 3,

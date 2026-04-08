@@ -8,7 +8,6 @@ import {
   ScrollView,
   StatusBar,
   Image,
-  FlatList,
 } from "react-native";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { Ionicons } from "@expo/vector-icons";

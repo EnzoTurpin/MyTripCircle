@@ -47,7 +47,7 @@ export function useTripDetails(tripId: string, showToastParam?: boolean) {
 
   const progressPercent = (() => {
     if (!trip) return 0;
-    const now = new Date().getTime();
+    const now = Date.now();
     const start = new Date(trip.startDate).getTime();
     const end = new Date(trip.endDate).getTime();
     if (now <= start) return 0;
@@ -68,7 +68,7 @@ export function useTripDetails(tripId: string, showToastParam?: boolean) {
         Math.min(
           durationDays,
           Math.round(
-            (new Date().getTime() - new Date(trip.startDate).getTime()) /
+            (Date.now() - new Date(trip.startDate).getTime()) /
               (1000 * 60 * 60 * 24),
           ),
         ),
@@ -102,7 +102,7 @@ export function useTripDetails(tripId: string, showToastParam?: boolean) {
   useEffect(() => {
     if (!trip) return;
     const updateCountdown = () => {
-      const now = new Date().getTime();
+      const now = Date.now();
       const start = new Date(trip.startDate).getTime();
       const diff = start - now;
       if (diff <= 0) {

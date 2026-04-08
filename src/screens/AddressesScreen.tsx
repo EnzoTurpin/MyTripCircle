@@ -163,7 +163,7 @@ const AddressesScreen: React.FC = () => {
           ) : (
             <FlatList
               data={filteredAddresses}
-              renderItem={({ item }: { item: Address }) => (
+              renderItem={({ item }) => (
                 <AddressCard
                   item={item}
                   colors={colors}

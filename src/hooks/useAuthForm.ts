@@ -201,7 +201,7 @@ export function useAuthForm(): UseAuthFormReturn {
       const isExpired = otpErr.includes("expired") || otpErr.includes("expiré");
       const message = isExpired ? t("common.requiresOtpExpired") : t("common.requiresOtp");
       Alert.alert(t("common.info"), message, [
-        { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId!, email) },
+        { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId, email) },
       ]);
       return;
     }
@@ -216,7 +216,7 @@ export function useAuthForm(): UseAuthFormReturn {
   const handleRegisterErrors = (result: any, onOtpRedirect: (userId: string, email: string) => void) => {
     if (result.requiresOtp && result.userId) {
       Alert.alert(t("common.info"), t("common.requiresOtp"), [
-        { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId!, email) },
+        { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId, email) },
       ]);
       return;
     }

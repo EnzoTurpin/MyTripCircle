@@ -37,7 +37,7 @@ const MOSS_LIGHT = "#E2EDD9";
 const detectContactType = (input: string): "email" | "phone" | null => {
   const t = input.trim();
   if (/^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(t)) return "email";
-  if (/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{6,15}$/.test(t.replaceAll(/[\s-()]/g, ""))) return "phone";
+  if (/^\+?\(?\d{1,4}\)?[-\s.]?\(?\d{1,4}\)?[-\s.]?\d{6,15}$/.test(t.replaceAll(/[\s-()]/g, ""))) return "phone";
   return null;
 };
 

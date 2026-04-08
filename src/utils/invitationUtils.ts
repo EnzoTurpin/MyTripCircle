@@ -11,7 +11,7 @@ export function getBannerGradient(seed: string): readonly [string, string] {
     ["#C0A040", "#8B7020"],
   ] as const;
   let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xff;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + (seed.codePointAt(i) ?? 0)) & 0xff;
   return palettes[h % palettes.length];
 }
 

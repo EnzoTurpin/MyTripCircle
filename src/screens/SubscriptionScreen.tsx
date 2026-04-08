@@ -7,10 +7,10 @@ import {
   Platform,
   View,
   StatusBar,
+  TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
 import PlanCard from "../components/PlanCard";
 import Constants from "expo-constants";
