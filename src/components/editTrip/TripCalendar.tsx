@@ -8,7 +8,7 @@ const buildCalendarCells = (year: number, month: number): (number | null)[] => {
   const firstDay = new Date(year, month, 1).getDay();
   const offset = (firstDay + 6) % 7;
   const cells: (number | null)[] = [
-    ...Array(offset).fill(null),
+    ...new Array(offset).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);

@@ -20,9 +20,9 @@ interface Section {
 }
 
 interface LegalScreenProps {
-  headerTitle: string;
-  lastUpdated: string;
-  sections: Section[];
+  readonly headerTitle: string;
+  readonly lastUpdated: string;
+  readonly sections: Section[];
 }
 
 const SectionItem: React.FC<{ title: string; children: string }> = ({ title, children }) => {
