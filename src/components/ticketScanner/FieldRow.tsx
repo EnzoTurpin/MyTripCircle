@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { styles } from "./ticketScannerStyles";
 
 interface FieldRowProps {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
   colors: any;
@@ -12,7 +12,7 @@ interface FieldRowProps {
 
 const FieldRow: React.FC<FieldRowProps> = ({ icon, label, value, colors }) => (
   <View style={styles.fieldRow}>
-    <Ionicons name={icon as any} size={16} color={colors.textMid} style={{ marginRight: 8 }} />
+    <Ionicons name={icon} size={16} color={colors.textMid} style={{ marginRight: 8 }} />
     <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{label} : </Text>
     <Text style={[styles.fieldValue, { color: colors.text }]} numberOfLines={1}>{value}</Text>
   </View>

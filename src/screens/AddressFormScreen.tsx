@@ -130,7 +130,7 @@ const AddressFormScreen: React.FC = () => {
           </Text>
           <AddressTypeSelector
             selectedType={form.type}
-            onSelect={(type) => handleInputChange("type", type as any)}
+            onSelect={(type) => handleInputChange("type", type)}
           />
         </View>
 

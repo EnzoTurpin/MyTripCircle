@@ -60,7 +60,7 @@ export function useBookingForm({
         )
       : new Date(initialDate.getTime() + ONE_DAY_MS);
     return {
-      type: (initialBooking?.type || "flight") as Booking["type"],
+      type: initialBooking?.type ?? "flight",
       title: initialBooking?.title || "",
       description: initialBooking?.description || "",
       date: initialDate,
@@ -68,7 +68,7 @@ export function useBookingForm({
       time: initialBooking?.time || "",
       address: initialBooking?.address || "",
       confirmationNumber: initialBooking?.confirmationNumber || "",
-      status: (initialBooking?.status || "pending") as Booking["status"],
+      status: initialBooking?.status ?? "pending",
     };
   };
 
