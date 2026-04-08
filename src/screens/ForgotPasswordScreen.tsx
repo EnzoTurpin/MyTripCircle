@@ -308,8 +308,56 @@ const ForgotPasswordScreen: React.FC = () => {
                 <Text style={styles.primaryButtonText}>{t("forgotPassword.backToLogin")}</Text>
               </TouchableOpacity>
             </View>
-          ) : !isResetMode ? (
-            emailSent ? (
+          ) : isResetMode ? (
+            // ── Reset password form ──
+            <>
+              <LabelledInput
+                label={t("forgotPassword.newPasswordLabel")}
+                value={newPassword}
+                onChangeText={(text) => {
+                  setNewPassword(text);
+                  if (passwordError) setPasswordError("");
+                }}
+                onBlur={() => validatePasswordStrong(newPassword)}
+                placeholder={t("forgotPassword.newPasswordPlaceholder")}
+                secureTextEntry
+                showToggle
+                showValue={showPassword}
+                onToggleShow={() => setShowPassword(!showPassword)}
+                hasError={!!passwordError}
+                errorText={passwordError}
+              />
+
+              <LabelledInput
+                label={t("forgotPassword.confirmPasswordLabel")}
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (confirmPasswordError) setConfirmPasswordError("");
+                }}
+                placeholder={t("forgotPassword.confirmPasswordPlaceholder")}
+                secureTextEntry
+                showToggle
+                showValue={showConfirmPassword}
+                onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
+                hasError={!!confirmPasswordError}
+                errorText={confirmPasswordError}
+              />
+
+              <TouchableOpacity
+                style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+                onPress={handleResetPassword}
+                disabled={loading}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {loading
+                    ? t("common.pleaseWait")
+                    : t("forgotPassword.resetPassword")}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : emailSent ? (
               // ── Success state ──
               <View style={styles.successContainer}>
                 <Ionicons name="checkmark-circle" size={56} color={colors.terra} />
@@ -376,55 +424,6 @@ const ForgotPasswordScreen: React.FC = () => {
                 </View>
               </>
             )
-          ) : (
-            // ── Reset password form ──
-            <>
-              <LabelledInput
-                label={t("forgotPassword.newPasswordLabel")}
-                value={newPassword}
-                onChangeText={(text) => {
-                  setNewPassword(text);
-                  if (passwordError) setPasswordError("");
-                }}
-                onBlur={() => validatePasswordStrong(newPassword)}
-                placeholder={t("forgotPassword.newPasswordPlaceholder")}
-                secureTextEntry
-                showToggle
-                showValue={showPassword}
-                onToggleShow={() => setShowPassword(!showPassword)}
-                hasError={!!passwordError}
-                errorText={passwordError}
-              />
-
-              <LabelledInput
-                label={t("forgotPassword.confirmPasswordLabel")}
-                value={confirmPassword}
-                onChangeText={(text) => {
-                  setConfirmPassword(text);
-                  if (confirmPasswordError) setConfirmPasswordError("");
-                }}
-                placeholder={t("forgotPassword.confirmPasswordPlaceholder")}
-                secureTextEntry
-                showToggle
-                showValue={showConfirmPassword}
-                onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-                hasError={!!confirmPasswordError}
-                errorText={confirmPasswordError}
-              />
-
-              <TouchableOpacity
-                style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
-                onPress={handleResetPassword}
-                disabled={loading}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {loading
-                    ? t("common.pleaseWait")
-                    : t("forgotPassword.resetPassword")}
-                </Text>
-              </TouchableOpacity>
-            </>
           )}
       </ScrollView>
     </View>

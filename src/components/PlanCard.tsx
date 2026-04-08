@@ -53,8 +53,8 @@ const PlanCard: React.FC<Props> = ({
       </View>
 
       <View style={styles.advantagesList}>
-        {advantages.map((advantage, index) => (
-          <View key={index} style={styles.advantageItem}>
+        {advantages.map((advantage) => (
+          <View key={advantage} style={styles.advantageItem}>
             <View style={styles.checkIcon}>
               <Ionicons name="checkmark" size={16} color="#4CAF50" />
             </View>

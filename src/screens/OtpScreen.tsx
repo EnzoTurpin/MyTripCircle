@@ -154,7 +154,7 @@ const OtpScreen: React.FC = () => {
         <View style={styles.boxesRow}>
           {digits.map((digit, i) => (
             <TextInput
-              key={i}
+              key={`otp-digit-${i}`}
               ref={(ref) => { inputRefs.current[i] = ref; }}
               style={[
                 styles.otpBox,

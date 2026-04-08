@@ -284,8 +284,8 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
           {/* ── Pièces jointes ── */}
           <View style={styles.attachmentSection}>
-            {form.attachments.map((attachment, index) => (
-              <View key={index} style={[styles.attachmentItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {form.attachments.map((attachment) => (
+              <View key={attachment.uri} style={[styles.attachmentItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 {attachment.type === "image" && (attachment.uri.startsWith("file://") || attachment.uri.startsWith("content://") || attachment.uri.startsWith("ph://")) ? (
                   <Image source={{ uri: attachment.uri }} style={styles.attachmentThumbnail} resizeMode="cover" />
                 ) : (

@@ -39,7 +39,7 @@ function parseBCBP(raw: string): ScannedBookingData | null {
   const julianRaw = raw.substring(44, 47).trim();
 
   const julian = Number.parseInt(julianRaw, 10);
-  const date   = !Number.isNaN(julian) ? julianToDate(julian) : undefined;
+  const date   = Number.isNaN(julian) ? undefined : julianToDate(julian);
 
   const title = `${from} → ${to}${flightNum ? ` · ${carrier.trim()}${flightNum}` : ""}`;
 

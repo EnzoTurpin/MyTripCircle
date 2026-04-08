@@ -305,17 +305,17 @@ const FriendProfileScreen: React.FC = () => {
               {isFriend && (
                 <>
                   <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friendProfile.sectionCommonTrips")}</Text>
-                  {!profile?.commonTrips?.length ? (
-                    <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                      <Ionicons name="airplane-outline" size={26} color={colors.textLight} />
-                      <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyCommonTrips")}</Text>
-                    </View>
-                  ) : (
+                  {profile?.commonTrips?.length ? (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
                       {profile.commonTrips.map((trip: any) => (
                         <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
                       ))}
                     </ScrollView>
+                  ) : (
+                    <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
+                      <Ionicons name="airplane-outline" size={26} color={colors.textLight} />
+                      <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyCommonTrips")}</Text>
+                    </View>
                   )}
                 </>
               )}
@@ -330,17 +330,17 @@ const FriendProfileScreen: React.FC = () => {
                 return (
                   <>
                     <Text style={[styles.sectionLabel, { marginTop: isFriend ? 20 : 0 }]}>{t("friendProfile.sectionRecentTrips")}</Text>
-                    {!recentTrips.length ? (
-                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                        <Ionicons name="earth-outline" size={26} color={colors.textLight} />
-                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyRecentTrips", { name: firstName })}</Text>
-                      </View>
-                    ) : (
+                    {recentTrips.length ? (
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
                         {recentTrips.map((trip: any) => (
                           <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
                         ))}
                       </ScrollView>
+                    ) : (
+                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
+                        <Ionicons name="earth-outline" size={26} color={colors.textLight} />
+                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyRecentTrips", { name: firstName })}</Text>
+                      </View>
                     )}
                   </>
                 );
@@ -352,17 +352,17 @@ const FriendProfileScreen: React.FC = () => {
                 return (
                   <>
                     <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t("friendProfile.sectionFriendsTrips")}</Text>
-                    {!friendsTrips.length ? (
-                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                        <Ionicons name="people-outline" size={26} color={colors.textLight} />
-                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyFriendsTrips")}</Text>
-                      </View>
-                    ) : (
+                    {friendsTrips.length ? (
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
                         {friendsTrips.map((trip: any) => (
                           <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
                         ))}
                       </ScrollView>
+                    ) : (
+                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
+                        <Ionicons name="people-outline" size={26} color={colors.textLight} />
+                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyFriendsTrips")}</Text>
+                      </View>
                     )}
                   </>
                 );
@@ -375,17 +375,17 @@ const FriendProfileScreen: React.FC = () => {
                 return (
                   <>
                     <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t("friendProfile.sectionPublicTrips")}</Text>
-                    {!publicTrips.length ? (
-                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                        <Ionicons name="earth-outline" size={26} color={colors.textLight} />
-                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyPublicTrips", { name: firstName })}</Text>
-                      </View>
-                    ) : (
+                    {publicTrips.length ? (
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
                         {publicTrips.map((trip: any) => (
                           <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
                         ))}
                       </ScrollView>
+                    ) : (
+                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
+                        <Ionicons name="earth-outline" size={26} color={colors.textLight} />
+                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyPublicTrips", { name: firstName })}</Text>
+                      </View>
                     )}
                   </>
                 );

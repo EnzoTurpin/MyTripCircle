@@ -370,13 +370,13 @@ const BookingDetailsScreen: React.FC = () => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.attachmentsScroll}
             >
-              {booking.attachments.map((attachment, index) => {
+              {booking.attachments.map((attachment) => {
                 const [name, uri] = attachment.includes("::")
                   ? attachment.split("::")
                   : [attachment.split("/").pop() || attachment, attachment];
                 return (
                   <TouchableOpacity
-                    key={index}
+                    key={attachment}
                     style={[styles.attachmentChip, { backgroundColor: colors.bgMid }]}
                     onPress={() => handleViewAttachment(uri)}
                     activeOpacity={0.75}

@@ -120,8 +120,8 @@ const TripActionsScreen: React.FC = () => {
           { value: String(totalBookings), label: t("tripActions.statsBookings") },
           { value: String(totalAddresses), label: t("tripActions.statsAddresses") },
           { value: budget > 0 ? `${budget}€` : "—", label: t("tripActions.statsBudget") },
-        ].map((stat, idx) => (
-          <View key={idx} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
+        ].map((stat) => (
+          <View key={stat.label} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
             <Text style={s.statValue}>{stat.value}</Text>
             <Text style={[s.statLabel, { color: colors.textLight }]}>{stat.label}</Text>
           </View>

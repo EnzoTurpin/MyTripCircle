@@ -53,8 +53,8 @@ const AddressesScreen: React.FC = () => {
 
             {/* Filter chips */}
             <View style={{ flexDirection: "row", paddingHorizontal: 24, gap: 8, marginBottom: 12 }}>
-              {[60, 80, 70, 65].map((w, i) => (
-                <SkeletonBox key={i} width={w} height={32} borderRadius={999} />
+              {[{ id: "f1", w: 60 }, { id: "f2", w: 80 }, { id: "f3", w: 70 }, { id: "f4", w: 65 }].map(({ id, w }) => (
+                <SkeletonBox key={id} width={w} height={32} borderRadius={999} />
               ))}
             </View>
 
