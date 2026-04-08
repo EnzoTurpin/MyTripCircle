@@ -215,15 +215,23 @@ function messageLooksFrench(s: string): boolean {
   );
 }
 
+const ENGLISH_ERROR_PREFIXES = [
+  "invalid ", "missing ", "not ", "unauthorized", "weak password", "email already",
+  "please verify", "your verification", "account not verified", "token ", "user ",
+  "google ", "apple ", "end date", "start date", "only the", "cannot ",
+  "invitation ", "booking ", "address ", "trip ", "access denied",
+  "something went ", "failed to", "network request",
+];
+
 /** Réponse d'erreur typique en anglais (backend) alors que l'UI est en français. */
 function messageLooksLikeEnglishApiError(s: string): boolean {
   const t = s.trim();
   if (!t || t.length > 220) return false;
   if (/[àâäéèêëïîôùûüçœ]/.test(t)) return false;
+  const lower = t.toLowerCase();
   return (
-    /^(Invalid |Missing |Not |Unauthorized|Weak password|Email already|Please verify|Your verification|Account not verified|Token |User |Google |Apple |End date|Start date|Only the|Cannot |Invitation |Booking |Address |Trip |Access denied|Something went |Failed to|Network request)/i.test(
-      t,
-    ) || /\b(not found|required|expired|denied|incorrect)\b/i.test(t)
+    ENGLISH_ERROR_PREFIXES.some((p) => lower.startsWith(p)) ||
+    /\b(not found|required|expired|denied|incorrect)\b/i.test(t)
   );
 }
 
