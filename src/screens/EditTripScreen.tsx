@@ -22,7 +22,7 @@ import { useTranslation } from "react-i18next";
 import BookingForm from "../components/BookingForm";
 import { formatDate } from "../utils/i18n";
 import { F } from "../theme/fonts";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme, AppColors } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 
 type EditTripRouteProp = RouteProp<RootStackParamList, "EditTrip">;
@@ -34,6 +34,35 @@ import RadioOptionCard, { RadioOption } from "../components/editTrip/RadioOption
 import BookingsList from "../components/editTrip/BookingsList";
 
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
+
+interface DatePickerFieldProps {
+  label: string;
+  isActive: boolean;
+  dateValue: string;
+  onPress: () => void;
+  colors: AppColors;
+}
+const DatePickerField: React.FC<DatePickerFieldProps> = ({ label, isActive, dateValue, onPress, colors }) => (
+  <TouchableOpacity
+    style={[
+      s.field, s.fieldNoMargin,
+      { backgroundColor: colors.surface, borderColor: colors.border },
+      isActive && s.fieldActive,
+    ]}
+    onPress={onPress}
+    activeOpacity={0.8}
+  >
+    <Text style={[s.fieldLbl, { color: colors.textLight }, isActive && { color: "#C4714A" }]}>
+      {label}{isActive ? " ✎" : ""}
+    </Text>
+    <View style={s.fieldRow}>
+      <Text style={s.fieldEmoji}>📅</Text>
+      <Text style={[s.dateVal, { color: colors.text }, isActive && { color: "#C4714A", fontFamily: F.sans700 }]}>
+        {dateValue}
+      </Text>
+    </View>
+  </TouchableOpacity>
+);
 
 const EditTripScreen: React.FC = () => {
   const navigation = useNavigation<EditTripNavigationProp>();
@@ -220,60 +249,22 @@ const EditTripScreen: React.FC = () => {
               {/* ── Dates ─────────────────────────────────────────────────────── */}
               <View style={s.dateRow}>
                 <View style={s.dateCol}>
-                  <TouchableOpacity
-                    style={[
-                      s.field, s.fieldNoMargin,
-                      { backgroundColor: colors.surface, borderColor: colors.border },
-                      showCalendar && calendarPickingFor === "start" && s.fieldActive,
-                    ]}
+                  <DatePickerField
+                    label={t("editTrip.departureDateLabel")}
+                    isActive={showCalendar && calendarPickingFor === "start"}
+                    dateValue={formatDate(formData.startDate)}
                     onPress={() => openCalendar("start")}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[
-                      s.fieldLbl, { color: colors.textLight },
-                      showCalendar && calendarPickingFor === "start" && { color: "#C4714A" },
-                    ]}>
-                      {t("editTrip.departureDateLabel")}
-                      {showCalendar && calendarPickingFor === "start" ? " ✎" : ""}
-                    </Text>
-                    <View style={s.fieldRow}>
-                      <Text style={s.fieldEmoji}>📅</Text>
-                      <Text style={[
-                        s.dateVal, { color: colors.text },
-                        showCalendar && calendarPickingFor === "start" && { color: "#C4714A", fontFamily: F.sans700 },
-                      ]}>
-                        {formatDate(formData.startDate)}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
+                    colors={colors}
+                  />
                 </View>
                 <View style={s.dateCol}>
-                  <TouchableOpacity
-                    style={[
-                      s.field, s.fieldNoMargin,
-                      { backgroundColor: colors.surface, borderColor: colors.border },
-                      showCalendar && calendarPickingFor === "end" && s.fieldActive,
-                    ]}
+                  <DatePickerField
+                    label={t("editTrip.returnDateLabel")}
+                    isActive={showCalendar && calendarPickingFor === "end"}
+                    dateValue={formatDate(formData.endDate)}
                     onPress={() => openCalendar("end")}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[
-                      s.fieldLbl, { color: colors.textLight },
-                      showCalendar && calendarPickingFor === "end" && { color: "#C4714A" },
-                    ]}>
-                      {t("editTrip.returnDateLabel")}
-                      {showCalendar && calendarPickingFor === "end" ? " ✎" : ""}
-                    </Text>
-                    <View style={s.fieldRow}>
-                      <Text style={s.fieldEmoji}>📅</Text>
-                      <Text style={[
-                        s.dateVal, { color: colors.text },
-                        showCalendar && calendarPickingFor === "end" && { color: "#C4714A", fontFamily: F.sans700 },
-                      ]}>
-                        {formatDate(formData.endDate)}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
+                    colors={colors}
+                  />
                 </View>
               </View>
 
