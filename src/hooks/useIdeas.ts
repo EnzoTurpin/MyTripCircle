@@ -113,107 +113,89 @@ export const useIdeas = () => {
     }
   };
 
-  const createBookingsFromItinerary = async (
-    tripId: string,
-    itineraryData: any,
-    tripStart: Date,
-    tripEnd: Date,
-  ) => {
-    const city: string = itineraryData.city || "";
-    const days: any[] = itineraryData.days || [];
-
+  const createHotelEntry = async (tripId: string, city: string, tripStart: Date, tripEnd: Date) => {
+    let hotelAddress: string | undefined;
+    let hotelName: string | undefined;
+    let hotelRating: number | undefined;
+    let hotelPhotoUrl: string | undefined;
     try {
-      let hotelAddress: string | undefined;
-      let hotelName: string | undefined;
-      let hotelRating: number | undefined;
-      let hotelPhotoUrl: string | undefined;
-      try {
-        const place = await searchPlaceByText(`hotel ${city}`);
-        if (place) {
-          hotelAddress = place.formattedAddress;
-          hotelName = place.name;
-          hotelRating = place.rating;
-          hotelPhotoUrl = place.photoUrl;
-        }
-      } catch { /* échec silencieux */ }
-
-      await createBooking({
-        tripId,
-        type: "hotel",
-        title: hotelName || `Hébergement – ${city}`,
-        address: hotelAddress,
-        date: tripStart,
-        endDate: tripEnd,
-        currency: "€",
-        status: "pending",
-      });
-
-      if (hotelAddress && hotelName) {
-        const { city: placeCity, country: placeCountry } = extractCityCountry(hotelAddress, city);
-        await createAddress({
-          type: "hotel",
-          name: hotelName,
-          address: hotelAddress,
-          city: placeCity,
-          country: placeCountry,
-          rating: hotelRating,
-          photoUrl: hotelPhotoUrl,
-          tripId,
-        }).catch(() => { /* échec silencieux */ });
+      const place = await searchPlaceByText(`hotel ${city}`);
+      if (place) {
+        hotelAddress = place.formattedAddress;
+        hotelName = place.name;
+        hotelRating = place.rating;
+        hotelPhotoUrl = place.photoUrl;
       }
     } catch { /* échec silencieux */ }
 
-    const slots = [
-      { key: "morning" },
-      { key: "afternoon" },
-      { key: "evening" },
-    ];
+    await createBooking({
+      tripId, type: "hotel",
+      title: hotelName || `Hébergement – ${city}`,
+      address: hotelAddress,
+      date: tripStart, endDate: tripEnd,
+      currency: "€", status: "pending",
+    });
+
+    if (hotelAddress && hotelName) {
+      const { city: placeCity, country: placeCountry } = extractCityCountry(hotelAddress, city);
+      await createAddress({
+        type: "hotel", name: hotelName, address: hotelAddress,
+        city: placeCity, country: placeCountry,
+        rating: hotelRating, photoUrl: hotelPhotoUrl, tripId,
+      }).catch(() => { /* échec silencieux */ });
+    }
+  };
+
+  const createActivityEntry = async (tripId: string, activityTitle: string, city: string, dayDate: Date) => {
+    let realAddress: string | undefined;
+    let placeName: string | undefined;
+    let placeRating: number | undefined;
+    let placePhotoUrl: string | undefined;
+    try {
+      const place = await searchPlaceByText(`${activityTitle} ${city}`);
+      if (place) {
+        realAddress = place.formattedAddress;
+        placeName = place.name;
+        placeRating = place.rating;
+        placePhotoUrl = place.photoUrl;
+      }
+    } catch { /* échec silencieux */ }
+
+    try {
+      await createBooking({
+        tripId, type: "activity", title: activityTitle,
+        address: realAddress, date: dayDate,
+        currency: "€", status: "pending",
+      });
+    } catch { /* échec silencieux */ }
+
+    if (realAddress && placeName) {
+      const { city: placeCity, country: placeCountry } = extractCityCountry(realAddress, city);
+      await createAddress({
+        type: "activity", name: placeName, address: realAddress,
+        city: placeCity, country: placeCountry,
+        rating: placeRating, photoUrl: placePhotoUrl, tripId,
+      }).catch(() => { /* échec silencieux */ });
+    }
+  };
+
+  const createBookingsFromItinerary = async (
+    tripId: string, itineraryData: any, tripStart: Date, tripEnd: Date,
+  ) => {
+    const city: string = itineraryData.city || "";
+    const days: any[] = itineraryData.days || [];
+    const slots = [{ key: "morning" }, { key: "afternoon" }, { key: "evening" }];
+
+    try {
+      await createHotelEntry(tripId, city, tripStart, tripEnd);
+    } catch { /* échec silencieux */ }
 
     for (const day of days) {
       const dayDate = new Date(tripStart.getTime() + (day.day - 1) * 24 * 60 * 60 * 1000);
       for (const slot of slots) {
         const slotData = day[slot.key];
         if (!slotData?.activity) continue;
-        const activityTitle: string = slotData.activity;
-        let realAddress: string | undefined;
-        let placeName: string | undefined;
-        let placeRating: number | undefined;
-        let placePhotoUrl: string | undefined;
-        try {
-          const place = await searchPlaceByText(`${activityTitle} ${city}`);
-          if (place) {
-            realAddress = place.formattedAddress;
-            placeName = place.name;
-            placeRating = place.rating;
-            placePhotoUrl = place.photoUrl;
-          }
-        } catch { /* échec silencieux */ }
-
-        try {
-          await createBooking({
-            tripId,
-            type: "activity",
-            title: activityTitle,
-            address: realAddress,
-            date: dayDate,
-            currency: "€",
-            status: "pending",
-          });
-        } catch { /* échec silencieux */ }
-
-        if (realAddress && placeName) {
-          const { city: placeCity, country: placeCountry } = extractCityCountry(realAddress, city);
-          await createAddress({
-            type: "activity",
-            name: placeName,
-            address: realAddress,
-            city: placeCity,
-            country: placeCountry,
-            rating: placeRating,
-            photoUrl: placePhotoUrl,
-            tripId,
-          }).catch(() => { /* échec silencieux */ });
-        }
+        await createActivityEntry(tripId, slotData.activity as string, city, dayDate);
       }
     }
   };

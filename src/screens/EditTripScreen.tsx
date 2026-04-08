@@ -53,6 +53,7 @@ const EditTripScreen: React.FC = () => {
 
   const MONTHS = t("editTrip.monthNames").split(",");
   const DAYS   = t("editTrip.dayInitials").split(",");
+  const kvaBehavior = Platform.OS === "ios" ? "padding" : "height";
 
   const visibilityOptions: RadioOption<"private" | "friends" | "public">[] = [
     { value: "private", label: t("editTrip.visibilityPrivate"), desc: t("editTrip.visibilityPrivateDesc"), emoji: "🔒", selBg: "#F5E5DC", selColor: "#C4714A", dotColor: "#C4714A" },
@@ -118,7 +119,7 @@ const EditTripScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView
       style={[s.root, { backgroundColor: colors.bg }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={kvaBehavior}
     >
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
       <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bgLight }]} edges={["top"]}>

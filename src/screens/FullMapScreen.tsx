@@ -124,13 +124,15 @@ const FullMapScreen: React.FC = () => {
         }
         const now = Date.now();
         const delay = Math.max(0, 1100 - (now - lastNetworkRequest));
-        if (lastNetworkRequest > 0 && delay > 0) {
+        const shouldDelay = lastNetworkRequest > 0 && delay > 0;
+        if (shouldDelay) {
           await new Promise<void>((r) => setTimeout(r, delay));
         }
         if (cancelled) break;
         const coords = await geocodeAddress(address.address, address.city, address.country);
         lastNetworkRequest = Date.now();
-        if (coords && !cancelled) {
+        const hasCoords = !!coords && !cancelled;
+        if (hasCoords) {
           setMapCoords((prev) => ({ ...prev, [address.id]: coords }));
         }
       }

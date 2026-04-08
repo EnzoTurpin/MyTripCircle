@@ -407,6 +407,19 @@ class MongoDBAdapter {
     }
   }
 
+  private async importUsers(users: User[]): Promise<void> {
+    for (const user of users) {
+      if ("password" in user) {
+        await this.createUser({
+          email: user.email,
+          name: user.name,
+          avatar: user.avatar,
+          password: crypto.randomBytes(32).toString("hex"),
+        });
+      }
+    }
+  }
+
   async importData(data: {
     trips?: Trip[];
     bookings?: Booking[];
@@ -430,17 +443,7 @@ class MongoDBAdapter {
         }
       }
       if (data.users) {
-        for (const user of data.users) {
-          // createUser expects password, so we skip users without it
-          if ("password" in user) {
-            await this.createUser({
-              email: user.email,
-              name: user.name,
-              avatar: user.avatar,
-              password: crypto.randomBytes(32).toString("hex"),
-            });
-          }
-        }
+        await this.importUsers(data.users);
       }
     } catch (error) {
       console.error("Error importing data:", error);
