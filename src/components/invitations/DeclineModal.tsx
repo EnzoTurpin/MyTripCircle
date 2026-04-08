@@ -17,7 +17,7 @@ import { RADIUS, SHADOW } from "../../theme";
 
 interface DeclineModalProps {
   visible: boolean;
-  declineTarget: any | null;
+  declineTarget: any;
   declineReason: string;
   declining: boolean;
   onConfirm: () => void;

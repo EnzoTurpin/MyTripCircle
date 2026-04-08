@@ -272,7 +272,7 @@ export const parseApiError = (error: unknown): string => {
     // Message non mappé mais cohérent avec la langue d'affichage
     return resolveLocalizedMessage(trimmed);
   } catch {
-    const raw = error instanceof Error ? error.message : String(error ?? "");
+    const raw = error instanceof Error ? error.message : "";
     return resolveLocalizedMessage(raw);
   }
 };

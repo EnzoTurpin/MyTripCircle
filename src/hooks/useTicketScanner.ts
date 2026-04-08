@@ -41,7 +41,8 @@ function parseBCBP(raw: string): ScannedBookingData | null {
   const julian = Number.parseInt(julianRaw, 10);
   const date   = Number.isNaN(julian) ? undefined : julianToDate(julian);
 
-  const title = `${from} → ${to}${flightNum ? ` · ${carrier.trim()}${flightNum}` : ""}`;
+  const flightSuffix = flightNum ? ` · ${carrier.trim()}${flightNum}` : "";
+  const title = `${from} → ${to}${flightSuffix}`;
 
   return {
     type: "flight",
@@ -51,25 +52,31 @@ function parseBCBP(raw: string): ScannedBookingData | null {
   };
 }
 
+const ISO_DATE_RE = /(\d{4}-\d{2}-\d{2})/;
+const FR_DATE_RE = /(\d{2})[/\-.](\d{2})[/\-.](\d{4})/;
+const TIME_RE = /\b(\d{2}):(\d{2})\b/;
+const ROUTE_RE = /([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})\s*[>→]\s*([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})/i;
+const PNR_RE = /\b([A-Z0-9]{5,9})\b/;
+
 function parseGeneric(raw: string): ScannedBookingData {
   const data: ScannedBookingData = {};
 
-  const isoDate = raw.match(/(\d{4}-\d{2}-\d{2})/);
+  const isoDate = ISO_DATE_RE.exec(raw);
   if (isoDate) {
     const d = new Date(isoDate[1]);
     if (!Number.isNaN(d.getTime())) data.date = d;
   } else {
-    const frDate = raw.match(/(\d{2})[/\-.](\d{2})[/\-.](\d{4})/);
+    const frDate = FR_DATE_RE.exec(raw);
     if (frDate) {
       const d = new Date(`${frDate[3]}-${frDate[2]}-${frDate[1]}`);
       if (!Number.isNaN(d.getTime())) data.date = d;
     }
   }
 
-  const timeMatch = raw.match(/\b(\d{2}):(\d{2})\b/);
+  const timeMatch = TIME_RE.exec(raw);
   if (timeMatch) data.time = `${timeMatch[1]}:${timeMatch[2]}`;
 
-  const routeMatch = raw.match(/([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})\s*[>→]\s*([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})/i);
+  const routeMatch = ROUTE_RE.exec(raw);
   if (routeMatch) {
     data.title = `${routeMatch[1].trim()} → ${routeMatch[2].trim()}`;
     const lower = raw.toLowerCase();
@@ -80,7 +87,7 @@ function parseGeneric(raw: string): ScannedBookingData {
     }
   }
 
-  const pnrMatch = raw.match(/\b([A-Z0-9]{5,9})\b/);
+  const pnrMatch = PNR_RE.exec(raw);
   if (pnrMatch) data.confirmationNumber = pnrMatch[1];
 
   return data;

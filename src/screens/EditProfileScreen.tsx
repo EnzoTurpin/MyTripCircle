@@ -65,6 +65,7 @@ const EditProfileScreen: React.FC = () => {
       setUploadingAvatar(true);
       await updateAvatar(dataUri);
     } catch (error) {
+      console.error("updateAvatar error:", error);
       Alert.alert(t("common.error"), t("editProfile.photoUploadError"));
     } finally {
       setUploadingAvatar(false);

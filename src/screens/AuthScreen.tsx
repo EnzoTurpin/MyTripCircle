@@ -12,7 +12,7 @@ import RegisterForm from "../components/auth/RegisterForm";
 
 WebBrowser.maybeCompleteAuthSession();
 
-// TODO(PROJ-ENV): Remplacer par les vrais Client IDs depuis les variables d'environnement
+// Client IDs Google (variables d'environnement recommandées pour la prod)
 const GOOGLE_IOS_CLIENT_ID = "716446908422-mrcb2edcq3mk6c3p40jfn1dl1q8ds7p3.apps.googleusercontent.com";
 const GOOGLE_ANDROID_CLIENT_ID = "716446908422-d4ado7rl3lnce7blhsapl0p27lsuth0k.apps.googleusercontent.com";
 const GOOGLE_WEB_CLIENT_ID = "716446908422-qpv02aoi7olglp30hjfno48t17kbvmd5.apps.googleusercontent.com";

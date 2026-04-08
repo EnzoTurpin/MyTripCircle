@@ -57,7 +57,7 @@ const InvitationScreen: React.FC = () => {
   const [tab, setTab]                         = useState<TabKey>("all");
 
   // Decline modal
-  const [declineTarget, setDeclineTarget] = useState<any | null>(null);
+  const [declineTarget, setDeclineTarget] = useState<any>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [declining, setDeclining]         = useState(false);
 
