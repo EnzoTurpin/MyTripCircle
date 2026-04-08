@@ -113,6 +113,19 @@ const FullMapScreen: React.FC = () => {
     let cancelled = false;
     setIsGeocoding(true);
 
+    const geocodeViaNetwork = async (
+      address: Address,
+      lastMs: number,
+    ): Promise<number> => {
+      const delay = Math.max(0, 1100 - (Date.now() - lastMs));
+      if (lastMs > 0 && delay > 0) await new Promise<void>((r) => setTimeout(r, delay));
+      if (cancelled) return lastMs;
+      const coords = await geocodeAddress(address.address, address.city, address.country);
+      const now = Date.now();
+      if (coords && !cancelled) setMapCoords((prev) => ({ ...prev, [address.id]: coords }));
+      return now;
+    };
+
     const run = async () => {
       let lastNetworkRequest = 0;
       for (const address of toGeocode) {
@@ -122,19 +135,7 @@ const FullMapScreen: React.FC = () => {
           if (cached) setMapCoords((prev) => ({ ...prev, [address.id]: cached }));
           continue;
         }
-        const now = Date.now();
-        const delay = Math.max(0, 1100 - (now - lastNetworkRequest));
-        const shouldDelay = lastNetworkRequest > 0 && delay > 0;
-        if (shouldDelay) {
-          await new Promise<void>((r) => setTimeout(r, delay));
-        }
-        if (cancelled) break;
-        const coords = await geocodeAddress(address.address, address.city, address.country);
-        lastNetworkRequest = Date.now();
-        const hasCoords = !!coords && !cancelled;
-        if (hasCoords) {
-          setMapCoords((prev) => ({ ...prev, [address.id]: coords }));
-        }
+        lastNetworkRequest = await geocodeViaNetwork(address, lastNetworkRequest);
       }
       if (!cancelled) setIsGeocoding(false);
     };
