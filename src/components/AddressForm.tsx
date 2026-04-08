@@ -120,7 +120,8 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   }, [visible, initialAddress]);
 
   useEffect(() => {
-    if (!form.address || form.address.trim().length < 3) {
+    const noInput = !form.address || form.address.trim().length < 3;
+    if (noInput) {
       setSuggestions([]);
       return;
     }

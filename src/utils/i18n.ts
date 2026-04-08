@@ -227,6 +227,17 @@ function messageLooksLikeEnglishApiError(s: string): boolean {
   );
 }
 
+function resolveLocalizedMessage(raw: string): string {
+  const lang = i18n.language || "en";
+  if (raw && messageLooksFrench(raw) && lang.startsWith("en")) {
+    return i18n.t("apiErrors.unmappedFallback");
+  }
+  if (raw && messageLooksLikeEnglishApiError(raw) && lang.startsWith("fr")) {
+    return i18n.t("apiErrors.unmappedFallback");
+  }
+  return raw || i18n.t("common.unexpectedError");
+}
+
 // Helper function to parse API errors and return translated messages
 export const parseApiError = (error: unknown): string => {
   try {
@@ -258,30 +269,11 @@ export const parseApiError = (error: unknown): string => {
       return i18n.t("common.phoneAlreadyInUse");
     }
 
-    const lang = i18n.language || "en";
-    if (messageLooksFrench(trimmed) && lang.startsWith("en")) {
-      return i18n.t("apiErrors.unmappedFallback");
-    }
-    if (messageLooksLikeEnglishApiError(trimmed) && lang.startsWith("fr")) {
-      return i18n.t("apiErrors.unmappedFallback");
-    }
-
     // Message non mappé mais cohérent avec la langue d'affichage
-    return trimmed;
+    return resolveLocalizedMessage(trimmed);
   } catch {
-    const raw =
-      error instanceof Error ? error.message : String(error ?? "");
-    if (raw && messageLooksFrench(raw) && (i18n.language || "en").startsWith("en")) {
-      return i18n.t("apiErrors.unmappedFallback");
-    }
-    if (
-      raw &&
-      messageLooksLikeEnglishApiError(raw) &&
-      (i18n.language || "en").startsWith("fr")
-    ) {
-      return i18n.t("apiErrors.unmappedFallback");
-    }
-    return raw || i18n.t("common.unexpectedError");
+    const raw = error instanceof Error ? error.message : String(error ?? "");
+    return resolveLocalizedMessage(raw);
   }
 };
 
