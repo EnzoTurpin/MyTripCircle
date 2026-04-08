@@ -30,8 +30,8 @@ const TripStatsRow: React.FC<Props> = ({
 
   return (
     <View style={s.statsRow}>
-      {stats.map((stat, idx) => (
-        <View key={idx} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
+      {stats.map((stat) => (
+        <View key={stat.label} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
           <Text style={s.statValue}>{stat.value}</Text>
           <Text style={[s.statLabel, { color: colors.textLight }]}>{stat.label}</Text>
         </View>

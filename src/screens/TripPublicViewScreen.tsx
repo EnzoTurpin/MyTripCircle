@@ -333,12 +333,7 @@ const TripPublicViewScreen: React.FC = () => {
         {/* ── Réservations ── */}
         {activeTab === "bookings" && (
           <View style={styles.list}>
-            {!bookings.length ? (
-              <View style={styles.emptyBox}>
-                <Ionicons name="receipt-outline" size={28} color="#B0A090" />
-                <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noBookings")}</Text>
-              </View>
-            ) : bookings.map((b: any) => (
+            {bookings.length ? bookings.map((b: any) => (
               <TouchableOpacity
                 key={b._id ?? b.id}
                 style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -361,19 +356,19 @@ const TripPublicViewScreen: React.FC = () => {
                 ) : null}
                 <Ionicons name="chevron-forward" size={14} color="#D8CCBA" style={{ marginLeft: 4 }} />
               </TouchableOpacity>
-            ))}
+            )) : (
+              <View style={styles.emptyBox}>
+                <Ionicons name="receipt-outline" size={28} color="#B0A090" />
+                <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noBookings")}</Text>
+              </View>
+            )}
           </View>
         )}
 
         {/* ── Adresses ── */}
         {activeTab === "addresses" && (
           <View style={styles.list}>
-            {!addresses.length ? (
-              <View style={styles.emptyBox}>
-                <Ionicons name="location-outline" size={28} color="#B0A090" />
-                <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noAddresses")}</Text>
-              </View>
-            ) : addresses.map((a: any) => (
+            {addresses.length ? addresses.map((a: any) => (
               <View key={a._id ?? a.id} style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={[styles.itemIcon, { backgroundColor: colors.bgMid }]}>
                   <Text style={{ fontSize: 18 }}>{addressIcon(a.type)}</Text>
@@ -385,7 +380,12 @@ const TripPublicViewScreen: React.FC = () => {
                   ) : null}
                 </View>
               </View>
-            ))}
+            )) : (
+              <View style={styles.emptyBox}>
+                <Ionicons name="location-outline" size={28} color="#B0A090" />
+                <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noAddresses")}</Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>

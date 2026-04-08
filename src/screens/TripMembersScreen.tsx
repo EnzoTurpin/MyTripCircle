@@ -354,7 +354,7 @@ const TripMembersScreen: React.FC = () => {
         <View style={{ flex: 1 }}>
           <Text style={[s.mn, { color: colors.text }]}>{inv.name}</Text>
           <Text style={[s.ms, { color: colors.textLight }]}>
-            {t("tripMembers.pendingLabel")}{daysAgo != null ? ` ${t("tripMembers.pendingDaysAgo", { count: daysAgo })}` : ""}
+            {t("tripMembers.pendingLabel")}{daysAgo == null ? "" : ` ${t("tripMembers.pendingDaysAgo", { count: daysAgo })}`}
           </Text>
         </View>
         {isOwner && (

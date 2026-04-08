@@ -227,8 +227,8 @@ const BookingsScreen: React.FC = () => {
 
             {/* Filter pills */}
             <View style={{ flexDirection: "row", paddingHorizontal: 14, gap: 8, marginBottom: 16 }}>
-              {[80, 60, 60, 80, 70].map((w, i) => (
-                <SkeletonBox key={i} width={w} height={34} borderRadius={20} />
+              {[{ id: "p1", w: 80 }, { id: "p2", w: 60 }, { id: "p3", w: 60 }, { id: "p4", w: 80 }, { id: "p5", w: 70 }].map(({ id, w }) => (
+                <SkeletonBox key={id} width={w} height={34} borderRadius={20} />
               ))}
             </View>
 

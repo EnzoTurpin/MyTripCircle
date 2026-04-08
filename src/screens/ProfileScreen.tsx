@@ -146,8 +146,8 @@ const ProfileScreen: React.FC = () => {
               { value: tripsLoading ? "…" : bookings.length,  label: t("profile.stats.bookings") },
               { value: friendsLoading ? "…" : friends.length, label: t("profile.stats.friends") },
               { value: tripsLoading ? "…" : addresses.length, label: t("profile.stats.addresses") },
-            ].map((s, i) => (
-              <View key={i} style={[styles.stat, { backgroundColor: colors.bgMid }]}>
+            ].map((s) => (
+              <View key={s.label} style={[styles.stat, { backgroundColor: colors.bgMid }]}>
                 <Text style={[styles.statVal, { color: colors.terra }]}>{s.value}</Text>
                 <Text style={[styles.statLbl, { color: colors.textLight }]}>{s.label}</Text>
               </View>
@@ -285,11 +285,11 @@ const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, on
       </Text>
       <View style={styles.rowRight}>
         {value ? <Text style={[styles.rowValue, { color: colors.textLight }]}>{value}</Text> : null}
-        {badge !== undefined ? (
+        {badge === undefined ? null : (
           <View style={[styles.badge, { backgroundColor: colors.terraLight }]}>
             <Text style={[styles.badgeText, { color: colors.terra }]}>{badge}</Text>
           </View>
-        ) : null}
+        )}
         <Ionicons name="chevron-forward" size={16} color={colors.bgDark} />
       </View>
     </TouchableOpacity>

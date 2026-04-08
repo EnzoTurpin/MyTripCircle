@@ -240,8 +240,8 @@ const SubscriptionScreen: React.FC = () => {
                 { icon: "shield-checkmark-outline",  text: t("subscription.featureSecure") },
                 { icon: "people-outline",            text: t("subscription.featureTeam") },
                 { icon: "refresh-outline",           text: t("subscription.featureUpdates") },
-              ].map((feature, index) => (
-                <View key={index} style={styles.featureItem}>
+              ].map((feature) => (
+                <View key={feature.icon} style={styles.featureItem}>
                   <View style={styles.featureIcon}>
                     <Ionicons name={feature.icon as any} size={20} color="#6B8C5A" />
                   </View>

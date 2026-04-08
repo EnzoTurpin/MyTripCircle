@@ -323,7 +323,10 @@ const useEditTrip = (): UseEditTripReturn => {
     booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
   ) => {
     try {
-      if (editingBookingIndex !== null) {
+      if (editingBookingIndex === null) {
+        const newBooking = await createBooking({ ...booking, tripId });
+        setBookings(prev => [...prev, newBooking]);
+      } else {
         const existing = bookings[editingBookingIndex];
         if (existing.id) {
           await updateBooking(existing.id, booking);
@@ -333,9 +336,6 @@ const useEditTrip = (): UseEditTripReturn => {
             )
           );
         }
-      } else {
-        const newBooking = await createBooking({ ...booking, tripId });
-        setBookings(prev => [...prev, newBooking]);
       }
       setShowBookingForm(false);
       setEditingBookingIndex(null);

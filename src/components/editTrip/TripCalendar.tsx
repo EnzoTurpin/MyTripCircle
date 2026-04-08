@@ -81,7 +81,7 @@ const TripCalendar: React.FC<Props> = ({
       {/* En-têtes jours */}
       <View style={s.calDaysRow}>
         {days.map((d, i) => (
-          <Text key={i} style={[s.calDayHeader, i >= 5 && s.calDayHeaderWeekend]}>
+          <Text key={d} style={[s.calDayHeader, i >= 5 && s.calDayHeaderWeekend]}>
             {d}
           </Text>
         ))}
@@ -90,7 +90,8 @@ const TripCalendar: React.FC<Props> = ({
       {/* Grille jours */}
       <View style={s.calGrid}>
         {cells.map((day, idx) => {
-          if (!day) return <View key={idx} style={s.calCell} />;
+          const cellKey = `${year}-${month}-${idx}`;
+          if (!day) return <View key={cellKey} style={s.calCell} />;
 
           const isStart =
             startDate.getFullYear() === year &&
@@ -108,7 +109,7 @@ const TripCalendar: React.FC<Props> = ({
 
           return (
             <TouchableOpacity
-              key={idx}
+              key={cellKey}
               style={[
                 s.calCell,
                 (isStart || isEnd || inRange) && {

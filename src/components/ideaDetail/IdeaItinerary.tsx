@@ -38,8 +38,8 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
         <Text style={[s.sectionTitle, { color: colors.text }]}>
           {t("ideas.detail.highlights")}
         </Text>
-        {highlights.map((h, idx) => (
-          <View key={idx} style={s.highlightRow}>
+        {highlights.map((h) => (
+          <View key={h} style={s.highlightRow}>
             <View style={s.highlightDot} />
             <Text style={[s.highlightText, { color: colors.textMid }]}>{h}</Text>
           </View>
@@ -65,8 +65,8 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
                 <Text style={[s.dayTitle, { color: colors.text }]}>{dayTitle}</Text>
               </View>
               <View style={s.activitiesList}>
-                {activities.map((act, aIdx) => (
-                  <View key={aIdx} style={s.activityRow}>
+                {activities.map((act) => (
+                  <View key={act} style={s.activityRow}>
                     <View style={s.activityBullet} />
                     <Text style={[s.activityText, { color: colors.textMid }]}>{act}</Text>
                   </View>
@@ -84,11 +84,11 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
         <Text style={[s.suggestedNote, { color: colors.textLight }]}>
           {t("ideas.detail.suggestedNote")}
         </Text>
-        {idea.suggestedBookings.map((b: SuggestedBooking, idx: number) => {
+        {idea.suggestedBookings.map((b: SuggestedBooking) => {
           const title = lang === "fr" ? b.titleFr : b.titleEn;
           return (
             <View
-              key={idx}
+              key={title}
               style={[s.bookingRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <View style={[s.bookingIconBg, { backgroundColor: colors.terraLight }]}>

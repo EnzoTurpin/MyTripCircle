@@ -81,8 +81,8 @@ const EditTripScreen: React.FC = () => {
           <SkeletonBox width="100%" height={160} borderRadius={16} />
 
           {/* Form fields */}
-          {[1, 0.6, 1, 0.7].map((w, i) => (
-            <View key={i} style={{ gap: 8 }}>
+          {[{ id: "f1", w: 1 }, { id: "f2", w: 0.6 }, { id: "f3", w: 1 }, { id: "f4", w: 0.7 }].map(({ id, w }) => (
+            <View key={id} style={{ gap: 8 }}>
               <SkeletonBox width={100} height={12} borderRadius={5} />
               <SkeletonBox width={`${w * 100}%`} height={52} borderRadius={10} />
             </View>
@@ -403,7 +403,7 @@ const EditTripScreen: React.FC = () => {
         visible={showBookingForm}
         onClose={closeBookingForm}
         onSave={handleSaveBooking}
-        initialBooking={editingBookingIndex !== null ? bookings[editingBookingIndex] : undefined}
+        initialBooking={editingBookingIndex === null ? undefined : bookings[editingBookingIndex]}
         tripStartDate={formData.startDate}
         tripEndDate={formData.endDate}
       />

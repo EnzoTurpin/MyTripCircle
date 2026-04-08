@@ -168,8 +168,8 @@ const AddressDetailsScreen: React.FC = () => {
 
             {/* Chips row */}
             <View style={{ flexDirection: "row", gap: 8 }}>
-              {[80, 70, 90].map((w, i) => (
-                <SkeletonBox key={i} width={w} height={30} borderRadius={999} />
+              {[{ id: "s1", w: 80 }, { id: "s2", w: 70 }, { id: "s3", w: 90 }].map(({ id, w }) => (
+                <SkeletonBox key={id} width={w} height={30} borderRadius={999} />
               ))}
             </View>
 
@@ -267,9 +267,7 @@ const AddressDetailsScreen: React.FC = () => {
         <View style={styles.ratingRow}>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => {
-              const filled = address.rating != null
-                ? star <= Math.round(address.rating)
-                : false;
+              const filled = address.rating == null ? false : star <= Math.round(address.rating);
               return (
                 <Text key={star} style={[styles.star, !filled && styles.starEmpty]}>★</Text>
               );

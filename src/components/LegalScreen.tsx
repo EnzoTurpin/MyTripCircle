@@ -59,8 +59,8 @@ export default function LegalScreen({ headerTitle, lastUpdated, sections }: Lega
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.lastUpdated, { color: colors.textMid }]}>{lastUpdated}</Text>
-        {sections.map((s, i) => (
-          <SectionItem key={i} title={s.title}>{s.body}</SectionItem>
+        {sections.map((s) => (
+          <SectionItem key={s.title} title={s.title}>{s.body}</SectionItem>
         ))}
       </ScrollView>
     </SafeAreaView>

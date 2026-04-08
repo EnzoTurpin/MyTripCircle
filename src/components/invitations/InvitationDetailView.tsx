@@ -228,7 +228,7 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
       {/* ── CTA fixe en bas ── */}
       {canRespond ? (
         <View style={[styles.detailCta, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-          {!isLinkType ? (
+          {isLinkType ? null : (
             <TouchableOpacity
               style={[styles.detailCtaDecline, { backgroundColor: colors.bgMid }]}
               onPress={onDecline}
@@ -244,7 +244,7 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
                 </>
               )}
             </TouchableOpacity>
-          ) : null}
+          )}
           <TouchableOpacity
             style={[styles.detailCtaAccept, !isLinkType && { flex: 2 }]}
             onPress={onAccept}
