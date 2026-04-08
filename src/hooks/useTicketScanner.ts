@@ -69,7 +69,7 @@ function parseGeneric(raw: string): ScannedBookingData {
   const timeMatch = raw.match(/\b(\d{2}):(\d{2})\b/);
   if (timeMatch) data.time = `${timeMatch[1]}:${timeMatch[2]}`;
 
-  const routeMatch = raw.match(/([A-ZÉÈÊ\- ]{3,})\s*[>→]\s*([A-ZÉÈÊ\- ]{3,})/i);
+  const routeMatch = raw.match(/([A-ZÉÈÊ\- ]{3,50})\s*[>→]\s*([A-ZÉÈÊ\- ]{3,50})/i);
   if (routeMatch) {
     data.title = `${routeMatch[1].trim()} → ${routeMatch[2].trim()}`;
     const lower = raw.toLowerCase();
