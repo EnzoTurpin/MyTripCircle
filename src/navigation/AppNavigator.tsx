@@ -129,7 +129,7 @@ const AppNavigator = () => {
         ForgotPassword: {
           path: "reset-password",
           parse: {
-            token: (token: string) => token,
+            code: (code: string) => code,
           },
         },
       },
