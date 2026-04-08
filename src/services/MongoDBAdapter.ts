@@ -2,6 +2,7 @@
 import MongoDBService from "./MongoDBService";
 import { Trip, Booking, Address, User } from "../types";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 class MongoDBAdapter {
   private static instance: MongoDBAdapter;
@@ -266,7 +267,7 @@ class MongoDBAdapter {
   }) {
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = crypto.randomInt(100000, 1000000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     const created = await this.mongoService.createUser({
@@ -441,7 +442,7 @@ class MongoDBAdapter {
               email: user.email,
               name: user.name,
               avatar: user.avatar,
-              password: "temp-password-change-me",
+              password: crypto.randomBytes(32).toString("hex"),
             });
           }
         }

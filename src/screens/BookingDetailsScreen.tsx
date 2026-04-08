@@ -200,7 +200,6 @@ const BookingDetailsScreen: React.FC = () => {
     const isUri =
       attachment.startsWith("file://") ||
       attachment.startsWith("content://") ||
-      attachment.startsWith("http://") ||
       attachment.startsWith("https://") ||
       attachment.startsWith("ph://");
 
