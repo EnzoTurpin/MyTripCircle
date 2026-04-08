@@ -113,7 +113,7 @@ export function useTripsApi(setters: TripsApiSetters) {
         const updated = await ApiService.updateBooking(bookingId, updates);
         setBookings((prev) =>
           prev.map((b) =>
-            b.id === bookingId || (b as any)._id === bookingId
+            b.id === bookingId || (b as Booking & { _id?: string })._id === bookingId
               ? { ...b, ...updated }
               : b
           )

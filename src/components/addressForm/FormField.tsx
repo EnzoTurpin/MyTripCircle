@@ -9,7 +9,7 @@ type Props = {
   label: string;
   value: string;
   onChangeText: (v: string) => void;
-  icon?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
   placeholder?: string;
   multiline?: boolean;
   keyboardType?: any;
@@ -43,7 +43,7 @@ const FormField: React.FC<Props> = ({
       ]}>
         {icon && (
           <Ionicons
-            name={icon as any}
+            name={icon}
             size={20}
             color={colors.textLight}
             style={[styles.inputIcon, multiline && styles.inputIconTop]}

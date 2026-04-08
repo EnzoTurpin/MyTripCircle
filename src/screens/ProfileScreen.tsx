@@ -261,7 +261,7 @@ const ProfileScreen: React.FC = () => {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface RowProps {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value?: string;
   badge?: number;
@@ -275,7 +275,7 @@ const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, on
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <Ionicons
-        name={icon as any}
+        name={icon}
         size={22}
         color={danger ? colors.danger : tinted ? colors.terra : colors.textMid}
         style={styles.rowIcon}

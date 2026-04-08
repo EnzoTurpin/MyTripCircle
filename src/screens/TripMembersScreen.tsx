@@ -114,7 +114,7 @@ const TripMembersScreen: React.FC = () => {
         return { userId: c.userId, name: u.name || c.userId, email: u.email, avatar: u.avatar || null, role: c.role || "viewer", status: "active" as const };
       }));
 
-      const tripPending = (sentInvs as any[]).filter((inv: any) => inv.tripId === tripId);
+      const tripPending = sentInvs.filter((inv: any) => inv.tripId === tripId);
       setPendingMembers(tripPending.map((inv: any) => ({
         userId:       inv._id || inv.id,
         name:         inv.inviteeEmail || inv.inviteePhone || t("tripMembers.guestFallback"),

@@ -51,14 +51,14 @@ const OtpScreen: React.FC = () => {
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timerRef.current!);
+          clearInterval(timerRef.current ?? undefined);
           setCanResend(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-    return () => clearInterval(timerRef.current!);
+    return () => clearInterval(timerRef.current ?? undefined);
   }, []);
 
   const otp = digits.join("");
