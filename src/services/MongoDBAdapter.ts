@@ -250,13 +250,8 @@ class MongoDBAdapter {
 
   // User Management
   async getUsers(): Promise<User[]> {
-    try {
-      // Cette méthode devrait être adaptée selon les besoins
-      return [];
-    } catch (error) {
-      console.error("Error getting users:", error);
-      return [];
-    }
+    // Cette méthode devrait être adaptée selon les besoins
+    return [];
   }
 
   async createUser(user: {

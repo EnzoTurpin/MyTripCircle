@@ -321,7 +321,7 @@ export function useInviteFriends(tripId: string) {
       const promises: Promise<any>[] = [];
 
       if (byEmail) {
-        const valid = /^[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]{1,253}\.[a-zA-Z]{2,}$/.test(byEmail);
+        const valid = /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(byEmail);
         if (!valid) {
           Alert.alert(t("inviteFriends.error"), t("inviteFriends.invalidEmail"));
           return;

@@ -28,9 +28,9 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const parseDate = (date: Date | string | undefined, fallback: Date): Date => {
   if (!date) return fallback;
-  if (date instanceof Date && !isNaN(date.getTime())) return date;
+  if (date instanceof Date && !Number.isNaN(date.getTime())) return date;
   const parsed = new Date(date);
-  return isNaN(parsed.getTime()) ? fallback : parsed;
+  return Number.isNaN(parsed.getTime()) ? fallback : parsed;
 };
 
 export const needsEndDate = (type: Booking["type"]): boolean => type === "hotel";
@@ -129,7 +129,7 @@ export function useBookingForm({
     if (selectedDate) {
       const date =
         selectedDate instanceof Date ? selectedDate : new Date(selectedDate);
-      if (isNaN(date.getTime())) return;
+      if (Number.isNaN(date.getTime())) return;
       if (dateType === "start") {
         setFormData((prev) => ({
           ...prev,
@@ -167,7 +167,7 @@ export function useBookingForm({
     const base = new Date(formData.date);
     if (formData.time) {
       const [h, m] = formData.time.split(":");
-      base.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+      base.setHours(Number.parseInt(h, 10), Number.parseInt(m, 10), 0, 0);
       return base;
     }
     base.setHours(12, 0, 0, 0);
@@ -262,10 +262,10 @@ export function useBookingForm({
       ...(data.confirmationNumber
         ? { confirmationNumber: data.confirmationNumber }
         : {}),
-      ...(data.date instanceof Date && !isNaN(data.date.getTime())
+      ...(data.date instanceof Date && !Number.isNaN(data.date.getTime())
         ? { date: data.date }
         : {}),
-      ...(data.endDate instanceof Date && !isNaN(data.endDate.getTime())
+      ...(data.endDate instanceof Date && !Number.isNaN(data.endDate.getTime())
         ? { endDate: data.endDate }
         : {}),
     }));

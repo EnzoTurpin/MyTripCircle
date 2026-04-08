@@ -12,8 +12,7 @@ import {
   Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { RouteProp } from "@react-navigation/native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";

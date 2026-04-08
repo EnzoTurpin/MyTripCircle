@@ -106,7 +106,6 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
   const form = useBookingForm(props);
 
-  const BOOKING_TYPES: Booking["type"][] = ["flight", "train", "hotel", "restaurant", "activity"];
   const STATUSES: Booking["status"][]    = ["confirmed", "pending", "cancelled"];
 
   const statusLabel = (s: Booking["status"]) =>
@@ -212,7 +211,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           {Platform.OS === "ios" && (
             <>
               <PickerModal visible={form.showDatePicker} title={needsEndDate(form.formData.type) ? t("bookings.startDate") : t("bookings.date")} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
-                <DateTimePicker value={form.formData.date instanceof Date && !isNaN(form.formData.date.getTime()) ? form.formData.date : new Date()} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
+                <DateTimePicker value={form.formData.date instanceof Date && !Number.isNaN(form.formData.date.getTime()) ? form.formData.date : new Date()} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
               </PickerModal>
               <PickerModal visible={form.showTimePicker} title={t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
                 <DateTimePicker value={form.getTimePickerValue()} mode="time" display="spinner" onChange={form.handleTimeChange} textColor={colors.text} />
@@ -234,7 +233,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           )}
           {Platform.OS === "ios" && (
             <PickerModal visible={form.showEndDatePicker} title={t("bookings.endDate")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
-              <DateTimePicker value={form.formData.endDate instanceof Date && !isNaN(form.formData.endDate.getTime()) ? form.formData.endDate : new Date()} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
+              <DateTimePicker value={form.formData.endDate instanceof Date && !Number.isNaN(form.formData.endDate.getTime()) ? form.formData.endDate : new Date()} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
             </PickerModal>
           )}
 
@@ -327,10 +326,10 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
         {/* Android pickers */}
         {Platform.OS === "android" && form.showDatePicker && (
-          <DateTimePicker value={form.formData.date instanceof Date && !isNaN(form.formData.date.getTime()) ? form.formData.date : new Date()} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "start")} />
+          <DateTimePicker value={form.formData.date instanceof Date && !Number.isNaN(form.formData.date.getTime()) ? form.formData.date : new Date()} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "start")} />
         )}
         {Platform.OS === "android" && form.showEndDatePicker && (
-          <DateTimePicker value={form.formData.endDate instanceof Date && !isNaN(form.formData.endDate.getTime()) ? form.formData.endDate : new Date()} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "end")} />
+          <DateTimePicker value={form.formData.endDate instanceof Date && !Number.isNaN(form.formData.endDate.getTime()) ? form.formData.endDate : new Date()} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "end")} />
         )}
         {Platform.OS === "android" && form.showTimePicker && (
           <DateTimePicker value={form.getTimePickerValue()} mode="time" display="default" onChange={form.handleTimeChange} />

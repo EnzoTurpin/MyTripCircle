@@ -112,7 +112,7 @@ const useEditTrip = (): UseEditTripReturn => {
       if (tripData) {
         const startDate = new Date(tripData.startDate);
         const endDate   = new Date(tripData.endDate);
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
+        if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return;
 
         const visibility: "private" | "friends" | "public" =
           tripData.visibility === "friends" ? "friends"

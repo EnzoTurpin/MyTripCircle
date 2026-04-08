@@ -32,7 +32,6 @@ if (!isExpoGoEnvironment) {
     isIapAvailable = true;
   } catch (error) {
     // react-native-iap is not available (not installed or other error)
-    isIapAvailable = false;
     console.warn("react-native-iap not available:", error);
   }
 }
@@ -55,7 +54,7 @@ const SubscriptionScreen: React.FC = () => {
   const { colors } = useTheme();
   const [products, setProducts] = useState<MockProduct[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [isExpoGo, setIsExpoGo] = useState(!isIapAvailable);
+  const isExpoGo = !isIapAvailable;
 
   useEffect(() => {
     if (!isIapAvailable || !RNIap) {

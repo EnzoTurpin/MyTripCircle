@@ -18,7 +18,7 @@ export const formatDate = (
     const dateObj = typeof date === "string" ? new Date(date) : date;
 
     // Vérifier si la date est valide
-    if (isNaN(dateObj.getTime())) {
+    if (Number.isNaN(dateObj.getTime())) {
       return i18n.t("common.invalidDate");
     }
 
@@ -60,7 +60,7 @@ export const formatTime = (time: string | null | undefined) => {
     // Parse time string (assuming HH:MM format)
     const [hours, minutes] = time.split(":");
     const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
+    date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
 
     return date.toLocaleTimeString(locale, {
       hour: "2-digit",

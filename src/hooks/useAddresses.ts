@@ -8,17 +8,21 @@ import { useTheme } from "../contexts/ThemeContext";
 import { geocodeAddress, getCached, GeoCoords } from "../utils/geocoding";
 import { useCurrentLocation } from "./useCurrentLocation";
 
-let MapView: any = null;
-let Marker: any = null;
-let mapsAvailable = false;
+let _MapView: any = null;
+let _Marker: any = null;
+let _mapsAvailable = false;
 try {
   const RNMaps = require("react-native-maps");
-  MapView = RNMaps.default;
-  Marker = RNMaps.Marker;
-  mapsAvailable = true;
+  _MapView = RNMaps.default;
+  _Marker = RNMaps.Marker;
+  _mapsAvailable = true;
 } catch {
   // Module natif non encore compilé — rebuild nécessaire
 }
+
+export const MapView: any = _MapView;
+export const Marker: any = _Marker;
+export const mapsAvailable: boolean = _mapsAvailable;
 
 export type Region = {
   latitude: number;
@@ -28,8 +32,6 @@ export type Region = {
 };
 
 export type FilterType = "all" | "hotel" | "restaurant" | "activity" | "transport" | "other";
-
-export { MapView, Marker, mapsAvailable };
 
 const DEFAULT_REGION: Region = {
   latitude: 48.8566,
@@ -90,7 +92,6 @@ export function useAddresses() {
         }
         if (cancelled) break;
 
-        lastNetworkRequest = Date.now();
         const coords = await geocodeAddress(
           address.address,
           address.city,

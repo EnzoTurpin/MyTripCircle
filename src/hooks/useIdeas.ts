@@ -92,8 +92,8 @@ export const useIdeas = () => {
   };
 
   const generateItinerary = async () => {
-    const days = parseInt(daysInput, 10);
-    if (!cityInput.trim() || isNaN(days) || days < 1 || days > 30) return;
+    const days = Number.parseInt(daysInput, 10);
+    if (!cityInput.trim() || Number.isNaN(days) || days < 1 || days > 30) return;
     setLoading(true);
     setItinerary(null);
     try {
@@ -227,7 +227,7 @@ export const useIdeas = () => {
     if (!itinerary) return;
     setCreating(true);
     try {
-      const days = parseInt(daysInput, 10) || 1;
+      const days = Number.parseInt(daysInput, 10) || 1;
       const endDate = new Date(startDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
       const newTrip = await createTrip({
         title: `${itinerary.city}`,

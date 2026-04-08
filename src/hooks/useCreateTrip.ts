@@ -66,7 +66,7 @@ export const useCreateTrip = () => {
       }
     }
 
-    if (!selectedDate || isNaN(selectedDate.getTime())) {
+    if (!selectedDate || Number.isNaN(selectedDate.getTime())) {
       return;
     }
 

@@ -336,15 +336,9 @@ class DataService {
     }
   }
 
-  async getAddressesByTripId(tripId: string): Promise<Address[]> {
-    try {
-      const addresses = await this.getAddresses();
-      // Les adresses ne sont plus liées à un voyage spécifique
-      return [];
-    } catch (error) {
-      console.error("Error getting addresses by trip ID:", error);
-      return [];
-    }
+  async getAddressesByTripId(_tripId: string): Promise<Address[]> {
+    // Les adresses ne sont plus liées à un voyage spécifique
+    return [];
   }
 
   private async deleteAddressesByTripId(tripId: string): Promise<void> {

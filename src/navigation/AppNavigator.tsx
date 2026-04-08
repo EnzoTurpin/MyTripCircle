@@ -2,9 +2,7 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { Linking } from "react-native";
 
 import { RootStackParamList, MainTabParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
@@ -117,7 +115,6 @@ const MainTabNavigator = () => {
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
-  const { t } = useTranslation();
 
   // Configuration des deep links
   const linking = {

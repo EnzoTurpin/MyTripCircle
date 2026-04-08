@@ -12,8 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { RouteProp } from "@react-navigation/native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTranslation } from "react-i18next";
@@ -218,13 +217,6 @@ const BookingDetailsScreen: React.FC = () => {
         t("common.error"),
         t("bookings.details.fileOpenError")
       );
-    }
-  };
-
-  const handleGetDirections = () => {
-    if (booking?.address) {
-      const url = `https://maps.google.com/maps?q=${encodeURIComponent(booking.address)}`;
-      Linking.openURL(url);
     }
   };
 

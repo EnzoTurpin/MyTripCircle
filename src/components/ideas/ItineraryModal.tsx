@@ -128,7 +128,7 @@ const ItineraryModal: React.FC<Props> = ({
               <View style={styles.stepperRow}>
                 <TouchableOpacity
                   style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => onDaysChange(String(Math.max(1, parseInt(daysInput, 10) - 1)))}
+                  onPress={() => onDaysChange(String(Math.max(1, Number.parseInt(daysInput, 10) - 1)))}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="remove" size={16} color="#C4714A" />
@@ -138,12 +138,12 @@ const ItineraryModal: React.FC<Props> = ({
                 </Text>
                 <TouchableOpacity
                   style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => onDaysChange(String(Math.min(30, parseInt(daysInput, 10) + 1)))}
+                  onPress={() => onDaysChange(String(Math.min(30, Number.parseInt(daysInput, 10) + 1)))}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="add" size={16} color="#C4714A" />
                 </TouchableOpacity>
-                {parseInt(daysInput, 10) !== itinerary.days?.length && (
+                {Number.parseInt(daysInput, 10) !== itinerary.days?.length && (
                   <TouchableOpacity
                     style={[styles.regenerateBtn, { opacity: loading ? 0.6 : 1 }]}
                     onPress={onGenerate}

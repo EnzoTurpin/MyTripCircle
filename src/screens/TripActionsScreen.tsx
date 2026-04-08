@@ -12,12 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
 import { useTrips } from "../contexts/TripsContext";
-import { useAuth } from "../contexts/AuthContext";
 import ApiService from "../services/ApiService";
 import { formatDate, parseApiError } from "../utils/i18n";
 import { useTranslation } from "react-i18next";
@@ -43,7 +41,6 @@ const TripActionsScreen: React.FC = () => {
     isOwner,
   } = route.params;
   const { deleteTrip } = useTrips();
-  const { user } = useAuth();
   const { t } = useTranslation();
   const { colors } = useTheme();
 

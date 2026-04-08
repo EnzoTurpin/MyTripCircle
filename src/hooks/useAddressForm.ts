@@ -117,9 +117,9 @@ export const useAddressForm = () => {
 
   const handleInputChange = (field: keyof typeof form, value: string) => {
     if (field === "phone") {
-      const cleaned = value.replace(/\D/g, "");
+      const cleaned = value.replaceAll(/\D/g, "");
       const trimmed = cleaned.slice(0, 10);
-      const formatted = trimmed.replace(/(\d{2})(?=\d)/g, "$1 ");
+      const formatted = trimmed.replaceAll(/(\d{2})(?=\d)/g, "$1 ");
       setForm((prev) => ({ ...prev, [field]: formatted }));
       return;
     }
