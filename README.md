@@ -1,319 +1,243 @@
 # MyTripCircle
 
-A modern React Native mobile application for collaborative trip planning with friends. Built with Expo, TypeScript, and React Navigation.
+Application mobile collaborative de planification de voyages entre amis, construite avec React Native (Expo) et un backend Express.js / MongoDB.
 
-## Features
+## Fonctionnalités
 
-### 🎯 Core Functionality
+### Voyages
 
-- **Trip Management**: Create, edit, and organize your travel plans
-- **Booking Management**: Track flights, trains, hotels, restaurants, and activities
-- **Address Management**: Store and manage important locations
-- **Collaborative Planning**: Invite friends to collaborate on trips
-- **Real-time Updates**: Share modifications with trip collaborators
+- Créer, modifier et organiser des voyages
+- Inviter des amis avec des rôles (propriétaire, éditeur, lecteur)
+- Partager un voyage publiquement ou entre amis
+- Deep links pour les invitations (`mytripcircle://invitation/:token`)
 
-### 📱 User Experience
+### Réservations
 
-- **Modern UI/UX**: Clean, intuitive interface with gradient designs
-- **Responsive Design**: Optimized for both iOS and Android
-- **Offline Support**: Data persistence with AsyncStorage
-- **Type Safety**: Full TypeScript implementation
+- Gérer vols, trains, hôtels, restaurants et activités
+- Scanner des billets (QR/code-barres + OCR via l'API Anthropic Claude)
+- Suivi du statut (confirmé, en attente, annulé)
 
-### 🔐 Authentication
+### Idées & Itinéraires IA
 
-- User registration and login
-- Profile management
-- Secure data storage
+- Génération d'itinéraires par ville et nombre de jours (Groq — Llama 3.3 70B)
+- Activités matin / après-midi / soir avec conseils
+- Filtrage par catégorie (attractions, gastronomie, aventure…)
+- Création de voyage en un clic depuis un itinéraire généré
+- 10 générations par utilisateur par 24 h, cache de 7 jours
 
-## Technology Stack
+### Adresses
 
-- **React Native**: Mobile app framework
-- **Expo**: Development platform and tools
-- **TypeScript**: Type-safe JavaScript
-- **React Navigation**: Navigation library
-- **AsyncStorage**: Local data persistence
-- **LinearGradient**: UI styling
-- **Ionicons**: Icon library
+- Sauvegarde de lieux avec autocomplétion Google Places
+- Coordonnées, notes, évaluations et photos
 
-## Project Structure
+### Amis
+
+- Envoi et réception de demandes d'amis
+- Invitation par lien / email
+- Notification email lors de l'inscription d'un ami invité
+
+### Authentification
+
+- Email / mot de passe avec vérification OTP
+- Sign in with Apple (vérification JWT côté serveur)
+- Google OAuth
+- Réinitialisation de mot de passe par email
+- JWT + refresh tokens
+
+### Autres
+
+- Internationalisation français / anglais (i18next)
+- Thème clair / sombre
+- Skeleton loaders sur toutes les pages
+- Notifications push
+
+## Stack technique
+
+### Frontend
+
+| Technologie | Usage |
+|---|---|
+| React Native 0.81 | Framework mobile |
+| Expo ~54 | Plateforme de développement |
+| TypeScript ~5.9 | Typage statique |
+| React Navigation | Navigation (stack, tabs, drawer) |
+| React Native Paper | Composants Material UI |
+| React Native Maps | Intégration cartographique |
+| i18next | Internationalisation |
+| AsyncStorage | Persistance locale |
+
+### Backend
+
+| Technologie | Usage |
+|---|---|
+| Express.js 5 | Framework web |
+| MongoDB (driver natif) | Base de données |
+| JWT + Bcrypt | Authentification et hachage |
+| Nodemailer | Envoi d'emails |
+| Helmet + Rate Limit | Sécurité |
+| Groq API | Génération d'itinéraires IA |
+
+## Structure du projet
 
 ```
 MyTripCircle/
 ├── src/
-│   ├── components/          # Reusable UI components
-│   ├── contexts/           # React Context providers
-│   │   ├── AuthContext.tsx # Authentication state
-│   │   └── TripsContext.tsx # Trip data management
-│   ├── navigation/         # Navigation configuration
-│   │   └── AppNavigator.tsx
-│   ├── screens/           # Application screens
-│   │   ├── AuthScreen.tsx
-│   │   ├── TripsScreen.tsx
-│   │   ├── BookingsScreen.tsx
-│   │   ├── AddressesScreen.tsx
-│   │   ├── ProfileScreen.tsx
-│   │   ├── TripDetailsScreen.tsx
-│   │   ├── BookingDetailsScreen.tsx
-│   │   ├── AddressDetailsScreen.tsx
-│   │   └── InviteFriendsScreen.tsx
-│   ├── services/          # Data management
-│   │   └── DataService.ts
-│   ├── types/            # TypeScript type definitions
-│   │   └── index.ts
-│   └── utils/            # Utility functions
-├── App.tsx                 # Main application component
-└── package.json          # Dependencies and scripts
+│   ├── components/        # Composants réutilisables (auth, trips, bookings, friends…)
+│   ├── screens/           # ~36 écrans (auth, voyages, réservations, idées, profil…)
+│   ├── contexts/          # État global (Auth, Trips, Friends, Theme, Notifications)
+│   ├── hooks/             # Hooks métier (useTripsApi, useBookingForm, useIdeas…)
+│   ├── navigation/        # AppNavigator — Stack + Tab navigation
+│   ├── services/          # Communication API (ApiService, PlacesService…)
+│   ├── utils/             # Helpers (i18n, geocoding, avatar…)
+│   ├── types/             # Interfaces TypeScript
+│   ├── theme/             # Couleurs, typographie, espacements
+│   └── config/            # Configuration API
+├── server/
+│   ├── index.js           # Point d'entrée Express
+│   ├── config.js          # Variables d'environnement
+│   ├── db.js              # Connexion MongoDB, index, validators
+│   ├── middleware/         # Auth JWT, rate limiter, error handler
+│   ├── routes/            # auth, users, trips, bookings, addresses, friends, invitations, itinerary
+│   └── utils/             # Email templates, helpers
+├── assets/                # Icônes et splash screen
+├── App.tsx                # Composant racine
+├── app.json               # Configuration Expo
+├── eas.json               # Profils de build EAS
+└── package.json
 ```
 
-## Getting Started
+## Installation
 
-### Prerequisites
+### Prérequis
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Expo CLI
-- iOS Simulator or Android Emulator (for testing)
+- Node.js ≥ 18
+- npm
+- Expo CLI (`npx expo`)
+- Instance MongoDB (locale ou Atlas)
+- Simulateur iOS / émulateur Android (optionnel)
 
-### Installation
+### Configuration
 
-1. **Clone the repository**
+1. Cloner le dépôt
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/EnzoTurpin/MyTripCircle.git
    cd MyTripCircle
    ```
 
-2. **Install dependencies**
+2. Installer les dépendances
 
    ```bash
    npm install
    ```
 
-3. **Configure environment variables**
+3. Configurer les variables d'environnement
 
-   Create a `.env` file at the project root and set your Google Places API key:
+   Créer un fichier `.env` à la racine :
 
-   ```bash
-   EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=<your-google-places-key>
+   ```env
+   # Base de données
+   MONGODB_URI=mongodb+srv://...
+   DB_NAME=mytripcircle
+
+   # Authentification
+   JWT_SECRET=votre_secret_jwt
+   REFRESH_SECRET=votre_secret_refresh
+
+   # Serveur
+   API_PORT=4000
+   API_BASE_URL=http://localhost:4000
+
+   # Google Places (autocomplétion adresses)
+   EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=votre_clé_google
+
+   # Email (Gmail)
+   MAIL_USER=votre_email@gmail.com
+   MAIL_PASS=votre_app_password
+
+   # IA — Génération d'itinéraires
+   GROQ_API_KEY=votre_clé_groq
+
+   # Apple Sign-In (optionnel)
+   APPLE_APP_ID=com.votre.bundle.id
    ```
 
-   The `EXPO_PUBLIC_` prefix is required so that Expo can expose the key at runtime for the address auto-complete feature.
-
-4. **Start the development server**
+4. Lancer le serveur backend
 
    ```bash
-   npm run start:clear
+   npm run server
    ```
 
-## Key Features Implementation
+5. Lancer l'application Expo
 
-### Authentication System
+   ```bash
+   npm start
+   ```
 
-- User registration and login with email/password
-- Persistent authentication state
-- Profile management
+## Scripts disponibles
 
-### Trip Management
+| Commande | Description |
+|---|---|
+| `npm start` | Lancer Expo |
+| `npm run dev` | Lancer Expo + serveur en parallèle |
+| `npm run server` | Lancer le backend Express |
+| `npm run ios` | Build et lancement iOS |
+| `npm run android` | Build et lancement Android |
+| `npm run seed` | Alimenter la base avec des données de test |
 
-- Create new trips with details (title, destination, dates)
-- View trip list with filtering and search
-- Edit trip information
-- Delete trips
+## Navigation
 
-### Booking Management
+### Non authentifié
 
-- Add bookings for flights, trains, hotels, restaurants, activities
-- Track booking status (confirmed, pending, cancelled)
-- Store confirmation numbers and pricing
-- Filter bookings by type
+Welcome → Connexion / Inscription → Vérification OTP → Mot de passe oublié
 
-### Address Management
+### Authentifié (5 onglets)
 
-- Store important locations with Google Places auto-completion- Contact information (phone, website)
-- Notes and additional details
-- Get directions integration
+| Onglet | Contenu |
+|---|---|
+| Voyages | Liste, création, détails, membres, vue publique |
+| Réservations | Gestion, scanner de billets, détails |
+| Idées | Génération IA d'itinéraires, inspiration par catégorie |
+| Adresses | Lieux sauvegardés, intégration Google Places |
+| Profil | Paramètres, amis, notifications, abonnement |
 
-### Collaboration Features
+## Charte graphique
 
-- Invite friends to trips via email
-- Manage trip collaborators
-- Shared editing permissions
-- Real-time updates
+Palette sable / terracotta :
 
-## Data Models
+| Token | Couleur | Hex |
+|---|---|---|
+| Terra | Accent principal | `#C4714A` |
+| Terra Dark | Variante sombre | `#A35830` |
+| Sand | Fond principal | `#F5F0E8` |
+| Sand Light | Fond secondaire | `#FDFAF5` |
+| Ink | Texte principal | `#2A2318` |
+| Moss | Accent vert | `#6B8C5A` |
+| Sky | Accent bleu | `#5A8FAA` |
 
-### Trip
+Typographie : **Lora** (serif, titres) + **Sora** (sans-serif, corps)
 
-```typescript
-interface Trip {
-  id: string;
-  title: string;
-  description?: string;
-  startDate: Date;
-  endDate: Date;
-  destination: string;
-  ownerId: string;
-  collaborators: string[];
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+## Collections MongoDB
 
-### Booking
+| Collection | Contenu |
+|---|---|
+| `users` | Profils, données d'auth |
+| `trips` | Voyages, collaborateurs, permissions |
+| `bookings` | Réservations, pièces jointes |
+| `addresses` | Lieux sauvegardés |
+| `friends` | Relations d'amitié |
+| `invitations` | Invitations voyage (expiration 7j) |
+| `itinerary_cache` | Itinéraires IA générés (TTL 7j) |
+| `itinerary_usage` | Limite de génération (TTL 24h) |
 
-```typescript
-interface Booking {
-  id: string;
-  tripId: string;
-  type: "flight" | "train" | "hotel" | "restaurant" | "activity";
-  title: string;
-  description?: string;
-  date: Date;
-  time?: string;
-  address?: string;
-  confirmationNumber?: string;
-  price?: number;
-  currency?: string;
-  status: "confirmed" | "pending" | "cancelled";
-  attachments?: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+## Deep linking
 
-### Address
+| Schéma | Action |
+|---|---|
+| `mytripcircle://invitation/:token` | Accepter une invitation voyage |
+| `mytripcircle://friend-invite/:token` | Accepter une demande d'ami |
+| `mytripcircle://reset-password` | Réinitialiser le mot de passe |
 
-```typescript
-interface Address {
-  id: string;
-  type: "hotel" | "restaurant" | "activity" | "transport" | "other";
-  name: string;
-  address: string;
-  city: string;
-  country: string;
-  phone?: string;
-  website?: string;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+## Licence
 
-## Navigation Structure
-
-### Main Navigation (Tab Navigator)
-
-- **Trips**: View and manage trips
-- **Bookings**: Track all bookings
-- **Addresses**: Manage locations
-- **Profile**: User profile and settings
-
-### Stack Navigation
-
-- Authentication flow
-- Trip details
-- Booking details
-- Address details
-- Friend invitations
-
-## State Management
-
-### Authentication Context
-
-- User login/logout state
-- Profile information
-- Authentication methods
-
-### Trips Context
-
-- Trip data management
-- Booking operations
-- Address management
-- Data persistence
-
-## Data Persistence
-
-- **AsyncStorage**: Local data storage
-- **DataService**: Centralized data management
-- **CRUD Operations**: Create, read, update, delete
-- **Data Export/Import**: Backup and restore functionality
-
-## UI/UX Design
-
-### Design Principles
-
-- **Modern**: Clean, contemporary interface
-- **Intuitive**: Easy-to-use navigation
-- **Consistent**: Unified design language
-- **Accessible**: User-friendly for all users
-
-### Color Scheme
-
-- Primary: #007AFF (Blue)
-- Secondary: #5856D6 (Purple)
-- Success: #34C759 (Green)
-- Warning: #FF9500 (Orange)
-- Error: #FF3B30 (Red)
-
-### Components
-
-- Gradient backgrounds
-- Card-based layouts
-- Icon integration
-- Responsive typography
-
-## Development Guidelines
-
-### Code Structure
-
-- TypeScript for type safety
-- Functional components with hooks
-- Context API for state management
-- Service layer for data operations
-
-### Best Practices
-
-- Consistent naming conventions
-- Proper error handling
-- Loading states
-- User feedback
-
-## Future Enhancements
-
-### Planned Features
-
-- Real-time collaboration
-- Push notifications
-- Offline synchronization
-- Advanced trip templates
-- Expense tracking
-- Social sharing
-- Integration with travel services
-
-### Technical Improvements
-
-- Performance optimization
-- Enhanced error handling
-- Better offline support
-- Advanced caching strategies
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support and questions, please contact the development team or create an issue in the repository.
-
----
-
-**MyTripCircle** - Making travel planning collaborative and fun! ✈️🌍
+MIT
