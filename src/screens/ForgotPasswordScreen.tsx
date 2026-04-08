@@ -255,6 +255,12 @@ const ForgotPasswordScreen: React.FC = () => {
 
   const isResetMode = !!resetCode;
 
+  const titleText = isResetMode ? t("forgotPassword.resetPasswordTitle") : t("forgotPassword.title");
+  const subtitleText = isResetMode ? t("forgotPassword.resetPasswordSubtitle") : t("forgotPassword.subtitle");
+  const btnDisabledStyle = loading ? styles.primaryButtonDisabled : undefined;
+  const resetBtnText = loading ? t("common.pleaseWait") : t("forgotPassword.resetPassword");
+  const requestBtnText = loading ? t("common.pleaseWait") : t("forgotPassword.sendResetLink");
+
   let mainContent: React.ReactNode;
   if (isResetMode && tokenChecking) {
     mainContent = (
@@ -316,14 +322,12 @@ const ForgotPasswordScreen: React.FC = () => {
           errorText={confirmPasswordError}
         />
         <TouchableOpacity
-          style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+          style={[styles.primaryButton, btnDisabledStyle]}
           onPress={handleResetPassword}
           disabled={loading}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>
-            {loading ? t("common.pleaseWait") : t("forgotPassword.resetPassword")}
-          </Text>
+          <Text style={styles.primaryButtonText}>{resetBtnText}</Text>
         </TouchableOpacity>
       </>
     );
@@ -360,14 +364,12 @@ const ForgotPasswordScreen: React.FC = () => {
           errorText={emailError}
         />
         <TouchableOpacity
-          style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+          style={[styles.primaryButton, btnDisabledStyle]}
           onPress={handleRequestReset}
           disabled={loading}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>
-            {loading ? t("common.pleaseWait") : t("forgotPassword.sendResetLink")}
-          </Text>
+          <Text style={styles.primaryButtonText}>{requestBtnText}</Text>
         </TouchableOpacity>
         <View style={styles.hintBox}>
           <Ionicons name="information-circle-outline" size={16} color={C.moss} style={{ marginRight: 6 }} />
@@ -397,16 +399,8 @@ const ForgotPasswordScreen: React.FC = () => {
         {/* Center block */}
         <View style={styles.centerBlock}>
           <Text style={styles.emoji}>🔑</Text>
-          <Text style={[styles.title, { color: colors.text }]}>
-            {isResetMode
-              ? t("forgotPassword.resetPasswordTitle")
-              : t("forgotPassword.title")}
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textMid }]}>
-            {isResetMode
-              ? t("forgotPassword.resetPasswordSubtitle")
-              : t("forgotPassword.subtitle")}
-          </Text>
+          <Text style={[styles.title, { color: colors.text }]}>{titleText}</Text>
+          <Text style={[styles.subtitle, { color: colors.textMid }]}>{subtitleText}</Text>
         </View>
 
         {mainContent}
