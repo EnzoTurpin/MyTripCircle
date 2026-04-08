@@ -303,12 +303,12 @@ export const ApiService = {
       { email },
     ),
 
-  verifyResetToken: (token: string) =>
-    request<{ success: boolean; error?: string }>(`/users/verify-reset-token?token=${encodeURIComponent(token)}`, "GET"),
+  verifyResetToken: (code: string) =>
+    request<{ success: boolean; error?: string }>(`/users/verify-reset-token?code=${encodeURIComponent(code)}`, "GET"),
 
-  resetPassword: (token: string, newPassword: string) =>
+  resetPassword: (code: string, newPassword: string) =>
     request<{ success: boolean; token?: string; user?: any }>("/users/reset-password", "POST", {
-      token,
+      code,
       newPassword,
     }),
 

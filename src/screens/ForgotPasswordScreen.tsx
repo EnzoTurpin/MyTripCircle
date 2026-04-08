@@ -140,7 +140,7 @@ const ForgotPasswordScreen: React.FC = () => {
   const { t } = useTranslation();
   const { loginWithToken } = useAuth();
   const { colors } = useTheme();
-  const resetToken = route.params?.token || "";
+  const resetCode = route.params?.code || "";
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -153,15 +153,15 @@ const ForgotPasswordScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [tokenInvalid, setTokenInvalid] = useState(false);
-  const [tokenChecking, setTokenChecking] = useState(!!resetToken);
+  const [tokenChecking, setTokenChecking] = useState(!!resetCode);
 
   React.useEffect(() => {
-    if (!resetToken) return;
-    ApiService.verifyResetToken(resetToken)
+    if (!resetCode) return;
+    ApiService.verifyResetToken(resetCode)
       .then((res) => { if (!res.success) setTokenInvalid(true); })
       .catch(() => setTokenInvalid(true))
       .finally(() => setTokenChecking(false));
-  }, [resetToken]);
+  }, [resetCode]);
 
   const validateEmail = (emailValue: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -233,7 +233,7 @@ const ForgotPasswordScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await ApiService.resetPassword(resetToken, newPassword);
+      const res = await ApiService.resetPassword(resetCode, newPassword);
       if (res.token && res.user) {
         await loginWithToken(res.token, res.user);
       } else {
@@ -254,7 +254,7 @@ const ForgotPasswordScreen: React.FC = () => {
     }
   };
 
-  const isResetMode = !!resetToken;
+  const isResetMode = !!resetCode;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
