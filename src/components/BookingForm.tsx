@@ -140,6 +140,32 @@ const TypePill: React.FC<TypePillProps> = ({ type, isSelected, typeColor, label,
   </TouchableOpacity>
 );
 
+interface StatusPillItemProps {
+  status: Booking["status"];
+  label: string;
+  isSelected: boolean;
+  colors: any;
+  onPress: () => void;
+}
+const StatusPillItem: React.FC<StatusPillItemProps> = ({ status, label, isSelected, colors, onPress }) => {
+  const color = STATUS_COLORS[status] || "#7A6A58";
+  return (
+    <TouchableOpacity
+      style={[styles.statusPill, {
+        backgroundColor: isSelected ? `${color}20` : colors.bgMid,
+        borderColor: isSelected ? color : colors.border,
+        borderWidth: isSelected ? 1.5 : 1,
+      }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Text style={[styles.statusPillText, { color: isSelected ? color : colors.textMid, fontFamily: isSelected ? F.sans600 : F.sans400 }]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 const BookingForm: React.FC<BookingFormProps> = (props) => {
@@ -292,22 +318,16 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.statusLabel")}</Text>
             <View style={styles.statusRow}>
-              {STATUSES.map((status) => {
-                const color = STATUS_COLORS[status] || "#7A6A58";
-                const isSelected = form.formData.status === status;
-                return (
-                  <TouchableOpacity
-                    key={status}
-                    style={[styles.statusPill, { backgroundColor: isSelected ? `${color}20` : colors.bgMid, borderColor: isSelected ? color : colors.border, borderWidth: isSelected ? 1.5 : 1 }]}
-                    onPress={() => form.handleInputChange("status", status)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.statusPillText, { color: isSelected ? color : colors.textMid, fontFamily: isSelected ? F.sans600 : F.sans400 }]}>
-                      {statusLabel(t, status)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {STATUSES.map((status) => (
+                <StatusPillItem
+                  key={status}
+                  status={status}
+                  label={statusLabel(t, status)}
+                  isSelected={form.formData.status === status}
+                  colors={colors}
+                  onPress={() => form.handleInputChange("status", status)}
+                />
+              ))}
             </View>
           </View>
 
