@@ -254,21 +254,25 @@ const ForgotPasswordScreen: React.FC = () => {
   };
 
   const isResetMode = !!resetCode;
+  const showVerifying = isResetMode && tokenChecking;
+  const showInvalidToken = isResetMode && tokenInvalid;
 
-  const titleText = isResetMode ? t("forgotPassword.resetPasswordTitle") : t("forgotPassword.title");
-  const subtitleText = isResetMode ? t("forgotPassword.resetPasswordSubtitle") : t("forgotPassword.subtitle");
+  const headings = isResetMode
+    ? { title: t("forgotPassword.resetPasswordTitle"), subtitle: t("forgotPassword.resetPasswordSubtitle") }
+    : { title: t("forgotPassword.title"), subtitle: t("forgotPassword.subtitle") };
   const btnDisabledStyle = loading ? styles.primaryButtonDisabled : undefined;
-  const resetBtnText = loading ? t("common.pleaseWait") : t("forgotPassword.resetPassword");
-  const requestBtnText = loading ? t("common.pleaseWait") : t("forgotPassword.sendResetLink");
+  const btnLabels = loading
+    ? { reset: t("common.pleaseWait"), request: t("common.pleaseWait") }
+    : { reset: t("forgotPassword.resetPassword"), request: t("forgotPassword.sendResetLink") };
 
   let mainContent: React.ReactNode;
-  if (isResetMode && tokenChecking) {
+  if (showVerifying) {
     mainContent = (
       <View style={styles.successContainer}>
         <Text style={styles.successTitle}>{t("forgotPassword.verifyingToken")}</Text>
       </View>
     );
-  } else if (isResetMode && tokenInvalid) {
+  } else if (showInvalidToken) {
     mainContent = (
       <View style={styles.successContainer}>
         <Ionicons name="lock-closed" size={56} color={colors.danger} />
@@ -327,7 +331,7 @@ const ForgotPasswordScreen: React.FC = () => {
           disabled={loading}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>{resetBtnText}</Text>
+          <Text style={styles.primaryButtonText}>{btnLabels.reset}</Text>
         </TouchableOpacity>
       </>
     );
@@ -369,7 +373,7 @@ const ForgotPasswordScreen: React.FC = () => {
           disabled={loading}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>{requestBtnText}</Text>
+          <Text style={styles.primaryButtonText}>{btnLabels.request}</Text>
         </TouchableOpacity>
         <View style={styles.hintBox}>
           <Ionicons name="information-circle-outline" size={16} color={C.moss} style={{ marginRight: 6 }} />
@@ -399,8 +403,8 @@ const ForgotPasswordScreen: React.FC = () => {
         {/* Center block */}
         <View style={styles.centerBlock}>
           <Text style={styles.emoji}>🔑</Text>
-          <Text style={[styles.title, { color: colors.text }]}>{titleText}</Text>
-          <Text style={[styles.subtitle, { color: colors.textMid }]}>{subtitleText}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{headings.title}</Text>
+          <Text style={[styles.subtitle, { color: colors.textMid }]}>{headings.subtitle}</Text>
         </View>
 
         {mainContent}
