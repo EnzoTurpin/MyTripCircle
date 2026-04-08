@@ -2,7 +2,7 @@
 import MongoDBService from "./MongoDBService";
 import { Trip, Booking, Address, User } from "../types";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 class MongoDBAdapter {
   private static instance: MongoDBAdapter;

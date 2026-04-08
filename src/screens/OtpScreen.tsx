@@ -26,16 +26,17 @@ type OtpScreenNavigationProp = StackNavigationProp<RootStackParamList, "Otp">;
 
 const OTP_LENGTH = 6;
 const RESEND_DELAY = 60;
+const OTP_KEYS = ["otp-0", "otp-1", "otp-2", "otp-3", "otp-4", "otp-5"] as const;
 
 const OtpScreen: React.FC = () => {
-  const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [digits, setDigits] = useState<string[]>(new Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [countdown, setCountdown] = useState(RESEND_DELAY);
   const [canResend, setCanResend] = useState(false);
   const [hasResent, setHasResent] = useState(false);
 
-  const inputRefs = useRef<Array<TextInput | null>>(Array(OTP_LENGTH).fill(null));
+  const inputRefs = useRef<Array<TextInput | null>>(new Array(OTP_LENGTH).fill(null));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const route = useRoute<OtpScreenRouteProp>();
@@ -64,7 +65,7 @@ const OtpScreen: React.FC = () => {
   const otp = digits.join("");
 
   const handleDigitChange = (text: string, index: number) => {
-    const numeric = text.replaceAll(/[^0-9]/g, "").slice(-1);
+    const numeric = text.replaceAll(/\D/g, "").slice(-1);
     const next = [...digits];
     next[index] = numeric;
     setDigits(next);
@@ -109,7 +110,7 @@ const OtpScreen: React.FC = () => {
       await ApiService.resendOtp(userId);
       setHasResent(true);
       setCanResend(false);
-      setDigits(Array(OTP_LENGTH).fill(""));
+      setDigits(new Array(OTP_LENGTH).fill(""));
       setOtpError("");
       Alert.alert(
         t("otp.resendAlertTitle"),
@@ -167,7 +168,7 @@ const OtpScreen: React.FC = () => {
         <View style={styles.boxesRow}>
           {digits.map((digit, i) => (
             <TextInput
-              key={`otp-digit-${i}`}
+              key={OTP_KEYS[i]}
               ref={(ref) => { inputRefs.current[i] = ref; }}
               style={[
                 styles.otpBox,

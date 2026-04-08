@@ -33,8 +33,8 @@ export const DESTINATIONS_BASE = [
 
 const extractCityCountry = (formattedAddress: string, fallbackCity: string) => {
   const parts = formattedAddress.split(", ").map((p) => p.trim()).filter(Boolean);
-  const country = parts.length >= 1 ? parts[parts.length - 1] : fallbackCity;
-  const city = parts.length >= 2 ? parts[parts.length - 2] : fallbackCity;
+  const country = parts.length >= 1 ? parts.at(-1) : fallbackCity;
+  const city = parts.length >= 2 ? parts.at(-2) : fallbackCity;
   return { city, country };
 };
 

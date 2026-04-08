@@ -51,7 +51,7 @@ const FriendInvitationScreen: React.FC = () => {
     setState({ status: "loading" });
     try {
       const data = await ApiService.getFriendInviteByToken(token);
-      if (user && data.userId === user.id) {
+      if (data.userId === user?.id) {
         setState({ status: "self" });
         return;
       }

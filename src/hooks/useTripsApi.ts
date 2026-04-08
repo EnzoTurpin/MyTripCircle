@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { Trip, Booking, Address, TripInvitation } from "../types";
 import ApiService from "../services/ApiService";
 import {
-  mapTrip,
   mapTripFromCreate,
   mapBooking,
   mapAddress,
@@ -18,11 +17,13 @@ interface TripsApiSetters {
   refreshData: () => Promise<void>;
 }
 
+type TripTimestampKeys = "id" | "createdAt" | "updatedAt";
+
 export function useTripsApi(setters: TripsApiSetters) {
   const { setTrips, setBookings, setAddresses, setInvitations, refreshData } = setters;
 
   const createTrip = useCallback(
-    async (trip: Omit<Trip, "id" | "createdAt" | "updatedAt">): Promise<Trip> => {
+    async (trip: Omit<Trip, TripTimestampKeys>): Promise<Trip> => {
       try {
         const result = await ApiService.createTrip(trip);
         const mappedTrip = mapTripFromCreate(result);

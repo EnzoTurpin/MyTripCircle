@@ -165,7 +165,7 @@ const FullMapScreen: React.FC = () => {
     setSelectedAddress(address);
     // Centre le marker dans le tiers bas de l'écran pour que la popup
     // au-dessus soit toujours visible (offset de 20 % du delta courant)
-    const offsetLat = coords.latitude - currentRegionRef.current.latitudeDelta * 0.20;
+    const offsetLat = coords.latitude - currentRegionRef.current.latitudeDelta * 0.2;
     mapRef.current?.animateCamera(
       { center: { latitude: offsetLat, longitude: coords.longitude } },
       { duration: 350 },

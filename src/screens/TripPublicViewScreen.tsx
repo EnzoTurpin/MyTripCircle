@@ -352,11 +352,11 @@ const TripPublicViewScreen: React.FC = () => {
                     <Text style={[styles.itemSub, { color: colors.textLight }]}>{fmtDateShort(b.startDate)}{b.endDate ? ` – ${fmtDateShort(b.endDate)}` : ""}</Text>
                   ) : null}
                 </View>
-                {b.price != null ? (
+                {b.price == null ? null : (
                   <Text style={styles.itemPrice}>
                     {b.price}{b.currency ? ` ${b.currency}` : t("tripPublicView.currencyFallback")}
                   </Text>
-                ) : null}
+                )}
                 <Ionicons name="chevron-forward" size={14} color="#D8CCBA" style={{ marginLeft: 4 }} />
               </TouchableOpacity>
             )) : (
