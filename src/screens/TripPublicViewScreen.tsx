@@ -215,7 +215,10 @@ const TripPublicViewScreen: React.FC = () => {
   const now = new Date();
   const start = new Date(trip.startDate);
   const end = new Date(trip.endDate);
-  const status = now < start ? "upcoming" : now > end ? "past" : "ongoing";
+  let status: "upcoming" | "past" | "ongoing";
+  if (now < start) { status = "upcoming"; }
+  else if (now > end) { status = "past"; }
+  else { status = "ongoing"; }
   const statusLabel = {
     upcoming: t("tripPublicView.statusUpcoming"),
     past:     t("tripPublicView.statusPast"),

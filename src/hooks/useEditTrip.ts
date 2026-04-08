@@ -114,10 +114,14 @@ const useEditTrip = (): UseEditTripReturn => {
         const endDate   = new Date(tripData.endDate);
         if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return;
 
-        const visibility: "private" | "friends" | "public" =
-          tripData.visibility === "friends" ? "friends"
-          : (tripData.visibility === "public" || tripData.isPublic) ? "public"
-          : "private";
+        let visibility: "private" | "friends" | "public";
+        if (tripData.visibility === "friends") {
+          visibility = "friends";
+        } else if (tripData.visibility === "public" || tripData.isPublic) {
+          visibility = "public";
+        } else {
+          visibility = "private";
+        }
 
         setFormData({
           title:       tripData.title,

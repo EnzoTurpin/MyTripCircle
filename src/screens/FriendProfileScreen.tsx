@@ -216,34 +216,36 @@ const FriendProfileScreen: React.FC = () => {
         {/* ── Contenu ── */}
         <View style={[styles.body, { backgroundColor: colors.bg }]}>
 
-          {loading ? (
-            <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 20 }}>
-              {/* Avatar + name */}
-              <View style={{ alignItems: "center", gap: 12 }}>
-                <SkeletonBox width={88} height={88} borderRadius={44} />
-                <SkeletonBox width={160} height={20} borderRadius={8} />
-                <SkeletonBox width={100} height={14} borderRadius={6} />
-              </View>
+          {(() => {
+            if (loading) return (
+              <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 20 }}>
+                {/* Avatar + name */}
+                <View style={{ alignItems: "center", gap: 12 }}>
+                  <SkeletonBox width={88} height={88} borderRadius={44} />
+                  <SkeletonBox width={160} height={20} borderRadius={8} />
+                  <SkeletonBox width={100} height={14} borderRadius={6} />
+                </View>
 
-              {/* Stats row */}
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                {[0, 1, 2].map((i) => (
-                  <SkeletonBox key={i} height={64} borderRadius={12} style={{ flex: 1 }} />
-                ))}
-              </View>
+                {/* Stats row */}
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  {[0, 1, 2].map((i) => (
+                    <SkeletonBox key={i} height={64} borderRadius={12} style={{ flex: 1 }} />
+                  ))}
+                </View>
 
-              {/* Trip grid */}
-              <SkeletonBox width={120} height={16} borderRadius={6} />
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {[0, 1, 2, 3].map((i) => (
-                  <SkeletonBox key={i} width={100} height={100} borderRadius={12} />
-                ))}
-              </View>
+                {/* Trip grid */}
+                <SkeletonBox width={120} height={16} borderRadius={6} />
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {[0, 1, 2, 3].map((i) => (
+                    <SkeletonBox key={i} width={100} height={100} borderRadius={12} />
+                  ))}
+                </View>
 
-              {/* Action buttons */}
-              <SkeletonBox width="100%" height={48} borderRadius={12} />
-            </View>
-          ) : profile?.isPublicProfile === false ? (
+                {/* Action buttons */}
+                <SkeletonBox width="100%" height={48} borderRadius={12} />
+              </View>
+            );
+            if (profile?.isPublicProfile === false) return (
             <>
               {/* ── Profil privé ── */}
               <View style={[styles.privateCard, { backgroundColor: colors.bgMid, borderColor: colors.border }]}>
@@ -284,7 +286,8 @@ const FriendProfileScreen: React.FC = () => {
                 )}
               </View>
             </>
-          ) : (
+            );
+            return (
             <>
               {/* Stats */}
               <View style={styles.statsRow}>
@@ -423,7 +426,8 @@ const FriendProfileScreen: React.FC = () => {
                 )}
               </View>
             </>
-          )}
+            );
+          })()}
         </View>
       </ScrollView>
     </View>

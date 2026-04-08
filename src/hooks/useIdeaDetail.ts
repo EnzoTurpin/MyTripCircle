@@ -108,11 +108,10 @@ export function useIdeaDetail() {
         }
       } catch { /* échec silencieux */ }
 
-      const addressType: "hotel" | "restaurant" | "activity" | "transport" =
-        b.type === "hotel" ? "hotel"
-        : b.type === "restaurant" ? "restaurant"
-        : b.type === "flight" ? "transport"
-        : "activity";
+      const ADDRESS_TYPE_MAP: Record<string, "hotel" | "restaurant" | "activity" | "transport"> = {
+        hotel: "hotel", restaurant: "restaurant", flight: "transport",
+      };
+      const addressType = ADDRESS_TYPE_MAP[b.type] ?? "activity";
 
       try {
         await createBooking({

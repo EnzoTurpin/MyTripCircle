@@ -272,12 +272,14 @@ interface RowProps {
 
 const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, onPress }) => {
   const { colors } = useTheme();
+  const iconColorFallback = tinted ? colors.terra : colors.textMid;
+  const iconColor = danger ? colors.danger : iconColorFallback;
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <Ionicons
         name={icon}
         size={22}
-        color={danger ? colors.danger : tinted ? colors.terra : colors.textMid}
+        color={iconColor}
         style={styles.rowIcon}
       />
       <Text style={[styles.rowLabel, { color: colors.text }, danger && { color: colors.danger }, tinted && { color: colors.terra }]}>

@@ -43,6 +43,31 @@ const InvitationCard: React.FC<CardProps> = ({
     ? tripDuration(inv.trip.startDate, inv.trip.endDate)
     : null;
 
+  let badgeEl: React.ReactNode = null;
+  if (expanded) {
+    badgeEl = <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgePending")}</Text></View>;
+  } else if (isUnread) {
+    badgeEl = <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgeNew")}</Text></View>;
+  }
+
+  let footerEl: React.ReactNode = null;
+  if (!canAct) {
+    if (status === "accepted") {
+      footerEl = (
+        <TouchableOpacity style={cardStyles.viewTripLink} onPress={onViewTrip} activeOpacity={0.8}>
+          <Text style={cardStyles.viewTripText}>{t("invitation.viewTripLink")}</Text>
+        </TouchableOpacity>
+      );
+    } else if (isExpired) {
+      footerEl = (
+        <View style={cardStyles.expiredRow}>
+          <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
+          <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
+        </View>
+      );
+    }
+  }
+
   return (
     <TouchableOpacity
       style={[cardStyles.card, isUnread && status === "pending" ? cardStyles.cardActive : cardStyles.cardDefault, { backgroundColor: colors.surface }]}
@@ -63,15 +88,7 @@ const InvitationCard: React.FC<CardProps> = ({
           end={{ x: 0, y: 1 }}
         />
         {isUnread && <View style={cardStyles.unreadDot} />}
-        {expanded ? (
-          <View style={cardStyles.bannerBadge}>
-            <Text style={cardStyles.bannerBadgeText}>{t("invitation.badgePending")}</Text>
-          </View>
-        ) : isUnread ? (
-          <View style={cardStyles.bannerBadge}>
-            <Text style={cardStyles.bannerBadgeText}>{t("invitation.badgeNew")}</Text>
-          </View>
-        ) : null}
+        {badgeEl}
         <View style={cardStyles.bannerBottom}>
           <View style={{ flex: 1 }}>
             <Text style={cardStyles.bannerTitle} numberOfLines={1}>{tripName}</Text>
@@ -157,16 +174,7 @@ const InvitationCard: React.FC<CardProps> = ({
               </TouchableOpacity>
             )}
           </View>
-        ) : status === "accepted" ? (
-          <TouchableOpacity style={cardStyles.viewTripLink} onPress={onViewTrip} activeOpacity={0.8}>
-            <Text style={cardStyles.viewTripText}>{t("invitation.viewTripLink")}</Text>
-          </TouchableOpacity>
-        ) : isExpired ? (
-          <View style={cardStyles.expiredRow}>
-            <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
-            <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
-          </View>
-        ) : null}
+        ) : footerEl}
       </View>
     </TouchableOpacity>
   );

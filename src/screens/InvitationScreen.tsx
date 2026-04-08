@@ -305,10 +305,10 @@ const InvitationScreen: React.FC = () => {
   // ── Derived lists ──
 
   const pending   = invitations.filter((i) => i.status === "pending");
-  const displayed =
-    tab === "pending" ? pending         :
-    tab === "sent"    ? sentInvitations :
-    invitations;
+  let displayed: typeof invitations;
+  if (tab === "pending")    { displayed = pending; }
+  else if (tab === "sent")  { displayed = sentInvitations; }
+  else                      { displayed = invitations; }
 
   // ── Deep-link mode ──
 
@@ -400,10 +400,9 @@ const InvitationScreen: React.FC = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#C4714A" />
           }
         >
-          {displayed.length === 0 ? (
-            <EmptyState tab={tab} />
-          ) : tab === "sent" ? (
-            displayed.map((inv) => (
+          {(() => {
+            if (displayed.length === 0) return <EmptyState tab={tab} />;
+            if (tab === "sent") return displayed.map((inv) => (
               <SentCard
                 key={inv._id ?? inv.token ?? inv.id}
                 invitation={inv}
@@ -413,9 +412,8 @@ const InvitationScreen: React.FC = () => {
                 }}
                 onCancel={() => handleCancelInvitation(inv)}
               />
-            ))
-          ) : (
-            displayed.map((inv) => (
+            ));
+            return displayed.map((inv) => (
               <InvitationCard
                 key={inv._id ?? inv.token}
                 invitation={inv}
@@ -436,8 +434,8 @@ const InvitationScreen: React.FC = () => {
                   if (id) navigation.navigate("TripDetails", { tripId: id });
                 }}
               />
-            ))
-          )}
+            ));
+          })()}
         </ScrollView>
       )}
 

@@ -123,6 +123,19 @@ const OtpScreen: React.FC = () => {
     }
   };
 
+  let resendEl: React.ReactNode;
+  if (!canResend && !hasResent) {
+    resendEl = <Text style={styles.resendText}>{t("otp.resendCountdown", { count: countdown })}</Text>;
+  } else if (hasResent) {
+    resendEl = <Text style={styles.resendDone}>{t("otp.resendDone")}</Text>;
+  } else {
+    resendEl = (
+      <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
+        <Text style={styles.resendLink}>{t("otp.resendLink")}</Text>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
@@ -195,19 +208,7 @@ const OtpScreen: React.FC = () => {
         </TouchableOpacity>
 
         {/* Renvoyer le code */}
-        <View style={styles.resendRow}>
-          {!canResend && !hasResent ? (
-            <Text style={styles.resendText}>
-              {t("otp.resendCountdown", { count: countdown })}
-            </Text>
-          ) : hasResent ? (
-            <Text style={styles.resendDone}>{t("otp.resendDone")}</Text>
-          ) : (
-            <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
-              <Text style={styles.resendLink}>{t("otp.resendLink")}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <View style={styles.resendRow}>{resendEl}</View>
       </ScrollView>
     </View>
   );

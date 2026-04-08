@@ -47,26 +47,28 @@ const MemberRow: React.FC<Props> = ({ member, isOwner, onPress }) => {
   const isMe = member.userId === user?.id;
   const canTap = !isMe && !member.isOwner && isOwner;
 
+  let roleText: string;
+  if (member.isOwner) {
+    roleText = isMe ? t("inviteFriends.roleOrganizerSelf") : t("inviteFriends.roleOrganizer");
+  } else {
+    roleText = t("inviteFriends.roleParticipant");
+  }
+
+  let trailingEl: React.ReactNode = null;
+  if (isMe) {
+    trailingEl = <View style={s.meTag}><Text style={s.meTagTxt}>{t("inviteFriends.meLabel")}</Text></View>;
+  } else if (canTap) {
+    trailingEl = <Text style={s.rowChevron}>›</Text>;
+  }
+
   const inner = (
     <>
       <AvatarBubble name={member.name} size={58} ownerBorder={member.isOwner} avatar={member.avatar} />
       <View style={{ flex: 1 }}>
         <Text style={[s.mn, { color: colors.text }]}>{member.name}</Text>
-        <Text style={[s.ms, { color: colors.textLight }]}>
-          {member.isOwner
-            ? isMe
-              ? t("inviteFriends.roleOrganizerSelf")
-              : t("inviteFriends.roleOrganizer")
-            : t("inviteFriends.roleParticipant")}
-        </Text>
+        <Text style={[s.ms, { color: colors.textLight }]}>{roleText}</Text>
       </View>
-      {isMe ? (
-        <View style={s.meTag}>
-          <Text style={s.meTagTxt}>{t("inviteFriends.meLabel")}</Text>
-        </View>
-      ) : canTap ? (
-        <Text style={s.rowChevron}>›</Text>
-      ) : null}
+      {trailingEl}
     </>
   );
 

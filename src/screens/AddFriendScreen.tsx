@@ -120,13 +120,15 @@ const AddFriendScreen: React.FC = () => {
     const type = detectContactType(trimmed);
     try {
       setSending(true);
-      const res = await sendFriendRequest(
-        recipientEmail
-          ? { recipientEmail }
-          : type === "email"
-          ? { recipientEmail: trimmed }
-          : { recipientPhone: trimmed }
-      );
+      let requestPayload: { recipientEmail?: string; recipientPhone?: string };
+      if (recipientEmail) {
+        requestPayload = { recipientEmail };
+      } else if (type === "email") {
+        requestPayload = { recipientEmail: trimmed };
+      } else {
+        requestPayload = { recipientPhone: trimmed };
+      }
+      const res = await sendFriendRequest(requestPayload);
       const name = overrideName ?? searchResult?.name ?? trimmed;
       const email = recipientEmail ?? searchResult?.email ?? (type === "email" ? trimmed : undefined);
       navigation.replace("FriendRequestConfirmation", {
@@ -152,6 +154,40 @@ const AddFriendScreen: React.FC = () => {
     const isAlreadyFriend = r.relation === "friend";
     const isPendingSent = r.relation === "pending_sent";
     const isPendingReceived = r.relation === "pending_received";
+
+    let actionEl: React.ReactNode;
+    if (isAlreadyFriend) {
+      actionEl = (
+        <View style={[styles.alreadyPill, { backgroundColor: MOSS_LIGHT }]}>
+          <Ionicons name="checkmark-circle" size={17} color={MOSS} />
+          <Text style={[styles.alreadyText, { color: MOSS }]}>{t("addFriend.alreadyFriend")}</Text>
+        </View>
+      );
+    } else if (isPendingSent) {
+      actionEl = (
+        <View style={[styles.actionBtn, { backgroundColor: colors.bgMid }]}>
+          <Ionicons name="hourglass-outline" size={17} color={colors.textMid} />
+          <Text style={[styles.actionBtnText, { color: colors.textMid }]}>{t("addFriend.requestSent")}</Text>
+        </View>
+      );
+    } else {
+      actionEl = (
+        <TouchableOpacity
+          style={[styles.actionBtn, sending && { opacity: 0.6 }]}
+          onPress={() => handleSend()}
+          disabled={sending}
+          activeOpacity={0.85}
+        >
+          {sending
+            ? <ActivityIndicator size="small" color={colors.white} />
+            : <Ionicons name={isPendingReceived ? "checkmark" : "person-add-outline"} size={17} color={colors.white} />
+          }
+          <Text style={styles.actionBtnText}>
+            {isPendingReceived ? t("addFriend.acceptRequest") : t("addFriend.sendRequest")}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
 
     return (
       <>
@@ -193,32 +229,7 @@ const AddFriendScreen: React.FC = () => {
           </View>
 
           {/* Action */}
-          {isAlreadyFriend ? (
-            <View style={[styles.alreadyPill, { backgroundColor: MOSS_LIGHT }]}>
-              <Ionicons name="checkmark-circle" size={17} color={MOSS} />
-              <Text style={[styles.alreadyText, { color: MOSS }]}>{t("addFriend.alreadyFriend")}</Text>
-            </View>
-          ) : isPendingSent ? (
-            <View style={[styles.actionBtn, { backgroundColor: colors.bgMid }]}>
-              <Ionicons name="hourglass-outline" size={17} color={colors.textMid} />
-              <Text style={[styles.actionBtnText, { color: colors.textMid }]}>{t("addFriend.requestSent")}</Text>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={[styles.actionBtn, sending && { opacity: 0.6 }]}
-              onPress={() => handleSend()}
-              disabled={sending}
-              activeOpacity={0.85}
-            >
-              {sending
-                ? <ActivityIndicator size="small" color={colors.white} />
-                : <Ionicons name={isPendingReceived ? "checkmark" : "person-add-outline"} size={17} color={colors.white} />
-              }
-              <Text style={styles.actionBtnText}>
-                {isPendingReceived ? t("addFriend.acceptRequest") : t("addFriend.sendRequest")}
-              </Text>
-            </TouchableOpacity>
-          )}
+          {actionEl}
         </View>
       </>
     );

@@ -431,94 +431,99 @@ const FriendsScreen: React.FC = () => {
         )}
 
         {/* ── Content ── */}
-        {loading ? (
-          <View style={{ paddingHorizontal: 14, paddingTop: 8, gap: 12 }}>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
-                <SkeletonBox width={48} height={48} borderRadius={24} />
-                <View style={{ flex: 1, gap: 8 }}>
-                  <SkeletonBox width="60%" height={14} borderRadius={6} />
-                  <SkeletonBox width="40%" height={12} borderRadius={5} />
+        {(() => {
+          if (loading) return (
+            <View style={{ paddingHorizontal: 14, paddingTop: 8, gap: 12 }}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
+                  <SkeletonBox width={48} height={48} borderRadius={24} />
+                  <View style={{ flex: 1, gap: 8 }}>
+                    <SkeletonBox width="60%" height={14} borderRadius={6} />
+                    <SkeletonBox width="40%" height={12} borderRadius={5} />
+                  </View>
+                  <SkeletonBox width={80} height={32} borderRadius={16} />
                 </View>
-                <SkeletonBox width={80} height={32} borderRadius={16} />
-              </View>
-            ))}
-          </View>
-
-        ) : activeTab === "friends" ? (
-          filteredFriends.length === 0 ? (
-            <View style={styles.emptyState}>
-              <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
-                <Ionicons name="people-outline" size={40} color={colors.terra} />
-              </View>
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("friends.emptyFriends")}</Text>
-              <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.emptyFriendsSubtitle")}</Text>
+              ))}
             </View>
-          ) : (
-            <FlatList
-              data={filteredFriends}
-              renderItem={renderFriendItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          )
+          );
 
-        ) : activeTab === "requests" ? (
-          <>
-            {/* Reçues */}
-            <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friends.receivedSection", { count: receivedRequests.length })}</Text>
-            {receivedRequests.length === 0 ? (
-              <View style={[styles.emptyState, { paddingVertical: 20 }]}>
-                <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noRequestsReceived")}</Text>
+          if (activeTab === "friends") return (
+            filteredFriends.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
+                  <Ionicons name="people-outline" size={40} color={colors.terra} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("friends.emptyFriends")}</Text>
+                <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.emptyFriendsSubtitle")}</Text>
               </View>
             ) : (
               <FlatList
-                data={receivedRequests}
-                renderItem={renderReceivedItem}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                contentContainerStyle={{ marginBottom: 14 }}
-              />
-            )}
-
-            {/* Envoyées */}
-            <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friends.sentSection", { count: sentRequests.length })}</Text>
-            {sentRequests.length === 0 ? (
-              <View style={[styles.emptyState, { paddingVertical: 20 }]}>
-                <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noRequestsSent")}</Text>
-              </View>
-            ) : (
-              <FlatList
-                data={sentRequests}
-                renderItem={renderSentItem}
+                data={filteredFriends}
+                renderItem={renderFriendItem}
                 keyExtractor={(item) => item.id}
                 scrollEnabled={false}
               />
-            )}
-          </>
+            )
+          );
 
-        ) : (
-          /* Suggestions tab */
-          suggestions.length === 0 ? (
-            <View style={styles.emptyState}>
-              <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
-                <Ionicons name="person-add-outline" size={40} color={colors.terra} />
-              </View>
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("friends.noSuggestions")}</Text>
-              <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noSuggestionsDesc")}</Text>
-            </View>
-          ) : (
+          if (activeTab === "requests") return (
             <>
-              <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friends.youMightKnow")}</Text>
-              <FlatList
-                data={suggestions}
-                renderItem={renderSuggestionItem}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-              />
+              {/* Reçues */}
+              <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friends.receivedSection", { count: receivedRequests.length })}</Text>
+              {receivedRequests.length === 0 ? (
+                <View style={[styles.emptyState, { paddingVertical: 20 }]}>
+                  <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noRequestsReceived")}</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={receivedRequests}
+                  renderItem={renderReceivedItem}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  contentContainerStyle={{ marginBottom: 14 }}
+                />
+              )}
+
+              {/* Envoyées */}
+              <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friends.sentSection", { count: sentRequests.length })}</Text>
+              {sentRequests.length === 0 ? (
+                <View style={[styles.emptyState, { paddingVertical: 20 }]}>
+                  <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noRequestsSent")}</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={sentRequests}
+                  renderItem={renderSentItem}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                />
+              )}
             </>
-          )
-        )}
+          );
+
+          /* Suggestions tab */
+          return (
+            suggestions.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
+                  <Ionicons name="person-add-outline" size={40} color={colors.terra} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("friends.noSuggestions")}</Text>
+                <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noSuggestionsDesc")}</Text>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friends.youMightKnow")}</Text>
+                <FlatList
+                  data={suggestions}
+                  renderItem={renderSuggestionItem}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                />
+              </>
+            )
+          );
+        })()}
       </ScrollView>
     </SafeAreaView>
   );
