@@ -41,6 +41,29 @@ const SentCard: React.FC<SentProps> = ({ invitation: inv, onViewTrip, onCancel }
   };
   const sc = statusConfig[status] ?? statusConfig.pending;
 
+  let actionEl: React.ReactNode = null;
+  if (status === "accepted") {
+    actionEl = (
+      <TouchableOpacity style={cardStyles.viewTripLink} onPress={onViewTrip} activeOpacity={0.8}>
+        <Text style={cardStyles.viewTripText}>{t("invitation.viewTripLink")}</Text>
+      </TouchableOpacity>
+    );
+  } else if (status === "expired") {
+    actionEl = (
+      <View style={cardStyles.expiredRow}>
+        <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
+        <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
+      </View>
+    );
+  } else if (status === "pending") {
+    actionEl = (
+      <TouchableOpacity style={cardStyles.cancelInviteBtn} onPress={onCancel} activeOpacity={0.85}>
+        <Ionicons name="close-outline" size={18} color="#C04040" />
+        <Text style={cardStyles.cancelInviteText}>{t("invitation.cancelInviteBtn")}</Text>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <View style={[cardStyles.card, cardStyles.cardDefault, { backgroundColor: colors.surface }]}>
       {/* ── Banner ── */}
@@ -88,21 +111,7 @@ const SentCard: React.FC<SentProps> = ({ invitation: inv, onViewTrip, onCancel }
           </View>
         ) : null}
 
-        {status === "accepted" ? (
-          <TouchableOpacity style={cardStyles.viewTripLink} onPress={onViewTrip} activeOpacity={0.8}>
-            <Text style={cardStyles.viewTripText}>{t("invitation.viewTripLink")}</Text>
-          </TouchableOpacity>
-        ) : status === "expired" ? (
-          <View style={cardStyles.expiredRow}>
-            <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
-            <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
-          </View>
-        ) : status === "pending" ? (
-          <TouchableOpacity style={cardStyles.cancelInviteBtn} onPress={onCancel} activeOpacity={0.85}>
-            <Ionicons name="close-outline" size={18} color="#C04040" />
-            <Text style={cardStyles.cancelInviteText}>{t("invitation.cancelInviteBtn")}</Text>
-          </TouchableOpacity>
-        ) : null}
+        {actionEl}
       </View>
     </View>
   );

@@ -230,6 +230,37 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     }
   };
 
+  let nameFieldEl: React.ReactNode = null;
+  if (initialAddress) {
+    nameFieldEl = (
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: colors.text }]}>{t("addresses.form.name")} *</Text>
+        <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="text-outline" size={20} color={colors.textLight} style={styles.inputIcon} />
+          <TextInput
+            style={[styles.input, { color: colors.text }]}
+            value={form.name}
+            onChangeText={(value) => handleInputChange("name", value)}
+            placeholder={t("addresses.form.namePlaceholder")}
+            placeholderTextColor={colors.textLight}
+            autoComplete="off"
+            textContentType="none"
+          />
+        </View>
+      </View>
+    );
+  } else if (form.name) {
+    nameFieldEl = (
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: colors.text }]}>{t("addresses.form.name")}</Text>
+        <View style={[styles.inputContainer, { backgroundColor: colors.bgMid, borderColor: colors.border }]}>
+          <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.terra} style={styles.inputIcon} />
+          <Text style={[styles.input, { color: colors.text }]} numberOfLines={1}>{form.name}</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.modalOverlay}>
@@ -291,31 +322,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             </View>
 
             {/* Nom — éditable uniquement en mode édition, auto-rempli en création */}
-            {initialAddress ? (
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>{t("addresses.form.name")} *</Text>
-                <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Ionicons name="text-outline" size={20} color={colors.textLight} style={styles.inputIcon} />
-                  <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    value={form.name}
-                    onChangeText={(value) => handleInputChange("name", value)}
-                    placeholder={t("addresses.form.namePlaceholder")}
-                    placeholderTextColor={colors.textLight}
-                    autoComplete="off"
-                    textContentType="none"
-                  />
-                </View>
-              </View>
-            ) : form.name ? (
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>{t("addresses.form.name")}</Text>
-                <View style={[styles.inputContainer, { backgroundColor: colors.bgMid, borderColor: colors.border }]}>
-                  <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.terra} style={styles.inputIcon} />
-                  <Text style={[styles.input, { color: colors.text }]} numberOfLines={1}>{form.name}</Text>
-                </View>
-              </View>
-            ) : null}
+            {nameFieldEl}
 
             {/* Adresse */}
             <View style={styles.inputGroup}>

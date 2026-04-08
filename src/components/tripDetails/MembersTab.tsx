@@ -30,6 +30,15 @@ const MembersTab: React.FC<Props> = ({
   const { t } = useTranslation();
   const { colors } = useTheme();
 
+  let roleLabel: string;
+  if (isOwner) {
+    roleLabel = t("tripDetails.roleOrganizer");
+  } else if (userCollaborator?.role === "editor") {
+    roleLabel = t("tripDetails.roleEditor");
+  } else {
+    roleLabel = t("tripDetails.roleViewer");
+  }
+
   return (
     <View style={s.tabContent}>
       <View style={[s.memberRow, { borderBottomColor: colors.bgMid }]}>
@@ -41,13 +50,7 @@ const MembersTab: React.FC<Props> = ({
         </View>
         <View style={s.memberInfo}>
           <Text style={[s.memberName, { color: colors.text }]}>{user?.name || t("tripDetails.you")}</Text>
-          <Text style={[s.memberRole, { color: colors.textMid }]}>
-            {isOwner
-              ? t("tripDetails.roleOrganizer")
-              : userCollaborator?.role === "editor"
-              ? t("tripDetails.roleEditor")
-              : t("tripDetails.roleViewer")}
-          </Text>
+          <Text style={[s.memberRole, { color: colors.textMid }]}>{roleLabel}</Text>
           {!isOwner && userCollaborator?.invitedBy && (
             <Text style={[s.memberInvited, { color: colors.textLight }]}>
               {t("tripDetails.invitedBy", {

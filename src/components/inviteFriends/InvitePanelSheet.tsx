@@ -52,6 +52,15 @@ const InvitePanelSheet: React.FC<Props> = ({
   const { t } = useTranslation();
   const { colors } = useTheme();
 
+  let sendBtnText: string;
+  if (sendingInvitations) {
+    sendBtnText = t("inviteFriends.sendInviteLoading");
+  } else if (inviteCount > 0) {
+    sendBtnText = t("inviteFriends.sendInviteCount", { count: inviteCount });
+  } else {
+    sendBtnText = t("inviteFriends.sendInviteBtn");
+  }
+
   return (
     <Modal transparent visible animationType="none" onRequestClose={onClose}>
       <Animated.View
@@ -168,13 +177,7 @@ const InvitePanelSheet: React.FC<Props> = ({
             onPress={onSend}
             disabled={sendingInvitations || inviteCount === 0}
           >
-            <Text style={s.sendBtnTxt}>
-              {sendingInvitations
-                ? t("inviteFriends.sendInviteLoading")
-                : inviteCount > 0
-                ? t("inviteFriends.sendInviteCount", { count: inviteCount })
-                : t("inviteFriends.sendInviteBtn")}
-            </Text>
+            <Text style={s.sendBtnTxt}>{sendBtnText}</Text>
           </TouchableOpacity>
         </Animated.View>
       </KeyboardAvoidingView>

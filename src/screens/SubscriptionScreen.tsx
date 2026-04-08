@@ -114,14 +114,15 @@ const SubscriptionScreen: React.FC = () => {
 
     const purchaseError = RNIap.purchaseErrorListener((err: unknown) => {
       console.warn("purchase error", err);
-      const raw =
-        err instanceof Error
-          ? err
-          : new Error(
-              typeof (err as { message?: string })?.message === "string"
-                ? (err as { message: string }).message
-                : "",
-            );
+      let raw: Error;
+      if (err instanceof Error) {
+        raw = err;
+      } else {
+        const msg = typeof (err as { message?: string })?.message === "string"
+          ? (err as { message: string }).message
+          : "";
+        raw = new Error(msg);
+      }
       Alert.alert(
         t("subscription.purchaseErrorTitle"),
         parseApiError(raw) || t("subscription.purchaseErrorMessage"),

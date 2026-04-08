@@ -46,7 +46,8 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const iconSize = size === "small" ? 16 : size === "medium" ? 18 : 24;
+  const iconSizeMedLarge = size === "medium" ? 18 : 24;
+  const iconSize = size === "small" ? 16 : iconSizeMedLarge;
 
   const iconColor = (() => {
     switch (variant) {

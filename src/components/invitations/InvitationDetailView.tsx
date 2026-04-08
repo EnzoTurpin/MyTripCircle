@@ -92,6 +92,30 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
     ? tripDuration(invitation.trip.startDate, invitation.trip.endDate)
     : null;
 
+  let statusBannerEl: React.ReactNode = null;
+  if (isExpired) {
+    statusBannerEl = (
+      <View style={[styles.detailStatusBanner, { backgroundColor: "#FDEAEA", borderColor: "rgba(192,64,64,0.2)" }]}>
+        <Ionicons name="hourglass-outline" size={20} color="#C04040" />
+        <Text style={[styles.detailStatusText, { color: "#C04040" }]}>{t("invitation.expired")}</Text>
+      </View>
+    );
+  } else if (invitation.status === "accepted") {
+    statusBannerEl = (
+      <View style={[styles.detailStatusBanner, { backgroundColor: "#E2EDD9", borderColor: "rgba(107,140,90,0.25)" }]}>
+        <Ionicons name="checkmark-circle" size={20} color="#6B8C5A" />
+        <Text style={[styles.detailStatusText, { color: "#6B8C5A" }]}>{t("invitation.statusAccepted")}</Text>
+      </View>
+    );
+  } else if (invitation.status === "declined") {
+    statusBannerEl = (
+      <View style={[styles.detailStatusBanner, { backgroundColor: "#FDEAEA", borderColor: "rgba(192,64,64,0.2)" }]}>
+        <Ionicons name="close-circle" size={20} color="#C04040" />
+        <Text style={[styles.detailStatusText, { color: "#C04040" }]}>{t("invitation.statusDeclined")}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -194,22 +218,7 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
           </View>
 
           {/* Statut si déjà traité */}
-          {isExpired ? (
-            <View style={[styles.detailStatusBanner, { backgroundColor: "#FDEAEA", borderColor: "rgba(192,64,64,0.2)" }]}>
-              <Ionicons name="hourglass-outline" size={20} color="#C04040" />
-              <Text style={[styles.detailStatusText, { color: "#C04040" }]}>{t("invitation.expired")}</Text>
-            </View>
-          ) : invitation.status === "accepted" ? (
-            <View style={[styles.detailStatusBanner, { backgroundColor: "#E2EDD9", borderColor: "rgba(107,140,90,0.25)" }]}>
-              <Ionicons name="checkmark-circle" size={20} color="#6B8C5A" />
-              <Text style={[styles.detailStatusText, { color: "#6B8C5A" }]}>{t("invitation.statusAccepted")}</Text>
-            </View>
-          ) : invitation.status === "declined" ? (
-            <View style={[styles.detailStatusBanner, { backgroundColor: "#FDEAEA", borderColor: "rgba(192,64,64,0.2)" }]}>
-              <Ionicons name="close-circle" size={20} color="#C04040" />
-              <Text style={[styles.detailStatusText, { color: "#C04040" }]}>{t("invitation.statusDeclined")}</Text>
-            </View>
-          ) : null}
+          {statusBannerEl}
 
           {/* Lien vers le voyage si déjà accepté */}
           {invitation.status === "accepted" && (invitation.tripId ?? invitation.trip?._id) ? (

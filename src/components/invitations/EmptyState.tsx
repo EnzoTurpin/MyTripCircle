@@ -16,19 +16,24 @@ interface EmptyStateProps {
   tab: TabKey;
 }
 
+const TITLE_KEYS: Record<TabKey, string> = {
+  all:     "invitation.emptyAllTitle",
+  pending: "invitation.emptyPendingTitle",
+  sent:    "invitation.emptySentTitle",
+};
+const SUB_KEYS: Record<TabKey, string> = {
+  all:     "invitation.emptyAllSub",
+  pending: "invitation.emptyPendingSub",
+  sent:    "invitation.emptySentSub",
+};
+
 const EmptyState: React.FC<EmptyStateProps> = ({ tab }) => {
   const { t }      = useTranslation();
   const { colors } = useTheme();
 
-  const icon = EMPTY_ICONS[tab];
-  const title =
-    tab === "all"     ? t("invitation.emptyAllTitle")     :
-    tab === "pending" ? t("invitation.emptyPendingTitle") :
-                        t("invitation.emptySentTitle");
-  const sub =
-    tab === "all"     ? t("invitation.emptyAllSub")     :
-    tab === "pending" ? t("invitation.emptyPendingSub") :
-                        t("invitation.emptySentSub");
+  const icon  = EMPTY_ICONS[tab];
+  const title = t(TITLE_KEYS[tab]);
+  const sub   = t(SUB_KEYS[tab]);
 
   return (
     <View style={styles.emptyWrap}>

@@ -302,23 +302,25 @@ const TripMembersScreen: React.FC = () => {
     const isSelf     = member.userId === user?.id;
     const canTap     = tappable && isOwner && !isSelf;
 
+    const roleText = isOwnerRow
+      ? (isSelf ? t("tripMembers.roleOrganizerSelf") : t("tripMembers.roleOrganizer"))
+      : t("tripMembers.roleParticipant");
+
+    let trailingEl: React.ReactNode = null;
+    if (isSelf) {
+      trailingEl = <View style={s.meTag}><Text style={s.meTagTxt}>{t("tripMembers.meLabel")}</Text></View>;
+    } else if (canTap) {
+      trailingEl = <Text style={s.rowChevron}>›</Text>;
+    }
+
     const inner = (
       <>
         {renderAvatar(member.name, 34, isOwnerRow, member.avatar)}
         <View style={{ flex: 1 }}>
           <Text style={[s.mn, { color: colors.text }]}>{member.name}</Text>
-          <Text style={[s.ms, { color: colors.textLight }]}>
-            {isOwnerRow
-              ? (isSelf ? t("tripMembers.roleOrganizerSelf") : t("tripMembers.roleOrganizer"))
-              : t("tripMembers.roleParticipant")}
-          </Text>
+          <Text style={[s.ms, { color: colors.textLight }]}>{roleText}</Text>
         </View>
-        {isSelf
-          ? <View style={s.meTag}><Text style={s.meTagTxt}>{t("tripMembers.meLabel")}</Text></View>
-          : canTap
-            ? <Text style={s.rowChevron}>›</Text>
-            : null
-        }
+        {trailingEl}
       </>
     );
 
