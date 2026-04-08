@@ -38,6 +38,88 @@ interface InvitationDetailViewProps {
   onNavigateBack: () => void;
 }
 
+interface DetailChipsProps {
+  duration: number | null;
+  destination: string;
+  invitation: any;
+  isExpired: boolean;
+  colors: any;
+  t: (key: string, opts?: any) => string;
+}
+
+const DetailChips: React.FC<DetailChipsProps> = ({ duration, destination, invitation, isExpired, colors, t }) => {
+  if (!duration && !destination) return null;
+  const durationChipEl = duration
+    ? (
+      <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="time-outline" size={18} color="#C4714A" />
+        <Text style={[styles.detailChipValue, { color: colors.text }]}>{duration}</Text>
+        <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>{t("invitation.days")}</Text>
+      </View>
+    ) : null;
+  const destinationChipEl = destination
+    ? (
+      <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="airplane-outline" size={18} color="#5A8FAA" />
+        <Text style={[styles.detailChipValue, { fontSize: 13, color: colors.text }]} numberOfLines={1}>{destination}</Text>
+      </View>
+    ) : null;
+  const expiresChipEl = invitation.expiresAt && !isExpired
+    ? (
+      <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="hourglass-outline" size={18} color="#FF9500" />
+        <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>
+          {t("invitation.expiresOnDate", { date: formatDate(invitation.expiresAt) })}
+        </Text>
+      </View>
+    ) : null;
+  return (
+    <View style={styles.detailChips}>
+      {durationChipEl}
+      {destinationChipEl}
+      {expiresChipEl}
+    </View>
+  );
+};
+
+interface DetailCtaProps {
+  canRespond: boolean;
+  isLinkType: boolean;
+  responding: boolean;
+  onAccept: () => void;
+  onDecline: () => void;
+  colors: any;
+  t: (key: string) => string;
+}
+
+const DetailCta: React.FC<DetailCtaProps> = ({ canRespond, isLinkType, responding, onAccept, onDecline, colors, t }) => {
+  if (!canRespond) return null;
+  const declineContentEl = responding
+    ? <ActivityIndicator size="small" color={colors.textMid} />
+    : <><Ionicons name="close" size={20} color={colors.textMid} /><Text style={[styles.detailCtaDeclineText, { color: colors.textMid }]}>{t("invitation.decline")}</Text></>;
+  const acceptIcon = isLinkType ? "airplane-outline" : "checkmark";
+  const acceptText = isLinkType ? t("invitation.joinTrip") : t("invitation.accept");
+  const acceptContentEl = responding
+    ? <ActivityIndicator size="small" color="#FFFFFF" />
+    : <><Ionicons name={acceptIcon} size={20} color="#FFFFFF" /><Text style={styles.detailCtaAcceptText}>{acceptText}</Text></>;
+  const acceptFlexStyle = isLinkType ? undefined : { flex: 2 };
+  const declineBtnEl = isLinkType
+    ? null
+    : (
+      <TouchableOpacity style={[styles.detailCtaDecline, { backgroundColor: colors.bgMid }]} onPress={onDecline} disabled={responding} activeOpacity={0.85}>
+        {declineContentEl}
+      </TouchableOpacity>
+    );
+  return (
+    <View style={[styles.detailCta, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      {declineBtnEl}
+      <TouchableOpacity style={[styles.detailCtaAccept, acceptFlexStyle]} onPress={onAccept} disabled={responding} activeOpacity={0.85}>
+        {acceptContentEl}
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
   invitation,
   loading,
@@ -116,82 +198,54 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
     );
   }
 
+  const bannerBgEl = hasImage
+    ? <Image source={{ uri: invitation.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+    : <LinearGradient colors={bannerGrad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />;
+
+  const destRowEl = destination
+    ? <View style={styles.detailDestRow}><Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.80)" /><Text style={styles.detailDestText}>{destination}</Text></View>
+    : null;
+
+  const dateRangeEl = dateRange ? <Text style={styles.detailDateRange}>📅 {dateRange}</Text> : null;
+  const inviterEmailEl = invitation.inviter?.email
+    ? <Text style={[styles.detailInviterEmail, { color: colors.textMid }]}>{invitation.inviter.email}</Text>
+    : null;
+  const messageBoxEl = invitation.message
+    ? <View style={styles.detailMessage}><Text style={[styles.detailMessageText, { color: colors.text }]}>"{invitation.message}"</Text></View>
+    : null;
+  const tripId = invitation.tripId ?? invitation.trip?._id;
+  const viewTripEl = invitation.status === "accepted" && tripId
+    ? (
+      <TouchableOpacity style={styles.detailViewTripBtn} onPress={() => onNavigateToTrip(tripId)} activeOpacity={0.85}>
+        <Ionicons name="airplane" size={18} color="#FFFFFF" />
+        <Text style={styles.detailViewTripText}>{t("invitation.viewTrip")}</Text>
+      </TouchableOpacity>
+    ) : null;
+
+  const scrollPaddingBottom = canRespond ? 120 : 40;
+
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: canRespond ? 120 : 40 }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}>
         {/* ── Grande bannière ── */}
         <View style={styles.detailBanner}>
-          {hasImage ? (
-            <Image
-              source={{ uri: invitation.trip.coverImage }}
-              style={StyleSheet.absoluteFill}
-              resizeMode="cover"
-            />
-          ) : (
-            <LinearGradient
-              colors={bannerGrad}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-          )}
-          <LinearGradient
-            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"]}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0, y: 0.3 }}
-            end={{ x: 0, y: 1 }}
-          />
+          {bannerBgEl}
+          <LinearGradient colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0.3 }} end={{ x: 0, y: 1 }} />
           <TouchableOpacity style={styles.detailBackBtn} onPress={onBack} activeOpacity={0.85}>
             <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.detailBannerContent}>
-            {destination ? (
-              <View style={styles.detailDestRow}>
-                <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.80)" />
-                <Text style={styles.detailDestText}>{destination}</Text>
-              </View>
-            ) : null}
+            {destRowEl}
             <Text style={styles.detailTripTitle}>{tripName}</Text>
-            {dateRange ? (
-              <Text style={styles.detailDateRange}>📅 {dateRange}</Text>
-            ) : null}
+            {dateRangeEl}
           </View>
         </View>
 
         {/* ── Corps ── */}
         <View style={[styles.detailBody, { backgroundColor: colors.bg }]}>
-
-          {/* Stats chips */}
-          {(duration || destination) ? (
-            <View style={styles.detailChips}>
-              {duration ? (
-                <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Ionicons name="time-outline" size={18} color="#C4714A" />
-                  <Text style={[styles.detailChipValue, { color: colors.text }]}>{duration}</Text>
-                  <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>{t("invitation.days")}</Text>
-                </View>
-              ) : null}
-              {destination ? (
-                <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Ionicons name="airplane-outline" size={18} color="#5A8FAA" />
-                  <Text style={[styles.detailChipValue, { fontSize: 13, color: colors.text }]} numberOfLines={1}>{destination}</Text>
-                </View>
-              ) : null}
-              {invitation.expiresAt && !isExpired ? (
-                <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Ionicons name="hourglass-outline" size={18} color="#FF9500" />
-                  <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>
-                    {t("invitation.expiresOnDate", { date: formatDate(invitation.expiresAt) })}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
+          <DetailChips duration={duration} destination={destination} invitation={invitation} isExpired={isExpired} colors={colors} t={t} />
 
           {/* Section inviteur */}
           <View style={[styles.detailSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -202,77 +256,21 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.detailInviterName, { color: colors.text }]}>{inviterName}</Text>
-                {invitation.inviter?.email ? (
-                  <Text style={[styles.detailInviterEmail, { color: colors.textMid }]}>{invitation.inviter.email}</Text>
-                ) : null}
+                {inviterEmailEl}
               </View>
               <Text style={[styles.detailRelTime, { color: colors.textLight }]}>
                 {invitation.createdAt ? formatRelative(invitation.createdAt) : ""}
               </Text>
             </View>
-            {invitation.message ? (
-              <View style={styles.detailMessage}>
-                <Text style={[styles.detailMessageText, { color: colors.text }]}>"{invitation.message}"</Text>
-              </View>
-            ) : null}
+            {messageBoxEl}
           </View>
 
-          {/* Statut si déjà traité */}
           {statusBannerEl}
-
-          {/* Lien vers le voyage si déjà accepté */}
-          {invitation.status === "accepted" && (invitation.tripId ?? invitation.trip?._id) ? (
-            <TouchableOpacity
-              style={styles.detailViewTripBtn}
-              onPress={() => onNavigateToTrip(invitation.tripId ?? invitation.trip._id)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="airplane" size={18} color="#FFFFFF" />
-              <Text style={styles.detailViewTripText}>{t("invitation.viewTrip")}</Text>
-            </TouchableOpacity>
-          ) : null}
+          {viewTripEl}
         </View>
       </ScrollView>
 
-      {/* ── CTA fixe en bas ── */}
-      {canRespond ? (
-        <View style={[styles.detailCta, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-          {isLinkType ? null : (
-            <TouchableOpacity
-              style={[styles.detailCtaDecline, { backgroundColor: colors.bgMid }]}
-              onPress={onDecline}
-              disabled={responding}
-              activeOpacity={0.85}
-            >
-              {responding ? (
-                <ActivityIndicator size="small" color={colors.textMid} />
-              ) : (
-                <>
-                  <Ionicons name="close" size={20} color={colors.textMid} />
-                  <Text style={[styles.detailCtaDeclineText, { color: colors.textMid }]}>{t("invitation.decline")}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={[styles.detailCtaAccept, !isLinkType && { flex: 2 }]}
-            onPress={onAccept}
-            disabled={responding}
-            activeOpacity={0.85}
-          >
-            {responding ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <>
-                <Ionicons name={isLinkType ? "airplane-outline" : "checkmark"} size={20} color="#FFFFFF" />
-                <Text style={styles.detailCtaAcceptText}>
-                  {isLinkType ? t("invitation.joinTrip") : t("invitation.accept")}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      ) : null}
+      <DetailCta canRespond={canRespond} isLinkType={isLinkType} responding={responding} onAccept={onAccept} onDecline={onDecline} colors={colors} t={t} />
     </View>
   );
 };

@@ -77,6 +77,55 @@ export function useIdeaDetail() {
     });
   };
 
+  const ADDRESS_TYPE_MAP: Record<string, "hotel" | "restaurant" | "activity" | "transport"> = {
+    hotel: "hotel", restaurant: "restaurant", flight: "transport",
+  };
+
+  const createSingleBooking = async (
+    tripId: string,
+    b: SuggestedBooking,
+    index: number,
+    tripStart: Date,
+    tripEnd: Date,
+    days: number,
+  ) => {
+    const title = lang === "fr" ? b.titleFr : b.titleEn;
+    const bookingDate = new Date(tripStart);
+    if (b.type === "activity" || b.type === "restaurant") {
+      bookingDate.setDate(tripStart.getDate() + Math.min(index, days - 1));
+    }
+
+    let realAddress: string | undefined;
+    let placeRating: number | undefined;
+    let placePhotoUrl: string | undefined;
+    let placeName: string | undefined;
+    try {
+      const placeResult = await searchPlaceByText(b.placeSearchQuery);
+      if (placeResult) {
+        realAddress = placeResult.formattedAddress;
+        placeRating = placeResult.rating;
+        placePhotoUrl = placeResult.photoUrl;
+        placeName = placeResult.name;
+      }
+    } catch { /* échec silencieux */ }
+
+    const addressType = ADDRESS_TYPE_MAP[b.type] ?? "activity";
+    try {
+      await createBooking({
+        tripId, type: b.type, title, address: realAddress,
+        date: bookingDate, endDate: b.type === "hotel" ? tripEnd : undefined,
+        price: b.estimatedPrice, currency: b.currency || "€", status: "pending",
+      });
+    } catch { /* échec silencieux */ }
+
+    if (realAddress && placeName) {
+      const { city, country } = parseCityCountry(realAddress, idea!.destinationCity, idea!.destinationCountry);
+      try {
+        await createAddress({ type: addressType, name: placeName, address: realAddress, city, country, rating: placeRating, photoUrl: placePhotoUrl, tripId });
+      } catch { /* échec silencieux */ }
+    }
+  };
+
   const createSuggestedBookings = async (
     tripId: string,
     bookings: SuggestedBooking[],
@@ -85,67 +134,7 @@ export function useIdeaDetail() {
     days: number,
   ) => {
     for (let i = 0; i < bookings.length; i++) {
-      const b = bookings[i];
-      const title = lang === "fr" ? b.titleFr : b.titleEn;
-
-      const bookingDate = new Date(tripStart);
-      if (b.type === "activity" || b.type === "restaurant") {
-        bookingDate.setDate(tripStart.getDate() + Math.min(i, days - 1));
-      }
-
-      let realAddress: string | undefined;
-      let placeRating: number | undefined;
-      let placePhotoUrl: string | undefined;
-      let placeName: string | undefined;
-
-      try {
-        const placeResult = await searchPlaceByText(b.placeSearchQuery);
-        if (placeResult) {
-          realAddress = placeResult.formattedAddress;
-          placeRating = placeResult.rating;
-          placePhotoUrl = placeResult.photoUrl;
-          placeName = placeResult.name;
-        }
-      } catch { /* échec silencieux */ }
-
-      const ADDRESS_TYPE_MAP: Record<string, "hotel" | "restaurant" | "activity" | "transport"> = {
-        hotel: "hotel", restaurant: "restaurant", flight: "transport",
-      };
-      const addressType = ADDRESS_TYPE_MAP[b.type] ?? "activity";
-
-      try {
-        await createBooking({
-          tripId,
-          type: b.type,
-          title,
-          address: realAddress,
-          date: bookingDate,
-          endDate: b.type === "hotel" ? tripEnd : undefined,
-          price: b.estimatedPrice,
-          currency: b.currency || "€",
-          status: "pending",
-        });
-      } catch { /* échec silencieux */ }
-
-      if (realAddress && placeName) {
-        const { city, country } = parseCityCountry(
-          realAddress,
-          idea!.destinationCity,
-          idea!.destinationCountry,
-        );
-        try {
-          await createAddress({
-            type: addressType,
-            name: placeName,
-            address: realAddress,
-            city,
-            country,
-            rating: placeRating,
-            photoUrl: placePhotoUrl,
-            tripId,
-          });
-        } catch { /* échec silencieux */ }
-      }
+      await createSingleBooking(tripId, bookings[i], i, tripStart, tripEnd, days);
     }
   };
 

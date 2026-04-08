@@ -178,6 +178,83 @@ export function useAuthForm(): UseAuthFormReturn {
 
   // ─── Soumission du formulaire ───────────────────────────────────────────────
 
+  const validateLoginFields = (): boolean => {
+    let isValid = true;
+    if (!validateEmail(email)) isValid = false;
+    if (!validatePasswordRequired(password)) isValid = false;
+    return isValid;
+  };
+
+  const validateRegisterFields = (): boolean => {
+    let isValid = true;
+    if (!validateName(name)) isValid = false;
+    if (!validatePhone(phone)) isValid = false;
+    if (!validateEmail(email)) isValid = false;
+    if (!validatePasswordStrong(password)) isValid = false;
+    if (!validateConfirmPassword(confirmPassword)) isValid = false;
+    return isValid;
+  };
+
+  const handleLoginErrors = (result: any, onOtpRedirect: (userId: string, email: string) => void) => {
+    if (result.requiresOtp && result.userId) {
+      const otpErr = (result.error ?? "").toLowerCase();
+      const isExpired = otpErr.includes("expired") || otpErr.includes("expiré");
+      const message = isExpired ? t("common.requiresOtpExpired") : t("common.requiresOtp");
+      Alert.alert(t("common.info"), message, [
+        { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId!, email) },
+      ]);
+      return;
+    }
+    if (result.field === "email") {
+      setEmailError(parseApiError(new Error(result.error)));
+    } else {
+      const isInvalidCreds = result.error.includes("Invalid credentials");
+      setPasswordError(isInvalidCreds ? t("common.invalidCredentials") : parseApiError(new Error(result.error)));
+    }
+  };
+
+  const handleRegisterErrors = (result: any, onOtpRedirect: (userId: string, email: string) => void) => {
+    if (result.requiresOtp && result.userId) {
+      Alert.alert(t("common.info"), t("common.requiresOtp"), [
+        { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId!, email) },
+      ]);
+      return;
+    }
+    if (result.field === "name") {
+      setNameError(parseApiError(new Error(result.error)));
+    } else if (result.field === "phone") {
+      const isInvalidPhone = result.error.includes("Invalid phone");
+      setPhoneError(isInvalidPhone ? t("common.invalidPhone") : parseApiError(new Error(result.error)));
+    } else if (result.field === "email") {
+      const isAlreadyUsed = result.error.includes("Email already in use");
+      setEmailError(isAlreadyUsed ? t("common.emailAlreadyInUse") : parseApiError(new Error(result.error)));
+    } else if (result.field === "password") {
+      const isWeak = result.error.includes("Weak password") || result.error.includes("Password must be at least");
+      setPasswordError(isWeak ? t("common.invalidPassword") : parseApiError(new Error(result.error)));
+    } else {
+      const msg = result.error ? parseApiError(new Error(result.error)) : t("common.registerFailed");
+      Alert.alert(t("common.error"), msg);
+    }
+  };
+
+  const handleLoginAttempt = async (onOtpRedirect: (userId: string, email: string) => void) => {
+    const result = await login(email, password);
+    if (!result.success) {
+      handleLoginErrors(result, onOtpRedirect);
+    }
+  };
+
+  const handleRegisterAttempt = async (onOtpRedirect: (userId: string, email: string) => void) => {
+    const result = await register(name, email, password, phone.trim());
+    if (!result.success) {
+      handleRegisterErrors(result, onOtpRedirect);
+      return;
+    }
+    if (result.userId) {
+      onOtpRedirect(result.userId, email);
+    }
+  };
+
   const handleSubmit = async (
     isLogin: boolean,
     onOtpRedirect: (userId: string, email: string) => void,
@@ -188,82 +265,20 @@ export function useAuthForm(): UseAuthFormReturn {
     setNameError("");
     setPhoneError("");
 
-    let isValid = true;
-    if (!isLogin && !validateName(name)) isValid = false;
-    if (!isLogin && !validatePhone(phone)) isValid = false;
-    if (!validateEmail(email)) isValid = false;
+    let isValid: boolean;
     if (isLogin) {
-      if (!validatePasswordRequired(password)) isValid = false;
+      isValid = validateLoginFields();
     } else {
-      if (!validatePasswordStrong(password)) isValid = false;
-      if (!validateConfirmPassword(confirmPassword)) isValid = false;
+      isValid = validateRegisterFields();
     }
     if (!isValid) return;
 
     setIsSubmitting(true);
     try {
       if (isLogin) {
-        const result = await login(email, password);
-        if (!result.success) {
-          if (result.requiresOtp && result.userId) {
-            const otpErr = (result.error ?? "").toLowerCase();
-            const isExpired = otpErr.includes("expired") || otpErr.includes("expiré");
-            const message = isExpired ? t("common.requiresOtpExpired") : t("common.requiresOtp");
-            Alert.alert(t("common.info"), message, [
-              { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId!, email) },
-            ]);
-            return;
-          }
-          if (result.field === "email") {
-            setEmailError(parseApiError(new Error(result.error)));
-          } else {
-            setPasswordError(
-              result.error.includes("Invalid credentials")
-                ? t("common.invalidCredentials")
-                : parseApiError(new Error(result.error)),
-            );
-          }
-        }
+        await handleLoginAttempt(onOtpRedirect);
       } else {
-        const result = await register(name, email, password, phone.trim());
-        if (!result.success) {
-          if (result.requiresOtp && result.userId) {
-            Alert.alert(t("common.info"), t("common.requiresOtp"), [
-              { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId!, email) },
-            ]);
-            return;
-          }
-          if (result.field === "name") {
-            setNameError(parseApiError(new Error(result.error)));
-          } else if (result.field === "phone") {
-            setPhoneError(
-              result.error.includes("Invalid phone")
-                ? t("common.invalidPhone")
-                : parseApiError(new Error(result.error)),
-            );
-          } else if (result.field === "email") {
-            setEmailError(
-              result.error.includes("Email already in use")
-                ? t("common.emailAlreadyInUse")
-                : parseApiError(new Error(result.error)),
-            );
-          } else if (result.field === "password") {
-            setPasswordError(
-              result.error.includes("Weak password") || result.error.includes("Password must be at least")
-                ? t("common.invalidPassword")
-                : parseApiError(new Error(result.error)),
-            );
-          } else {
-            Alert.alert(
-              t("common.error"),
-              (result.error && parseApiError(new Error(result.error))) || t("common.registerFailed"),
-            );
-          }
-          return;
-        }
-        if (result.userId) {
-          onOtpRedirect(result.userId, email);
-        }
+        await handleRegisterAttempt(onOtpRedirect);
       }
     } catch (error) {
       Alert.alert(t("common.error"), parseApiError(error) || t("common.unexpectedError"));

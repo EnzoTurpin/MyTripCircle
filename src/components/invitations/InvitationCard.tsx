@@ -68,19 +68,74 @@ const InvitationCard: React.FC<CardProps> = ({
     }
   }
 
+  const isActiveCard = isUnread && status === "pending";
+  const cardBorderStyle = isActiveCard ? cardStyles.cardActive : cardStyles.cardDefault;
+
+  const bannerBgEl = hasImage
+    ? <Image source={{ uri: inv.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+    : <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />;
+
+  const destinationEl = destination
+    ? <Text style={cardStyles.bannerSub}>📍 {destination}{dateRange ? ` · ${dateRange}` : ""}</Text>
+    : null;
+
+  const dateRangeStr = dateRange ? `📅 ${dateRange}` : "";
+  const relTimeStr = relTime ? ` · ${relTime}` : "";
+  let inviterBodyEl: React.ReactNode;
+  if (expanded) {
+    inviterBodyEl = (
+      <>
+        <Text style={[cardStyles.inviterName, { color: colors.text }]}>{inviterName}</Text>
+        <Text style={[cardStyles.inviterRole, { color: colors.textLight }]}>{t("invitation.roleOrganizer")} · {relTime}</Text>
+      </>
+    );
+  } else {
+    inviterBodyEl = (
+      <>
+        <Text style={[cardStyles.inviterNameSmall, { color: colors.text }]}>
+          {t("invitation.invitedBy")} <Text style={cardStyles.bold}>{inviterName}</Text>
+        </Text>
+        <Text style={[cardStyles.inviterDate, { color: colors.textLight }]}>{dateRangeStr}{relTimeStr}</Text>
+      </>
+    );
+  }
+
+  const showMessage = !!(expanded && inv.message);
+  const messageEl = showMessage
+    ? <View style={cardStyles.messageBox}><Text style={cardStyles.messageText}>"{inv.message}"</Text></View>
+    : null;
+
+  const showDuration = !!(expanded && duration);
+  const durationEl = showDuration
+    ? (
+      <View style={cardStyles.chips}>
+        <View style={[cardStyles.chip, { backgroundColor: colors.bgMid }]}>
+          <Text style={[cardStyles.chipLabel, { color: colors.textLight }]}>{t("invitation.duration")}</Text>
+          <Text style={[cardStyles.chipValue, { color: colors.text }]}>{t("invitation.durationDays", { count: duration })}</Text>
+        </View>
+      </View>
+    )
+    : null;
+
+  const acceptContentEl = accepting
+    ? <ActivityIndicator size="small" color="#FFFFFF" />
+    : <><Ionicons name="checkmark" size={16} color="#FFFFFF" /><Text style={cardStyles.btnAcceptText}>{t("invitation.acceptBtn")}</Text></>;
+
+  const expandedActionsStyle = expanded ? cardStyles.actionsExpanded : undefined;
+  const expandedBtnStyle = expanded ? cardStyles.btnAcceptExpanded : undefined;
+  const moreBtnEl = expanded
+    ? null
+    : <TouchableOpacity style={[cardStyles.btnMore, { backgroundColor: colors.bgMid }]} onPress={onDetail} activeOpacity={0.8}><Text style={[cardStyles.btnMoreText, { color: colors.textMid }]}>›</Text></TouchableOpacity>;
+
   return (
     <TouchableOpacity
-      style={[cardStyles.card, isUnread && status === "pending" ? cardStyles.cardActive : cardStyles.cardDefault, { backgroundColor: colors.surface }]}
+      style={[cardStyles.card, cardBorderStyle, { backgroundColor: colors.surface }]}
       onPress={onDetail}
       activeOpacity={0.92}
     >
       {/* ── Banner ── */}
       <View style={cardStyles.banner}>
-        {hasImage ? (
-          <Image source={{ uri: inv.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        ) : (
-          <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-        )}
+        {bannerBgEl}
         <LinearGradient
           colors={["rgba(0,0,0,0.04)", "rgba(0,0,0,0.70)"]}
           style={StyleSheet.absoluteFill}
@@ -92,11 +147,7 @@ const InvitationCard: React.FC<CardProps> = ({
         <View style={cardStyles.bannerBottom}>
           <View style={{ flex: 1 }}>
             <Text style={cardStyles.bannerTitle} numberOfLines={1}>{tripName}</Text>
-            {destination ? (
-              <Text style={cardStyles.bannerSub}>
-                📍 {destination}{dateRange ? ` · ${dateRange}` : ""}
-              </Text>
-            ) : null}
+            {destinationEl}
           </View>
         </View>
       </View>
@@ -107,57 +158,21 @@ const InvitationCard: React.FC<CardProps> = ({
           <View style={[cardStyles.avatar, { backgroundColor: avatarColor }]}>
             <Text style={cardStyles.avatarText}>{initials}</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            {expanded ? (
-              <>
-                <Text style={[cardStyles.inviterName, { color: colors.text }]}>{inviterName}</Text>
-                <Text style={[cardStyles.inviterRole, { color: colors.textLight }]}>{t("invitation.roleOrganizer")} · {relTime}</Text>
-              </>
-            ) : (
-              <>
-                <Text style={[cardStyles.inviterNameSmall, { color: colors.text }]}>
-                  {t("invitation.invitedBy")} <Text style={cardStyles.bold}>{inviterName}</Text>
-                </Text>
-                <Text style={[cardStyles.inviterDate, { color: colors.textLight }]}>
-                  {dateRange ? `📅 ${dateRange}` : ""}
-                  {relTime ? ` · ${relTime}` : ""}
-                </Text>
-              </>
-            )}
-          </View>
+          <View style={{ flex: 1 }}>{inviterBodyEl}</View>
         </View>
 
-        {expanded && inv.message ? (
-          <View style={cardStyles.messageBox}>
-            <Text style={cardStyles.messageText}>"{inv.message}"</Text>
-          </View>
-        ) : null}
-
-        {expanded && duration ? (
-          <View style={cardStyles.chips}>
-            <View style={[cardStyles.chip, { backgroundColor: colors.bgMid }]}>
-              <Text style={[cardStyles.chipLabel, { color: colors.textLight }]}>{t("invitation.duration")}</Text>
-              <Text style={[cardStyles.chipValue, { color: colors.text }]}>{t("invitation.durationDays", { count: duration })}</Text>
-            </View>
-          </View>
-        ) : null}
+        {messageEl}
+        {durationEl}
 
         {canAct ? (
-          <View style={[cardStyles.actions, expanded && cardStyles.actionsExpanded]}>
+          <View style={[cardStyles.actions, expandedActionsStyle]}>
             <TouchableOpacity
-              style={[cardStyles.btnAccept, expanded && cardStyles.btnAcceptExpanded]}
+              style={[cardStyles.btnAccept, expandedBtnStyle]}
               onPress={onAccept}
               disabled={accepting}
               activeOpacity={0.85}
             >
-              {accepting ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                  <Text style={cardStyles.btnAcceptText}>{t("invitation.acceptBtn")}</Text>
-                </>
-              )}
+              {acceptContentEl}
             </TouchableOpacity>
             <TouchableOpacity
               style={[cardStyles.btnDecline, { backgroundColor: colors.bgMid }]}
@@ -168,11 +183,7 @@ const InvitationCard: React.FC<CardProps> = ({
               <Ionicons name="close" size={16} color={colors.textMid} />
               <Text style={[cardStyles.btnDeclineText, { color: colors.textMid }]}>{t("invitation.declineBtn")}</Text>
             </TouchableOpacity>
-            {!expanded && (
-              <TouchableOpacity style={[cardStyles.btnMore, { backgroundColor: colors.bgMid }]} onPress={onDetail} activeOpacity={0.8}>
-                <Text style={[cardStyles.btnMoreText, { color: colors.textMid }]}>›</Text>
-              </TouchableOpacity>
-            )}
+            {moreBtnEl}
           </View>
         ) : footerEl}
       </View>
