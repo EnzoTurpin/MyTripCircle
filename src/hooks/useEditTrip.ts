@@ -334,11 +334,9 @@ const useEditTrip = (): UseEditTripReturn => {
         const existing = bookings[editingBookingIndex];
         if (existing.id) {
           await updateBooking(existing.id, booking);
-          setBookings(prev =>
-            prev.map((b, i) =>
-              i === editingBookingIndex ? { ...b, ...booking, updatedAt: new Date() } : b
-            )
-          );
+          const applyUpdate = (b: Booking, i: number) =>
+            i === editingBookingIndex ? { ...b, ...booking, updatedAt: new Date() } : b;
+          setBookings(prev => prev.map(applyUpdate));
         }
       }
       setShowBookingForm(false);

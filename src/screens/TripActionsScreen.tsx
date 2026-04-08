@@ -58,7 +58,9 @@ const TripActionsScreen: React.FC = () => {
         message: t("tripActions.shareMessage", { title: tripTitle, link }),
         url: link,
       });
-    } catch (_) {}
+    } catch (e) {
+      console.error("[TripActionsScreen] share error", e);
+    }
   };
 
   const handleDelete = () => {

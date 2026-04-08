@@ -212,10 +212,8 @@ const BookingDetailsScreen: React.FC = () => {
     try {
       await Linking.openURL(attachment);
     } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        t("bookings.details.fileOpenError")
-      );
+      console.error("openURL error:", error);
+      Alert.alert(t("common.error"), t("bookings.details.fileOpenError"));
     }
   };
 

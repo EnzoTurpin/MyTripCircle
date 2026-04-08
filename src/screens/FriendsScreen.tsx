@@ -217,8 +217,7 @@ const FriendsScreen: React.FC = () => {
         title: "MyTripCircle",
       });
     } catch (error: unknown) {
-      const raw =
-        error instanceof Error ? error.message : String(error ?? "");
+      const raw = error instanceof Error ? error.message : "";
       if (raw !== "User did not share") {
         Alert.alert(
           t("common.error"),

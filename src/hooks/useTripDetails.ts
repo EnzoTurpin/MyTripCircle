@@ -231,7 +231,7 @@ export function useTripDetails(tripId: string, showToastParam?: boolean) {
 
   const handleInviteFriends = () => { navigation.navigate("InviteFriends", { tripId }); };
 
-  const handleAddBooking = () => { if (!trip) return; setShowBookingForm(true); };
+  const handleAddBooking = () => { if (!trip) { return; } setShowBookingForm(true); };
 
   const handleSaveBooking = async (booking: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
     try {

@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useMemo,
   ReactNode,
 } from "react";
 import { useColorScheme } from "react-native";
@@ -132,10 +133,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
+  const ctxValue = useMemo(
+    () => ({ isDark, colors: isDark ? darkColors : lightColors, toggleTheme, satelliteMap, toggleSatelliteMap }),
+    [isDark, satelliteMap, toggleTheme, toggleSatelliteMap],
+  );
+
   return (
-    <ThemeContext.Provider
-      value={{ isDark, colors: isDark ? darkColors : lightColors, toggleTheme, satelliteMap, toggleSatelliteMap }}
-    >
+    <ThemeContext.Provider value={ctxValue}>
       {children}
     </ThemeContext.Provider>
   );
