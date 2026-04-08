@@ -91,6 +91,37 @@ const tcStyles = StyleSheet.create({
   visText: { fontSize: 10, fontFamily: F.sans600 },
 });
 
+interface TripSectionProps {
+  title: string;
+  marginTop: number;
+  trips: any[];
+  emptyIcon: string;
+  emptyText: string;
+  bgMid: string;
+  textLight: string;
+  onPress: (id: string) => void;
+}
+
+const TripSection: React.FC<TripSectionProps> = ({
+  title, marginTop, trips, emptyIcon, emptyText, bgMid, textLight, onPress,
+}) => (
+  <>
+    <Text style={[styles.sectionLabel, { marginTop }]}>{title}</Text>
+    {trips.length ? (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
+        {trips.map((trip: any) => (
+          <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => onPress(trip._id ?? trip.id)} />
+        ))}
+      </ScrollView>
+    ) : (
+      <View style={[styles.emptyCard, { backgroundColor: bgMid }]}>
+        <Ionicons name={emptyIcon as any} size={26} color={textLight} />
+        <Text style={[styles.emptyText, { color: textLight }]}>{emptyText}</Text>
+      </View>
+    )}
+  </>
+);
+
 // ── Screen ─────────────────────────────────────────────────────────────────────
 const FriendProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -331,21 +362,16 @@ const FriendProfileScreen: React.FC = () => {
                   .filter((t: any) => new Date(t.endDate) < now)
                   .slice(0, 8);
                 return (
-                  <>
-                    <Text style={[styles.sectionLabel, { marginTop: isFriend ? 20 : 0 }]}>{t("friendProfile.sectionRecentTrips")}</Text>
-                    {recentTrips.length ? (
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
-                        {recentTrips.map((trip: any) => (
-                          <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
-                        ))}
-                      </ScrollView>
-                    ) : (
-                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                        <Ionicons name="earth-outline" size={26} color={colors.textLight} />
-                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyRecentTrips", { name: firstName })}</Text>
-                      </View>
-                    )}
-                  </>
+                  <TripSection
+                    title={t("friendProfile.sectionRecentTrips")}
+                    marginTop={isFriend ? 20 : 0}
+                    trips={recentTrips}
+                    emptyIcon="earth-outline"
+                    emptyText={t("friendProfile.emptyRecentTrips", { name: firstName })}
+                    bgMid={colors.bgMid}
+                    textLight={colors.textLight}
+                    onPress={goToTrip}
+                  />
                 );
               })()}
 
@@ -353,21 +379,16 @@ const FriendProfileScreen: React.FC = () => {
               {isFriend && (() => {
                 const friendsTrips = (profile?.sharedTrips || []).filter((t: any) => t.visibility === "friends");
                 return (
-                  <>
-                    <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t("friendProfile.sectionFriendsTrips")}</Text>
-                    {friendsTrips.length ? (
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
-                        {friendsTrips.map((trip: any) => (
-                          <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
-                        ))}
-                      </ScrollView>
-                    ) : (
-                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                        <Ionicons name="people-outline" size={26} color={colors.textLight} />
-                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyFriendsTrips")}</Text>
-                      </View>
-                    )}
-                  </>
+                  <TripSection
+                    title={t("friendProfile.sectionFriendsTrips")}
+                    marginTop={20}
+                    trips={friendsTrips}
+                    emptyIcon="people-outline"
+                    emptyText={t("friendProfile.emptyFriendsTrips")}
+                    bgMid={colors.bgMid}
+                    textLight={colors.textLight}
+                    onPress={goToTrip}
+                  />
                 );
               })()}
 
@@ -376,21 +397,16 @@ const FriendProfileScreen: React.FC = () => {
                 const firstName = (profile?.name || friendName).split(" ")[0];
                 const publicTrips = (profile?.sharedTrips || []).filter((t: any) => t.visibility === "public");
                 return (
-                  <>
-                    <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t("friendProfile.sectionPublicTrips")}</Text>
-                    {publicTrips.length ? (
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
-                        {publicTrips.map((trip: any) => (
-                          <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
-                        ))}
-                      </ScrollView>
-                    ) : (
-                      <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                        <Ionicons name="earth-outline" size={26} color={colors.textLight} />
-                        <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyPublicTrips", { name: firstName })}</Text>
-                      </View>
-                    )}
-                  </>
+                  <TripSection
+                    title={t("friendProfile.sectionPublicTrips")}
+                    marginTop={20}
+                    trips={publicTrips}
+                    emptyIcon="earth-outline"
+                    emptyText={t("friendProfile.emptyPublicTrips", { name: firstName })}
+                    bgMid={colors.bgMid}
+                    textLight={colors.textLight}
+                    onPress={goToTrip}
+                  />
                 );
               })()}
 

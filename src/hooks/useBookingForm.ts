@@ -316,14 +316,10 @@ export function useBookingForm({
   };
 
   const handleRemoveAttachment = (index: number) => {
+    const removeAtIndex = (prev: typeof attachments) => prev.filter((_, i) => i !== index);
     Alert.alert(t("common.confirm"), t("bookings.removeAttachmentConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: () =>
-          setAttachments((prev) => prev.filter((_, i) => i !== index)),
-      },
+      { text: t("common.delete"), style: "destructive", onPress: () => setAttachments(removeAtIndex) },
     ]);
   };
 
