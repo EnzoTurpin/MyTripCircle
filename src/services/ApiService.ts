@@ -1,7 +1,6 @@
 import { API_URLS } from "../config/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FriendRequest, Friend, FriendSuggestion } from "../types";
-// import { updateProfile } from "../controllers/userController";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
