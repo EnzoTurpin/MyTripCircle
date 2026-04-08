@@ -13,11 +13,11 @@ export interface RadioOption<T extends string> {
 }
 
 interface Props<T extends string> {
-  options: RadioOption<T>[];
-  selected: T;
-  isDark: boolean;
-  colors: { surface: string; border: string; bg: string; bgMid: string; text: string; textLight: string };
-  onChange: (value: T) => void;
+  readonly options: RadioOption<T>[];
+  readonly selected: T;
+  readonly isDark: boolean;
+  readonly colors: { surface: string; border: string; bg: string; bgMid: string; text: string; textLight: string };
+  readonly onChange: (value: T) => void;
 }
 
 /**
