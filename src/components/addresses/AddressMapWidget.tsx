@@ -4,8 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { Address } from "../../types";
 import { GeoCoords } from "../../utils/geocoding";
-import { MapView, Marker, mapsAvailable } from "../../hooks/useAddresses";
-import { Region } from "../../hooks/useAddresses";
+import { MapView, Marker, mapsAvailable, Region } from "../../hooks/useAddresses";
 import { getTypeIcon, getMarkerColor } from "./addressHelpers";
 import { styles } from "./addressStyles";
 

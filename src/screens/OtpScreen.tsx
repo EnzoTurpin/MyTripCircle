@@ -64,7 +64,7 @@ const OtpScreen: React.FC = () => {
   const otp = digits.join("");
 
   const handleDigitChange = (text: string, index: number) => {
-    const numeric = text.replace(/[^0-9]/g, "").slice(-1);
+    const numeric = text.replaceAll(/[^0-9]/g, "").slice(-1);
     const next = [...digits];
     next[index] = numeric;
     setDigits(next);

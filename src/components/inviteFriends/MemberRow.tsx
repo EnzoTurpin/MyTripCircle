@@ -19,7 +19,6 @@ export const AvatarBubble: React.FC<{
   ownerBorder?: boolean;
   avatar?: string | null;
 }> = ({ name, size = 58, ownerBorder = false, avatar }) => {
-  const { colors } = useTheme();
   return (
     <View
       style={[

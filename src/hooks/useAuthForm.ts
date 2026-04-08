@@ -79,7 +79,7 @@ export function useAuthForm(): UseAuthFormReturn {
   // ─── Validation ────────────────────────────────────────────────────────────
 
   const validateEmail = (emailValue: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]{1,253}\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/;
     if (!emailValue) {
       setEmailError(t("common.fillAllFields"));
       return false;
@@ -152,9 +152,9 @@ export function useAuthForm(): UseAuthFormReturn {
   // ─── Formatage téléphone ────────────────────────────────────────────────────
 
   const formatPhoneNumber = (text: string): string => {
-    const cleaned = text.replace(/\D/g, "");
+    const cleaned = text.replaceAll(/\D/g, "");
     const trimmed = cleaned.slice(0, 10);
-    return trimmed.replace(/(\d{2})(?=\d)/g, "$1 ");
+    return trimmed.replaceAll(/(\d{2})(?=\d)/g, "$1 ");
   };
 
   const handlePhoneChange = (text: string) => {

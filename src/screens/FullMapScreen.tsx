@@ -128,7 +128,6 @@ const FullMapScreen: React.FC = () => {
           await new Promise<void>((r) => setTimeout(r, delay));
         }
         if (cancelled) break;
-        lastNetworkRequest = Date.now();
         const coords = await geocodeAddress(address.address, address.city, address.country);
         lastNetworkRequest = Date.now();
         if (coords && !cancelled) {

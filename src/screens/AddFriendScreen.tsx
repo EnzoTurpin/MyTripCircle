@@ -20,7 +20,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ApiService } from "../services/ApiService";
 import { useFriends } from "../contexts/FriendsContext";
-import { useAuth } from "../contexts/AuthContext";
 import { FriendSuggestion } from "../types";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
@@ -37,15 +36,14 @@ const MOSS_LIGHT = "#E2EDD9";
 
 const detectContactType = (input: string): "email" | "phone" | null => {
   const t = input.trim();
-  if (/^[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]{1,253}\.[a-zA-Z]{2,}$/.test(t)) return "email";
-  if (/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{6,15}$/.test(t.replace(/[\s\-\(\)]/g, ""))) return "phone";
+  if (/^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(t)) return "email";
+  if (/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{6,15}$/.test(t.replaceAll(/[\s-()]/g, ""))) return "phone";
   return null;
 };
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 const AddFriendScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
   const { t } = useTranslation();
   const { sendFriendRequest, suggestions, refreshSuggestions } = useFriends();
   const { colors } = useTheme();

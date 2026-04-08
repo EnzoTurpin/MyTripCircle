@@ -141,10 +141,6 @@ const NotificationsScreen: React.FC = () => {
     }
   };
 
-  const unreadCount = invitations.filter(
-    (i) => i.status === "pending" && !readIds.has(i._id ?? i.token ?? "")
-  ).length;
-
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} translucent={false} />

@@ -38,8 +38,8 @@ function parseBCBP(raw: string): ScannedBookingData | null {
   const flightNum = raw.substring(39, 44).trim().replace(/^0+/, "");
   const julianRaw = raw.substring(44, 47).trim();
 
-  const julian = parseInt(julianRaw, 10);
-  const date   = !isNaN(julian) ? julianToDate(julian) : undefined;
+  const julian = Number.parseInt(julianRaw, 10);
+  const date   = !Number.isNaN(julian) ? julianToDate(julian) : undefined;
 
   const title = `${from} → ${to}${flightNum ? ` · ${carrier.trim()}${flightNum}` : ""}`;
 
@@ -57,19 +57,19 @@ function parseGeneric(raw: string): ScannedBookingData {
   const isoDate = raw.match(/(\d{4}-\d{2}-\d{2})/);
   if (isoDate) {
     const d = new Date(isoDate[1]);
-    if (!isNaN(d.getTime())) data.date = d;
+    if (!Number.isNaN(d.getTime())) data.date = d;
   } else {
-    const frDate = raw.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
+    const frDate = raw.match(/(\d{2})[/\-.](\d{2})[/\-.](\d{4})/);
     if (frDate) {
       const d = new Date(`${frDate[3]}-${frDate[2]}-${frDate[1]}`);
-      if (!isNaN(d.getTime())) data.date = d;
+      if (!Number.isNaN(d.getTime())) data.date = d;
     }
   }
 
   const timeMatch = raw.match(/\b(\d{2}):(\d{2})\b/);
   if (timeMatch) data.time = `${timeMatch[1]}:${timeMatch[2]}`;
 
-  const routeMatch = raw.match(/([A-ZÉÈÊ\-]{2,30}(?:\s[A-ZÉÈÊ\-]{1,30}){0,4})\s*[>→]\s*([A-ZÉÈÊ\-]{2,30}(?:\s[A-ZÉÈÊ\-]{1,30}){0,4})/i);
+  const routeMatch = raw.match(/([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})\s*[>→]\s*([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})/i);
   if (routeMatch) {
     data.title = `${routeMatch[1].trim()} → ${routeMatch[2].trim()}`;
     const lower = raw.toLowerCase();

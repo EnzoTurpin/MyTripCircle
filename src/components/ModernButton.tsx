@@ -12,7 +12,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, RADIUS, DISABLED_OPACITY } from "../theme";
 import { F } from "../theme/fonts";
-import { useTheme } from "../contexts/ThemeContext";
 
 // Design-system tokens (invariants entre thèmes)
 const TERRA        = COLORS.terra;

@@ -40,8 +40,8 @@ const _fetchNominatim = async (query: string): Promise<GeoCoords | null> => {
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0) return null;
     return {
-      latitude: parseFloat(data[0].lat),
-      longitude: parseFloat(data[0].lon),
+      latitude: Number.parseFloat(data[0].lat),
+      longitude: Number.parseFloat(data[0].lon),
     };
   } catch {
     return null;
