@@ -22,7 +22,7 @@ export type ScanMode = "choose" | "camera" | "gallery";
 function julianToDate(julian: number): Date {
   const year = new Date().getFullYear();
   const d = new Date(year, 0, julian);
-  if (d.getTime() < Date.now() - 30 * 86400_000) {
+  if (d.getTime() < Date.now() - 30 * 86_400_000) {
     return new Date(year + 1, 0, julian);
   }
   return d;
