@@ -6,7 +6,7 @@ console.log("\n💡 Astuce: Scannez le QR code directement avec l'application Ex
 console.log("   L'application s'ouvrira automatiquement!\n");
 
 // Lancer Expo (le serveur tourne sur le VPS, pas en local)
-const expoProcess = spawn("npx", ["expo", "start", "--clear"], {
+const expoProcess = spawn("npx", ["expo", "start", "--clear"], { // NOSONAR — script de développement local uniquement
   stdio: "inherit",
   shell: true,
 });

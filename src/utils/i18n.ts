@@ -149,7 +149,7 @@ const API_ERROR_KEY_BY_MESSAGE: Record<string, string> = {
     "common.phoneAlreadyInUse",
   Unauthorized: "apiErrors.unauthorized",
   "Missing required fields": "apiErrors.missingRequiredFields",
-  "Weak password": "common.invalidPassword",
+  "Weak password": "common.invalidPassword", // NOSONAR — clé de traduction, pas un mot de passe
   "Invalid phone number": "apiErrors.invalidPhoneNumber",
   "Account not verified. A new code has been sent to your email.":
     "apiErrors.accountNotVerifiedNewCode",
@@ -161,9 +161,9 @@ const API_ERROR_KEY_BY_MESSAGE: Record<string, string> = {
     "common.requiresOtpExpired",
   "Name and email are required": "apiErrors.nameAndEmailRequired",
   "Invalid language. Supported: en, fr": "apiErrors.invalidLanguage",
-  "Current password is incorrect": "apiErrors.currentPasswordIncorrect",
+  "Current password is incorrect": "apiErrors.currentPasswordIncorrect", // NOSONAR — clé de traduction
   "Email is required": "apiErrors.emailRequired",
-  "Token and new password are required": "apiErrors.tokenAndPasswordRequired",
+  "Token and new password are required": "apiErrors.tokenAndPasswordRequired", // NOSONAR — clé de traduction
   "Invalid or expired reset token": "apiErrors.invalidOrExpiredResetToken",
   "User ID and OTP are required": "apiErrors.userIdAndOtpRequired",
   "Invalid OTP": "apiErrors.invalidOtp",
