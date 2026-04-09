@@ -25,6 +25,13 @@ import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
 
+function computeInviteDates(inv: any): { dateRange: string | null; duration: number | null } {
+  if (inv.trip?.startDate && inv.trip?.endDate) {
+    return { dateRange: formatDateRange(inv.trip.startDate, inv.trip.endDate), duration: tripDuration(inv.trip.startDate, inv.trip.endDate) };
+  }
+  return { dateRange: null, duration: null };
+}
+
 function buildStatusBanner(
   isExpired: boolean | Date | null | undefined,
   status: string,
@@ -199,12 +206,7 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
   const bannerGrad  = getBannerGradient(destination || tripName);
   const avatarColor = getAvatarColor(inviterName);
   const initials    = getInitials(inviterName);
-  const dateRange   = invitation.trip?.startDate && invitation.trip?.endDate
-    ? formatDateRange(invitation.trip.startDate, invitation.trip.endDate)
-    : null;
-  const duration    = invitation.trip?.startDate && invitation.trip?.endDate
-    ? tripDuration(invitation.trip.startDate, invitation.trip.endDate)
-    : null;
+  const { dateRange, duration } = computeInviteDates(invitation);
 
   const statusBannerEl = buildStatusBanner(isExpired, invitation.status, t);
 
