@@ -73,6 +73,11 @@ function buildAcceptContent(accepting: boolean, t: ReturnType<typeof useTranslat
   return <><Ionicons name="checkmark" size={16} color="#FFFFFF" /><Text style={cardStyles.btnAcceptText}>{t("invitation.acceptBtn")}</Text></>;
 }
 
+function buildDestinationEl(destination: string, dateRange: string | null): React.ReactNode {
+  if (!destination) return null;
+  return <Text style={cardStyles.bannerSub}>📍 {destination}{dateRange ? ` · ${dateRange}` : ""}</Text>;
+}
+
 function buildMoreBtn(expanded: boolean, colors: { bgMid: string; textMid: string }, onDetail: () => void): React.ReactNode {
   if (expanded) return null;
   return (
@@ -123,9 +128,7 @@ const InvitationCard: React.FC<CardProps> = ({
     ? <Image source={{ uri: inv.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
     : <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />;
 
-  const destinationEl = destination
-    ? <Text style={cardStyles.bannerSub}>📍 {destination}{dateRange ? ` · ${dateRange}` : ""}</Text>
-    : null;
+  const destinationEl = buildDestinationEl(destination, dateRange);
 
   const messageEl  = expanded && inv.message
     ? <View style={cardStyles.messageBox}><Text style={cardStyles.messageText}>"{inv.message}"</Text></View>
