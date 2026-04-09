@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
 import ApiService from "../services/ApiService";
 import i18n, { parseApiError as translateApiMessage } from "../utils/i18n";
+import { useUserProfile } from "../hooks/useUserProfile";
 
 export type AuthField = "email" | "password" | "name" | "phone";
 export type AuthResult =
@@ -251,36 +252,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateUser = async (userData: Partial<User>): Promise<void> => {
-    const filteredData = Object.fromEntries(
-      Object.entries(userData).filter(([, value]) => value !== undefined),
-    ) as { name?: string; email?: string };
-
-    const res = await ApiService.updateProfile(
-      filteredData as { name: string; email: string },
-    );
-
-    if (res.success) {
-      await AsyncStorage.setItem("user", JSON.stringify(res.user));
-      setUser(res.user);
-    }
-  };
-
-  const updateAvatar = async (avatar: string): Promise<void> => {
-    const res = await ApiService.uploadAvatar(avatar);
-    if (res.success) {
-      await AsyncStorage.setItem("user", JSON.stringify(res.user));
-      setUser(res.user);
-    }
-  };
-
-  const updateSettings = async (data: { isPublicProfile: boolean }): Promise<void> => {
-    const res = await ApiService.updateSettings(data);
-    if (res.success) {
-      await AsyncStorage.setItem("user", JSON.stringify(res.user));
-      setUser(res.user);
-    }
-  };
+  const { updateUser, updateAvatar, updateSettings } = useUserProfile({ onUserUpdated: setUser });
 
   const verifyOtp = async (
     userId: string,
