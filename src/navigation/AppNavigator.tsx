@@ -54,7 +54,7 @@ const MainTabNavigator = () => {
   const { t } = useTranslation();
   return (
     <Tab.Navigator
-      tabBar={FloatingTabBar}
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerStyle: {
           backgroundColor: "#FFFFFF",
