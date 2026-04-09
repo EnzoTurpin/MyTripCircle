@@ -234,9 +234,9 @@ export const ApiService = {
     return request<any[]>(`/invitations/user/${email}${query}`);
   },
 
-  getSentInvitations: (userId: string, status?: string) => {
+  getSentInvitations: (_userId: string, status?: string) => {
     const query = status ? `?status=${status}` : "";
-    return request<any[]>(`/invitations/sent/${userId}${query}`);
+    return request<any[]>(`/invitations/sent${query}`);
   },
 
   getInvitationByToken: (token: string) =>
