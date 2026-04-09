@@ -73,6 +73,15 @@ function buildAcceptContent(accepting: boolean, t: ReturnType<typeof useTranslat
   return <><Ionicons name="checkmark" size={16} color="#FFFFFF" /><Text style={cardStyles.btnAcceptText}>{t("invitation.acceptBtn")}</Text></>;
 }
 
+function buildMoreBtn(expanded: boolean, colors: { bgMid: string; textMid: string }, onDetail: () => void): React.ReactNode {
+  if (expanded) return null;
+  return (
+    <TouchableOpacity style={[cardStyles.btnMore, { backgroundColor: colors.bgMid }]} onPress={onDetail} activeOpacity={0.8}>
+      <Text style={[cardStyles.btnMoreText, { color: colors.textMid }]}>›</Text>
+    </TouchableOpacity>
+  );
+}
+
 interface CardProps {
   invitation: any;
   expanded: boolean;
@@ -135,8 +144,7 @@ const InvitationCard: React.FC<CardProps> = ({
 
   const expandedActionsStyle = expanded ? cardStyles.actionsExpanded : undefined;
   const expandedBtnStyle     = expanded ? cardStyles.btnAcceptExpanded : undefined;
-  const moreBtnEl = expanded ? null
-    : <TouchableOpacity style={[cardStyles.btnMore, { backgroundColor: colors.bgMid }]} onPress={onDetail} activeOpacity={0.8}><Text style={[cardStyles.btnMoreText, { color: colors.textMid }]}>›</Text></TouchableOpacity>;
+  const moreBtnEl = buildMoreBtn(expanded, colors, onDetail);
 
   return (
     <TouchableOpacity
