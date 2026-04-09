@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Alert, Animated, Share } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { Alert, Share } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useTrips } from "../contexts/TripsContext";
@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import ApiService from "../services/ApiService";
 import { parseApiError } from "../utils/i18n";
 import { RootStackParamList, Trip, User } from "../types";
+import { useBottomSheet } from "./useBottomSheet";
+import { useSendInvitations } from "./useSendInvitations";
 
 type ScreenNavProp = StackNavigationProp<RootStackParamList, "InviteFriends">;
 
@@ -23,7 +25,7 @@ export interface CollabInfo {
 export function useInviteFriends(tripId: string) {
   const navigation = useNavigation<ScreenNavProp>();
   const { t } = useTranslation();
-  const { createInvitation, getSentInvitations, getTripInvitationLink, refreshData } = useTrips();
+  const { getSentInvitations, getTripInvitationLink, refreshData } = useTrips();
   const { user } = useAuth();
   const { friends: realFriends } = useFriends();
 
@@ -36,18 +38,11 @@ export function useInviteFriends(tripId: string) {
   const [linkExpiry, setLinkExpiry] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-
   const [showInvitePanel, setShowInvitePanel] = useState(false);
-  const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
-  const [emailInput, setEmailInput] = useState("");
-  const [sendingInvitations, setSendingInvitations] = useState(false);
-
   const [selectedMember, setSelectedMember] = useState<CollabInfo | null>(null);
 
-  const sheetAnim = useRef(new Animated.Value(0)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
-  const inviteAnim = useRef(new Animated.Value(0)).current;
-  const inviteBackdrop = useRef(new Animated.Value(0)).current;
+  const memberSheet = useBottomSheet({ outputRange: [340, 0] });
+  const inviteSheet = useBottomSheet({ outputRange: [600, 0] });
 
   const isOwner = !!(user && owner?.userId === user.id);
 
@@ -135,43 +130,30 @@ export function useInviteFriends(tripId: string) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // ── Sheet & panel controls ─────────────────────────────────────────────────
+
   const openSheet = (m: CollabInfo) => {
     setSelectedMember(m);
-    Animated.parallel([
-      Animated.spring(sheetAnim, { toValue: 1, useNativeDriver: true, bounciness: 4 }),
-      Animated.timing(backdropAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
-    ]).start();
+    memberSheet.open();
   };
 
   const closeSheet = () => {
-    Animated.parallel([
-      Animated.timing(sheetAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-      Animated.timing(backdropAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-    ]).start(() => setSelectedMember(null));
+    memberSheet.close(() => setSelectedMember(null));
   };
-
-  const sheetY = sheetAnim.interpolate({ inputRange: [0, 1], outputRange: [340, 0] });
 
   const openInvitePanel = () => {
     setShowInvitePanel(true);
-    Animated.parallel([
-      Animated.spring(inviteAnim, { toValue: 1, useNativeDriver: true, bounciness: 4 }),
-      Animated.timing(inviteBackdrop, { toValue: 1, duration: 250, useNativeDriver: true }),
-    ]).start();
+    inviteSheet.open();
   };
 
   const closeInvitePanel = () => {
-    Animated.parallel([
-      Animated.timing(inviteAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-      Animated.timing(inviteBackdrop, { toValue: 0, duration: 220, useNativeDriver: true }),
-    ]).start(() => {
+    inviteSheet.close(() => {
       setShowInvitePanel(false);
-      setInvitedFriends([]);
-      setEmailInput("");
+      sendInvitations.reset();
     });
   };
 
-  const inviteY = inviteAnim.interpolate({ inputRange: [0, 1], outputRange: [600, 0] });
+  // ── Invitation link ────────────────────────────────────────────────────────
 
   const handleShareLink = async () => {
     if (!invitationLink) return;
@@ -207,6 +189,8 @@ export function useInviteFriends(tripId: string) {
       ]
     );
   };
+
+  // ── Member actions ─────────────────────────────────────────────────────────
 
   const handleCancelInvitation = (inv: any) => {
     const label = inv.inviteeEmail || inv.inviteePhone || t("inviteFriends.guestFallback");
@@ -253,10 +237,7 @@ export function useInviteFriends(tripId: string) {
               await loadData();
               refreshData();
             } catch (e: any) {
-              Alert.alert(
-                t("common.error"),
-                parseApiError(e) || t("inviteFriends.removeError"),
-              );
+              Alert.alert(t("common.error"), parseApiError(e) || t("inviteFriends.removeError"));
             } finally {
               setActionLoading(false);
             }
@@ -285,10 +266,7 @@ export function useInviteFriends(tripId: string) {
               await loadData();
               refreshData();
             } catch (e: unknown) {
-              Alert.alert(
-                t("common.error"),
-                parseApiError(e) || t("inviteFriends.transferError"),
-              );
+              Alert.alert(t("common.error"), parseApiError(e) || t("inviteFriends.transferError"));
             } finally {
               setActionLoading(false);
             }
@@ -307,81 +285,7 @@ export function useInviteFriends(tripId: string) {
     });
   };
 
-  const toggleFriend = (id: string) =>
-    setInvitedFriends((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-
-  const handleSendInvitations = async () => {
-    if (!trip || !user) return;
-    const byEmail = emailInput.trim();
-
-    try {
-      setSendingInvitations(true);
-      const promises: Promise<any>[] = [];
-
-      if (byEmail) {
-        const valid = /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(byEmail);
-        if (!valid) {
-          Alert.alert(t("inviteFriends.error"), t("inviteFriends.invalidEmail"));
-          return;
-        }
-        promises.push(
-          createInvitation({
-            tripId: trip.id,
-            inviteeEmail: byEmail,
-            message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
-            permissions: { role: "editor", canEdit: true, canInvite: false, canDelete: false },
-          })
-        );
-      }
-
-      const skipped: string[] = [];
-      invitedFriends.forEach((fId) => {
-        const friend = friends.find((f) => f.id === fId);
-        if (!friend) return;
-        if (!friend.email) {
-          skipped.push(friend.name);
-          return;
-        }
-        promises.push(
-          createInvitation({
-            tripId: trip.id,
-            inviteeEmail: friend.email,
-            message: `${t("inviteFriends.invitationMessage")} "${trip.title}"`,
-            permissions: { role: "editor", canEdit: true, canInvite: false, canDelete: false },
-          })
-        );
-      });
-
-      if (skipped.length > 0) {
-        Alert.alert(
-          t("inviteFriends.noEmailFriends"),
-          t("inviteFriends.noEmailFriendsMsg", { names: skipped.join(", ") })
-        );
-      }
-
-      if (promises.length === 0) {
-        Alert.alert(t("inviteFriends.noInviteSelected"), t("inviteFriends.noInviteSelectedMsg"));
-        return;
-      }
-
-      await Promise.all(promises);
-      closeInvitePanel();
-      await loadData();
-      Alert.alert(
-        t("inviteFriends.invitationsSent"),
-        t("inviteFriends.invitesSentCount", { count: promises.length })
-      );
-    } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        parseApiError(error) || t("inviteFriends.invitationError"),
-      );
-    } finally {
-      setSendingInvitations(false);
-    }
-  };
+  // ── Derived data ───────────────────────────────────────────────────────────
 
   const alreadyMemberIds = new Set([owner?.userId, ...activeMembers.map((m) => m.userId)]);
   const pendingEmails = new Set(
@@ -391,7 +295,15 @@ export function useInviteFriends(tripId: string) {
     (f) => !alreadyMemberIds.has(f.id) && !pendingEmails.has(f.email)
   );
   const alreadyMembers = friends.filter((f) => alreadyMemberIds.has(f.id));
-  const inviteCount = invitedFriends.length + (emailInput.trim() ? 1 : 0);
+
+  const sendInvitations = useSendInvitations({ trip, friends });
+
+  const handleSendInvitations = async () => {
+    await sendInvitations.handleSendInvitations(async () => {
+      closeInvitePanel();
+      await loadData();
+    });
+  };
 
   return {
     trip,
@@ -406,30 +318,30 @@ export function useInviteFriends(tripId: string) {
     loading,
     actionLoading,
     showInvitePanel,
-    invitedFriends,
-    emailInput,
-    setEmailInput,
-    sendingInvitations,
-    inviteCount,
     selectedMember,
     isOwner,
-    sheetAnim,
-    backdropAnim,
-    sheetY,
-    inviteAnim,
-    inviteBackdrop,
-    inviteY,
+    memberSheet,
+    inviteSheet,
+    // Invitation link
+    handleShareLink,
+    handleRenewLink,
+    // Sheet controls
     openSheet,
     closeSheet,
     openInvitePanel,
     closeInvitePanel,
-    handleShareLink,
-    handleRenewLink,
+    // Member actions
     handleCancelInvitation,
     handleRemoveMember,
     handleTransferOwnership,
     handleViewProfile,
-    toggleFriend,
+    // Send invitations (from useSendInvitations)
+    invitedFriends: sendInvitations.invitedFriends,
+    emailInput: sendInvitations.emailInput,
+    setEmailInput: sendInvitations.setEmailInput,
+    sendingInvitations: sendInvitations.sendingInvitations,
+    inviteCount: sendInvitations.inviteCount,
+    toggleFriend: sendInvitations.toggleFriend,
     handleSendInvitations,
   };
 }
