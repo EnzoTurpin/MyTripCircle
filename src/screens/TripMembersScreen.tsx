@@ -88,9 +88,8 @@ const TripMembersScreen: React.FC = () => {
     const isSelf     = member.userId === user?.id;
     const canTap     = tappable && isOwner && !isSelf;
 
-    const roleText = isOwnerRow
-      ? (isSelf ? t("tripMembers.roleOrganizerSelf") : t("tripMembers.roleOrganizer"))
-      : t("tripMembers.roleParticipant");
+    const organizerRole = isSelf ? t("tripMembers.roleOrganizerSelf") : t("tripMembers.roleOrganizer");
+    const roleText = isOwnerRow ? organizerRole : t("tripMembers.roleParticipant");
 
     let trailingEl: React.ReactNode = null;
     if (isSelf) {
