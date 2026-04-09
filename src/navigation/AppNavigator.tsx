@@ -50,11 +50,19 @@ import { F } from "../theme/fonts";
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+// Défini en dehors du composant pour éviter une nouvelle référence à chaque rendu.
+// Ne pas passer FloatingTabBar directement : React Navigation v7 l'appelle comme
+// une fonction ordinaire (tabBar(props)), ce qui viole les Rules of Hooks.
+// Cette wrapper retourne un élément React, forçant un rendu en tant que composant.
+const renderTabBar: React.ComponentProps<typeof Tab.Navigator>["tabBar"] = (props) => (
+  <FloatingTabBar {...props} />
+);
+
 const MainTabNavigator = () => {
   const { t } = useTranslation();
   return (
     <Tab.Navigator
-      tabBar={(props) => <FloatingTabBar {...props} />}
+      tabBar={renderTabBar}
       screenOptions={{
         headerStyle: {
           backgroundColor: "#FFFFFF",
