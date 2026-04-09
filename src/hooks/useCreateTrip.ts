@@ -72,7 +72,7 @@ export const useCreateTrip = () => {
 
     if (type === "start") {
       setFormData((prev) => {
-        const newEnd = selectedDate > prev.endDate ? selectedDate : prev.endDate;
+        const newEnd = new Date(Math.max(selectedDate.valueOf(), prev.endDate.valueOf()));
         setDateError(null);
         return { ...prev, startDate: selectedDate, endDate: newEnd };
       });

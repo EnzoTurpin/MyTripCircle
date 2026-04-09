@@ -95,7 +95,7 @@ interface TripSectionProps {
   title: string;
   marginTop: number;
   trips: any[];
-  emptyIcon: string;
+  emptyIcon: React.ComponentProps<typeof Ionicons>["name"];
   emptyText: string;
   bgMid: string;
   textLight: string;
@@ -115,7 +115,7 @@ const TripSection: React.FC<TripSectionProps> = ({
       </ScrollView>
     ) : (
       <View style={[styles.emptyCard, { backgroundColor: bgMid }]}>
-        <Ionicons name={emptyIcon as any} size={26} color={textLight} />
+        <Ionicons name={emptyIcon} size={26} color={textLight} />
         <Text style={[styles.emptyText, { color: textLight }]}>{emptyText}</Text>
       </View>
     )}

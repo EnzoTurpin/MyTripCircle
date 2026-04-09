@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useMemo,
   ReactNode,
   useCallback,
 } from "react";
@@ -12,6 +13,8 @@ import { useAuth } from "./AuthContext";
 import { useTripsApi } from "../hooks/useTripsApi";
 import { mapTrip, mapBooking, mapAddress } from "../utils/tripMappers";
 
+type NewEntityFields = "id" | "createdAt" | "updatedAt";
+
 interface TripsContextType {
   trips: Trip[];
   bookings: Booking[];
@@ -19,14 +22,14 @@ interface TripsContextType {
   invitations: TripInvitation[];
   loading: boolean;
   createTrip: (
-    trip: Omit<Trip, "id" | "createdAt" | "updatedAt">
+    trip: Omit<Trip, NewEntityFields>
   ) => Promise<Trip>;
   updateTrip: (tripId: string, updates: Partial<Trip>) => Promise<Trip | null>;
   validateTrip: (tripId: string) => Promise<Trip | null>;
   deleteTrip: (tripId: string) => Promise<boolean>;
   getTripById: (tripId: string) => Trip | null;
   createBooking: (
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+    booking: Omit<Booking, NewEntityFields>
   ) => Promise<Booking>;
   updateBooking: (
     bookingId: string,
@@ -35,7 +38,7 @@ interface TripsContextType {
   deleteBooking: (bookingId: string) => Promise<boolean>;
   getBookingsByTripId: (tripId: string) => Booking[];
   createAddress: (
-    address: Omit<Address, "id" | "createdAt" | "updatedAt">
+    address: Omit<Address, NewEntityFields>
   ) => Promise<Address>;
   updateAddress: (
     addressId: string,
@@ -171,34 +174,26 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
   const getAddressesByTripId = (tripId: string): Address[] =>
     addresses.filter((address) => address.tripId === tripId);
 
-  const value: TripsContextType = {
-    trips,
-    bookings,
-    addresses,
-    invitations,
-    loading,
-    createTrip: api.createTrip,
-    updateTrip: api.updateTrip,
-    validateTrip: api.validateTrip,
-    deleteTrip: api.deleteTrip,
-    getTripById,
-    createBooking: api.createBooking,
-    updateBooking: api.updateBooking,
-    deleteBooking: api.deleteBooking,
-    getBookingsByTripId,
-    createAddress: api.createAddress,
-    updateAddress: api.updateAddress,
-    deleteAddress: api.deleteAddress,
-    getAddressesByTripId,
-    refreshData,
-    createInvitation: api.createInvitation,
-    getUserInvitations: api.getUserInvitations,
-    getSentInvitations: api.getSentInvitations,
-    respondToInvitation: api.respondToInvitation,
-    getInvitationByToken: api.getInvitationByToken,
-    getTripInvitationLink: api.getTripInvitationLink,
-    cancelInvitation: api.cancelInvitation,
-  };
+  const value: TripsContextType = useMemo(
+    () => ({
+      trips, bookings, addresses, invitations, loading,
+      createTrip: api.createTrip, updateTrip: api.updateTrip,
+      validateTrip: api.validateTrip, deleteTrip: api.deleteTrip,
+      getTripById, createBooking: api.createBooking,
+      updateBooking: api.updateBooking, deleteBooking: api.deleteBooking,
+      getBookingsByTripId, createAddress: api.createAddress,
+      updateAddress: api.updateAddress, deleteAddress: api.deleteAddress,
+      getAddressesByTripId, refreshData,
+      createInvitation: api.createInvitation,
+      getUserInvitations: api.getUserInvitations,
+      getSentInvitations: api.getSentInvitations,
+      respondToInvitation: api.respondToInvitation,
+      getInvitationByToken: api.getInvitationByToken,
+      getTripInvitationLink: api.getTripInvitationLink,
+      cancelInvitation: api.cancelInvitation,
+    }),
+    [trips, bookings, addresses, invitations, loading], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <TripsContext.Provider value={value}>{children}</TripsContext.Provider>

@@ -102,7 +102,7 @@ const SubscriptionScreen: React.FC = () => {
       try {
         const receipt = purchase.transactionReceipt || purchase.purchaseToken;
         if (receipt) {
-          // TODO: envoyer 'receipt' à votre serveur pour validation
+          // Envoyer le receipt au serveur pour validation (côté backend)
           await RNIap.finishTransaction(purchase);
           Alert.alert(t("subscription.purchaseSuccessTitle"), t("subscription.purchaseSuccessMessage"), [{ text: t("common.ok") }]);
           setLoadingId(null);

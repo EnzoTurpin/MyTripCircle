@@ -15,7 +15,6 @@ import AddressCard from "../components/addresses/AddressCard";
 import AddressFilterBar from "../components/addresses/AddressFilterBar";
 import AddressMapWidget from "../components/addresses/AddressMapWidget";
 import { styles } from "../components/addresses/addressStyles";
-import { Address } from "../types";
 import SkeletonBox from "../components/SkeletonBox";
 
 const AddressesScreen: React.FC = () => {

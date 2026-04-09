@@ -95,8 +95,8 @@ export const getAddressSuggestions = async (
 };
 
 const extractComponent = (
+  type: string,
   components: any[] = [],
-  type: string
 ): string | undefined => {
   const component = components.find((item) => item.types?.includes(type));
   return component?.long_name;
@@ -128,9 +128,9 @@ export const getPlaceDetails = async (
   const components = data.result?.address_components || [];
 
   const city =
-    extractComponent(components, "locality") ||
-    extractComponent(components, "administrative_area_level_1");
-  const country = extractComponent(components, "country");
+    extractComponent("locality", components) ||
+    extractComponent("administrative_area_level_1", components);
+  const country = extractComponent("country", components);
 
   const rawRating = data.result?.rating;
 

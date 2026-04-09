@@ -1,9 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Trip, Booking, Address, User } from "../types";
 
+type NewEntityFields = "id" | "createdAt" | "updatedAt";
+
 class DataService {
   private static instance: DataService;
-  private storageKeys = {
+  private readonly storageKeys = {
     trips: "mytripcircle_trips",
     bookings: "mytripcircle_bookings",
     addresses: "mytripcircle_addresses",
@@ -49,7 +51,7 @@ class DataService {
   }
 
   async createTrip(
-    trip: Omit<Trip, "id" | "createdAt" | "updatedAt">
+    trip: Omit<Trip, NewEntityFields>
   ): Promise<Trip> {
     try {
       const trips = await this.getTrips();
@@ -157,7 +159,7 @@ class DataService {
   }
 
   async createBooking(
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+    booking: Omit<Booking, NewEntityFields>
   ): Promise<Booking> {
     try {
       const bookings = await this.getBookings();
@@ -275,7 +277,7 @@ class DataService {
   }
 
   async createAddress(
-    address: Omit<Address, "id" | "createdAt" | "updatedAt">
+    address: Omit<Address, NewEntityFields>
   ): Promise<Address> {
     try {
       const addresses = await this.getAddresses();

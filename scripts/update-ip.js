@@ -1,29 +1,30 @@
 // Script pour mettre à jour automatiquement l'IP dans la configuration
-const os = require("os");
-const fs = require("fs");
-const path = require("path");
+const os = require("node:os");
+const fs = require("node:fs");
+const path = require("node:path");
+
+function findIPv4(ifaces) {
+  for (const iface of ifaces) {
+    if (iface.family === "IPv4" && !iface.internal) return iface.address;
+  }
+  return null;
+}
 
 function getCurrentIP() {
   const interfaces = os.networkInterfaces();
   const priorityInterfaces = ["Wi-Fi", "Ethernet", "en0", "eth0"];
 
-  for (const interfaceName of priorityInterfaces) {
-    if (interfaces[interfaceName]) {
-      for (const iface of interfaces[interfaceName]) {
-        if (iface.family === "IPv4" && !iface.internal) {
-          return iface.address;
-        }
-      }
+  for (const name of priorityInterfaces) {
+    if (interfaces[name]) {
+      const ip = findIPv4(interfaces[name]);
+      if (ip) return ip;
     }
   }
 
-  // Fallback: première IP non-internale
+  // Fallback: première IP non-interne
   for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === "IPv4" && !iface.internal) {
-        return iface.address;
-      }
-    }
+    const ip = findIPv4(interfaces[name]);
+    if (ip) return ip;
   }
 
   return "localhost";

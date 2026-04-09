@@ -8,6 +8,35 @@ import { cardStyles } from "./cardStyles";
 import { getBannerGradient, formatRelative, formatDateRange, tripDuration } from "../../utils/invitationUtils";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
 
+function buildBadge(expanded: boolean, isUnread: boolean, t: ReturnType<typeof useTranslation>["t"]): React.ReactNode {
+  if (expanded) return <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgePending")}</Text></View>;
+  if (isUnread) return <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgeNew")}</Text></View>;
+  return null;
+}
+
+function buildFooter(
+  canAct: boolean, status: string, isExpired: boolean | Date | null | undefined,
+  colors: { textLight: string }, t: ReturnType<typeof useTranslation>["t"], onViewTrip: () => void,
+): React.ReactNode {
+  if (canAct) return null;
+  if (status === "accepted") {
+    return (
+      <TouchableOpacity style={cardStyles.viewTripLink} onPress={onViewTrip} activeOpacity={0.8}>
+        <Text style={cardStyles.viewTripText}>{t("invitation.viewTripLink")}</Text>
+      </TouchableOpacity>
+    );
+  }
+  if (isExpired) {
+    return (
+      <View style={cardStyles.expiredRow}>
+        <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
+        <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
+      </View>
+    );
+  }
+  return null;
+}
+
 interface CardProps {
   invitation: any;
   expanded: boolean;
@@ -43,30 +72,8 @@ const InvitationCard: React.FC<CardProps> = ({
     ? tripDuration(inv.trip.startDate, inv.trip.endDate)
     : null;
 
-  let badgeEl: React.ReactNode = null;
-  if (expanded) {
-    badgeEl = <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgePending")}</Text></View>;
-  } else if (isUnread) {
-    badgeEl = <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgeNew")}</Text></View>;
-  }
-
-  let footerEl: React.ReactNode = null;
-  if (!canAct) {
-    if (status === "accepted") {
-      footerEl = (
-        <TouchableOpacity style={cardStyles.viewTripLink} onPress={onViewTrip} activeOpacity={0.8}>
-          <Text style={cardStyles.viewTripText}>{t("invitation.viewTripLink")}</Text>
-        </TouchableOpacity>
-      );
-    } else if (isExpired) {
-      footerEl = (
-        <View style={cardStyles.expiredRow}>
-          <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
-          <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
-        </View>
-      );
-    }
-  }
+  const badgeEl  = buildBadge(expanded, isUnread, t);
+  const footerEl = buildFooter(canAct, status, isExpired, colors, t, onViewTrip);
 
   const isActiveCard = isUnread && status === "pending";
   const cardBorderStyle = isActiveCard ? cardStyles.cardActive : cardStyles.cardDefault;
@@ -164,7 +171,7 @@ const InvitationCard: React.FC<CardProps> = ({
         {messageEl}
         {durationEl}
 
-        {canAct ? (
+        {canAct && (
           <View style={[cardStyles.actions, expandedActionsStyle]}>
             <TouchableOpacity
               style={[cardStyles.btnAccept, expandedBtnStyle]}
@@ -185,7 +192,8 @@ const InvitationCard: React.FC<CardProps> = ({
             </TouchableOpacity>
             {moreBtnEl}
           </View>
-        ) : footerEl}
+        )}
+        {!canAct && footerEl}
       </View>
     </TouchableOpacity>
   );
