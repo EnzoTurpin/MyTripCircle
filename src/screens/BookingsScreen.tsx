@@ -27,48 +27,16 @@ import { F } from "../theme/fonts";
 import { COLORS as C } from "../theme/colors";
 import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
-
-// ─── Couleurs non-thémifiables ─────────────────────────────────────────────────
-const MOSS       = '#6B8C5A';
-const MOSS_LIGHT = '#E2EDD9';
-const SKY        = '#5A8FAA';
-const SKY_LIGHT  = '#DCF0F5';
+import {
+  getBookingTypeIcon,
+  getBookingTypeColors,
+  getBookingStatusColors,
+} from "../utils/bookingHelpers";
 
 type BookingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Main"
 >;
-
-const getTypeIcon = (type: Booking["type"]) => {
-  switch (type) {
-    case "flight":      return "airplane";
-    case "train":       return "train";
-    case "hotel":       return "bed";
-    case "restaurant":  return "restaurant";
-    case "activity":    return "ticket";
-    default:            return "receipt";
-  }
-};
-
-const getTypeColors = (type: Booking["type"]): { stripe: string; bg: string } | null => {
-  switch (type) {
-    case "flight":     return { stripe: SKY,       bg: SKY_LIGHT };
-    case "hotel":      return { stripe: MOSS,      bg: MOSS_LIGHT };
-    case "train":      return { stripe: '#C4714A', bg: '#F5E5DC' }; // terra/terraLight
-    case "restaurant": return { stripe: '#C4714A', bg: '#F5E5DC' };
-    case "activity":   return { stripe: '#8B70C0', bg: '#EDE8F5' };
-    default:           return null;
-  }
-};
-
-const getStatusColors = (status: Booking["status"]): { color: string; bg: string } | null => {
-  switch (status) {
-    case "confirmed": return { color: MOSS,      bg: MOSS_LIGHT };
-    case "pending":   return { color: '#C4714A', bg: '#F5E5DC' };
-    case "cancelled": return { color: '#C04040', bg: '#FDEAEA' };
-    default:          return null;
-  }
-};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const BookingsScreen: React.FC = () => {
@@ -123,8 +91,8 @@ const BookingsScreen: React.FC = () => {
 
   // ─── Booking card ────────────────────────────────────────────────────────────
   const renderBookingCard = ({ item }: { item: Booking }) => {
-    const typeC   = getTypeColors(item.type);
-    const statusC = getStatusColors(item.status);
+    const typeC   = getBookingTypeColors(item.type);
+    const statusC = getBookingStatusColors(item.status);
     const stripeColor = typeC?.stripe ?? colors.textMid;
     const typeBg = typeC?.bg ?? colors.bgMid;
     const statusBgColor = statusC?.bg ?? colors.bgMid;
@@ -144,7 +112,7 @@ const BookingsScreen: React.FC = () => {
           <View style={styles.cardTopRow}>
             <View style={[styles.typeIconCircle, { backgroundColor: typeBg }]}>
               <Ionicons
-                name={getTypeIcon(item.type) as any}
+                name={getBookingTypeIcon(item.type) as any}
                 size={24}
                 color={stripeColor}
               />
