@@ -28,10 +28,12 @@ import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
-
-// ─── Couleurs non-thémifiables ─────────────────────────────────────────────────
-const MOSS = '#6B8C5A';
-const SKY  = '#5A8FAA';
+import {
+  getBookingTypeIcon,
+  getBookingTypeColorsDetail,
+  getBookingStatusColorsDetail,
+  getBookingHeroGradient,
+} from "../utils/bookingHelpers";
 
 type BookingDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -41,49 +43,6 @@ type BookingDetailsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "BookingDetails"
 >;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const getTypeIcon = (type: Booking["type"]) => {
-  switch (type) {
-    case "flight":     return "airplane";
-    case "train":      return "train";
-    case "hotel":      return "bed";
-    case "restaurant": return "restaurant";
-    case "activity":   return "ticket";
-    default:           return "receipt";
-  }
-};
-
-const getHeroGradient = (type: Booking["type"]): [string, string, string] => {
-  switch (type) {
-    case "flight":     return ['#1A3A5C', '#0D2540', '#1E4A70'];
-    case "hotel":      return ['#1E3A2A', '#0D2418', '#2A4A35'];
-    case "train":      return ['#3A2818', '#1E1408', '#4A3020'];
-    case "restaurant": return ['#3A1A18', '#1E0E0C', '#4A2820'];
-    case "activity":   return ['#2A1A3C', '#150E24', '#382A4E'];
-    default:           return ['#2A2318', '#1A1610', '#3A3028'];
-  }
-};
-
-const getTypeColors = (type: Booking["type"]): { stripe: string; bg: string } => {
-  switch (type) {
-    case "flight":     return { stripe: SKY,       bg: 'rgba(90,143,170,0.22)' };
-    case "hotel":      return { stripe: MOSS,      bg: 'rgba(107,140,90,0.22)' };
-    case "train":      return { stripe: '#C8A870', bg: 'rgba(200,168,112,0.22)' };
-    case "restaurant": return { stripe: '#D08070', bg: 'rgba(208,128,112,0.22)' };
-    case "activity":   return { stripe: '#A080D0', bg: 'rgba(160,128,208,0.22)' };
-    default:           return { stripe: '#B0A090', bg: 'rgba(176,160,144,0.22)' };
-  }
-};
-
-const getStatusColors = (status: Booking["status"]): { color: string; bg: string } => {
-  switch (status) {
-    case "confirmed": return { color: '#7BC88A', bg: 'rgba(107,200,138,0.22)' };
-    case "pending":   return { color: '#E8B870', bg: 'rgba(232,184,112,0.22)' };
-    case "cancelled": return { color: '#E08080', bg: 'rgba(224,128,128,0.22)' };
-    default:          return { color: '#B0A090', bg: 'rgba(176,160,144,0.22)' };
-  }
-};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const BookingDetailsScreen: React.FC = () => {
@@ -271,9 +230,9 @@ const BookingDetailsScreen: React.FC = () => {
     );
   }
 
-  const typeC    = getTypeColors(booking.type);
-  const statusC  = getStatusColors(booking.status);
-  const gradient = getHeroGradient(booking.type);
+  const typeC    = getBookingTypeColorsDetail(booking.type);
+  const statusC  = getBookingStatusColorsDetail(booking.status);
+  const gradient = getBookingHeroGradient(booking.type);
 
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
@@ -310,7 +269,7 @@ const BookingDetailsScreen: React.FC = () => {
             <View style={styles.heroBadgeRow}>
               {/* Type badge */}
               <View style={[styles.heroBadge, { backgroundColor: typeC.bg }]}>
-                <Ionicons name={getTypeIcon(booking.type) as any} size={13} color={typeC.stripe} />
+                <Ionicons name={getBookingTypeIcon(booking.type) as any} size={13} color={typeC.stripe} />
                 <Text style={[styles.heroBadgeText, { color: typeC.stripe }]}>
                   {t(`bookings.filters.${booking.type}`)}
                 </Text>
