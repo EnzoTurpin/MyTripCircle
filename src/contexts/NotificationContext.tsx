@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useMemo,
   ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -140,15 +141,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     await loadInvitations();
   };
 
-  const value: NotificationContextType = {
-    invitations,
-    unreadCount,
-    readIds,
-    loadInvitations,
-    markAsRead,
-    markAllAsRead,
-    refreshInvitations,
-  };
+  const value: NotificationContextType = useMemo(
+    () => ({ invitations, unreadCount, readIds, loadInvitations, markAsRead, markAllAsRead, refreshInvitations }),
+    [invitations, unreadCount, readIds], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <NotificationContext.Provider value={value}>

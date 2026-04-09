@@ -4,9 +4,11 @@ import { Trip, Booking, Address, User } from "../types";
 import bcrypt from "bcrypt";
 import crypto from "node:crypto";
 
+type NewEntityFields = "id" | "createdAt" | "updatedAt";
+
 class MongoDBAdapter {
   private static instance: MongoDBAdapter;
-  private mongoService: MongoDBService;
+  private readonly mongoService: MongoDBService;
 
   private constructor() {
     this.mongoService = MongoDBService.getInstance();
@@ -40,7 +42,7 @@ class MongoDBAdapter {
   }
 
   async createTrip(
-    trip: Omit<Trip, "id" | "createdAt" | "updatedAt">,
+    trip: Omit<Trip, NewEntityFields>,
   ): Promise<Trip> {
     try {
       const mongoTrip = await this.mongoService.createTrip({
@@ -117,7 +119,7 @@ class MongoDBAdapter {
   }
 
   async createBooking(
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">,
+    booking: Omit<Booking, NewEntityFields>,
   ): Promise<Booking> {
     try {
       const mongoBooking = await this.mongoService.createBooking({
@@ -191,7 +193,7 @@ class MongoDBAdapter {
   }
 
   async createAddress(
-    address: Omit<Address, "id" | "createdAt" | "updatedAt">,
+    address: Omit<Address, NewEntityFields>,
   ): Promise<Address> {
     try {
       const mongoAddress = await this.mongoService.createAddress({

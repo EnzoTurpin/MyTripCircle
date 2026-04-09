@@ -206,9 +206,9 @@ const useEditTrip = (): UseEditTripReturn => {
       setFormData(p => ({
         ...p,
         startDate: selected,
-        endDate:   selected > p.endDate ? selected : p.endDate,
+        endDate:   new Date(Math.max(selected.valueOf(), p.endDate.valueOf())),
       }));
-      const endRef = selected > formData.endDate ? selected : formData.endDate;
+      const endRef = new Date(Math.max(selected.valueOf(), formData.endDate.valueOf()));
       setCalendarYear(endRef.getFullYear());
       setCalendarMonth(endRef.getMonth());
       setCalendarPickingFor("end");
@@ -310,6 +310,7 @@ const useEditTrip = (): UseEditTripReturn => {
 
   const handleDeleteBooking = (index: number) => {
     const booking = bookings[index];
+    const removeAtIdx = (_: Booking, i: number) => i !== index;
     Alert.alert(t("common.confirm"), t("bookings.deleteConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
       {
@@ -317,7 +318,7 @@ const useEditTrip = (): UseEditTripReturn => {
         style: "destructive",
         onPress: async () => {
           if (booking.id) await deleteBooking(booking.id);
-          setBookings(prev => prev.filter((_, i) => i !== index));
+          setBookings(prev => prev.filter(removeAtIdx));
         },
       },
     ]);

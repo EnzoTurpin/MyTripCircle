@@ -5,7 +5,7 @@ export const authMiddleware = async (req: any, res: any, next: any) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({ success: false });
     }
 
@@ -23,6 +23,7 @@ export const authMiddleware = async (req: any, res: any, next: any) => {
     req.user = user;
     next();
   } catch (e) {
+    console.error("[authMiddleware] token verification failed:", e);
     return res.status(401).json({ success: false });
   }
 };

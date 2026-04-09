@@ -13,6 +13,8 @@ import {
   AddressQuery,
 } from "../types/mongodb";
 
+type NewMongoFields = "_id" | "createdAt" | "updatedAt";
+
 class MongoDBService {
   private static instance: MongoDBService;
   private client: MongoClient | null = null;
@@ -74,7 +76,7 @@ class MongoDBService {
 
   // === GESTION DES UTILISATEURS ===
   async createUser(
-    userData: Omit<User, "_id" | "createdAt" | "updatedAt">
+    userData: Omit<User, NewMongoFields>
   ): Promise<User> {
     if (!this.users) throw new Error("MongoDB non connecté");
 
@@ -115,7 +117,7 @@ class MongoDBService {
 
   // === GESTION DES VOYAGES ===
   async createTrip(
-    tripData: Omit<Trip, "_id" | "createdAt" | "updatedAt">
+    tripData: Omit<Trip, NewMongoFields>
   ): Promise<Trip> {
     if (!this.trips) throw new Error("MongoDB non connecté");
 
@@ -173,7 +175,7 @@ class MongoDBService {
 
   // === GESTION DES RÉSERVATIONS ===
   async createBooking(
-    bookingData: Omit<Booking, "_id" | "createdAt" | "updatedAt">
+    bookingData: Omit<Booking, NewMongoFields>
   ): Promise<Booking> {
     if (!this.bookings) throw new Error("MongoDB non connecté");
 
@@ -226,7 +228,7 @@ class MongoDBService {
 
   // === GESTION DES ADRESSES ===
   async createAddress(
-    addressData: Omit<Address, "_id" | "createdAt" | "updatedAt">
+    addressData: Omit<Address, NewMongoFields>
   ): Promise<Address> {
     if (!this.addresses) throw new Error("MongoDB non connecté");
 

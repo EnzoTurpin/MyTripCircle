@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 import { FriendRequest, Friend, FriendSuggestion } from "../types";
 import { ApiService } from "../services/ApiService";
 import { useAuth } from "./AuthContext";
@@ -121,22 +121,17 @@ export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const ctxValue = useMemo(
+    () => ({
+      friends, friendRequests, suggestions, loading,
+      sendFriendRequest, respondToFriendRequest, cancelFriendRequest,
+      removeFriend, refreshFriends, refreshFriendRequests, refreshSuggestions,
+    }),
+    [friends, friendRequests, suggestions, loading], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   return (
-    <FriendsContext.Provider
-      value={{
-        friends,
-        friendRequests,
-        suggestions,
-        loading,
-        sendFriendRequest,
-        respondToFriendRequest,
-        cancelFriendRequest,
-        removeFriend,
-        refreshFriends,
-        refreshFriendRequests,
-        refreshSuggestions,
-      }}
-    >
+    <FriendsContext.Provider value={ctxValue}>
       {children}
     </FriendsContext.Provider>
   );

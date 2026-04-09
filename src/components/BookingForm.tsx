@@ -52,6 +52,10 @@ const STATUS_COLORS: Record<string, string> = {
 const statusLabel = (t: (key: string) => string, s: string) =>
   t(`bookings.status.${s}`) || s;
 
+function getSafeDate(date: unknown): Date {
+  return date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+}
+
 // ─── Sub-component : modal picker iOS ────────────────────────────────────────
 
 interface PickerModalProps {
@@ -179,10 +183,9 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
   const STATUSES: Booking["status"][]    = ["confirmed", "pending", "cancelled"];
 
-  const safeDate = form.formData.date instanceof Date && !Number.isNaN(form.formData.date.getTime())
-    ? form.formData.date : new Date();
-  const safeEndDate = form.formData.endDate instanceof Date && !Number.isNaN(form.formData.endDate.getTime())
-    ? form.formData.endDate : new Date();
+  const safeDate    = getSafeDate(form.formData.date);
+  const safeEndDate = getSafeDate(form.formData.endDate);
+  const locale      = i18n.language === "fr" ? "fr_FR" : "en_US";
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
@@ -266,7 +269,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           {Platform.OS === "ios" && (
             <>
               <PickerModal visible={form.showDatePicker} title={needsEndDate(form.formData.type) ? t("bookings.startDate") : t("bookings.date")} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
-                <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
+                <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={locale} />
               </PickerModal>
               <PickerModal visible={form.showTimePicker} title={t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
                 <DateTimePicker value={form.getTimePickerValue()} mode="time" display="spinner" onChange={form.handleTimeChange} textColor={colors.text} />
@@ -288,7 +291,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           )}
           {Platform.OS === "ios" && (
             <PickerModal visible={form.showEndDatePicker} title={t("bookings.endDate")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
-              <DateTimePicker value={safeEndDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={i18n.language === "fr" ? "fr_FR" : "en_US"} />
+              <DateTimePicker value={safeEndDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={locale} />
             </PickerModal>
           )}
 

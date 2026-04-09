@@ -1,4 +1,4 @@
-const { spawn } = require("child_process");
+const { spawn } = require("node:child_process");
 
 console.log("📱 Lancement d'Expo avec QR code (API sur VPS)...");
 console.log("─".repeat(50));
