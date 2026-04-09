@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
 import * as Location from "expo-location";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { TripsProvider } from "./src/contexts/TripsContext";
 import { NotificationProvider } from "./src/contexts/NotificationContext";
@@ -35,16 +36,18 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <TripsProvider>
-          <NotificationProvider>
-            <FriendsProvider>
-              <AppNavigator />
-            </FriendsProvider>
-          </NotificationProvider>
-        </TripsProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <TripsProvider>
+            <NotificationProvider>
+              <FriendsProvider>
+                <AppNavigator />
+              </FriendsProvider>
+            </NotificationProvider>
+          </TripsProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
