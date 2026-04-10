@@ -1,0 +1,89 @@
+import React from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { F } from "../../theme/fonts";
+
+interface ProfileActionsProps {
+  isFriend: boolean;
+  sending: boolean;
+  dangerBg: string;
+  dangerColor: string;
+  onInvite: () => void;
+  onRemove: () => void;
+  onAddFriend: () => void;
+}
+
+const ProfileActions: React.FC<ProfileActionsProps> = ({
+  isFriend, sending, dangerBg, dangerColor,
+  onInvite, onRemove, onAddFriend,
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.actions}>
+      {isFriend ? (
+        <>
+          <TouchableOpacity style={styles.inviteBtn} activeOpacity={0.85} onPress={onInvite}>
+            <Ionicons name="airplane" size={16} color="#FFFFFF" />
+            <Text style={styles.inviteBtnText}>{t("friendProfile.inviteToTrip")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.removeBtn, { backgroundColor: dangerBg }]}
+            onPress={onRemove}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="trash-outline" size={18} color={dangerColor} />
+          </TouchableOpacity>
+        </>
+      ) : (
+        <TouchableOpacity
+          style={[styles.inviteBtn, sending && { opacity: 0.6 }]}
+          activeOpacity={0.85}
+          onPress={onAddFriend}
+          disabled={sending}
+        >
+          {sending
+            ? <ActivityIndicator size="small" color="#FFFFFF" />
+            : <Ionicons name="person-add" size={16} color="#FFFFFF" />
+          }
+          <Text style={styles.inviteBtnText}>{t("friendProfile.addFriend")}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  actions: {
+    flexDirection: "row",
+    gap: 8,
+    marginHorizontal: 14,
+    marginTop: 18,
+  },
+  inviteBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#C4714A",
+    borderRadius: 12,
+    paddingVertical: 14,
+    shadowColor: "#C4714A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  inviteBtnText: { fontSize: 14, fontFamily: F.sans600, color: "#FFFFFF" },
+  removeBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
+
+export default ProfileActions;

@@ -31,14 +31,16 @@ import RadioOptionCard, { RadioOption } from "../components/editTrip/RadioOption
 import BookingsList from "../components/editTrip/BookingsList";
 import DatePickerField from "../components/editTrip/DatePickerField";
 import EditTripSkeleton from "../components/editTrip/EditTripSkeleton";
+import EditTripDangerZone from "../components/editTrip/EditTripDangerZone";
+import EditTripMembersBtn from "../components/editTrip/EditTripMembersBtn";
 
 type EditTripRouteProp      = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
 
 const EditTripScreen: React.FC = () => {
   const navigation = useNavigation<EditTripNavigationProp>();
-  const route = useRoute<EditTripRouteProp>();
-  const { t }           = useTranslation();
+  const route      = useRoute<EditTripRouteProp>();
+  const { t }      = useTranslation();
   const { colors, isDark } = useTheme();
 
   const {
@@ -73,22 +75,13 @@ const EditTripScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
       <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bgLight }]} edges={["top"]}>
 
-        {/* ── Header ─────────────────────────────────────────────────────────── */}
+        {/* ── Header ── */}
         <View style={[s.header, { backgroundColor: colors.bgLight, borderBottomColor: colors.border }]}>
-          <TouchableOpacity
-            style={[s.backBtn, { backgroundColor: colors.bgMid }]}
-            onPress={handleCancel}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={[s.backBtn, { backgroundColor: colors.bgMid }]} onPress={handleCancel} activeOpacity={0.7}>
             <Ionicons name="chevron-back" size={22} color={colors.textMid} />
           </TouchableOpacity>
           <Text style={[s.headerTitle, { color: colors.text }]}>{t("editTrip.screenTitle")}</Text>
-          <TouchableOpacity
-            style={[s.savePill, loading && s.savePillDisabled]}
-            onPress={handleUpdateTrip}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={[s.savePill, loading && s.savePillDisabled]} onPress={handleUpdateTrip} disabled={loading} activeOpacity={0.85}>
             <Text style={s.savePillText}>{loading ? "…" : t("editTrip.saveButton")}</Text>
           </TouchableOpacity>
         </View>
@@ -96,17 +89,12 @@ const EditTripScreen: React.FC = () => {
         <TouchableWithoutFeedback onPress={closeCalendar}>
           <ScrollView style={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-            {/* ── Photo de couverture ─────────────────────────────────────────── */}
+            {/* ── Photo de couverture ── */}
             <TouchableOpacity style={s.cover} onPress={handlePickCoverPhoto} activeOpacity={0.9}>
               {formData.coverImage ? (
                 <>
                   <Image source={{ uri: formData.coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-                  <LinearGradient
-                    colors={["transparent", "rgba(15,8,2,0.55)"]}
-                    style={StyleSheet.absoluteFillObject}
-                    start={{ x: 0, y: 0.3 }}
-                    end={{ x: 0, y: 1 }}
-                  />
+                  <LinearGradient colors={["transparent", "rgba(15,8,2,0.55)"]} style={StyleSheet.absoluteFillObject} start={{ x: 0, y: 0.3 }} end={{ x: 0, y: 1 }} />
                 </>
               ) : (
                 <LinearGradient colors={["#3A3020", "#1E1A10"]} style={StyleSheet.absoluteFillObject} />
@@ -119,7 +107,7 @@ const EditTripScreen: React.FC = () => {
 
             <View style={s.form}>
 
-              {/* ── Nom du voyage ─────────────────────────────────────────────── */}
+              {/* ── Nom du voyage ── */}
               <FocusableField
                 baseStyle={[s.field, { backgroundColor: colors.surface }]}
                 render={({ onFocus, onBlur }) => (
@@ -139,7 +127,7 @@ const EditTripScreen: React.FC = () => {
                 )}
               />
 
-              {/* ── Destination ───────────────────────────────────────────────── */}
+              {/* ── Destination ── */}
               <FocusableField
                 baseStyle={[s.field, { backgroundColor: colors.surface }]}
                 render={({ onFocus, onBlur }) => (
@@ -162,7 +150,7 @@ const EditTripScreen: React.FC = () => {
                 )}
               />
 
-              {/* ── Dates ─────────────────────────────────────────────────────── */}
+              {/* ── Dates ── */}
               <View style={s.dateRow}>
                 <View style={s.dateCol}>
                   <DatePickerField
@@ -182,7 +170,7 @@ const EditTripScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* ── Calendrier ────────────────────────────────────────────────── */}
+              {/* ── Calendrier ── */}
               {showCalendar && (
                 <TripCalendar
                   year={calendarYear}
@@ -193,20 +181,14 @@ const EditTripScreen: React.FC = () => {
                   days={DAYS}
                   periodLabel={t("editTrip.period")}
                   periodRangeLabel={t("editTrip.periodLabel")}
-                  colors={{
-                    surface: colors.surface,
-                    border:  colors.border,
-                    bgMid:   colors.bgMid,
-                    text:    colors.text,
-                    textMid: colors.textMid,
-                  }}
+                  colors={{ surface: colors.surface, border: colors.border, bgMid: colors.bgMid, text: colors.text, textMid: colors.textMid }}
                   onPrevMonth={goToPrevMonth}
                   onNextMonth={goToNextMonth}
                   onDayPress={handleCalendarDayPress}
                 />
               )}
 
-              {/* ── Description ───────────────────────────────────────────────── */}
+              {/* ── Description ── */}
               <FocusableField
                 baseStyle={[s.field, { backgroundColor: colors.surface }]}
                 render={({ onFocus, onBlur }) => (
@@ -218,37 +200,26 @@ const EditTripScreen: React.FC = () => {
                       onChangeText={v => setFormData(p => ({ ...p, description: v }))}
                       placeholder={t("editTrip.descriptionPlaceholder")}
                       placeholderTextColor={colors.textLight}
-                      multiline
-                      maxLength={500}
-                      textAlignVertical="top"
+                      multiline maxLength={500} textAlignVertical="top"
                       onFocus={() => { onFocus(); closeCalendar(); }}
                       onBlur={onBlur}
                     />
-                    <Text style={[s.charCount, { color: colors.textLight }]}>
-                      {formData.description.length}/500
-                    </Text>
+                    <Text style={[s.charCount, { color: colors.textLight }]}>{formData.description.length}/500</Text>
                   </>
                 )}
               />
 
-              {/* ── Membres ───────────────────────────────────────────────────── */}
+              {/* ── Membres ── */}
               <Text style={[s.sectionLbl, { color: colors.textLight }]}>{t("editTrip.membersLabel")}</Text>
-              <TouchableOpacity
-                style={[s.membersBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              <EditTripMembersBtn
+                surface={colors.surface}
+                border={colors.border}
+                text={colors.text}
+                textLight={colors.textLight}
                 onPress={() => navigation.navigate("InviteFriends", { tripId: route.params.tripId })}
-                activeOpacity={0.75}
-              >
-                <View style={s.membersBtnIcon}>
-                  <Text style={{ fontSize: 16 }}>👥</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.membersBtnLabel, { color: colors.text }]}>{t("editTrip.manageMembers")}</Text>
-                  <Text style={[s.membersBtnDesc, { color: colors.textLight }]}>{t("editTrip.manageMembersSubtitle")}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={colors.border} />
-              </TouchableOpacity>
+              />
 
-              {/* ── Visibilité ────────────────────────────────────────────────── */}
+              {/* ── Visibilité ── */}
               <Text style={[s.sectionLbl, { color: colors.textLight }]}>{t("editTrip.visibilityLabel")}</Text>
               <RadioOptionCard
                 options={visibilityOptions}
@@ -258,7 +229,7 @@ const EditTripScreen: React.FC = () => {
                 onChange={value => setFormData(p => ({ ...p, visibility: value }))}
               />
 
-              {/* ── Statut ────────────────────────────────────────────────────── */}
+              {/* ── Statut ── */}
               <Text style={[s.sectionLbl, { color: colors.textLight }]}>{t("editTrip.tripStatusLabel")}</Text>
               <RadioOptionCard
                 options={statusOptions}
@@ -268,7 +239,7 @@ const EditTripScreen: React.FC = () => {
                 onChange={value => setFormData(p => ({ ...p, status: value }))}
               />
 
-              {/* ── Réservations ──────────────────────────────────────────────── */}
+              {/* ── Réservations ── */}
               <BookingsList
                 bookings={bookings}
                 colors={colors}
@@ -277,25 +248,12 @@ const EditTripScreen: React.FC = () => {
                 onDelete={handleDeleteBooking}
               />
 
-              {/* ── Zone dangereuse ───────────────────────────────────────────── */}
+              {/* ── Zone dangereuse ── */}
               {isOwner && (
-                <>
-                  <Text style={[s.sectionLbl, { marginTop: 8 }]}>{t("editTrip.dangerZone")}</Text>
-                  <TouchableOpacity
-                    style={[s.dangerRow, { backgroundColor: colors.dangerLight }]}
-                    onPress={handleDeleteTrip}
-                    activeOpacity={0.8}
-                  >
-                    <View style={s.dangerIcon}>
-                      <Text style={{ fontSize: 20 }}>🗑</Text>
-                    </View>
-                    <View style={s.dangerInfo}>
-                      <Text style={s.dangerLabel}>{t("editTrip.deleteTrip")}</Text>
-                      <Text style={s.dangerDesc}>{t("editTrip.deleteTripSubtitle")}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#C04040" />
-                  </TouchableOpacity>
-                </>
+                <EditTripDangerZone
+                  dangerLight={colors.dangerLight}
+                  onDelete={handleDeleteTrip}
+                />
               )}
 
               <View style={{ height: 48 }} />
@@ -322,57 +280,32 @@ const s = StyleSheet.create({
   scroll:  { flex: 1 },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 22,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 22, paddingVertical: 14, borderBottomWidth: 1,
   },
-  backBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
-  headerTitle: {
-    flex: 1, textAlign: "center",
-    fontSize: 20, fontFamily: F.sans700,
-    marginHorizontal: 8,
-  },
-  savePill: {
-    backgroundColor: "#C4714A", borderRadius: 24,
-    paddingHorizontal: 20, paddingVertical: 11,
-    shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35, shadowRadius: 6, elevation: 3,
-  },
+  backBtn:       { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
+  headerTitle:   { flex: 1, textAlign: "center", fontSize: 20, fontFamily: F.sans700, marginHorizontal: 8 },
+  savePill:      { backgroundColor: "#C4714A", borderRadius: 24, paddingHorizontal: 20, paddingVertical: 11, shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 6, elevation: 3 },
   savePillDisabled: { backgroundColor: "#B0A090", shadowOpacity: 0, elevation: 0 },
-  savePillText:     { fontSize: 15, fontFamily: F.sans700, color: "#FFFFFF" },
+  savePillText:  { fontSize: 15, fontFamily: F.sans700, color: "#FFFFFF" },
 
   cover: {
     height: 160, marginHorizontal: 16, marginTop: 18, marginBottom: 6,
-    borderRadius: 18, overflow: "hidden",
-    justifyContent: "center", alignItems: "center",
+    borderRadius: 18, overflow: "hidden", justifyContent: "center", alignItems: "center",
   },
-  coverBtn: {
-    flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: "rgba(255,255,255,0.90)",
-    paddingHorizontal: 20, paddingVertical: 11, borderRadius: 28,
-  },
+  coverBtn:      { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.90)", paddingHorizontal: 20, paddingVertical: 11, borderRadius: 28 },
   coverBtnEmoji: { fontSize: 18 },
   coverBtnText:  { fontSize: 15, fontFamily: F.sans600, color: "#2A2318" },
 
   form: { paddingHorizontal: 18, paddingTop: 16 },
 
-  field: {
-    borderWidth: 1, borderColor: "#D8CCBA",
-    borderRadius: 16,
-    paddingHorizontal: 18, paddingVertical: 14,
-    marginBottom: 12,
-  },
-  fieldLbl: {
-    fontSize: 12, fontFamily: F.sans600,
-    marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5,
-  },
-  fieldInput:     { fontSize: 18, fontFamily: F.sans400, padding: 0, margin: 0 },
+  field:         { borderWidth: 1, borderColor: "#D8CCBA", borderRadius: 16, paddingHorizontal: 18, paddingVertical: 14, marginBottom: 12 },
+  fieldLbl:      { fontSize: 12, fontFamily: F.sans600, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
+  fieldInput:    { fontSize: 18, fontFamily: F.sans400, padding: 0, margin: 0 },
   fieldMultiline: { minHeight: 90, textAlignVertical: "top" },
-  fieldRow:       { flexDirection: "row", alignItems: "center", gap: 10 },
-  fieldEmoji:     { fontSize: 18 },
-  charCount:      { fontSize: 12, fontFamily: F.sans400, textAlign: "right", marginTop: 5 },
+  fieldRow:      { flexDirection: "row", alignItems: "center", gap: 10 },
+  fieldEmoji:    { fontSize: 18 },
+  charCount:     { fontSize: 12, fontFamily: F.sans400, textAlign: "right", marginTop: 5 },
 
   dateRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
   dateCol: { flex: 1 },
@@ -382,33 +315,6 @@ const s = StyleSheet.create({
     textTransform: "uppercase", letterSpacing: 0.8,
     marginBottom: 10, marginTop: 10,
   },
-
-  membersBtn: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-    borderRadius: 14, borderWidth: 1,
-    padding: 14, marginBottom: 10,
-  },
-  membersBtnIcon: {
-    width: 38, height: 38, borderRadius: 10,
-    backgroundColor: "#DCF0F5", alignItems: "center", justifyContent: "center",
-  },
-  membersBtnLabel: { fontFamily: F.sans600, fontSize: 14 },
-  membersBtnDesc:  { fontFamily: F.sans400, fontSize: 12, marginTop: 2 },
-
-  dangerRow: {
-    borderWidth: 1,
-    borderColor: "rgba(192,64,64,0.18)", borderRadius: 18,
-    flexDirection: "row", alignItems: "center", gap: 14,
-    paddingHorizontal: 18, paddingVertical: 18, marginBottom: 10,
-  },
-  dangerIcon: {
-    width: 50, height: 50, borderRadius: 13,
-    backgroundColor: "rgba(192,64,64,0.12)",
-    justifyContent: "center", alignItems: "center",
-  },
-  dangerInfo:  { flex: 1 },
-  dangerLabel: { fontSize: 17, fontFamily: F.sans600, color: "#C04040" },
-  dangerDesc:  { fontSize: 13, fontFamily: F.sans400, color: "#C04040", opacity: 0.75, marginTop: 3 },
 });
 
 export default EditTripScreen;
