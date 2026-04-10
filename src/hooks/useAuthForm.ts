@@ -3,7 +3,15 @@ import { Alert } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { parseApiError } from "../utils/i18n";
-import * as AppleAuthentication from "expo-apple-authentication";
+import {
+  isEmailValid,
+  isPasswordPresent,
+  isPasswordStrong,
+  isNameValid,
+  isPhoneValid,
+  formatPhoneNumber,
+} from "../utils/authValidators";
+import useSocialAuth from "./useSocialAuth";
 
 export interface AuthFormErrors {
   email: string;
@@ -14,7 +22,6 @@ export interface AuthFormErrors {
 }
 
 export interface UseAuthFormReturn {
-  // Champs
   name: string;
   setName: (v: string) => void;
   phone: string;
@@ -30,20 +37,14 @@ export interface UseAuthFormReturn {
   setShowConfirmPassword: (v: boolean) => void;
   termsAccepted: boolean;
   setTermsAccepted: (v: boolean) => void;
-
-  // Erreurs
   errors: AuthFormErrors;
   setEmailError: (v: string) => void;
   setPasswordError: (v: string) => void;
   setConfirmPasswordError: (v: string) => void;
   setNameError: (v: string) => void;
   setPhoneError: (v: string) => void;
-
-  // États
   isSubmitting: boolean;
   busy: boolean;
-
-  // Handlers
   handlePhoneChange: (text: string) => void;
   validateEmail: (v: string) => boolean;
   validatePasswordRequired: (v: string) => boolean;
@@ -58,156 +59,82 @@ export interface UseAuthFormReturn {
 }
 
 export function useAuthForm(): UseAuthFormReturn {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [name,            setName]            = useState("");
+  const [phone,           setPhone]           = useState("");
+  const [email,           setEmail]           = useState("");
+  const [password,        setPassword]        = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword,        setShowPassword]        = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [isSubmitting,    setIsSubmitting]    = useState(false);
+  const [emailError,           setEmailError]           = useState("");
+  const [passwordError,        setPasswordError]        = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [nameError, setNameError] = useState("");
+  const [nameError,  setNameError]  = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const { login, register, loginWithGoogle, loginWithApple, loading } = useAuth();
+  const { login, register, loading } = useAuth();
   const { t } = useTranslation();
+  const socialAuth = useSocialAuth();
 
   // ─── Validation ────────────────────────────────────────────────────────────
 
-  const validateEmail = (emailValue: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/;
-    if (!emailValue) {
-      setEmailError(t("common.fillAllFields"));
-      return false;
-    }
-    if (!emailRegex.test(emailValue)) {
-      setEmailError(t("common.invalidEmail"));
-      return false;
-    }
-    setEmailError("");
-    return true;
+  const validateEmail = (v: string): boolean => {
+    if (!v) { setEmailError(t("common.fillAllFields")); return false; }
+    if (!isEmailValid(v)) { setEmailError(t("common.invalidEmail")); return false; }
+    setEmailError(""); return true;
   };
 
-  const validatePasswordRequired = (passwordValue: string): boolean => {
-    if (!passwordValue) {
-      setPasswordError(t("common.fillAllFields"));
-      return false;
-    }
-    setPasswordError("");
-    return true;
+  const validatePasswordRequired = (v: string): boolean => {
+    if (!isPasswordPresent(v)) { setPasswordError(t("common.fillAllFields")); return false; }
+    setPasswordError(""); return true;
   };
 
-  const validatePasswordStrong = (passwordValue: string): boolean => {
-    if (!validatePasswordRequired(passwordValue)) return false;
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-    if (!strongPasswordRegex.test(passwordValue)) {
-      setPasswordError(t("common.invalidPassword"));
-      return false;
-    }
-    setPasswordError("");
-    return true;
+  const validatePasswordStrong = (v: string): boolean => {
+    if (!validatePasswordRequired(v)) return false;
+    if (!isPasswordStrong(v)) { setPasswordError(t("common.invalidPassword")); return false; }
+    setPasswordError(""); return true;
   };
 
-  const validateName = (nameValue: string): boolean => {
-    if (!nameValue || nameValue.trim().length < 2) {
-      setNameError(t("common.fillAllFields"));
-      return false;
-    }
-    setNameError("");
-    return true;
+  const validateName = (v: string): boolean => {
+    if (!isNameValid(v)) { setNameError(t("common.fillAllFields")); return false; }
+    setNameError(""); return true;
   };
 
-  const validatePhone = (phoneValue: string): boolean => {
-    const value = phoneValue.trim();
-    if (!value) {
-      setPhoneError("");
-      return true;
-    }
-    const phoneRegex = /^[+]?[\d\s().-]{7,20}$/;
-    if (!phoneRegex.test(value)) {
-      setPhoneError(t("common.invalidPhone"));
-      return false;
-    }
-    setPhoneError("");
-    return true;
+  const validatePhone = (v: string): boolean => {
+    if (!isPhoneValid(v)) { setPhoneError(t("common.invalidPhone")); return false; }
+    setPhoneError(""); return true;
   };
 
-  const validateConfirmPassword = (confirmPasswordValue: string): boolean => {
-    if (!confirmPasswordValue) {
-      setConfirmPasswordError(t("common.fillAllFields"));
-      return false;
-    }
-    if (confirmPasswordValue !== password) {
-      setConfirmPasswordError(t("common.passwordsDoNotMatch"));
-      return false;
-    }
-    setConfirmPasswordError("");
-    return true;
-  };
-
-  // ─── Formatage téléphone ────────────────────────────────────────────────────
-
-  const formatPhoneNumber = (text: string): string => {
-    const cleaned = text.replaceAll(/\D/g, "");
-    const trimmed = cleaned.slice(0, 10);
-    return trimmed.replaceAll(/(\d{2})(?=\d)/g, "$1 ");
+  const validateConfirmPassword = (v: string): boolean => {
+    if (!v) { setConfirmPasswordError(t("common.fillAllFields")); return false; }
+    if (v !== password) { setConfirmPasswordError(t("common.passwordsDoNotMatch")); return false; }
+    setConfirmPasswordError(""); return true;
   };
 
   const handlePhoneChange = (text: string) => {
-    const formatted = formatPhoneNumber(text);
-    setPhone(formatted);
+    setPhone(formatPhoneNumber(text));
     if (phoneError) setPhoneError("");
   };
 
-  // ─── Réinitialisation lors du changement de mode ────────────────────────────
-
   const switchMode = () => {
-    setEmailError("");
-    setPasswordError("");
-    setConfirmPasswordError("");
-    setNameError("");
-    setPhoneError("");
-    setPhone("");
-    setConfirmPassword("");
-    setTermsAccepted(false);
+    setEmailError(""); setPasswordError(""); setConfirmPasswordError("");
+    setNameError(""); setPhoneError(""); setPhone(""); setConfirmPassword(""); setTermsAccepted(false);
   };
 
-  // ─── Soumission du formulaire ───────────────────────────────────────────────
-
-  const validateLoginFields = (): boolean => {
-    let isValid = true;
-    if (!validateEmail(email)) isValid = false;
-    if (!validatePasswordRequired(password)) isValid = false;
-    return isValid;
-  };
-
-  const validateRegisterFields = (): boolean => {
-    let isValid = true;
-    if (!validateName(name)) isValid = false;
-    if (!validatePhone(phone)) isValid = false;
-    if (!validateEmail(email)) isValid = false;
-    if (!validatePasswordStrong(password)) isValid = false;
-    if (!validateConfirmPassword(confirmPassword)) isValid = false;
-    return isValid;
-  };
+  // ─── Soumission ────────────────────────────────────────────────────────────
 
   const handleLoginErrors = (result: any, onOtpRedirect: (userId: string, email: string) => void) => {
     if (result.requiresOtp && result.userId) {
-      const otpErr = (result.error ?? "").toLowerCase();
-      const isExpired = otpErr.includes("expired") || otpErr.includes("expiré");
-      const message = isExpired ? t("common.requiresOtpExpired") : t("common.requiresOtp");
-      Alert.alert(t("common.info"), message, [
+      const isExpired = (result.error ?? "").toLowerCase().includes("expired") || (result.error ?? "").toLowerCase().includes("expiré");
+      Alert.alert(t("common.info"), isExpired ? t("common.requiresOtpExpired") : t("common.requiresOtp"), [
         { text: t("common.ok"), onPress: () => onOtpRedirect(result.userId, email) },
       ]);
       return;
     }
-    if (result.field === "email") {
-      setEmailError(parseApiError(new Error(result.error)));
-    } else {
+    if (result.field === "email") { setEmailError(parseApiError(new Error(result.error))); }
+    else {
       const isInvalidCreds = result.error.includes("Invalid credentials");
       setPasswordError(isInvalidCreds ? t("common.invalidCredentials") : parseApiError(new Error(result.error)));
     }
@@ -220,65 +147,39 @@ export function useAuthForm(): UseAuthFormReturn {
       ]);
       return;
     }
-    if (result.field === "name") {
-      setNameError(parseApiError(new Error(result.error)));
-    } else if (result.field === "phone") {
-      const isInvalidPhone = result.error.includes("Invalid phone");
-      setPhoneError(isInvalidPhone ? t("common.invalidPhone") : parseApiError(new Error(result.error)));
+    if (result.field === "name") { setNameError(parseApiError(new Error(result.error))); }
+    else if (result.field === "phone") {
+      setPhoneError(result.error.includes("Invalid phone") ? t("common.invalidPhone") : parseApiError(new Error(result.error)));
     } else if (result.field === "email") {
-      const isAlreadyUsed = result.error.includes("Email already in use");
-      setEmailError(isAlreadyUsed ? t("common.emailAlreadyInUse") : parseApiError(new Error(result.error)));
+      setEmailError(result.error.includes("Email already in use") ? t("common.emailAlreadyInUse") : parseApiError(new Error(result.error)));
     } else if (result.field === "password") {
-      const isWeak = result.error.includes("Weak password") || result.error.includes("Password must be at least");
-      setPasswordError(isWeak ? t("common.invalidPassword") : parseApiError(new Error(result.error)));
+      setPasswordError(
+        result.error.includes("Weak password") || result.error.includes("Password must be at least")
+          ? t("common.invalidPassword") : parseApiError(new Error(result.error))
+      );
     } else {
-      const msg = result.error ? parseApiError(new Error(result.error)) : t("common.registerFailed");
-      Alert.alert(t("common.error"), msg);
+      Alert.alert(t("common.error"), result.error ? parseApiError(new Error(result.error)) : t("common.registerFailed"));
     }
   };
 
-  const handleLoginAttempt = async (onOtpRedirect: (userId: string, email: string) => void) => {
-    const result = await login(email, password);
-    if (!result.success) {
-      handleLoginErrors(result, onOtpRedirect);
-    }
-  };
+  const handleSubmit = async (isLogin: boolean, onOtpRedirect: (userId: string, email: string) => void) => {
+    setEmailError(""); setPasswordError(""); setConfirmPasswordError(""); setNameError(""); setPhoneError("");
 
-  const handleRegisterAttempt = async (onOtpRedirect: (userId: string, email: string) => void) => {
-    const result = await register(name, email, password, phone.trim());
-    if (!result.success) {
-      handleRegisterErrors(result, onOtpRedirect);
-      return;
-    }
-    if (result.userId) {
-      onOtpRedirect(result.userId, email);
-    }
-  };
+    const isValid = isLogin
+      ? validateEmail(email) && validatePasswordRequired(password)
+      : validateName(name) && validatePhone(phone) && validateEmail(email) && validatePasswordStrong(password) && validateConfirmPassword(confirmPassword);
 
-  const handleSubmit = async (
-    isLogin: boolean,
-    onOtpRedirect: (userId: string, email: string) => void,
-  ) => {
-    setEmailError("");
-    setPasswordError("");
-    setConfirmPasswordError("");
-    setNameError("");
-    setPhoneError("");
-
-    let isValid: boolean;
-    if (isLogin) {
-      isValid = validateLoginFields();
-    } else {
-      isValid = validateRegisterFields();
-    }
     if (!isValid) return;
 
     setIsSubmitting(true);
     try {
       if (isLogin) {
-        await handleLoginAttempt(onOtpRedirect);
+        const result = await login(email, password);
+        if (!result.success) handleLoginErrors(result, onOtpRedirect);
       } else {
-        await handleRegisterAttempt(onOtpRedirect);
+        const result = await register(name, email, password, phone.trim());
+        if (!result.success) { handleRegisterErrors(result, onOtpRedirect); return; }
+        if (result.userId) onOtpRedirect(result.userId, email);
       }
     } catch (error) {
       Alert.alert(t("common.error"), parseApiError(error) || t("common.unexpectedError"));
@@ -287,90 +188,16 @@ export function useAuthForm(): UseAuthFormReturn {
     }
   };
 
-  // ─── Authentification sociale ───────────────────────────────────────────────
-
-  const handleGoogleToken = async (accessToken: string) => {
-    setIsSubmitting(true);
-    try {
-      const result = await loginWithGoogle(accessToken);
-      if (!result.success) {
-        Alert.alert(
-          t("common.error"),
-          result.error ? parseApiError(new Error(result.error)) : t("common.unexpectedError"),
-        );
-      }
-    } catch {
-      Alert.alert(t("common.error"), t("common.unexpectedError"));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    setIsSubmitting(true);
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      if (credential.identityToken) {
-        const result = await loginWithApple(
-          credential.identityToken,
-          credential.email ?? undefined,
-          credential.fullName ?? undefined,
-        );
-        if (!result.success) {
-          Alert.alert(
-            t("common.error"),
-            result.error ? parseApiError(new Error(result.error)) : t("common.unexpectedError"),
-          );
-        }
-      }
-    } catch (e: any) {
-      if (e.code !== "ERR_CANCELED") {
-        Alert.alert(t("common.error"), parseApiError(e) || t("common.unexpectedError"));
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return {
-    name,
-    setName,
-    phone,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    showPassword,
-    setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
-    termsAccepted,
-    setTermsAccepted,
+    name, setName, phone, email, setEmail, password, setPassword,
+    confirmPassword, setConfirmPassword, showPassword, setShowPassword,
+    showConfirmPassword, setShowConfirmPassword, termsAccepted, setTermsAccepted,
     errors: { email: emailError, password: passwordError, confirmPassword: confirmPasswordError, name: nameError, phone: phoneError },
-    setEmailError,
-    setPasswordError,
-    setConfirmPasswordError,
-    setNameError,
-    setPhoneError,
-    isSubmitting,
-    busy: loading || isSubmitting,
-    handlePhoneChange,
-    validateEmail,
-    validatePasswordRequired,
-    validatePasswordStrong,
-    validateName,
-    validatePhone,
-    validateConfirmPassword,
-    handleSubmit,
-    handleGoogleToken,
-    handleAppleSignIn,
-    switchMode,
+    setEmailError, setPasswordError, setConfirmPasswordError, setNameError, setPhoneError,
+    isSubmitting, busy: loading || isSubmitting,
+    handlePhoneChange, validateEmail, validatePasswordRequired, validatePasswordStrong,
+    validateName, validatePhone, validateConfirmPassword, handleSubmit, switchMode,
+    handleGoogleToken: socialAuth.handleGoogleToken,
+    handleAppleSignIn: socialAuth.handleAppleSignIn,
   };
 }
