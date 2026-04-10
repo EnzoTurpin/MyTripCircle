@@ -9,110 +9,58 @@ import {
   Linking,
   StatusBar,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList, Booking } from "../types";
 import { useTranslation } from "react-i18next";
-import {
-  formatDateLong,
-  getBookingStatusTranslation,
-  parseApiError,
-} from "../utils/i18n";
+import { formatDateLong, parseApiError } from "../utils/i18n";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTrips } from "../contexts/TripsContext";
 import { ApiService } from "../services/ApiService";
 import BookingForm from "../components/BookingForm";
+import BookingDetailsSkeleton from "../components/bookingDetails/BookingDetailsSkeleton";
+import BookingHeroCover from "../components/bookingDetails/BookingHeroCover";
 import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
-import SkeletonBox from "../components/SkeletonBox";
-import {
-  getBookingTypeIcon,
-  getBookingTypeColorsDetail,
-  getBookingStatusColorsDetail,
-  getBookingHeroGradient,
-} from "../utils/bookingHelpers";
+import { getBookingHeroGradient } from "../utils/bookingHelpers";
 
-type BookingDetailsScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "BookingDetails"
->;
-type BookingDetailsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "BookingDetails"
->;
+type BookingDetailsScreenRouteProp = RouteProp<RootStackParamList, "BookingDetails">;
+type BookingDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, "BookingDetails">;
 
-// ─── Component ────────────────────────────────────────────────────────────────
 const BookingDetailsScreen: React.FC = () => {
   const route      = useRoute<BookingDetailsScreenRouteProp>();
   const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
   const { bookingId, readOnly = false } = route.params;
   const { t }      = useTranslation();
-  const insets = useSafeAreaInsets();
+  const insets     = useSafeAreaInsets();
   const { bookings, updateBooking, deleteBooking } = useTrips();
   const { colors } = useTheme();
 
-  const getGridThirdLabel = (type: Booking["type"]): string => {
-    const key = (
-      {
-        flight: "bookings.details.gridThirdLabel.flight",
-        train: "bookings.details.gridThirdLabel.train",
-        hotel: "bookings.details.gridThirdLabel.hotel",
-        restaurant: "bookings.details.gridThirdLabel.restaurant",
-        activity: "bookings.details.gridThirdLabel.activity",
-      } as const
-    )[type];
-    return key ? t(key) : t("bookings.details.gridThirdLabel.default");
-  };
-
-  const [booking, setBooking]       = useState<Booking | null>(null);
-  const [loading, setLoading]       = useState(true);
+  const [booking, setBooking]     = useState<Booking | null>(null);
+  const [loading, setLoading]     = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
 
-  useEffect(() => {
-    loadBooking();
-  }, [bookingId, bookings]);
+  useEffect(() => { loadBooking(); }, [bookingId, bookings]);
 
   const loadBooking = async () => {
     setLoading(true);
-    const foundBooking = bookings.find((b) => b.id === bookingId || b._id === bookingId);
-    if (foundBooking) {
-      setBooking(foundBooking);
-      setLoading(false);
-      return;
-    }
+    const found = bookings.find((b) => b.id === bookingId || b._id === bookingId);
+    if (found) { setBooking(found); setLoading(false); return; }
     try {
       const data = await ApiService.getBookingById(bookingId);
       setBooking({
-        id: data._id ?? data.id,
-        _id: data._id,
-        tripId: data.tripId,
-        type: data.type,
-        title: data.title,
-        description: data.description,
-        date: data.date,
-        endDate: data.endDate,
-        time: data.time,
-        address: data.address,
-        confirmationNumber: data.confirmationNumber,
-        status: data.status,
-        attachments: data.attachments,
+        id: data._id ?? data.id, _id: data._id, tripId: data.tripId,
+        type: data.type, title: data.title, description: data.description,
+        date: data.date, endDate: data.endDate, time: data.time,
+        address: data.address, confirmationNumber: data.confirmationNumber,
+        status: data.status, attachments: data.attachments,
       } as any);
-    } catch {
-      setBooking(null);
-    }
+    } catch { setBooking(null); }
     setLoading(false);
   };
 
-  const handleEditBooking = () => {
-    setShowEditForm(true);
-  };
-
-  const handleSaveBooking = async (
-    updates: Omit<Booking, "id" | "createdAt" | "updatedAt">
-  ) => {
+  const handleSaveBooking = async (updates: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
     if (!booking) return;
     const id = (booking as any)._id ?? booking.id;
     try {
@@ -120,10 +68,7 @@ const BookingDetailsScreen: React.FC = () => {
       await loadBooking();
       setShowEditForm(false);
     } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        parseApiError(error) || t("bookings.details.errorUpdateBooking"),
-      );
+      Alert.alert(t("common.error"), parseApiError(error) || t("bookings.details.errorUpdateBooking"));
     }
   };
 
@@ -142,10 +87,7 @@ const BookingDetailsScreen: React.FC = () => {
               if (id) await deleteBooking(id);
               navigation.goBack();
             } catch (error) {
-              Alert.alert(
-                t("common.error"),
-                parseApiError(error) || t("bookings.details.errorDeleteBooking"),
-              );
+              Alert.alert(t("common.error"), parseApiError(error) || t("bookings.details.errorDeleteBooking"));
             }
           },
         },
@@ -154,71 +96,28 @@ const BookingDetailsScreen: React.FC = () => {
   };
 
   const handleViewAttachment = async (attachment: string) => {
-    const isUri =
-      attachment.startsWith("file://") ||
-      attachment.startsWith("content://") ||
-      attachment.startsWith("https://") ||
-      attachment.startsWith("ph://");
-
-    if (!isUri) {
-      Alert.alert(
-        t("common.error"),
-        t("bookings.details.fileNotAccessible")
-      );
-      return;
-    }
-
+    const isUri = attachment.startsWith("file://") || attachment.startsWith("content://")
+      || attachment.startsWith("https://") || attachment.startsWith("ph://");
+    if (!isUri) { Alert.alert(t("common.error"), t("bookings.details.fileNotAccessible")); return; }
     try {
       await Linking.openURL(attachment);
     } catch (error) {
-      console.error("openURL error:", error);
       Alert.alert(t("common.error"), t("bookings.details.fileOpenError"));
     }
   };
 
-  // ─── Loading / error states ───────────────────────────────────────────────
-  if (loading) {
-    return (
-      <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
-        <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: 40 }}>
-          {/* Hero */}
-          <SkeletonBox width="100%" height={200} borderRadius={0} />
+  const getGridThirdLabel = (type: Booking["type"]): string => {
+    const keys: Partial<Record<Booking["type"], string>> = {
+      flight: "bookings.details.gridThirdLabel.flight",
+      train: "bookings.details.gridThirdLabel.train",
+      hotel: "bookings.details.gridThirdLabel.hotel",
+      restaurant: "bookings.details.gridThirdLabel.restaurant",
+      activity: "bookings.details.gridThirdLabel.activity",
+    };
+    return keys[type] ? t(keys[type]!) : t("bookings.details.gridThirdLabel.default");
+  };
 
-          <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 16 }}>
-            {/* Type badge + title */}
-            <SkeletonBox width={80} height={22} borderRadius={20} />
-            <SkeletonBox width="70%" height={24} borderRadius={8} />
-            <SkeletonBox width="45%" height={14} borderRadius={6} />
-
-            {/* Info grid */}
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
-              {[0, 1, 2].map((i) => (
-                <SkeletonBox key={i} height={72} borderRadius={12} style={{ flex: 1 }} />
-              ))}
-            </View>
-
-            {/* Confirmation card */}
-            <SkeletonBox width="100%" height={64} borderRadius={12} />
-
-            {/* Description */}
-            <View style={{ gap: 8 }}>
-              <SkeletonBox width="100%" height={14} borderRadius={5} />
-              <SkeletonBox width="80%" height={14} borderRadius={5} />
-              <SkeletonBox width="60%" height={14} borderRadius={5} />
-            </View>
-
-            {/* Attachments section */}
-            <SkeletonBox width={120} height={14} borderRadius={6} />
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              {[0, 1].map((i) => (
-                <SkeletonBox key={i} width={100} height={80} borderRadius={10} />
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
+  if (loading) return <BookingDetailsSkeleton />;
 
   if (!booking) {
     return (
@@ -230,64 +129,25 @@ const BookingDetailsScreen: React.FC = () => {
     );
   }
 
-  const typeC    = getBookingTypeColorsDetail(booking.type);
-  const statusC  = getBookingStatusColorsDetail(booking.status);
   const gradient = getBookingHeroGradient(booking.type);
 
-  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <ScrollView
-        style={[styles.container, { backgroundColor: colors.bg }]}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
+        <BookingHeroCover
+          booking={booking}
+          gradient={gradient}
+          insetTop={insets.top}
+          onBack={() => navigation.goBack()}
+        />
 
-        {/* ── Hero Cover ──────────────────────────────────────────────────── */}
-        <View style={styles.heroCover}>
-          <LinearGradient
-            colors={gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
-          />
-          {/* Dark overlay */}
-          <View style={styles.heroOverlay} />
-
-          {/* Back button */}
-          <TouchableOpacity
-            style={[styles.backButton, { top: insets.top + 10 }]}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Bottom content: badges + title */}
-          <View style={styles.heroBottom}>
-            <View style={styles.heroBadgeRow}>
-              {/* Type badge */}
-              <View style={[styles.heroBadge, { backgroundColor: typeC.bg }]}>
-                <Ionicons name={getBookingTypeIcon(booking.type) as any} size={13} color={typeC.stripe} />
-                <Text style={[styles.heroBadgeText, { color: typeC.stripe }]}>
-                  {t(`bookings.filters.${booking.type}`)}
-                </Text>
-              </View>
-              {/* Status badge */}
-              <View style={[styles.heroBadge, { backgroundColor: statusC.bg }]}>
-                <Text style={[styles.heroBadgeText, { color: statusC.color }]}>
-                  {booking.status ? getBookingStatusTranslation(booking.status) : t("common.unknown")}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.heroTitle}>{booking.title}</Text>
-          </View>
-        </View>
-
-        {/* ── Info Grid ───────────────────────────────────────────────────── */}
+        {/* Info Grid */}
         <View style={styles.infoGrid}>
-          {/* Date */}
           <View style={[styles.infoPill, { backgroundColor: colors.bgMid }]}>
             <Text style={[styles.infoPillLabel, { color: colors.textLight }]}>{t("bookings.details.date")}</Text>
             <Text style={[styles.infoPillValue, { color: colors.text }]} numberOfLines={2}>
@@ -295,12 +155,10 @@ const BookingDetailsScreen: React.FC = () => {
               {booking.endDate ? `\n– ${formatDateLong(booking.endDate)}` : ""}
             </Text>
           </View>
-          {/* Time */}
           <View style={[styles.infoPill, { backgroundColor: colors.bgMid }]}>
             <Text style={[styles.infoPillLabel, { color: colors.textLight }]}>{t("bookings.details.time")}</Text>
             <Text style={[styles.infoPillValue, { color: colors.text }]}>{booking.time || "–"}</Text>
           </View>
-          {/* Contextual ref (short) */}
           <View style={[styles.infoPill, { backgroundColor: colors.bgMid }]}>
             <Text style={[styles.infoPillLabel, { color: colors.textLight }]}>{getGridThirdLabel(booking.type)}</Text>
             <Text style={[styles.infoPillValue, { color: colors.text }]} numberOfLines={1}>
@@ -309,7 +167,7 @@ const BookingDetailsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* ── Confirmation Card ────────────────────────────────────────────── */}
+        {/* Confirmation Card */}
         {booking.confirmationNumber ? (
           <View style={[styles.confirmCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.confirmLabel, { color: colors.textLight }]}>{t("bookings.details.confirmationNumberShort")}</Text>
@@ -317,15 +175,13 @@ const BookingDetailsScreen: React.FC = () => {
           </View>
         ) : null}
 
-        {/* ── Attachments ─────────────────────────────────────────────────── */}
+        {/* Attachments */}
         {booking.attachments && booking.attachments.length > 0 ? (
           <View style={styles.attachmentsSection}>
-            <Text style={[styles.attachmentsSectionLabel, { color: colors.textLight }]}>{t("bookings.details.attachmentsSectionTitle")}</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.attachmentsScroll}
-            >
+            <Text style={[styles.attachmentsSectionLabel, { color: colors.textLight }]}>
+              {t("bookings.details.attachmentsSectionTitle")}
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attachmentsScroll}>
               {booking.attachments.map((attachment) => {
                 const [name, uri] = attachment.includes("::")
                   ? attachment.split("::")
@@ -345,7 +201,7 @@ const BookingDetailsScreen: React.FC = () => {
           </View>
         ) : null}
 
-        {/* ── Description ─────────────────────────────────────────────────── */}
+        {/* Description */}
         {booking.description ? (
           <View style={[styles.descriptionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.descriptionCardTitle, { color: colors.textLight }]}>{t("bookings.details.description")}</Text>
@@ -353,17 +209,16 @@ const BookingDetailsScreen: React.FC = () => {
           </View>
         ) : null}
 
-        {/* ── Actions Row ─────────────────────────────────────────────────── */}
+        {/* Actions */}
         {!readOnly && (
           <View style={styles.actionsRow}>
             <TouchableOpacity
               style={[styles.actionEdit, { backgroundColor: colors.bgMid }]}
-              onPress={handleEditBooking}
+              onPress={() => setShowEditForm(true)}
               activeOpacity={0.8}
             >
               <Text style={[styles.actionEditText, { color: colors.textMid }]}>{t("bookings.details.editButton")}</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.actionDelete, { backgroundColor: colors.dangerLight }]}
               onPress={handleCancelBooking}
@@ -373,10 +228,8 @@ const BookingDetailsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         )}
-
       </ScrollView>
 
-      {/* ── Edit Form Modal ───────────────────────────────────────────────── */}
       {booking && (
         <BookingForm
           visible={showEditForm}
@@ -390,205 +243,30 @@ const BookingDetailsScreen: React.FC = () => {
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  centeredState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  centeredStateText: {
-    fontSize: 16,
-    fontFamily: F.sans400,
-  },
-
-  // Hero Cover
-  heroCover: {
-    height: 200,
-    position: "relative",
-    overflow: "hidden",
-    justifyContent: "flex-end",
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-  backButton: {
-    position: "absolute",
-    top: 10,
-    left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heroBottom: {
-    paddingHorizontal: 18,
-    paddingBottom: 16,
-  },
-  heroBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
-  },
-  heroBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  heroBadgeText: {
-    fontSize: 11,
-    fontFamily: F.sans600,
-  },
-  heroTitle: {
-    fontSize: 26,
-    fontFamily: F.sans700,
-    color: "#FFFFFF",
-    lineHeight: 32,
-  },
-
-  // Info Grid
-  infoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
-  infoPill: {
-    flex: 1,
-    minWidth: 80,
-    borderRadius: RADIUS.input,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  infoPillLabel: {
-    fontSize: 11,
-    fontFamily: F.sans400,
-    marginBottom: 3,
-  },
-  infoPillValue: {
-    fontSize: 14,
-    fontFamily: F.sans600,
-    lineHeight: 19,
-  },
-
-  // Confirmation card
-  confirmCard: {
-    marginHorizontal: 18,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderRadius: RADIUS.card,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  confirmLabel: {
-    fontSize: 11,
-    fontFamily: F.sans400,
-    marginBottom: 4,
-  },
-  confirmValue: {
-    fontSize: 17,
-    fontFamily: F.sans600,
-    letterSpacing: 0.5,
-  },
-
-  // Attachments section
-  attachmentsSection: {
-    marginHorizontal: 18,
-    marginBottom: 12,
-  },
-  attachmentsSectionLabel: {
-    fontSize: 12,
-    fontFamily: F.sans600,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
-  attachmentsScroll: {
-    gap: 8,
-    paddingRight: 4,
-  },
-  attachmentChip: {
-    borderRadius: RADIUS.input,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  attachmentChipText: {
-    fontSize: 12,
-    fontFamily: F.sans400,
-  },
-
-  // Description card
-  descriptionCard: {
-    marginHorizontal: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderRadius: RADIUS.card,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  descriptionCardTitle: {
-    fontSize: 11,
-    fontFamily: F.sans400,
-    marginBottom: 6,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  descriptionCardBody: {
-    fontSize: 14,
-    fontFamily: F.sans400,
-    lineHeight: 22,
-  },
-
-  // Actions row
-  actionsRow: {
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    marginTop: 8,
-  },
-  actionEdit: {
-    flex: 1,
-    borderRadius: RADIUS.button,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionEditText: {
-    fontSize: 14,
-    fontFamily: F.sans600,
-  },
-  actionDelete: {
-    flex: 1,
-    borderRadius: RADIUS.button,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: 'rgba(192,64,64,0.2)',
-  },
-  actionDeleteText: {
-    fontSize: 14,
-    fontFamily: F.sans600,
-  },
+  wrapper: { flex: 1 },
+  centeredState: { flex: 1, justifyContent: "center", alignItems: "center" },
+  centeredStateText: { fontSize: 16, fontFamily: F.sans400 },
+  infoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 18, paddingVertical: 14 },
+  infoPill: { flex: 1, minWidth: 80, borderRadius: RADIUS.input, paddingHorizontal: 12, paddingVertical: 8 },
+  infoPillLabel: { fontSize: 11, fontFamily: F.sans400, marginBottom: 3 },
+  infoPillValue: { fontSize: 14, fontFamily: F.sans600, lineHeight: 19 },
+  confirmCard: { marginHorizontal: 18, marginBottom: 10, borderWidth: 1, borderRadius: RADIUS.card, paddingHorizontal: 16, paddingVertical: 12 },
+  confirmLabel: { fontSize: 11, fontFamily: F.sans400, marginBottom: 4 },
+  confirmValue: { fontSize: 17, fontFamily: F.sans600, letterSpacing: 0.5 },
+  attachmentsSection: { marginHorizontal: 18, marginBottom: 12 },
+  attachmentsSectionLabel: { fontSize: 12, fontFamily: F.sans600, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 },
+  attachmentsScroll: { gap: 8, paddingRight: 4 },
+  attachmentChip: { borderRadius: RADIUS.input, paddingHorizontal: 12, paddingVertical: 7, flexDirection: "row", alignItems: "center", gap: 5 },
+  attachmentChipText: { fontSize: 12, fontFamily: F.sans400 },
+  descriptionCard: { marginHorizontal: 18, marginBottom: 12, borderWidth: 1, borderRadius: RADIUS.card, paddingHorizontal: 16, paddingVertical: 12 },
+  descriptionCardTitle: { fontSize: 11, fontFamily: F.sans400, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
+  descriptionCardBody: { fontSize: 14, fontFamily: F.sans400, lineHeight: 22 },
+  actionsRow: { flexDirection: "row", gap: 10, paddingHorizontal: 18, paddingVertical: 8, marginTop: 8 },
+  actionEdit: { flex: 1, borderRadius: RADIUS.button, paddingVertical: 14, alignItems: "center", justifyContent: "center" },
+  actionEditText: { fontSize: 14, fontFamily: F.sans600 },
+  actionDelete: { flex: 1, borderRadius: RADIUS.button, paddingVertical: 14, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(192,64,64,0.2)" },
+  actionDeleteText: { fontSize: 14, fontFamily: F.sans600 },
 });
 
 export default BookingDetailsScreen;
