@@ -1,0 +1,40 @@
+import React from "react";
+import { TouchableOpacity, View, StyleSheet } from "react-native";
+
+interface ToggleProps {
+  value: boolean;
+  onToggle: (v: boolean) => void;
+  disabled?: boolean;
+  trackColor?: string;
+}
+
+const Toggle: React.FC<ToggleProps> = ({ value, onToggle, disabled = false, trackColor }) => (
+  <TouchableOpacity
+    onPress={() => !disabled && onToggle(!value)}
+    activeOpacity={disabled ? 1 : 0.8}
+    style={[
+      styles.track,
+      { backgroundColor: value ? (trackColor ?? "#C4714A") : "#D8CCBA" },
+    ]}
+  >
+    <View style={[styles.knob, { transform: [{ translateX: value ? 24 : 0 }] }]} />
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  track: {
+    width: 54,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  knob: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
+  },
+});
+
+export default Toggle;
