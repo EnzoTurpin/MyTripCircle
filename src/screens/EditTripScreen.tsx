@@ -22,52 +22,23 @@ import { useTranslation } from "react-i18next";
 import BookingForm from "../components/BookingForm";
 import { formatDate } from "../utils/i18n";
 import { F } from "../theme/fonts";
-import { useTheme, AppColors } from "../contexts/ThemeContext";
-import SkeletonBox from "../components/SkeletonBox";
-
-type EditTripRouteProp = RouteProp<RootStackParamList, "EditTrip">;
+import { useTheme } from "../contexts/ThemeContext";
 
 import useEditTrip from "../hooks/useEditTrip";
 import FocusableField from "../components/editTrip/FocusableField";
 import TripCalendar from "../components/editTrip/TripCalendar";
 import RadioOptionCard, { RadioOption } from "../components/editTrip/RadioOptionCard";
 import BookingsList from "../components/editTrip/BookingsList";
+import DatePickerField from "../components/editTrip/DatePickerField";
+import EditTripSkeleton from "../components/editTrip/EditTripSkeleton";
 
+type EditTripRouteProp      = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
-
-interface DatePickerFieldProps {
-  label: string;
-  isActive: boolean;
-  dateValue: string;
-  onPress: () => void;
-  colors: AppColors;
-}
-const DatePickerField: React.FC<DatePickerFieldProps> = ({ label, isActive, dateValue, onPress, colors }) => (
-  <TouchableOpacity
-    style={[
-      s.field, s.fieldNoMargin,
-      { backgroundColor: colors.surface, borderColor: colors.border },
-      isActive && s.fieldActive,
-    ]}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <Text style={[s.fieldLbl, { color: colors.textLight }, isActive && { color: "#C4714A" }]}>
-      {label}{isActive ? " ✎" : ""}
-    </Text>
-    <View style={s.fieldRow}>
-      <Text style={s.fieldEmoji}>📅</Text>
-      <Text style={[s.dateVal, { color: colors.text }, isActive && { color: "#C4714A", fontFamily: F.sans700 }]}>
-        {dateValue}
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
 
 const EditTripScreen: React.FC = () => {
   const navigation = useNavigation<EditTripNavigationProp>();
   const route = useRoute<EditTripRouteProp>();
-  const { t }      = useTranslation();
+  const { t }           = useTranslation();
   const { colors, isDark } = useTheme();
 
   const {
@@ -95,61 +66,10 @@ const EditTripScreen: React.FC = () => {
     { value: "validated", label: t("editTrip.statusValidated"), desc: t("editTrip.statusValidatedDesc"), emoji: "✅", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
   ];
 
-  if (initialLoading) {
-    return (
-      <View style={[s.root, { backgroundColor: colors.bg }]}>
-        <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bgLight }]} edges={["top"]}>
-          {/* Header */}
-          <View style={[s.header, { backgroundColor: colors.bgLight, borderBottomColor: colors.border, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14 }]}>
-            <SkeletonBox width={36} height={36} borderRadius={18} />
-            <SkeletonBox width={140} height={20} borderRadius={8} />
-          </View>
-        </SafeAreaView>
-
-        <ScrollView scrollEnabled={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
-          {/* Cover photo */}
-          <SkeletonBox width="100%" height={160} borderRadius={16} />
-
-          {/* Form fields */}
-          {[{ id: "f1", w: 1 }, { id: "f2", w: 0.6 }, { id: "f3", w: 1 }, { id: "f4", w: 0.7 }].map(({ id, w }) => (
-            <View key={id} style={{ gap: 8 }}>
-              <SkeletonBox width={100} height={12} borderRadius={5} />
-              <SkeletonBox width={`${w * 100}%`} height={52} borderRadius={10} />
-            </View>
-          ))}
-
-          {/* Date row */}
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            {[0, 1].map((i) => (
-              <View key={i} style={{ flex: 1, gap: 8 }}>
-                <SkeletonBox width={80} height={12} borderRadius={5} />
-                <SkeletonBox width="100%" height={52} borderRadius={10} />
-              </View>
-            ))}
-          </View>
-
-          {/* Visibility selector */}
-          <View style={{ gap: 8 }}>
-            <SkeletonBox width={90} height={12} borderRadius={5} />
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              {[0, 1, 2].map((i) => (
-                <SkeletonBox key={i} height={64} borderRadius={12} style={{ flex: 1 }} />
-              ))}
-            </View>
-          </View>
-
-          {/* Save button */}
-          <SkeletonBox width="100%" height={52} borderRadius={12} style={{ marginTop: 8 }} />
-        </ScrollView>
-      </View>
-    );
-  }
+  if (initialLoading) return <EditTripSkeleton />;
 
   return (
-    <KeyboardAvoidingView
-      style={[s.root, { backgroundColor: colors.bg }]}
-      behavior={kvaBehavior}
-    >
+    <KeyboardAvoidingView style={[s.root, { backgroundColor: colors.bg }]} behavior={kvaBehavior}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
       <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bgLight }]} edges={["top"]}>
 
@@ -180,11 +100,7 @@ const EditTripScreen: React.FC = () => {
             <TouchableOpacity style={s.cover} onPress={handlePickCoverPhoto} activeOpacity={0.9}>
               {formData.coverImage ? (
                 <>
-                  <Image
-                    source={{ uri: formData.coverImage }}
-                    style={StyleSheet.absoluteFillObject}
-                    resizeMode="cover"
-                  />
+                  <Image source={{ uri: formData.coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
                   <LinearGradient
                     colors={["transparent", "rgba(15,8,2,0.55)"]}
                     style={StyleSheet.absoluteFillObject}
@@ -254,7 +170,6 @@ const EditTripScreen: React.FC = () => {
                     isActive={showCalendar && calendarPickingFor === "start"}
                     dateValue={formatDate(formData.startDate)}
                     onPress={() => openCalendar("start")}
-                    colors={colors}
                   />
                 </View>
                 <View style={s.dateCol}>
@@ -263,7 +178,6 @@ const EditTripScreen: React.FC = () => {
                     isActive={showCalendar && calendarPickingFor === "end"}
                     dateValue={formatDate(formData.endDate)}
                     onPress={() => openCalendar("end")}
-                    colors={colors}
                   />
                 </View>
               </View>
@@ -280,11 +194,11 @@ const EditTripScreen: React.FC = () => {
                   periodLabel={t("editTrip.period")}
                   periodRangeLabel={t("editTrip.periodLabel")}
                   colors={{
-                    surface:  colors.surface,
-                    border:   colors.border,
-                    bgMid:    colors.bgMid,
-                    text:     colors.text,
-                    textMid:  colors.textMid,
+                    surface: colors.surface,
+                    border:  colors.border,
+                    bgMid:   colors.bgMid,
+                    text:    colors.text,
+                    textMid: colors.textMid,
                   }}
                   onPrevMonth={goToPrevMonth}
                   onNextMonth={goToNextMonth}
@@ -390,7 +304,6 @@ const EditTripScreen: React.FC = () => {
         </TouchableWithoutFeedback>
       </SafeAreaView>
 
-      {/* ── Modal formulaire réservation ──────────────────────────────────────── */}
       <BookingForm
         visible={showBookingForm}
         onClose={closeBookingForm}
@@ -403,23 +316,19 @@ const EditTripScreen: React.FC = () => {
   );
 };
 
-// ── Styles ────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root:             { flex: 1 },
-  safeArea:         { flex: 1 },
-  scroll:           { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  loadingText:      { fontSize: 19, fontFamily: F.sans400 },
+  root:    { flex: 1 },
+  safeArea: { flex: 1 },
+  scroll:  { flex: 1 },
 
   header: {
-    flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 22, paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
-  backBtn: {
-    width: 44, height: 44, borderRadius: 22,
-    justifyContent: "center", alignItems: "center",
-  },
+  backBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
   headerTitle: {
     flex: 1, textAlign: "center",
     fontSize: 20, fontFamily: F.sans700,
@@ -455,14 +364,8 @@ const s = StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 14,
     marginBottom: 12,
   },
-  fieldActive: {
-    borderColor: "#C4714A",
-    shadowColor: "#C4714A", shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18, shadowRadius: 5, elevation: 2,
-  },
-  fieldNoMargin:  { marginBottom: 0 },
   fieldLbl: {
-    fontSize: 12, fontFamily: F.sans600, color: "#B0A090",
+    fontSize: 12, fontFamily: F.sans600,
     marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5,
   },
   fieldInput:     { fontSize: 18, fontFamily: F.sans400, padding: 0, margin: 0 },
@@ -473,7 +376,6 @@ const s = StyleSheet.create({
 
   dateRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
   dateCol: { flex: 1 },
-  dateVal: { fontSize: 17, fontFamily: F.sans500 },
 
   sectionLbl: {
     fontSize: 13, fontFamily: F.sans700,

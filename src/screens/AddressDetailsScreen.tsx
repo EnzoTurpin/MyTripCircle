@@ -8,7 +8,6 @@ import {
   Alert,
   Linking,
   StatusBar,
-  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,8 +21,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
-import SkeletonBox from "../components/SkeletonBox";
 import { geocodeAddress, getCached, GeoCoords } from "../utils/geocoding";
+import { getAddressHeroGradient, getAddressTypeBadge } from "../utils/addressHelpers";
+import AddressDetailsSkeleton from "../components/addressDetails/AddressDetailsSkeleton";
+import AddressHeroCover from "../components/addressDetails/AddressHeroCover";
 
 // Chargement conditionnel : react-native-maps nécessite un rebuild du dev client
 let MapView: any = null;
@@ -38,33 +39,9 @@ try {
   // Module natif non encore compilé — rebuild nécessaire
 }
 
-type AddressDetailsScreenRouteProp     = RouteProp<RootStackParamList, "AddressDetails">;
+type AddressDetailsScreenRouteProp      = RouteProp<RootStackParamList, "AddressDetails">;
 type AddressDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, "AddressDetails">;
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-const getHeroGradient = (type: Address["type"]): [string, string, string] => {
-  switch (type) {
-    case "restaurant": return ["#3A1E14", "#1E0E08", "#4A2E1A"];
-    case "hotel":      return ["#1A2C3A", "#0E1C28", "#2A3C4A"];
-    case "activity":   return ["#1A3020", "#0E1E14", "#2A4030"];
-    case "transport":  return ["#2A2A3A", "#14141E", "#3A3A4E"];
-    case "other":      return ["#2A2010", "#14100A", "#3A2E18"];
-    default:           return ["#2A2010", "#14100A", "#3A2E18"];
-  }
-};
-
-const getTypeBadge = (type: Address["type"], t: (k: string) => string): { label: string; emoji: string } => {
-  switch (type) {
-    case "restaurant": return { emoji: "🍽", label: t("addresses.filters.restaurant") };
-    case "hotel":      return { emoji: "🏨", label: t("addresses.filters.hotel") };
-    case "activity":   return { emoji: "🏄", label: t("addresses.filters.activity") };
-    case "transport":  return { emoji: "🚗", label: t("addresses.filters.transport") };
-    case "other":      return { emoji: "📍", label: t("addresses.filters.other") };
-    default:           return { emoji: "📍", label: t("addresses.filters.other") };
-  }
-};
-
-// ─── Component ─────────────────────────────────────────────────────────────────
 const AddressDetailsScreen: React.FC = () => {
   const route      = useRoute<AddressDetailsScreenRouteProp>();
   const navigation = useNavigation<AddressDetailsScreenNavigationProp>();
@@ -93,13 +70,11 @@ const AddressDetailsScreen: React.FC = () => {
     let cancelled = false;
 
     const run = async () => {
-      // Vérifier le cache d'abord (synchrone)
       const cached = getCached(address.address, address.city, address.country);
       if (cached !== undefined) {
         if (!cancelled) setCoords(cached);
         return;
       }
-      // Requête réseau
       const result = await geocodeAddress(address.address, address.city, address.country);
       if (!cancelled) setCoords(result);
     };
@@ -140,60 +115,7 @@ const AddressDetailsScreen: React.FC = () => {
     Linking.openURL(`https://maps.google.com/maps?daddr=${q}`);
   };
 
-  // ── Guards ─────────────────────────────────────────────────────────────────
-  if (!isReady || loading) {
-    return (
-      <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
-        <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: 40 }}>
-          {/* Hero gradient area */}
-          <SkeletonBox width="100%" height={270} borderRadius={0} />
-
-          <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 16 }}>
-            {/* Type badge */}
-            <SkeletonBox width={90} height={24} borderRadius={20} />
-
-            {/* Name */}
-            <SkeletonBox width="65%" height={24} borderRadius={8} />
-
-            {/* Address line */}
-            <SkeletonBox width="80%" height={14} borderRadius={6} />
-
-            {/* Rating row */}
-            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <SkeletonBox key={i} width={20} height={20} borderRadius={4} />
-              ))}
-              <SkeletonBox width={40} height={14} borderRadius={5} />
-            </View>
-
-            {/* Chips row */}
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {[{ id: "s1", w: 80 }, { id: "s2", w: 70 }, { id: "s3", w: 90 }].map(({ id, w }) => (
-                <SkeletonBox key={id} width={w} height={30} borderRadius={999} />
-              ))}
-            </View>
-
-            {/* Map thumbnail */}
-            <SkeletonBox width="100%" height={160} borderRadius={14} />
-
-            {/* Action buttons */}
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <SkeletonBox height={48} borderRadius={12} style={{ flex: 1 }} />
-              <SkeletonBox height={48} borderRadius={12} style={{ flex: 1 }} />
-            </View>
-
-            {/* Info rows */}
-            {[0, 1, 2].map((i) => (
-              <View key={i} style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-                <SkeletonBox width={20} height={20} borderRadius={4} />
-                <SkeletonBox width="70%" height={14} borderRadius={6} />
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
+  if (!isReady || loading) return <AddressDetailsSkeleton />;
 
   if (!address) {
     return (
@@ -205,8 +127,8 @@ const AddressDetailsScreen: React.FC = () => {
     );
   }
 
-  const gradient = getHeroGradient(address.type);
-  const badge    = getTypeBadge(address.type, t);
+  const gradient = getAddressHeroGradient(address.type);
+  const badge    = getAddressTypeBadge(address.type, t);
   const isOwner  = address.userId === user?.id;
 
   return (
@@ -219,49 +141,13 @@ const AddressDetailsScreen: React.FC = () => {
         contentContainerStyle={{ paddingBottom: 32 }}
       >
 
-        {/* ── Hero Cover ──────────────────────────────────────────────────── */}
-        <View style={styles.heroCover}>
-          {address.photoUrl ? (
-            <Image
-              source={{ uri: address.photoUrl }}
-              style={StyleSheet.absoluteFillObject}
-              resizeMode="cover"
-            />
-          ) : (
-            <LinearGradient
-              colors={gradient}
-              start={{ x: 0.2, y: 0 }}
-              end={{ x: 0.8, y: 1 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-          )}
-          {/* Gradient overlay sombre en bas pour lisibilité du texte */}
-          <LinearGradient
-            colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.70)"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
-          />
-
-          {/* Bouton retour */}
-          <TouchableOpacity
-            style={[styles.backButton, { top: insets.top + 10 }]}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Badge + titre en bas du hero */}
-          <View style={styles.heroBottom}>
-            <View style={[styles.typeBadge, { backgroundColor: colors.terraLight }]}>
-              <Text style={[styles.typeBadgeText, { color: colors.terra }]}>
-                {badge.emoji} {badge.label}
-              </Text>
-            </View>
-            <Text style={styles.heroTitle}>{address.name}</Text>
-          </View>
-        </View>
+        <AddressHeroCover
+          address={address}
+          gradient={gradient}
+          badge={badge}
+          insetTop={insets.top}
+          onBack={() => navigation.goBack()}
+        />
 
         {/* ── Rating + adresse courte ──────────────────────────────────────── */}
         <View style={styles.ratingRow}>
@@ -287,9 +173,7 @@ const AddressDetailsScreen: React.FC = () => {
                 onPress={handleCall}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.chipText, { color: colors.textMid }]}>
-                  📞 {address.phone}
-                </Text>
+                <Text style={[styles.chipText, { color: colors.textMid }]}>📞 {address.phone}</Text>
               </TouchableOpacity>
             ) : null}
             {address.website ? (
@@ -298,9 +182,7 @@ const AddressDetailsScreen: React.FC = () => {
                 onPress={handleWebsite}
                 activeOpacity={0.75}
               >
-                <Text style={styles.chipTextSky}>
-                  🌐 {t("addresses.details.websiteChip")}
-                </Text>
+                <Text style={styles.chipTextSky}>🌐 {t("addresses.details.websiteChip")}</Text>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -312,8 +194,8 @@ const AddressDetailsScreen: React.FC = () => {
             <MapView
               style={StyleSheet.absoluteFill}
               region={{
-                latitude:      coords.latitude,
-                longitude:     coords.longitude,
+                latitude:       coords.latitude,
+                longitude:      coords.longitude,
                 latitudeDelta:  0.005,
                 longitudeDelta: 0.005,
               }}
@@ -337,12 +219,7 @@ const AddressDetailsScreen: React.FC = () => {
               style={StyleSheet.absoluteFill}
             />
           )}
-          {/* Pill "Ouvrir dans Maps →" en bas à droite — toujours visible */}
-          <TouchableOpacity
-            style={styles.openMapsBtn}
-            onPress={handleMaps}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.openMapsBtn} onPress={handleMaps} activeOpacity={0.8}>
             <Text style={[styles.openMapsBtnText, { color: colors.textMid }]}>
               {t("addresses.details.openInMaps")}
             </Text>
@@ -388,53 +265,12 @@ const AddressDetailsScreen: React.FC = () => {
   );
 };
 
-// ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   wrapper:           { flex: 1 },
   scroll:            { flex: 1 },
   centeredState:     { flex: 1, justifyContent: "center", alignItems: "center" },
   centeredStateText: { fontSize: 16, fontFamily: F.sans400 },
 
-  // Hero
-  heroCover: {
-    height: 270,
-    position: "relative",
-    overflow: "hidden",
-    justifyContent: "flex-end",
-  },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heroBottom: {
-    paddingHorizontal: 18,
-    paddingBottom: 18,
-  },
-  typeBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginBottom: 8,
-  },
-  typeBadgeText: {
-    fontSize: 13,
-    fontFamily: F.sans600,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontFamily: F.serif700,
-    color: "#FFFFFF",
-    lineHeight: 34,
-  },
-
-  // Rating + adresse courte
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -443,52 +279,17 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 10,
   },
-  starsRow: {
-    flexDirection: "row",
-    gap: 3,
-  },
-  star: {
-    fontSize: 18,
-    color: "#C4714A",
-  },
-  starEmpty: {
-    color: "#D4C4B0",
-  },
-  shortAddress: {
-    flex: 1,
-    fontSize: 13,
-    fontFamily: F.sans400,
-    textAlign: "right",
-    marginLeft: 12,
-  },
+  starsRow:     { flexDirection: "row", gap: 3 },
+  star:         { fontSize: 18, color: "#C4714A" },
+  starEmpty:    { color: "#D4C4B0" },
+  shortAddress: { flex: 1, fontSize: 13, fontFamily: F.sans400, textAlign: "right", marginLeft: 12 },
 
-  // Chips contact
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingBottom: 14,
-  },
-  chip: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-  },
-  chipText: {
-    fontSize: 14,
-    fontFamily: F.sans400,
-  },
-  chipSky: {
-    backgroundColor: "#DCF0F5",
-  },
-  chipTextSky: {
-    fontSize: 14,
-    fontFamily: F.sans400,
-    color: "#5A8FAA",
-  },
+  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 18, paddingBottom: 14 },
+  chip:         { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 9 },
+  chipText:     { fontSize: 14, fontFamily: F.sans400 },
+  chipSky:      { backgroundColor: "#DCF0F5" },
+  chipTextSky:  { fontSize: 14, fontFamily: F.sans400, color: "#5A8FAA" },
 
-  // Vignette carte
   mapThumb: {
     marginHorizontal: 18,
     marginBottom: 14,
@@ -507,12 +308,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  openMapsBtnText: {
-    fontSize: 13,
-    fontFamily: F.sans400,
-  },
+  openMapsBtnText: { fontSize: 13, fontFamily: F.sans400 },
 
-  // Notes
   notesCard: {
     marginHorizontal: 18,
     marginBottom: 14,
@@ -521,47 +318,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  notesLabel: {
-    fontSize: 12,
-    fontFamily: F.sans400,
-    marginBottom: 6,
-  },
-  notesBody: {
-    fontSize: 15,
-    fontFamily: F.sans400,
-    lineHeight: 22,
-  },
+  notesLabel: { fontSize: 12, fontFamily: F.sans400, marginBottom: 6 },
+  notesBody:  { fontSize: 15, fontFamily: F.sans400, lineHeight: 22 },
 
-  // Actions
-  actionsRow: {
-    flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 6,
-    marginTop: 6,
-  },
-  actionEdit: {
-    flex: 1,
-    borderRadius: RADIUS.button,
-    paddingVertical: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionEditText: {
-    fontSize: 15,
-    fontFamily: F.sans600,
-  },
-  actionDelete: {
-    flex: 1,
-    borderRadius: RADIUS.button,
-    paddingVertical: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionDeleteText: {
-    fontSize: 15,
-    fontFamily: F.sans600,
-  },
+  actionsRow: { flexDirection: "row", gap: 12, paddingHorizontal: 18, paddingVertical: 6, marginTop: 6 },
+  actionEdit:       { flex: 1, borderRadius: RADIUS.button, paddingVertical: 15, alignItems: "center", justifyContent: "center" },
+  actionEditText:   { fontSize: 15, fontFamily: F.sans600 },
+  actionDelete:     { flex: 1, borderRadius: RADIUS.button, paddingVertical: 15, alignItems: "center", justifyContent: "center" },
+  actionDeleteText: { fontSize: 15, fontFamily: F.sans600 },
 });
 
 export default AddressDetailsScreen;
