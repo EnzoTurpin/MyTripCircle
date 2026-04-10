@@ -9,7 +9,6 @@ import {
   ScrollView,
   Alert,
   Platform,
-  Image,
   FlatList,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,71 +23,15 @@ import { F } from "../theme/fonts";
 import { RADIUS, SHADOW } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useBookingForm, needsEndDate } from "../hooks/useBookingForm";
-
-// ─── Constantes ──────────────────────────────────────────────────────────────
-
-const getTypeLabels = (t: (key: string) => string): Record<string, string> => ({
-  flight:     t("bookings.typeLabels.flight"),
-  hotel:      t("bookings.typeLabels.hotel"),
-  train:      t("bookings.typeLabels.train"),
-  restaurant: t("bookings.typeLabels.restaurant"),
-  activity:   t("bookings.typeLabels.activity"),
-});
-
-const TYPE_COLORS: Record<string, { border: string; bg: string; text: string }> = {
-  flight:     { border: "#5A8FAA", bg: "#DCF0F5", text: "#5A8FAA" },
-  hotel:      { border: "#6B8C5A", bg: "#E2EDD9", text: "#6B8C5A" },
-  train:      { border: "#C4714A", bg: "#F5E5DC", text: "#C4714A" },
-  restaurant: { border: "#C4714A", bg: "#F5E5DC", text: "#C4714A" },
-  activity:   { border: "#8B70C0", bg: "#EDE8F5", text: "#8B70C0" },
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  confirmed: "#6B8C5A",
-  pending:   "#FF9500",
-  cancelled: "#C04040",
-};
-
-const statusLabel = (t: (key: string) => string, s: string) =>
-  t(`bookings.status.${s}`) || s;
-
-function getSafeDate(date: unknown): Date {
-  return date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
-}
-
-// ─── Sub-component : modal picker iOS ────────────────────────────────────────
-
-interface PickerModalProps {
-  visible: boolean;
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-  colors: any;
-  t: (key: string) => string;
-}
-
-const PickerModal: React.FC<PickerModalProps> = ({ visible, title, onClose, children, colors, t }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <TouchableOpacity style={styles.pickerModalOverlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={(e) => e.stopPropagation()}
-        style={[styles.pickerModalContent, { backgroundColor: colors.surface }]}
-      >
-        <Text style={[styles.pickerModalTitle, { color: colors.text }]}>{title}</Text>
-        <View style={styles.pickerWrapper}>{children}</View>
-        <View style={styles.pickerButtons}>
-          <TouchableOpacity style={styles.pickerCancelButton} onPress={onClose}>
-            <Text style={styles.pickerCancelText}>{t("common.cancel")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.pickerConfirmButton} onPress={onClose}>
-            <Text style={styles.pickerConfirmText}>{t("common.confirm")}</Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  </Modal>
-);
+import PickerModal from "./bookingForm/PickerModal";
+import AttachmentThumb from "./bookingForm/AttachmentThumb";
+import { TypePill, StatusPillItem } from "./bookingForm/BookingFormPills";
+import {
+  getTypeLabels,
+  STATUSES,
+  statusLabel,
+  getSafeDate,
+} from "./bookingForm/bookingFormConstants";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -102,74 +45,6 @@ interface BookingFormProps {
   preselectedTripId?: string;
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-interface AttachmentThumbProps { attachment: { type: string; uri: string }; colors: any; }
-const AttachmentThumb: React.FC<AttachmentThumbProps> = ({ attachment, colors }) => {
-  const isLocalImage = attachment.type === "image" &&
-    (attachment.uri.startsWith("file://") || attachment.uri.startsWith("content://") || attachment.uri.startsWith("ph://"));
-  if (isLocalImage) {
-    return <Image source={{ uri: attachment.uri }} style={styles.attachmentThumbnail} resizeMode="cover" />;
-  }
-  return (
-    <View style={[styles.attachmentIcon, { backgroundColor: colors.bgLight }]}>
-      <Ionicons name={attachment.type === "pdf" ? "document" : "image"} size={22} color="#C4714A" />
-    </View>
-  );
-};
-
-interface TypePillProps {
-  type: Booking["type"];
-  isSelected: boolean;
-  typeColor: { bg: string; border: string; text: string };
-  label: string;
-  colors: any;
-  onPress: () => void;
-}
-const TypePill: React.FC<TypePillProps> = ({ type, isSelected, typeColor, label, colors, onPress }) => (
-  <TouchableOpacity
-    key={type}
-    style={[
-      styles.typePill,
-      isSelected
-        ? { backgroundColor: typeColor.bg, borderColor: typeColor.border, borderWidth: 1.5 }
-        : { backgroundColor: colors.bgMid, borderColor: colors.border, borderWidth: 1 },
-    ]}
-    onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <Text style={[styles.typePillText, { color: isSelected ? typeColor.text : colors.textMid }]}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
-
-interface StatusPillItemProps {
-  status: Booking["status"];
-  label: string;
-  isSelected: boolean;
-  colors: any;
-  onPress: () => void;
-}
-const StatusPillItem: React.FC<StatusPillItemProps> = ({ status, label, isSelected, colors, onPress }) => {
-  const color = STATUS_COLORS[status] || "#7A6A58";
-  return (
-    <TouchableOpacity
-      style={[styles.statusPill, {
-        backgroundColor: isSelected ? `${color}20` : colors.bgMid,
-        borderColor: isSelected ? color : colors.border,
-        borderWidth: isSelected ? 1.5 : 1,
-      }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.statusPillText, { color: isSelected ? color : colors.textMid, fontFamily: isSelected ? F.sans600 : F.sans400 }]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 const BookingForm: React.FC<BookingFormProps> = (props) => {
@@ -180,8 +55,6 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
   const TYPE_LABELS = getTypeLabels(t);
 
   const form = useBookingForm(props);
-
-  const STATUSES: Booking["status"][]    = ["confirmed", "pending", "cancelled"];
 
   const safeDate    = getSafeDate(form.formData.date);
   const safeEndDate = getSafeDate(form.formData.endDate);
@@ -218,12 +91,12 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           <View style={styles.typePillsContainer}>
             <View style={styles.typePillsRow}>
               {(["flight", "train", "hotel"] as Booking["type"][]).map((type) => (
-                <TypePill key={type} type={type} isSelected={form.formData.type === type} typeColor={TYPE_COLORS[type]} label={TYPE_LABELS[type]} colors={colors} onPress={() => form.handleInputChange("type", type)} />
+                <TypePill key={type} type={type} isSelected={form.formData.type === type} label={TYPE_LABELS[type]} colors={colors} onPress={() => form.handleInputChange("type", type)} />
               ))}
             </View>
             <View style={styles.typePillsRow}>
               {(["restaurant", "activity"] as Booking["type"][]).map((type) => (
-                <TypePill key={type} type={type} isSelected={form.formData.type === type} typeColor={TYPE_COLORS[type]} label={TYPE_LABELS[type]} colors={colors} onPress={() => form.handleInputChange("type", type)} />
+                <TypePill key={type} type={type} isSelected={form.formData.type === type} label={TYPE_LABELS[type]} colors={colors} onPress={() => form.handleInputChange("type", type)} />
               ))}
             </View>
           </View>
@@ -446,8 +319,6 @@ const styles = StyleSheet.create({
   scanButtonText: { fontSize: 15, fontFamily: F.sans600 },
   typePillsContainer: { marginTop: 20, marginBottom: 8, gap: 12 },
   typePillsRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 12 },
-  typePill: { borderRadius: 24, paddingVertical: 11, paddingHorizontal: 20 },
-  typePillText: { fontSize: 16, fontFamily: F.sans600 },
   fieldBox: {
     backgroundColor: "#FFFFFF", borderRadius: RADIUS.card, borderWidth: 1,
     paddingHorizontal: 18, paddingVertical: 16, marginHorizontal: 20, marginBottom: 12,
@@ -461,8 +332,6 @@ const styles = StyleSheet.create({
   dateRow: { flexDirection: "row", marginHorizontal: 20, marginBottom: 0, gap: 10 },
   dateRowItem: { flex: 1, marginHorizontal: 0, marginBottom: 10 },
   statusRow: { flexDirection: "row", gap: 8, marginTop: 4 },
-  statusPill: { flex: 1, borderRadius: 20, paddingVertical: 13, alignItems: "center" },
-  statusPillText: { fontSize: 15 },
   attachmentSection: { marginHorizontal: 20, marginBottom: 10 },
   attachmentDashedBox: {
     borderRadius: 16, borderWidth: 1.5, borderColor: "#D8CCBA", borderStyle: "dashed",
@@ -473,11 +342,6 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", borderRadius: RADIUS.button,
     padding: 12, marginBottom: 10, borderWidth: 1,
   },
-  attachmentThumbnail: { width: 50, height: 50, borderRadius: 8, marginRight: 12 },
-  attachmentIcon: {
-    width: 50, height: 50, borderRadius: 8,
-    justifyContent: "center", alignItems: "center", marginRight: 12,
-  },
   attachmentName: { flex: 1, fontSize: 14, fontFamily: F.sans400, marginRight: 8 },
   renameAttachmentButton: { padding: 4, marginRight: 4 },
   removeAttachmentButton: { padding: 4 },
@@ -487,32 +351,6 @@ const styles = StyleSheet.create({
     alignItems: "center", ...SHADOW.medium,
   },
   primaryButtonText: { fontSize: 19, fontFamily: F.sans700, color: "#FFFFFF" },
-  pickerModalOverlay: {
-    flex: 1, backgroundColor: "rgba(42, 35, 24, 0.5)",
-    justifyContent: "center", alignItems: "center",
-  },
-  pickerModalContent: {
-    borderRadius: 20, padding: 20, width: "90%", maxWidth: 400,
-    shadowColor: "#2A2318", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5,
-  },
-  pickerModalTitle: { fontSize: 20, fontFamily: F.sans700, marginBottom: 15, textAlign: "center" },
-  pickerWrapper: {
-    backgroundColor: "#FDFAF5", borderRadius: 12, padding: 10,
-    borderWidth: 1, borderColor: "#D8CCBA", minHeight: 200,
-    justifyContent: "center", alignItems: "center",
-  },
-  pickerButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, gap: 12 },
-  pickerCancelButton: {
-    flex: 1, backgroundColor: "#FFFFFF", paddingVertical: 14,
-    borderRadius: RADIUS.button, alignItems: "center", borderWidth: 2, borderColor: "#D8CCBA",
-  },
-  pickerCancelText: { color: "#7A6A58", fontSize: 16, fontFamily: F.sans600 },
-  pickerConfirmButton: {
-    flex: 1, backgroundColor: "#C4714A", paddingVertical: 14,
-    borderRadius: RADIUS.button, alignItems: "center",
-  },
-  pickerConfirmText: { color: "white", fontSize: 16, fontFamily: F.sans700 },
   renameOverlay: {
     flex: 1, backgroundColor: "rgba(42, 35, 24, 0.5)",
     justifyContent: "center", alignItems: "center", padding: 24,

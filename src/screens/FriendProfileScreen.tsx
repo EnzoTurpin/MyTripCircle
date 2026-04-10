@@ -24,13 +24,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 
 
-const formatDateRange = (start: string | Date, end: string | Date, locale: string): string => {
-  const s = new Date(start);
-  const e = new Date(end);
-  const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
-  return `${s.toLocaleDateString(locale, opts)} – ${e.toLocaleDateString(locale, opts)}`;
-};
-
 // ── TripSquare — carré photo avec gradient (maquette) ─────────────────────────
 const TripSquare: React.FC<{ trip: any; onPress: () => void }> = ({ trip, onPress }) => (
   <TouchableOpacity style={sqStyles.wrap} onPress={onPress} activeOpacity={0.85}>

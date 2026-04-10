@@ -18,37 +18,21 @@ import { useTranslation } from "react-i18next";
 import { ApiService } from "../services/ApiService";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
-import i18n, { parseApiError } from "../utils/i18n";
+import { formatDate, parseApiError } from "../utils/i18n";
+import { getBookingTypeIcon, getBookingTypeColors } from "../utils/bookingHelpers";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const getLocale = () => (i18n.language === "fr" ? "fr-FR" : "en-US");
-
 const fmtDate = (d: string | Date) =>
-  new Date(d).toLocaleDateString(getLocale(), { day: "numeric", month: "long", year: "numeric" });
+  formatDate(d, { day: "numeric", month: "long", year: "numeric" });
 
 const fmtDateShort = (d: string | Date) =>
-  new Date(d).toLocaleDateString(getLocale(), { day: "numeric", month: "short" });
+  formatDate(d, { day: "numeric", month: "short" });
 
 const tripDays = (start: string | Date, end: string | Date) =>
   Math.max(1, Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
-
-const bookingIcon = (type: string): any => ({
-  flight: "airplane", hotel: "bed", train: "train",
-  restaurant: "restaurant", activity: "star", car: "car",
-}[type] ?? "receipt");
-
-const bookingColor = (type: string) => ({
-  flight: "#5A8FAA", hotel: "#6B8C5A", train: "#C4714A",
-  restaurant: "#C4714A", activity: "#8B70C0", car: "#7A6A58",
-}[type] ?? "#C4714A");
-
-const bookingBg = (type: string) => ({
-  flight: "#DCF0F5", hotel: "#E2EDD9", train: "#F5E5DC",
-  restaurant: "#F5E5DC", activity: "#EDE8F5", car: "#EDE5D8",
-}[type] ?? "#F5E5DC");
 
 const addressIcon = (type: string) => ({
   hotel: "🏨", restaurant: "🍽️", activity: "🎯",
@@ -343,8 +327,8 @@ const TripPublicViewScreen: React.FC = () => {
                 activeOpacity={0.75}
                 onPress={() => navigation.navigate("BookingDetails", { bookingId: b._id ?? b.id, readOnly: true })}
               >
-                <View style={[styles.itemIcon, { backgroundColor: bookingBg(b.type) }]}>
-                  <Ionicons name={bookingIcon(b.type)} size={18} color={bookingColor(b.type)} />
+                <View style={[styles.itemIcon, { backgroundColor: getBookingTypeColors(b.type)?.bg ?? "#F5E5DC" }]}>
+                  <Ionicons name={getBookingTypeIcon(b.type) as any} size={18} color={getBookingTypeColors(b.type)?.stripe ?? "#C4714A"} />
                 </View>
                 <View style={styles.itemInfo}>
                   <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={1}>{b.title}</Text>
