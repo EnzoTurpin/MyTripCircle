@@ -17,50 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { changeLanguage } from "../utils/i18n";
 import { F } from "../theme/fonts";
-
-// ─── Custom toggle pill ───────────────────────────────────────────────────────
-interface ToggleProps {
-  value: boolean;
-  onToggle: (v: boolean) => void;
-  disabled?: boolean;
-  trackColor?: string;
-}
-
-const Toggle: React.FC<ToggleProps> = ({ value, onToggle, disabled = false, trackColor }) => (
-  <TouchableOpacity
-    onPress={() => !disabled && onToggle(!value)}
-    activeOpacity={disabled ? 1 : 0.8}
-    style={[
-      toggleStyles.track,
-      { backgroundColor: value ? (trackColor ?? "#C4714A") : "#D8CCBA" },
-    ]}
-  >
-    <View
-      style={[
-        toggleStyles.knob,
-        { transform: [{ translateX: value ? 24 : 0 }] },
-      ]}
-    />
-  </TouchableOpacity>
-);
-
-const toggleStyles = StyleSheet.create({
-  track: {
-    width: 54,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  knob: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#FFFFFF",
-  },
-});
-
-// ─── Main screen ──────────────────────────────────────────────────────────────
+import Toggle from "../components/ui/Toggle";
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user, updateSettings, deleteAccount } = useAuth();
