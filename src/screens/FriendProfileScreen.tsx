@@ -21,99 +21,9 @@ import { F } from "../theme/fonts";
 import { parseApiError } from "../utils/i18n";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
-import SkeletonBox from "../components/SkeletonBox";
-
-
-// ── TripSquare — carré photo avec gradient (maquette) ─────────────────────────
-const TripSquare: React.FC<{ trip: any; onPress: () => void }> = ({ trip, onPress }) => (
-  <TouchableOpacity style={sqStyles.wrap} onPress={onPress} activeOpacity={0.85}>
-    {trip.coverImage ? (
-      <Image source={{ uri: trip.coverImage }} style={StyleSheet.absoluteFill as any} resizeMode="cover" />
-    ) : (
-      <View style={[StyleSheet.absoluteFill as any, { backgroundColor: "#7A6A58" }]} />
-    )}
-    <LinearGradient
-      colors={["transparent", "rgba(0,0,0,0.68)"]}
-      locations={[0.4, 1]}
-      style={StyleSheet.absoluteFill as any}
-    />
-    <View style={sqStyles.bottom}>
-      <Text style={sqStyles.dest} numberOfLines={1}>{trip.destination || trip.title}</Text>
-    </View>
-  </TouchableOpacity>
-);
-
-const sqStyles = StyleSheet.create({
-  wrap: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
-    overflow: "hidden",
-    flexShrink: 0,
-    justifyContent: "flex-end",
-  },
-  bottom: { padding: 7 },
-  dest: { fontSize: 11, fontFamily: F.sans600, color: "#FFFFFF" },
-});
-
-
-const tcStyles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#D8CCBA",
-    borderRadius: 10,
-    marginHorizontal: 14,
-    marginBottom: 8,
-    padding: 8,
-  },
-  thumb: { width: 44, height: 44, borderRadius: 8, flexShrink: 0 },
-  thumbPlaceholder: { backgroundColor: "#EDE5D8", justifyContent: "center", alignItems: "center" },
-  info: { flex: 1 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  title: { fontSize: 14, fontFamily: F.sans600, color: "#2A2318" },
-  dates: { fontSize: 11, fontFamily: F.sans400, color: "#B0A090", marginTop: 3 },
-  pill: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  pillText: { fontSize: 11, fontFamily: F.sans600 },
-  visBadge: { flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 20, paddingHorizontal: 6, paddingVertical: 2 },
-  visBadgePublic: { backgroundColor: "#DCF0F5" },
-  visBadgeFriends: { backgroundColor: "#E2EDD9" },
-  visText: { fontSize: 10, fontFamily: F.sans600 },
-});
-
-interface TripSectionProps {
-  title: string;
-  marginTop: number;
-  trips: any[];
-  emptyIcon: React.ComponentProps<typeof Ionicons>["name"];
-  emptyText: string;
-  bgMid: string;
-  textLight: string;
-  onPress: (id: string) => void;
-}
-
-const TripSection: React.FC<TripSectionProps> = ({
-  title, marginTop, trips, emptyIcon, emptyText, bgMid, textLight, onPress,
-}) => (
-  <>
-    <Text style={[styles.sectionLabel, { marginTop }]}>{title}</Text>
-    {trips.length ? (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
-        {trips.map((trip: any) => (
-          <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => onPress(trip._id ?? trip.id)} />
-        ))}
-      </ScrollView>
-    ) : (
-      <View style={[styles.emptyCard, { backgroundColor: bgMid }]}>
-        <Ionicons name={emptyIcon} size={26} color={textLight} />
-        <Text style={[styles.emptyText, { color: textLight }]}>{emptyText}</Text>
-      </View>
-    )}
-  </>
-);
+import TripSquare from "../components/friendProfile/TripSquare";
+import TripSection from "../components/friendProfile/TripSection";
+import ProfileSkeleton from "../components/friendProfile/ProfileSkeleton";
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 const FriendProfileScreen: React.FC = () => {
@@ -241,34 +151,7 @@ const FriendProfileScreen: React.FC = () => {
         <View style={[styles.body, { backgroundColor: colors.bg }]}>
 
           {(() => {
-            if (loading) return (
-              <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 20 }}>
-                {/* Avatar + name */}
-                <View style={{ alignItems: "center", gap: 12 }}>
-                  <SkeletonBox width={88} height={88} borderRadius={44} />
-                  <SkeletonBox width={160} height={20} borderRadius={8} />
-                  <SkeletonBox width={100} height={14} borderRadius={6} />
-                </View>
-
-                {/* Stats row */}
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  {[0, 1, 2].map((i) => (
-                    <SkeletonBox key={i} height={64} borderRadius={12} style={{ flex: 1 }} />
-                  ))}
-                </View>
-
-                {/* Trip grid */}
-                <SkeletonBox width={120} height={16} borderRadius={6} />
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  {[0, 1, 2, 3].map((i) => (
-                    <SkeletonBox key={i} width={100} height={100} borderRadius={12} />
-                  ))}
-                </View>
-
-                {/* Action buttons */}
-                <SkeletonBox width="100%" height={48} borderRadius={12} />
-              </View>
-            );
+            if (loading) return <ProfileSkeleton />;
             if (profile?.isPublicProfile === false) return (
             <>
               {/* ── Profil privé ── */}
@@ -330,21 +213,16 @@ const FriendProfileScreen: React.FC = () => {
 
               {/* ── 1. Voyages en commun — uniquement si ami ── */}
               {isFriend && (
-                <>
-                  <Text style={[styles.sectionLabel, { color: colors.textLight }]}>{t("friendProfile.sectionCommonTrips")}</Text>
-                  {profile?.commonTrips?.length ? (
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.squaresRow}>
-                      {profile.commonTrips.map((trip: any) => (
-                        <TripSquare key={trip._id ?? trip.id} trip={trip} onPress={() => goToTrip(trip._id ?? trip.id)} />
-                      ))}
-                    </ScrollView>
-                  ) : (
-                    <View style={[styles.emptyCard, { backgroundColor: colors.bgMid }]}>
-                      <Ionicons name="airplane-outline" size={26} color={colors.textLight} />
-                      <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("friendProfile.emptyCommonTrips")}</Text>
-                    </View>
-                  )}
-                </>
+                <TripSection
+                  title={t("friendProfile.sectionCommonTrips")}
+                  marginTop={0}
+                  trips={profile?.commonTrips ?? []}
+                  emptyIcon="airplane-outline"
+                  emptyText={t("friendProfile.emptyCommonTrips")}
+                  bgMid={colors.bgMid}
+                  textLight={colors.textLight}
+                  onPress={goToTrip}
+                />
               )}
 
               {/* ── 2. Voyages récents (passés) ── */}
@@ -516,7 +394,6 @@ const styles = StyleSheet.create({
 
   // Body
   body: { flex: 1, backgroundColor: "#F5F0E8" },
-  loaderWrap: { paddingVertical: 60, alignItems: "center" },
 
   // Stats — fond sandMid comme la maquette (pas blanc)
   statsRow: {
@@ -534,28 +411,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     alignItems: "center",
   },
-  statBoxMid: {},
   statValue: { fontSize: 22, fontFamily: F.sans700, color: "#C4714A" },
   statLabel: { fontSize: 11, fontFamily: F.sans400, color: "#B0A090", textAlign: "center", marginTop: 4 },
-
-  // Squares horizontal row
-  squaresRow: {
-    paddingHorizontal: 16,
-    gap: 8,
-    paddingBottom: 4,
-    flexDirection: "row",
-  },
-
-  // Section label
-  sectionLabel: {
-    fontSize: 10,
-    fontFamily: F.sans600,
-    color: "#B0A090",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginHorizontal: 14,
-    marginBottom: 8,
-  },
 
   // Private profile
   privateCard: {
@@ -584,18 +441,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 19,
   },
-
-  // Empty
-  emptyCard: {
-    marginHorizontal: 14,
-    marginBottom: 14,
-    backgroundColor: "#EDE5D8",
-    borderRadius: 10,
-    paddingVertical: 22,
-    alignItems: "center",
-    gap: 8,
-  },
-  emptyText: { fontSize: 12, fontFamily: F.sans400, color: "#B0A090", textAlign: "center", paddingHorizontal: 16 },
 
   // Actions
   actions: {

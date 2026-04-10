@@ -1,0 +1,42 @@
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { F } from "../../theme/fonts";
+
+interface TripSquareProps {
+  trip: any;
+  onPress: () => void;
+}
+
+const TripSquare: React.FC<TripSquareProps> = ({ trip, onPress }) => (
+  <TouchableOpacity style={styles.wrap} onPress={onPress} activeOpacity={0.85}>
+    {trip.coverImage ? (
+      <Image source={{ uri: trip.coverImage }} style={StyleSheet.absoluteFill as any} resizeMode="cover" />
+    ) : (
+      <View style={[StyleSheet.absoluteFill as any, { backgroundColor: "#7A6A58" }]} />
+    )}
+    <LinearGradient
+      colors={["transparent", "rgba(0,0,0,0.68)"]}
+      locations={[0.4, 1]}
+      style={StyleSheet.absoluteFill as any}
+    />
+    <View style={styles.bottom}>
+      <Text style={styles.dest} numberOfLines={1}>{trip.destination || trip.title}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  wrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    overflow: "hidden",
+    flexShrink: 0,
+    justifyContent: "flex-end",
+  },
+  bottom: { padding: 7 },
+  dest: { fontSize: 11, fontFamily: F.sans600, color: "#FFFFFF" },
+});
+
+export default TripSquare;
