@@ -6,6 +6,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
 import { ApiService } from "../services/ApiService";
 import { useTrips } from "../contexts/TripsContext";
+import { useAuth } from "../contexts/AuthContext";
 import { searchPlaceByText } from "../services/PlacesService";
 
 export const DESTINATIONS_BASE = [
@@ -31,10 +32,10 @@ export const DESTINATIONS_BASE = [
   { id: "20", category: "culture",  image: "https://images.unsplash.com/photo-1592906209472-a36b1f3782ef?w=400&q=80&fit=crop" },
 ];
 
-const extractCityCountry = (formattedAddress: string, fallbackCity: string) => {
+const extractCityCountry = (formattedAddress: string, fallbackCity: string): { city: string; country: string } => {
   const parts = formattedAddress.split(", ").map((p) => p.trim()).filter(Boolean);
-  const country = parts.length >= 1 ? parts.at(-1) : fallbackCity;
-  const city = parts.length >= 2 ? parts.at(-2) : fallbackCity;
+  const country = (parts.length >= 1 ? parts.at(-1) : undefined) ?? fallbackCity;
+  const city = (parts.length >= 2 ? parts.at(-2) : undefined) ?? fallbackCity;
   return { city, country };
 };
 
@@ -42,6 +43,7 @@ export const useIdeas = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { createTrip, createBooking, createAddress } = useTrips();
+  const { user } = useAuth();
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -221,6 +223,7 @@ export const useIdeas = () => {
         isPublic: false,
         visibility: "private",
         status: "draft",
+        ownerId: user?.id ?? "",
         stats: { totalBookings: 0, totalAddresses: 0, totalCollaborators: 0 },
         location: { type: "Point", coordinates: [0, 0] },
       });

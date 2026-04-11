@@ -96,7 +96,7 @@ export function useInvitationManagement() {
   const loadSingleInvitation = async () => {
     try {
       setLoading(true);
-      const data = await getInvitationByToken(currentToken);
+      const data = await getInvitationByToken(currentToken ?? "");
       const tripId = data?.tripId ?? data?.trip?._id;
       if (tripId) {
         setLoading(false);
@@ -226,7 +226,7 @@ export function useInvitationManagement() {
     }
     try {
       setResponding(true);
-      const ok = await respondToInvitation(currentToken, "accept", user.id);
+      const ok = await respondToInvitation(currentToken ?? "", "accept", user.id);
       if (ok) {
         Alert.alert(
           invitation.type === "link" ? t("invitation.tripJoined") : t("invitation.accepted"),
@@ -261,7 +261,7 @@ export function useInvitationManagement() {
         onPress: async () => {
           try {
             setResponding(true);
-            const ok = await respondToInvitation(currentToken, "decline", user?.id);
+            const ok = await respondToInvitation(currentToken ?? "", "decline", user?.id);
             if (ok) {
               Alert.alert(t("invitation.declined"), t("invitation.declinedMessage"), [
                 { text: t("common.ok"), onPress: () => navigation.navigate("Main") },

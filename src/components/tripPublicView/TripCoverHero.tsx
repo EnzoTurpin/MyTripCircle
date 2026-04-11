@@ -39,7 +39,7 @@ const TripCoverHero: React.FC<Props> = ({
       {trip.coverImage ? (
         <Image
           source={{ uri: trip.coverImage }}
-          style={StyleSheet.absoluteFill as StyleProp<ViewStyle>}
+          style={StyleSheet.absoluteFill as any}
           resizeMode="cover"
         />
       ) : (
