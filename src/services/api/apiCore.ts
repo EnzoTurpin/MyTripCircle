@@ -41,35 +41,47 @@ async function findWorkingUrl(): Promise<string> {
   throw new Error("No working API URL found. Make sure the backend is running.");
 }
 
+// Mutex : évite les refreshes parallèles (race condition sur la rotation du refresh token).
+// Si plusieurs requêtes obtiennent un 401 simultanément, elles partagent toutes la même promesse.
+let refreshPromise: Promise<string | null> | null = null;
+
 // Tente de renouveler l'access token via le refresh token.
 // Retourne le nouveau token en cas de succès, null sinon.
 async function tryRefreshToken(): Promise<string | null> {
-  const refreshToken = await AsyncStorage.getItem("refreshToken");
-  if (!refreshToken) return null;
+  if (refreshPromise) return refreshPromise;
 
-  try {
-    const baseUrl = await findWorkingUrl();
-    const res = await fetch(`${baseUrl}/users/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
+  refreshPromise = (async () => {
+    const refreshToken = await AsyncStorage.getItem("refreshToken");
+    if (!refreshToken) return null;
 
-    if (!res.ok) return null;
+    try {
+      const baseUrl = await findWorkingUrl();
+      const res = await fetch(`${baseUrl}/users/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
 
-    const data = await res.json();
-    if (data.success && data.token) {
-      await AsyncStorage.setItem("token", data.token);
-      // Rotation : sauvegarde le nouveau refresh token si le serveur en a émis un
-      if (data.refreshToken) {
-        await AsyncStorage.setItem("refreshToken", data.refreshToken);
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (data.success && data.token) {
+        await AsyncStorage.setItem("token", data.token);
+        // Rotation : sauvegarde le nouveau refresh token si le serveur en a émis un
+        if (data.refreshToken) {
+          await AsyncStorage.setItem("refreshToken", data.refreshToken);
+        }
+        return data.token;
       }
-      return data.token;
+      return null;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
     }
-    return null;
-  } catch {
-    return null;
-  }
+  })();
+
+  return refreshPromise;
 }
 
 async function clearSession(): Promise<void> {
