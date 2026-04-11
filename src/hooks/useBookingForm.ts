@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Booking } from "../types";
 import { type AddressSuggestion } from "../services/PlacesService";
 import { type ScannedBookingData } from "../components/TicketScannerModal";
-import useAttachmentManager, { type Attachment } from "./useAttachmentManager";
+import useAttachmentManager from "./useAttachmentManager";
 import useAddressAutocomplete from "./useAddressAutocomplete";
 
-export type { Attachment };
+export type { Attachment } from "./useAttachmentManager";
 
 interface Props {
   visible: boolean;

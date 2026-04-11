@@ -56,7 +56,10 @@ const BookingDetailsScreen: React.FC = () => {
         address: data.address, confirmationNumber: data.confirmationNumber,
         status: data.status, attachments: data.attachments,
       } as any);
-    } catch { setBooking(null); }
+    } catch (error) {
+      console.error("[BookingDetailsScreen] Erreur lors du chargement de la réservation:", error);
+      setBooking(null);
+    }
     setLoading(false);
   };
 
@@ -114,7 +117,8 @@ const BookingDetailsScreen: React.FC = () => {
       restaurant: "bookings.details.gridThirdLabel.restaurant",
       activity: "bookings.details.gridThirdLabel.activity",
     };
-    return keys[type] ? t(keys[type]!) : t("bookings.details.gridThirdLabel.default");
+    const label = keys[type];
+    return label ? t(label) : t("bookings.details.gridThirdLabel.default");
   };
 
   if (loading) return <BookingDetailsSkeleton />;

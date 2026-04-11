@@ -181,7 +181,7 @@ const AddFriendScreen: React.FC = () => {
               ) : (
                 <FlatList
                   data={suggestions}
-                  renderItem={({ item }: { item: FriendSuggestion }) => (
+                  renderItem={({ item }) => (
                     <SuggestionCard
                       item={item}
                       sending={sending}

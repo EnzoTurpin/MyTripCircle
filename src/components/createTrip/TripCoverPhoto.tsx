@@ -35,7 +35,7 @@ const TripCoverPhoto: React.FC<Props> = ({ coverImage, onPickPhoto }) => {
       )}
       <TouchableOpacity style={styles.coverButton} onPress={onPickPhoto} activeOpacity={0.8}>
         <Text style={styles.coverButtonText}>
-          {coverImage ? t("createTrip.changeCoverPhoto") : t("createTrip.changeCoverPhoto")}
+          {coverImage ? t("createTrip.changeCoverPhoto") : t("createTrip.addCoverPhoto")}
         </Text>
       </TouchableOpacity>
     </View>

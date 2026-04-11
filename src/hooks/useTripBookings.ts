@@ -3,10 +3,12 @@ import { Alert } from "react-native";
 import { Booking } from "../types";
 import { parseApiError } from "../utils/i18n";
 
+type BookingOmitKeys = "id" | "createdAt" | "updatedAt";
+
 interface UseTripBookingsParams {
   tripId: string;
-  createBooking: (data: Omit<Booking, "id" | "createdAt" | "updatedAt"> & { tripId: string }) => Promise<Booking>;
-  updateBooking: (id: string, data: Omit<Booking, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  createBooking: (data: Omit<Booking, BookingOmitKeys> & { tripId: string }) => Promise<Booking>;
+  updateBooking: (id: string, data: Omit<Booking, BookingOmitKeys>) => Promise<void>;
   deleteBooking: (id: string) => Promise<void>;
   t: (key: string) => string;
 }
@@ -19,7 +21,7 @@ export interface UseTripBookingsReturn {
   handleAddBooking: () => void;
   handleEditBooking: (index: number) => void;
   handleDeleteBooking: (index: number) => void;
-  handleSaveBooking: (booking: Omit<Booking, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  handleSaveBooking: (booking: Omit<Booking, BookingOmitKeys>) => Promise<void>;
   closeBookingForm: () => void;
 }
 
@@ -46,21 +48,21 @@ const useTripBookings = ({
 
   const handleDeleteBooking = (index: number) => {
     const booking = bookings[index];
+    const removeAtIndex = (prev: Booking[]) => prev.filter((_, i) => i !== index);
+
+    const onConfirm = async () => {
+      if (booking.id) await deleteBooking(booking.id);
+      setBookings(removeAtIndex);
+    };
+
     Alert.alert(t("common.confirm"), t("bookings.deleteConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.ok"),
-        style: "destructive",
-        onPress: async () => {
-          if (booking.id) await deleteBooking(booking.id);
-          setBookings((prev) => prev.filter((_, i) => i !== index));
-        },
-      },
+      { text: t("common.ok"), style: "destructive", onPress: onConfirm },
     ]);
   };
 
   const handleSaveBooking = async (
-    booking: Omit<Booking, "id" | "createdAt" | "updatedAt">
+    booking: Omit<Booking, BookingOmitKeys>
   ) => {
     try {
       if (editingBookingIndex === null) {

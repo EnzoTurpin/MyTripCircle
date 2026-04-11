@@ -77,6 +77,24 @@ async function clearSession(): Promise<void> {
   onUnauthorizedCallback?.();
 }
 
+async function parseErrorAndThrow(res: Response, statusCode: number): Promise<never> {
+  const errText = await res.text();
+  let parsed: string;
+  try {
+    parsed = JSON.stringify(JSON.parse(errText));
+  } catch {
+    parsed = errText || `HTTP ${statusCode}`;
+  }
+  throw new Error(parsed);
+}
+
+async function handleRetryResponse(retryRes: Response): Promise<never> {
+  if (retryRes.status === 401) {
+    await clearSession();
+  }
+  return parseErrorAndThrow(retryRes, retryRes.status);
+}
+
 export async function request<T>(
   path: string,
   method: HttpMethod = "GET",
@@ -111,39 +129,16 @@ export async function request<T>(
         return (await retryRes.json()) as T;
       }
 
-      // Si la requête échoue à nouveau après refresh, on déconnecte
-      if (retryRes.status === 401) {
-        await clearSession();
-        const errText = await retryRes.text();
-        throw new Error(errText || `HTTP ${retryRes.status}`);
-      }
-
-      const retryErrText = await retryRes.text();
-      try {
-        throw new Error(JSON.stringify(JSON.parse(retryErrText)));
-      } catch {
-        throw new Error(retryErrText || `HTTP ${retryRes.status}`);
-      }
+      return handleRetryResponse(retryRes);
     }
 
     // Pas de refresh token disponible ou refresh échoué → déconnexion
     await clearSession();
-    const errText = await res.text();
-    try {
-      throw new Error(JSON.stringify(JSON.parse(errText)));
-    } catch {
-      throw new Error(errText || `HTTP ${res.status}`);
-    }
+    return parseErrorAndThrow(res, res.status);
   }
 
   if (!res.ok) {
-    const errText = await res.text();
-    try {
-      const errJson = JSON.parse(errText);
-      throw new Error(JSON.stringify(errJson));
-    } catch {
-      throw new Error(errText || `HTTP ${res.status}`);
-    }
+    return parseErrorAndThrow(res, res.status);
   }
 
   return (await res.json()) as T;

@@ -47,8 +47,6 @@ const InvitationScreen: React.FC = () => {
       <InvitationDetailView
         invitation={invitation}
         loading={loading}
-        currentToken={currentToken}
-        initialToken={initialToken}
         responding={responding}
         onBack={() => {
           if (initialToken) {
