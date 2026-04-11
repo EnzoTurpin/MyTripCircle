@@ -14,6 +14,7 @@ export const tripsApi = {
     collaborators?: any[];
     isPublic?: boolean;
     visibility?: "private" | "friends" | "public";
+    coverImage?: string;
     tags?: string[];
     stats?: { totalBookings: number; totalAddresses: number; totalCollaborators: number };
     location?: { type: "Point"; coordinates: [number, number] };
