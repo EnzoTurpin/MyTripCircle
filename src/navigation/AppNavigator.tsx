@@ -1,15 +1,12 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
 
-import { RootStackParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import TermsScreen from "../screens/TermsScreen";
 import PrivacyScreen from "../screens/PrivacyScreen";
 import AuthStack from "./stacks/AuthStack";
 import MainStack from "./stacks/MainStack";
-
-const Stack = createStackNavigator<RootStackParamList>();
+import { RootStack } from "./rootStack";
 
 const linking = {
   prefixes: ["mytripcircle://"],
@@ -32,11 +29,11 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer linking={linking}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? <MainStack /> : <AuthStack />}
-        <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
-      </Stack.Navigator>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? MainStack() : AuthStack()}
+        <RootStack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
+        <RootStack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
+      </RootStack.Navigator>
     </NavigationContainer>
   );
 };
