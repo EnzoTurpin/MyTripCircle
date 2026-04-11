@@ -17,7 +17,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ApiService } from "../services/ApiService";
 import { useFriends } from "../contexts/FriendsContext";
-import { FriendSuggestion } from "../types";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { parseApiError } from "../utils/i18n";

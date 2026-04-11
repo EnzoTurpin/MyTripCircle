@@ -83,9 +83,10 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
   };
 
   const handleRemoveAttachment = (index: number) => {
+    const removeItem = () => setAttachments((prev) => prev.filter((_, i) => i !== index));
     Alert.alert(t("common.confirm"), t("bookings.removeAttachmentConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
-      { text: t("common.delete"), style: "destructive", onPress: () => setAttachments((prev) => prev.filter((_, i) => i !== index)) },
+      { text: t("common.delete"), style: "destructive", onPress: removeItem },
     ]);
   };
 
