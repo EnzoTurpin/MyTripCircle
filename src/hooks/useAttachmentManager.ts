@@ -5,6 +5,8 @@ import * as DocumentPicker from "expo-document-picker";
 
 export type Attachment = { uri: string; name: string; type: "image" | "pdf" };
 
+const excludeIndex = (index: number) => (_: Attachment, i: number): boolean => i !== index;
+
 interface UseAttachmentManagerReturn {
   attachments: Attachment[];
   setAttachments: React.Dispatch<React.SetStateAction<Attachment[]>>;
@@ -83,7 +85,7 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
   };
 
   const handleRemoveAttachment = (index: number) => {
-    const removeItem = () => setAttachments((prev) => prev.filter((_, i) => i !== index));
+    const removeItem = () => setAttachments((prev) => prev.filter(excludeIndex(index)));
     Alert.alert(t("common.confirm"), t("bookings.removeAttachmentConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
       { text: t("common.delete"), style: "destructive", onPress: removeItem },
