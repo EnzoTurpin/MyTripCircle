@@ -1,26 +1,43 @@
 import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { COLORS as C } from "../../theme/colors";
 
-const TripCoverPhoto: React.FC = () => {
+interface Props {
+  coverImage?: string;
+  onPickPhoto: () => void;
+}
+
+const TripCoverPhoto: React.FC<Props> = ({ coverImage, onPickPhoto }) => {
   const { t } = useTranslation();
 
   return (
     <View style={styles.coverWrapper}>
-      <LinearGradient
-        colors={["#3A6B5A", "#1E4A3A", "#2C5A48"]}
-        style={styles.coverGradient}
-      >
-        <View style={styles.coverOverlay} />
-        <TouchableOpacity style={styles.coverButton} activeOpacity={0.8}>
-          <Text style={styles.coverButtonText}>
-            {t("createTrip.changeCoverPhoto")}
-          </Text>
-        </TouchableOpacity>
-      </LinearGradient>
+      {coverImage ? (
+        <>
+          <Image source={{ uri: coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.55)"]}
+            style={StyleSheet.absoluteFillObject}
+            start={{ x: 0, y: 0.3 }}
+            end={{ x: 0, y: 1 }}
+          />
+        </>
+      ) : (
+        <LinearGradient
+          colors={["#3A6B5A", "#1E4A3A", "#2C5A48"]}
+          style={StyleSheet.absoluteFillObject}
+        >
+          <View style={styles.coverOverlay} />
+        </LinearGradient>
+      )}
+      <TouchableOpacity style={styles.coverButton} onPress={onPickPhoto} activeOpacity={0.8}>
+        <Text style={styles.coverButtonText}>
+          {coverImage ? t("createTrip.changeCoverPhoto") : t("createTrip.changeCoverPhoto")}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -32,9 +49,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     height: 140,
-  },
-  coverGradient: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },

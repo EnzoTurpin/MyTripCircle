@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import TripHeroCard from "../components/trips/TripHeroCard";
 import TripMiniCard from "../components/trips/TripMiniCard";
 import TripAllRow from "../components/trips/TripAllRow";
 import TripNewCard from "../components/trips/TripNewCard";
+import { getCachedDestinationPhoto } from "../utils/destinationPhoto";
 
 const HERO_PHOTOS = [
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
@@ -50,8 +51,24 @@ const TripsScreen: React.FC = () => {
   const { colors } = useTheme();
 
   const [showAllTrips, setShowAllTrips] = useState(false);
+  // Photos auto-fetchées pour les voyages sans coverImage : tripId → URL
+  const [fetchedPhotos, setFetchedPhotos] = useState<Record<string, string>>({});
 
   useFocusEffect(useCallback(() => { refreshData(); }, [refreshData]));
+
+  // Pour chaque voyage sans coverImage, on fetch la photo depuis Google Places
+  useEffect(() => {
+    const tripsNeedingPhoto = trips.filter((t) => !t.coverImage && t.destination);
+    if (tripsNeedingPhoto.length === 0) return;
+
+    tripsNeedingPhoto.forEach(async (trip) => {
+      if (fetchedPhotos[trip.id]) return; // déjà fetché
+      const url = await getCachedDestinationPhoto(trip.destination);
+      if (url) {
+        setFetchedPhotos((prev) => ({ ...prev, [trip.id]: url }));
+      }
+    });
+  }, [trips]);
 
   const handleCreateTrip = () => navigation.navigate("CreateTrip");
   const handleTripPress = (trip: Trip) => navigation.navigate("TripDetails", { tripId: trip.id });
@@ -112,7 +129,7 @@ const TripsScreen: React.FC = () => {
               {heroTrip && (
                 <TripHeroCard
                   trip={heroTrip}
-                  photoUri={HERO_PHOTOS[trips.indexOf(heroTrip) % HERO_PHOTOS.length]}
+                  photoUri={heroTrip.coverImage || fetchedPhotos[heroTrip.id] || HERO_PHOTOS[trips.indexOf(heroTrip) % HERO_PHOTOS.length]}
                   daysUntil={daysUntil(heroTrip.startDate)}
                   onPress={() => handleTripPress(heroTrip)}
                 />
@@ -133,7 +150,7 @@ const TripsScreen: React.FC = () => {
                     <TripAllRow
                       key={trip.id ?? `all-${idx}`}
                       trip={trip}
-                      photoUri={MINI_PHOTOS[idx % MINI_PHOTOS.length]}
+                      photoUri={trip.coverImage || fetchedPhotos[trip.id] || MINI_PHOTOS[idx % MINI_PHOTOS.length]}
                       onPress={() => handleTripPress(trip)}
                     />
                   ))}
@@ -145,7 +162,7 @@ const TripsScreen: React.FC = () => {
                     <TripMiniCard
                       key={trip.id ?? `mini-${idx}`}
                       trip={trip}
-                      photoUri={MINI_PHOTOS[idx % MINI_PHOTOS.length]}
+                      photoUri={trip.coverImage || fetchedPhotos[trip.id] || MINI_PHOTOS[idx % MINI_PHOTOS.length]}
                       onPress={() => handleTripPress(trip)}
                     />
                   ))}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -11,6 +11,7 @@ import { parseApiError } from "../utils/i18n";
 import ApiService from "../services/ApiService";
 import useCalendarPicker, { UseCalendarPickerReturn } from "./useCalendarPicker";
 import useTripBookings, { UseTripBookingsReturn } from "./useTripBookings";
+import { fetchDestinationPhotoUrl } from "../utils/destinationPhoto";
 
 type EditTripRouteProp = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
@@ -60,6 +61,9 @@ const useEditTrip = (): UseEditTripReturn => {
   const [loading,        setLoading]        = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isOwner,        setIsOwner]        = useState(false);
+  // true si l'utilisateur a choisi manuellement une photo (ne pas écraser)
+  const isManualCover = useRef(false);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const calendar = useCalendarPicker({
     startDate: formData.startDate,
@@ -74,6 +78,25 @@ const useEditTrip = (): UseEditTripReturn => {
     deleteBooking,
     t,
   });
+
+  // ── Auto-fetch photo si destination change et pas de photo manuelle ─────────
+  useEffect(() => {
+    if (isManualCover.current) return;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    if (formData.destination.trim().length < 3) return;
+
+    debounceTimer.current = setTimeout(async () => {
+      if (isManualCover.current || formData.coverImage) return;
+      const url = await fetchDestinationPhotoUrl(formData.destination);
+      if (url && !isManualCover.current) {
+        setFormData((p) => ({ ...p, coverImage: url }));
+      }
+    }, 600);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [formData.destination]);
 
   // ── Chargement initial ──────────────────────────────────────────────────────
   useEffect(() => { loadTripData(); }, [tripId]);
@@ -95,6 +118,9 @@ const useEditTrip = (): UseEditTripReturn => {
         else if (tripData.visibility === "public" || tripData.isPublic) { visibility = "public"; }
         else { visibility = "private"; }
 
+        const existingCover = tripData.coverImage || "";
+        if (existingCover) isManualCover.current = true;
+
         setFormData({
           title:       tripData.title,
           description: tripData.description || "",
@@ -103,9 +129,15 @@ const useEditTrip = (): UseEditTripReturn => {
           endDate,
           visibility,
           status: tripData.status === "validated" ? "validated" : "draft",
-          coverImage: tripData.coverImage || "",
+          coverImage: existingCover,
         });
         setIsOwner(tripData.ownerId === user?.id);
+
+        // Pas de photo existante → auto-fetch depuis la destination
+        if (!existingCover && tripData.destination) {
+          const url = await fetchDestinationPhotoUrl(tripData.destination);
+          if (url) setFormData((p) => ({ ...p, coverImage: url }));
+        }
       }
 
       const mappedBookings: Booking[] = (bookingsData || []).map((b: any) => ({
@@ -136,6 +168,7 @@ const useEditTrip = (): UseEditTripReturn => {
         mediaTypes: "images", allowsEditing: true, aspect: [16, 9], quality: 0.8,
       });
       if (!result.canceled && result.assets[0]?.uri) {
+        isManualCover.current = true;
         setFormData((p) => ({ ...p, coverImage: result.assets[0].uri }));
       }
     } catch (error) {
