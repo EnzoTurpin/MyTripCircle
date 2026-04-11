@@ -54,7 +54,7 @@ export function useFriendProfileActions() {
   const handleAddFriend = async () => {
     try {
       setSending(true);
-      const res = await sendFriendRequest({ recipientId: friendId });
+      const res = await sendFriendRequest({ recipientEmail: profile?.email });
       if (res?.autoAccepted) {
         Alert.alert(t("friends.success"), t("friendProfile.successNowFriends"), [{ text: t("common.ok"), onPress: loadProfile }]);
       } else {

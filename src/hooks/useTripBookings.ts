@@ -8,8 +8,8 @@ type BookingOmitKeys = "id" | "createdAt" | "updatedAt";
 interface UseTripBookingsParams {
   tripId: string;
   createBooking: (data: Omit<Booking, BookingOmitKeys> & { tripId: string }) => Promise<Booking>;
-  updateBooking: (id: string, data: Omit<Booking, BookingOmitKeys>) => Promise<void>;
-  deleteBooking: (id: string) => Promise<void>;
+  updateBooking: (id: string, data: Partial<Booking>) => Promise<Booking | null>;
+  deleteBooking: (id: string) => Promise<boolean>;
   t: (key: string) => string;
 }
 

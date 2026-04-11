@@ -31,7 +31,7 @@ const ForgotPasswordScreen: React.FC = () => {
   const { t }      = useTranslation();
   const { loginWithToken } = useAuth();
   const { colors } = useTheme();
-  const resetCode  = route.params?.code || "";
+  const resetCode  = route.params?.token || "";
 
   const [email, setEmail]                         = useState("");
   const [emailError, setEmailError]               = useState("");

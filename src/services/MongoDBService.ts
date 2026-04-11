@@ -79,7 +79,8 @@ class MongoDBService {
     data: Omit<T, NewMongoFields>
   ): Promise<T> {
     const doc = { ...data, createdAt: new Date(), updatedAt: new Date() } as T;
-    const result = await collection.insertOne(doc);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await collection.insertOne(doc as any);
     return { ...doc, _id: result.insertedId.toString() };
   }
 
@@ -88,12 +89,12 @@ class MongoDBService {
     filter: Filter<T>,
     updates: Partial<T>
   ): Promise<T | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return collection.findOneAndUpdate(
       filter,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { $set: { ...updates, updatedAt: new Date() } } as any,
       { returnDocument: "after" }
-    );
+    ) as unknown as Promise<T | null>;
   }
 
   private async deleteDocument<T extends object>(
