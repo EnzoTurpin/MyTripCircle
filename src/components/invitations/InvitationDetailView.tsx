@@ -231,8 +231,6 @@ const DetailCta: React.FC<DetailCtaProps> = ({ canRespond, isLinkType, respondin
 interface InvitationDetailViewProps {
   invitation: any;
   loading: boolean;
-  currentToken: string;
-  initialToken: string | undefined;
   responding: boolean;
   onBack: () => void;
   onAccept: () => void;

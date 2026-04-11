@@ -16,6 +16,15 @@ import { fetchDestinationPhotoUrl } from "../utils/destinationPhoto";
 type EditTripRouteProp = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
 
+function parseVisibility(
+  val: string | undefined,
+  isPublic?: boolean,
+): "private" | "friends" | "public" {
+  if (val === "friends") return "friends";
+  if (val === "public" || isPublic) return "public";
+  return "private";
+}
+
 export interface EditTripFormData {
   title:       string;
   description: string;
@@ -113,10 +122,7 @@ const useEditTrip = (): UseEditTripReturn => {
         const endDate   = new Date(tripData.endDate);
         if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return;
 
-        let visibility: "private" | "friends" | "public";
-        if (tripData.visibility === "friends") { visibility = "friends"; }
-        else if (tripData.visibility === "public" || tripData.isPublic) { visibility = "public"; }
-        else { visibility = "private"; }
+        const visibility = parseVisibility(tripData.visibility, tripData.isPublic);
 
         const existingCover = tripData.coverImage || "";
         if (existingCover) isManualCover.current = true;

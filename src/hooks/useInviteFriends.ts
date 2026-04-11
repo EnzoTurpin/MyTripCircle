@@ -11,8 +11,7 @@ import { useBottomSheet } from "./useBottomSheet";
 import { useSendInvitations } from "./useSendInvitations";
 import { useInvitationLink } from "./useInvitationLink";
 import { usePendingInvitations } from "./usePendingInvitations";
-import { useTripMembers } from "./useTripMembers";
-import { CollabInfo } from "./useTripMembers";
+import { useTripMembers, CollabInfo } from "./useTripMembers";
 
 // Re-exporté pour la compatibilité descendante (MemberRow, MemberActionSheet)
 export type { CollabInfo } from "./useTripMembers";
@@ -106,9 +105,9 @@ export function useInviteFriends(tripId: string) {
   const link = useInvitationLink(tripId);
 
   useEffect(() => {
-    void loadData();
-    void invitations.loadPendingInvitations();
-    void link.loadLink();
+    loadData().catch(console.error);
+    invitations.loadPendingInvitations().catch(console.error);
+    link.loadLink().catch(console.error);
   }, [loadData, invitations.loadPendingInvitations, link.loadLink]);
 
   const sendInvitations = useSendInvitations({ trip, friends });

@@ -24,6 +24,13 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
   const [renamingIndex, setRenamingIndex] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
+  const appendAttachments = (newItems: Attachment[]) => {
+    setAttachments((prev) => {
+      if (newItems.length === 1) { setRenameValue(""); setRenamingIndex(prev.length); }
+      return [...prev, ...newItems];
+    });
+  };
+
   const handlePickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -38,10 +45,7 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
         const newItems = result.assets.filter((a) => a.uri).map((a) => ({
           uri: a.uri, name: a.fileName || `image_${Date.now()}.jpg`, type: "image" as const,
         }));
-        setAttachments((prev) => {
-          if (newItems.length === 1) { setRenameValue(""); setRenamingIndex(prev.length); }
-          return [...prev, ...newItems];
-        });
+        appendAttachments(newItems);
       }
     } catch {
       Alert.alert(t("common.error"), t("bookings.imagePickerError"));
@@ -57,10 +61,7 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
         const newItems = result.assets.map((a) => ({
           uri: a.uri, name: a.name, type: a.mimeType?.includes("pdf") ? ("pdf" as const) : ("image" as const),
         }));
-        setAttachments((prev) => {
-          if (newItems.length === 1) { setRenameValue(""); setRenamingIndex(prev.length); }
-          return [...prev, ...newItems];
-        });
+        appendAttachments(newItems);
       }
     } catch {
       Alert.alert(t("common.error"), t("bookings.documentPickerError"));
