@@ -9,6 +9,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
 import ApiService from "../services/ApiService";
+import { setUnauthorizedCallback, clearUnauthorizedCallback } from "../services/api/apiCore";
 import i18n, { parseApiError as translateApiMessage } from "../utils/i18n";
 import { useUserProfile } from "../hooks/useUserProfile";
 
@@ -69,6 +70,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     loadUser();
+  }, []);
+
+  // Enregistre le callback de déconnexion forcée en cas de 401 (token expiré côté serveur)
+  useEffect(() => {
+    setUnauthorizedCallback(() => setUser(null));
+    return () => clearUnauthorizedCallback();
   }, []);
 
   const parseApiError = (
@@ -132,6 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       await AsyncStorage.setItem("token", res.token);
+      if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(res.user));
       setUser({
         ...res.user,
@@ -180,6 +188,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // If token is provided, user is already verified (no OTP flow)
       if (res.token && res.user) {
         await AsyncStorage.setItem("token", res.token);
+        if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
         await AsyncStorage.setItem("user", JSON.stringify(res.user));
         setUser({
           ...res.user,
@@ -208,6 +217,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
       await AsyncStorage.setItem("token", res.token);
+      if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(res.user));
       setUser({ ...res.user, createdAt: new Date(res.user.createdAt) });
       return { success: true };
@@ -232,6 +242,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
       await AsyncStorage.setItem("token", res.token);
+      if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(res.user));
       setUser({ ...res.user, createdAt: new Date(res.user.createdAt) });
       return { success: true };
@@ -244,8 +255,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("user");
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      // Révoque le refresh token côté serveur (best-effort, pas bloquant)
+      if (refreshToken) {
+        ApiService.logout({ refreshToken }).catch(() => {});
+      }
+      await AsyncStorage.multiRemove(["token", "refreshToken", "user"]);
       setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
@@ -269,6 +284,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (res.token && res.user) {
         await AsyncStorage.setItem("token", res.token);
+        if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
         await AsyncStorage.setItem("user", JSON.stringify(res.user));
         setUser({
           ...res.user,

@@ -5,6 +5,7 @@ export const authApi = {
     request<{
       success: boolean;
       token?: string;
+      refreshToken?: string;
       user?: any;
       requiresOtp?: boolean;
       userId?: string;
@@ -15,6 +16,7 @@ export const authApi = {
     request<{
       success: boolean;
       token?: string;
+      refreshToken?: string;
       user?: any;
       userId?: string;
       error?: string;
@@ -22,7 +24,7 @@ export const authApi = {
     }>("/users/register", "POST", data),
 
   loginWithGoogle: (data: { accessToken: string }) =>
-    request<{ success: boolean; token?: string; user?: any; error?: string }>(
+    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string }>(
       "/users/google", "POST", data
     ),
 
@@ -31,14 +33,17 @@ export const authApi = {
     email?: string;
     fullName?: { givenName?: string | null; familyName?: string | null } | null;
   }) =>
-    request<{ success: boolean; token?: string; user?: any; error?: string }>(
+    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string }>(
       "/users/apple", "POST", data
     ),
 
   verifyOtp: (data: { userId: string; otp: string }) =>
-    request<{ success: boolean; token?: string; user?: any; error?: string }>(
+    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string }>(
       "/users/verify-otp", "POST", data
     ),
+
+  logout: (data: { refreshToken: string }) =>
+    request<{ success: boolean }>("/users/logout", "POST", data),
 
   resendOtp: (userId: string) =>
     request<{ success: boolean }>("/users/resend-otp", "POST", { userId }),
