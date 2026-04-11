@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { Trip, Collaborator } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -18,6 +19,7 @@ interface Props {
   isOwner: boolean;
   userCollaborator?: Collaborator;
   collaboratorUsers: Map<string, any>;
+  onInvite?: () => void;
 }
 
 const MembersTab: React.FC<Props> = ({
@@ -26,6 +28,7 @@ const MembersTab: React.FC<Props> = ({
   isOwner,
   userCollaborator,
   collaboratorUsers,
+  onInvite,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -41,6 +44,12 @@ const MembersTab: React.FC<Props> = ({
 
   return (
     <View style={s.tabContent}>
+      {isOwner && onInvite && (
+        <TouchableOpacity style={[s.inviteBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onInvite} activeOpacity={0.8}>
+          <Ionicons name="person-add-outline" size={18} color={colors.textMid} />
+          <Text style={[s.inviteBtnText, { color: colors.textMid }]}>{t("tripDetails.inviteFriends")}</Text>
+        </TouchableOpacity>
+      )}
       <View style={[s.memberRow, { borderBottomColor: colors.bgMid }]}>
         <View style={[s.memberAvatar, { backgroundColor: isOwner ? "#C4714A" : "#B0A090" }]}>
           {user?.avatar
@@ -111,6 +120,21 @@ const s = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 80,
     position: "relative",
+  },
+  inviteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  inviteBtnText: {
+    fontSize: 14,
+    fontFamily: F.sans600,
   },
   memberRow: {
     flexDirection: "row",

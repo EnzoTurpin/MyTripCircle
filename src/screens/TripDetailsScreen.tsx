@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -25,14 +27,21 @@ import TripTabBar from "../components/tripDetails/TripTabBar";
 import BookingsTab from "../components/tripDetails/BookingsTab";
 import AddressesTab from "../components/tripDetails/AddressesTab";
 import MembersTab from "../components/tripDetails/MembersTab";
+import {
+  ExistingBookingPicker,
+  ExistingAddressPicker,
+} from "../components/tripDetails/ExistingItemPicker";
 import { F } from "../theme/fonts";
 import { RADIUS, SHADOW } from "../theme";
 import SkeletonBox from "../components/SkeletonBox";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 
+type TripDetailsNavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
+
 const TripDetailsScreen: React.FC = () => {
   const route = useRoute<TripDetailsScreenRouteProp>();
+  const navigation = useNavigation<TripDetailsNavigationProp>();
   const { tripId, showValidateButton = false, showToast: toastParam } = route.params;
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -63,10 +72,43 @@ const TripDetailsScreen: React.FC = () => {
     durationDays,
     daysPassed,
     handleSaveBooking,
+    handleCopyBooking,
+    handleCopyAddress,
     handleEditAddress,
     handleSaveAddress,
     handleValidateTrip,
+    otherBookings,
+    otherAddresses,
   } = useTripDetails(tripId, toastParam);
+
+  const [showBookingPicker, setShowBookingPicker] = useState(false);
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
+
+  const canEdit = isOwner || userCollaborator?.permissions?.canEdit;
+
+  const handleAddBookingPress = () => {
+    if (!otherBookings.length) {
+      setShowBookingForm(true);
+      return;
+    }
+    Alert.alert(t("tripDetails.addBooking"), undefined, [
+      { text: t("tripDetails.createNew"), onPress: () => setShowBookingForm(true) },
+      { text: t("tripDetails.chooseExisting"), onPress: () => setShowBookingPicker(true) },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  };
+
+  const handleAddAddressPress = () => {
+    if (!otherAddresses.length) {
+      setShowAddressForm(true);
+      return;
+    }
+    Alert.alert(t("tripDetails.addAddress"), undefined, [
+      { text: t("tripDetails.createNew"), onPress: () => setShowAddressForm(true) },
+      { text: t("tripDetails.chooseExisting"), onPress: () => setShowAddressPicker(true) },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  };
 
   if (loading) {
     return (
@@ -167,6 +209,7 @@ const TripDetailsScreen: React.FC = () => {
             bookings={bookings}
             isOwner={isOwner}
             canEdit={userCollaborator?.permissions?.canEdit}
+            onAddBooking={handleAddBookingPress}
           />
         )}
 
@@ -174,6 +217,8 @@ const TripDetailsScreen: React.FC = () => {
           <AddressesTab
             addresses={addresses}
             onEditAddress={handleEditAddress}
+            onAddAddress={handleAddAddressPress}
+            canAdd={canEdit}
           />
         )}
 
@@ -184,6 +229,7 @@ const TripDetailsScreen: React.FC = () => {
             isOwner={isOwner}
             userCollaborator={userCollaborator}
             collaboratorUsers={collaboratorUsers}
+            onInvite={() => navigation.navigate("InviteFriends", { tripId })}
           />
         )}
 
@@ -206,6 +252,20 @@ const TripDetailsScreen: React.FC = () => {
         onClose={() => { setShowAddressForm(false); setEditingAddress(undefined); }}
         onSave={handleSaveAddress}
         initialAddress={editingAddress}
+      />
+
+      <ExistingBookingPicker
+        visible={showBookingPicker}
+        bookings={otherBookings}
+        onSelect={(booking) => { setShowBookingPicker(false); handleCopyBooking(booking); }}
+        onClose={() => setShowBookingPicker(false)}
+      />
+
+      <ExistingAddressPicker
+        visible={showAddressPicker}
+        addresses={otherAddresses}
+        onSelect={(address) => { setShowAddressPicker(false); handleCopyAddress(address); }}
+        onClose={() => setShowAddressPicker(false)}
       />
 
       {showToast && (

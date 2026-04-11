@@ -13,7 +13,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 export function useTripData(tripId: string) {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { validateTrip, createBooking, createAddress, updateAddress } = useTrips();
+  const { validateTrip, createBooking, createAddress, updateAddress, bookings: allBookings, addresses: allAddresses } = useTrips();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -138,6 +138,26 @@ export function useTripData(tripId: string) {
     setShowAddressForm(true);
   };
 
+  const handleCopyBooking = async (booking: Booking) => {
+    try {
+      const { id, createdAt, updatedAt, attachments, ...data } = booking;
+      const newBooking = await createBooking({ ...data, tripId });
+      setBookings((prev) => [...prev, newBooking]);
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error) || t("tripDetails.createBookingError"));
+    }
+  };
+
+  const handleCopyAddress = async (address: Address) => {
+    try {
+      const { id, createdAt, updatedAt, ...data } = address;
+      const newAddress = await createAddress({ ...data, tripId });
+      setAddresses((prev) => [...prev, newAddress]);
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error));
+    }
+  };
+
   const handleSaveAddress = async (addressData: Omit<Address, "id" | "createdAt" | "updatedAt">) => {
     if (editingAddress) {
       const updated = await updateAddress(editingAddress.id, addressData);
@@ -186,6 +206,10 @@ export function useTripData(tripId: string) {
     ]);
   };
 
+  // Éléments d'autres voyages disponibles pour copie
+  const otherBookings = allBookings.filter((b) => b.tripId !== tripId);
+  const otherAddresses = allAddresses.filter((a) => a.tripId !== tripId);
+
   return {
     trip,
     bookings,
@@ -200,9 +224,13 @@ export function useTripData(tripId: string) {
     loadTripData,
     handleAddBooking,
     handleSaveBooking,
+    handleCopyBooking,
+    handleCopyAddress,
     handleAddAddress,
     handleEditAddress,
     handleSaveAddress,
     handleValidateTrip,
+    otherBookings,
+    otherAddresses,
   };
 }

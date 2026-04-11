@@ -50,18 +50,27 @@ interface Props {
   bookings: Booking[];
   isOwner: boolean;
   canEdit?: boolean;
+  onAddBooking?: () => void;
 }
 
-const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit }) => {
+const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking }) => {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { colors } = useTheme();
+
+  const canAdd = isOwner || canEdit;
 
   if (bookings.length === 0) {
     return (
       <View style={s.tabContent}>
         <View style={s.emptyState}>
           <Text style={[s.emptyText, { color: colors.textMid }]}>{t("tripDetails.noBookings")}</Text>
+          {canAdd && onAddBooking && (
+            <TouchableOpacity style={[s.addBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddBooking} activeOpacity={0.8}>
+              <Ionicons name="add" size={18} color={colors.textMid} />
+              <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addBooking")}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -69,6 +78,12 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit }) => {
 
   return (
     <View style={s.tabContent}>
+      {canAdd && onAddBooking && (
+        <TouchableOpacity style={[s.addBtnTop, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddBooking} activeOpacity={0.8}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.textMid} />
+          <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addBooking")}</Text>
+        </TouchableOpacity>
+      )}
       {bookings.map((booking: Booking) => {
         const stripe = bookingStripeColor(booking.type);
         const iconBg = bookingIconBg(booking.type);
@@ -126,11 +141,36 @@ const s = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingVertical: 48,
+    gap: 16,
   },
   emptyText: {
     fontSize: 15,
     color: "#7A6A58",
     fontFamily: F.sans400,
+  },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: RADIUS.button,
+    borderWidth: 1,
+  },
+  addBtnTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.button,
+    borderWidth: 1,
+  },
+  addBtnText: {
+    fontSize: 14,
+    fontFamily: F.sans600,
   },
   listItem: {
     marginHorizontal: 20,
