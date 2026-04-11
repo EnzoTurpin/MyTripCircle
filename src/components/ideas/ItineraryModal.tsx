@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   View,
@@ -9,6 +9,7 @@ import {
   ScrollView as RNScrollView,
   StyleSheet,
   Platform,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -281,10 +282,27 @@ const ItineraryModal: React.FC<Props> = ({
   const { t } = useTranslation();
   const { colors } = useTheme();
 
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const sheetY = useRef(new Animated.Value(600)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(backdropOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.spring(sheetY, { toValue: 0, bounciness: 3, speed: 14, useNativeDriver: true }),
+      ]).start();
+    } else {
+      backdropOpacity.setValue(0);
+      sheetY.setValue(600);
+    }
+  }, [visible]);
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
+      <Animated.View style={[styles.overlay, { opacity: backdropOpacity }]}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+      </Animated.View>
+      <Animated.View style={[styles.container, { backgroundColor: colors.bg, transform: [{ translateY: sheetY }] }]}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t("ideas.itinerary.title")}</Text>
             <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
@@ -317,8 +335,7 @@ const ItineraryModal: React.FC<Props> = ({
               onCreateTrip={onCreateTrip} onBackFromCreate={onBackFromCreate} colors={colors}
             />
           )}
-        </View>
-      </View>
+      </Animated.View>
     </Modal>
   );
 };
@@ -327,11 +344,14 @@ const ItineraryModal: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
   },
   container: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,

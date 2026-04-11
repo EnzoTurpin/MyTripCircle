@@ -134,6 +134,7 @@ const profile = {
     featureUpdates: "Mises à jour gratuites",
     recommended: "Recommandé",
     perMonth: "/mois",
+    subscribe: "S'abonner",
   },
 };
 

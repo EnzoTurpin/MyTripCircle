@@ -40,6 +40,20 @@ type Region = {
   longitudeDelta: number;
 };
 
+const DARK_MAP_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#1A1714" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#A89880" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1A1714" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2E2A27" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#3A3530" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3D3830" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0D1117" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#22201D" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1A2218" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#262220" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#3A3530" }] },
+];
+
 const DEFAULT_REGION: Region = {
   latitude: 48.8566,
   longitude: 2.3522,
@@ -70,7 +84,7 @@ const FullMapScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { addresses }                          = useTrips();
   const { t }                                  = useTranslation();
-  const { colors, satelliteMap, toggleSatelliteMap } = useTheme();
+  const { colors, isDark, satelliteMap, toggleSatelliteMap } = useTheme();
   const insets                                 = useSafeAreaInsets();
 
   const [selectedFilter, setSelectedFilter]     = useState<FilterType>("all");
@@ -170,6 +184,7 @@ const FullMapScreen: React.FC = () => {
             zoomEnabled={selectedAddress === null}
             rotateEnabled={selectedAddress === null}
             pitchEnabled={selectedAddress === null}
+            customMapStyle={isDark && !satelliteMap ? DARK_MAP_STYLE : []}
           >
             {filteredWithCoords.map((address) => (
               <Marker

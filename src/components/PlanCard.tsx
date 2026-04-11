@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ModernButton } from "./ModernButton";
 import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
 
 type Props = {
   id: string;
@@ -16,18 +17,19 @@ type Props = {
   recommended?: boolean;
 };
 
-const PlanCard: React.FC<Props> = ({ 
-  id, 
-  title, 
-  price, 
-  advantages, 
-  onSubscribe, 
+const PlanCard: React.FC<Props> = ({
+  id,
+  title,
+  price,
+  advantages,
+  onSubscribe,
   loading,
   recommended = false,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   return (
-    <View style={[styles.card, recommended && styles.recommendedCard]}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: recommended ? "#2891FF" : colors.border }, recommended && styles.recommendedCard]}>
       {recommended && (
         <View style={styles.badge}>
           <LinearGradient
@@ -43,11 +45,11 @@ const PlanCard: React.FC<Props> = ({
       )}
       
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         {price && (
           <View style={styles.priceContainer}>
             <Text style={styles.price}>{price}</Text>
-            <Text style={styles.priceUnit}>{t("subscription.perMonth")}</Text>
+            <Text style={[styles.priceUnit, { color: colors.textMid }]}>{t("subscription.perMonth")}</Text>
           </View>
         )}
       </View>
@@ -58,13 +60,13 @@ const PlanCard: React.FC<Props> = ({
             <View style={styles.checkIcon}>
               <Ionicons name="checkmark" size={16} color="#4CAF50" />
             </View>
-            <Text style={styles.advantageText}>{advantage}</Text>
+            <Text style={[styles.advantageText, { color: colors.text }]}>{advantage}</Text>
           </View>
         ))}
       </View>
 
       <ModernButton
-        title={loading ? t("common.loading") : t("settings.subscribe")}
+        title={loading ? t("common.loading") : t("subscription.subscribe")}
         onPress={() => onSubscribe(id)}
         variant={recommended ? "primary" : "outline"}
         gradient={recommended}
@@ -79,8 +81,7 @@ const PlanCard: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  card: { 
-    backgroundColor: "#FFFFFF",
+  card: {
     borderRadius: 16,
     padding: 24,
     marginBottom: 16,
@@ -90,10 +91,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 2,
-    borderColor: "#F5F5F5",
   },
   recommendedCard: {
-    borderColor: "#2891FF",
     borderWidth: 2,
   },
   badge: {

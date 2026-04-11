@@ -43,6 +43,8 @@ const CreateTripScreen: React.FC = () => {
     setShowStartDatePicker,
     setShowEndDatePicker,
     setShowVisibilityPicker,
+    coverImage,
+    handlePickCoverPhoto,
   } = useCreateTrip();
 
   const VISIBILITY_LABELS: Record<string, string> = {
@@ -74,7 +76,7 @@ const CreateTripScreen: React.FC = () => {
         </View>
 
         {/* ── Cover Photo ── */}
-        <TripCoverPhoto />
+        <TripCoverPhoto coverImage={coverImage} onPickPhoto={handlePickCoverPhoto} />
 
         {/* ── Formulaire ── */}
         <ScrollView

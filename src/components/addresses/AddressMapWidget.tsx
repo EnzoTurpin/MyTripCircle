@@ -7,6 +7,21 @@ import { GeoCoords } from "../../utils/geocoding";
 import { MapView, Marker, mapsAvailable, Region } from "../../hooks/useAddresses";
 import { getTypeIcon, getMarkerColor } from "./addressHelpers";
 import { styles } from "./addressStyles";
+import { useTheme } from "../../contexts/ThemeContext";
+
+const DARK_MAP_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#1A1714" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#A89880" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1A1714" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2E2A27" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#3A3530" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3D3830" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0D1117" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#22201D" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1A2218" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#262220" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#3A3530" }] },
+];
 
 interface AddressMapWidgetProps {
   addresses: Address[];
@@ -39,6 +54,7 @@ const AddressMapWidget: React.FC<AddressMapWidgetProps> = ({
   onOpenFullMap,
 }) => {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   return (
     <View style={styles.mapWidget} pointerEvents="box-none">
@@ -54,6 +70,7 @@ const AddressMapWidget: React.FC<AddressMapWidgetProps> = ({
           showsMyLocationButton={false}
           showsCompass={false}
           toolbarEnabled={false}
+          customMapStyle={isDark ? DARK_MAP_STYLE : []}
         >
           {Object.entries(mapCoords).map(([addressId, coords]) => {
             const address = addresses.find((a) => a.id === addressId);
