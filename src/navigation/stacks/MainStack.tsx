@@ -1,7 +1,6 @@
 import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
 
-import { RootStackParamList } from "../../types";
+import { RootStack } from "../rootStack";
 import MainTabs from "../tabs/MainTabs";
 import TripDetailsScreen from "../../screens/TripDetailsScreen";
 import BookingDetailsScreen from "../../screens/BookingDetailsScreen";
@@ -29,36 +28,34 @@ import ForgotPasswordScreen from "../../screens/ForgotPasswordScreen";
 import FriendInvitationScreen from "../../screens/FriendInvitationScreen";
 import IdeaDetailScreen from "../../screens/IdeaDetailScreen";
 
-const Stack = createStackNavigator<RootStackParamList>();
-
-const MainStack: React.FC = () => (
+const MainStack = () => (
   <>
-    <Stack.Screen name="Main" component={MainTabs} />
-    <Stack.Screen name="TripDetails" component={TripDetailsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AddressDetails" component={AddressDetailsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="FullMap" component={FullMapScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AddressForm" component={AddressFormScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="InviteFriends" component={InviteFriendsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="CreateTrip" component={CreateTripScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="EditTrip" component={EditTripScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="TripActions" component={TripActionsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Invitation" component={InvitationScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="FriendProfile" component={FriendProfileScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AddFriend" component={AddFriendScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="FriendRequestConfirmation" component={FriendRequestConfirmationScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="TripPublicView" component={TripPublicViewScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="TripMembers" component={TripMembersScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="FriendInvitation" component={FriendInvitationScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="IdeaDetail" component={IdeaDetailScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="Main" component={MainTabs} />
+    <RootStack.Screen name="TripDetails" component={TripDetailsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="BookingDetails" component={BookingDetailsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="AddressDetails" component={AddressDetailsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="FullMap" component={FullMapScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="AddressForm" component={AddressFormScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="InviteFriends" component={InviteFriendsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="CreateTrip" component={CreateTripScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="EditTrip" component={EditTripScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="TripActions" component={TripActionsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="Invitation" component={InvitationScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="FriendProfile" component={FriendProfileScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="AddFriend" component={AddFriendScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="FriendRequestConfirmation" component={FriendRequestConfirmationScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="TripPublicView" component={TripPublicViewScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="TripMembers" component={TripMembersScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="FriendInvitation" component={FriendInvitationScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="IdeaDetail" component={IdeaDetailScreen} options={{ headerShown: false }} />
   </>
 );
 
