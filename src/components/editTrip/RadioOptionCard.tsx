@@ -16,7 +16,7 @@ interface Props<T extends string> {
   readonly options: RadioOption<T>[];
   readonly selected: T;
   readonly isDark: boolean;
-  readonly colors: { surface: string; border: string; bg: string; bgMid: string; text: string; textLight: string };
+  readonly colors: { surface: string; border: string; bg: string; bgMid: string; bgDark: string; text: string; textLight: string };
   readonly onChange: (value: T) => void;
 }
 
@@ -37,7 +37,7 @@ function RadioOptionCard<T extends string>({ options, selected, isDark, colors, 
               onPress={() => onChange(value)}
               activeOpacity={0.75}
             >
-              <View style={[s.icon, { backgroundColor: sel ? `${dotColor}22` : colors.bgMid }]}>
+              <View style={[s.icon, { backgroundColor: sel ? `${dotColor}22` : colors.bgDark }]}>
                 <Text style={s.emoji}>{emoji}</Text>
               </View>
               <View style={s.info}>

@@ -168,6 +168,12 @@ export function useInviteFriends(tripId: string) {
     isOwner,
     memberSheet: members.memberSheet,
     inviteSheet,
+    // Valeurs Animated exposées à plat pour InviteFriendsScreen
+    backdropAnim: members.memberSheet.backdropAnim,
+    sheetY: members.memberSheet.translateY,
+    inviteAnim: inviteSheet.sheetAnim,
+    inviteBackdrop: inviteSheet.backdropAnim,
+    inviteY: inviteSheet.translateY,
     // Invitation link
     handleShareLink: link.handleShareLink,
     handleRenewLink: link.handleRenewLink,

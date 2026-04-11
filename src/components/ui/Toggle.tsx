@@ -17,7 +17,7 @@ const Toggle: React.FC<ToggleProps> = ({ value, onToggle, disabled = false, trac
       { backgroundColor: value ? (trackColor ?? "#C4714A") : "#D8CCBA" },
     ]}
   >
-    <View style={[styles.knob, { transform: [{ translateX: value ? 24 : 0 }] }]} />
+    <View style={[styles.knob, { transform: [{ translateX: value ? 22 : 0 }] }]} />
   </TouchableOpacity>
 );
 

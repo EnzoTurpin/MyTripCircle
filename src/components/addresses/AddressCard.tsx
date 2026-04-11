@@ -15,9 +15,9 @@ interface AddressCardProps {
 const AddressCard: React.FC<AddressCardProps> = ({ item, colors, t, onPress }) => {
   const ic = getIconColors(item.type);
   const tag = getTagColors(item.type);
-  const iconBg = ic.bg ?? colors.bgMid;
+  const iconBg = ic.bg ?? colors.bgDark;
   const iconColor = ic.icon ?? colors.textMid;
-  const tagBg = tag.bg ?? colors.bgMid;
+  const tagBg = tag.bg ?? colors.bgDark;
   const tagText = tag.text ?? colors.textMid;
 
   return (

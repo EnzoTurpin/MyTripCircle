@@ -181,7 +181,7 @@ project-root/
 ### Taille des fonctions & fichiers
 
 - Une fonction : ≤ 30 lignes idéalement, ≤ 50 lignes maximum
-- Un fichier : ≤ 300 lignes idéalement, ≤ 500 lignes maximum
+- Un fichier : ≤ 400 lignes idéalement, ≤ 500 lignes maximum
 - Au-delà : refactoriser sans exception
 
 ### Commentaires

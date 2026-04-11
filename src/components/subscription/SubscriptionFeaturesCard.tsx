@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface SubscriptionFeaturesCardProps {
   colors: {
@@ -14,6 +15,7 @@ interface SubscriptionFeaturesCardProps {
 
 const SubscriptionFeaturesCard: React.FC<SubscriptionFeaturesCardProps> = ({ colors }) => {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   const features = [
     { icon: "cloud-upload-outline",     text: t("subscription.featureCloud") },
@@ -28,7 +30,7 @@ const SubscriptionFeaturesCard: React.FC<SubscriptionFeaturesCardProps> = ({ col
       <View style={styles.list}>
         {features.map((feature) => (
           <View key={feature.icon} style={styles.item}>
-            <View style={styles.iconWrap}>
+            <View style={[styles.iconWrap, { backgroundColor: isDark ? "#1F2E1A" : "#E2EDD9" }]}>
               <Ionicons name={feature.icon as any} size={20} color="#6B8C5A" />
             </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{feature.text}</Text>
@@ -72,7 +74,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#E2EDD9",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
