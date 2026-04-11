@@ -46,6 +46,12 @@ const trips = {
     featureSoon: "Cette fonctionnalité arrive bientôt !",
     addBooking: "Ajouter une réservation",
     addAddress: "Ajouter une adresse",
+    createNew: "Créer une nouvelle",
+    chooseExisting: "Choisir parmi mes existantes",
+    pickExistingBooking: "Mes réservations",
+    pickExistingAddress: "Mes adresses",
+    noOtherBookings: "Aucune réservation dans d'autres voyages",
+    noOtherAddresses: "Aucune adresse dans d'autres voyages",
     draftMessage:
       "Ce voyage est un brouillon. Validez-le pour le rendre actif.",
     deleteDraftTitle: "Supprimer le brouillon",

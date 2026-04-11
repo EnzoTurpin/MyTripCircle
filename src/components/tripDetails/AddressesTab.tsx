@@ -37,9 +37,11 @@ const addressIconEmoji = (type: string): string => {
 interface Props {
   addresses: Address[];
   onEditAddress: (address: Address) => void;
+  onAddAddress?: () => void;
+  canAdd?: boolean;
 }
 
-const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress }) => {
+const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress, canAdd }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -48,6 +50,12 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress }) => {
       <View style={s.tabContent}>
         <View style={s.emptyState}>
           <Text style={[s.emptyText, { color: colors.textMid }]}>{t("tripDetails.noAddresses")}</Text>
+          {canAdd && onAddAddress && (
+            <TouchableOpacity style={[s.addBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddAddress} activeOpacity={0.8}>
+              <Ionicons name="add" size={18} color={colors.textMid} />
+              <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addAddress")}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -55,6 +63,12 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress }) => {
 
   return (
     <View style={s.tabContent}>
+      {canAdd && onAddAddress && (
+        <TouchableOpacity style={[s.addBtnTop, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddAddress} activeOpacity={0.8}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.textMid} />
+          <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addAddress")}</Text>
+        </TouchableOpacity>
+      )}
       {addresses.map((address: Address) => {
         const stripe = addressStripeColor(address.type);
         const iconBg = addressIconBg(address.type);
@@ -90,11 +104,36 @@ const s = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingVertical: 48,
+    gap: 16,
   },
   emptyText: {
     fontSize: 15,
     color: "#7A6A58",
     fontFamily: F.sans400,
+  },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: RADIUS.button,
+    borderWidth: 1,
+  },
+  addBtnTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.button,
+    borderWidth: 1,
+  },
+  addBtnText: {
+    fontSize: 14,
+    fontFamily: F.sans600,
   },
   listItem: {
     marginHorizontal: 20,
