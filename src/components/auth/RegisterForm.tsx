@@ -7,6 +7,7 @@ import { AppColors } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 import { RADIUS, DISABLED_OPACITY } from "../../theme";
 import LabelledInput from "./LabelledInput";
+import SocialAuthButtons from "./SocialAuthButtons";
 
 interface RegisterFormProps {
   name: string;
@@ -40,6 +41,9 @@ interface RegisterFormProps {
   onBackToWelcome: () => void;
   onNavigateTerms: () => void;
   onNavigatePrivacy: () => void;
+  onGooglePress: () => void;
+  onApplePress: () => void;
+  googleDisabled: boolean;
   validateEmail: (v: string) => boolean;
   validatePasswordStrong: (v: string) => boolean;
   validateName: (v: string) => boolean;
@@ -80,6 +84,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   onBackToWelcome,
   onNavigateTerms,
   onNavigatePrivacy,
+  onGooglePress,
+  onApplePress,
+  googleDisabled,
   validateEmail,
   validatePasswordStrong,
   validateName,
@@ -217,6 +224,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                 {busy ? t("common.pleaseWait") : t("auth.createMyAccount")}
               </Text>
             </TouchableOpacity>
+
+            <SocialAuthButtons
+              onGooglePress={onGooglePress}
+              onApplePress={onApplePress}
+              googleDisabled={googleDisabled}
+              busy={busy}
+              colors={colors}
+            />
+
             <View style={styles.footer}>
               <Text style={[styles.footerLabel, { color: colors.textLight }]}>{t("auth.registerFooterPrompt")}</Text>
               <TouchableOpacity onPress={onSwitchToLogin} activeOpacity={0.8}>
