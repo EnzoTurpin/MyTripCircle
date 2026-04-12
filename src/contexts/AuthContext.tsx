@@ -308,8 +308,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const deleteAccount = async (): Promise<boolean> => {
     try {
       await ApiService.deleteAccount();
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("user");
+      await AsyncStorage.multiRemove(["token", "refreshToken", "user"]);
       setUser(null);
       return true;
     } catch (error) {
