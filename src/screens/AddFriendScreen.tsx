@@ -25,6 +25,7 @@ import SearchResultCard from "../components/addFriend/SearchResultCard";
 import SuggestionCard from "../components/addFriend/SuggestionCard";
 import SearchBarWithHistory from "../components/addFriend/SearchBarWithHistory";
 import useSearchHistory from "../hooks/useSearchHistory";
+import BackButton from "../components/ui/BackButton";
 
 const detectContactType = (input: string): "email" | "phone" | null => {
   const t = input.trim();
@@ -112,13 +113,7 @@ const AddFriendScreen: React.FC = () => {
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
 
         <View style={styles.header}>
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("addFriend.title")}</Text>
         </View>
 
@@ -214,14 +209,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 14,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerTitle: { fontSize: 32, fontFamily: F.sans700 },
+  headerTitle: { fontSize: 28, fontFamily: F.sans700 },
   centerRow: {
     flexDirection: "row",
     alignItems: "center",

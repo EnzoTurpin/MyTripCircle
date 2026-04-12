@@ -157,7 +157,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
         <View style={[styles.galleryContainer, { backgroundColor: colors.bg }]}>
           <SafeAreaView edges={["top"]} style={[styles.galleryHeader, { borderBottomColor: colors.bgMid }]}>
             <TouchableOpacity onPress={() => { reset(); setMode("choose"); }} style={[styles.closeBtn, { backgroundColor: colors.bgMid }]}>
-              <Ionicons name="chevron-back" size={20} color={colors.text} />
+              <Ionicons name="chevron-back" size={22} color={colors.textMid} />
             </TouchableOpacity>
             <Text style={[styles.chooseTitle, { color: colors.text }]}>{t("bookings.scanGalleryOption")}</Text>
             <View style={{ width: 40 }} />
@@ -229,7 +229,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
         <View style={styles.overlay}>
           <View style={[styles.cameraHeader, { paddingTop: insets.top + 4 }]}>
             <TouchableOpacity style={styles.closeBtnWhite} onPress={() => { reset(); setMode("choose"); }} activeOpacity={0.8}>
-              <Ionicons name="chevron-back" size={24} color="white" />
+              <Ionicons name="chevron-back" size={22} color="white" />
             </TouchableOpacity>
             <Text style={styles.cameraHeaderTitle}>{t("bookings.scanTitle")}</Text>
             <View style={{ width: 44 }} />

@@ -105,7 +105,7 @@ const TripActionsScreen: React.FC = () => {
         {/* Back button */}
         <SafeAreaView edges={["top"]} style={s.heroOverlay}>
           <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         </SafeAreaView>
 
@@ -220,10 +220,10 @@ const s = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 0 : 12,
   },
   backBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: "rgba(255,255,255,0.22)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,

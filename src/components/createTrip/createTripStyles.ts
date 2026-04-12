@@ -20,9 +20,9 @@ const createTripStyles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: C.sandMid,
     justifyContent: "center",
     alignItems: "center",
@@ -30,7 +30,7 @@ const createTripStyles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    fontSize: 26,
+    fontSize: 20,
     fontFamily: F.sans700,
     color: C.ink,
   },

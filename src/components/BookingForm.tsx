@@ -67,7 +67,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         {/* ── Header ── */}
         <View style={[styles.header, { paddingTop: insets.top + 6, backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
           <TouchableOpacity style={[styles.headerBackBtn, { backgroundColor: colors.bgMid }]} onPress={onClose} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={20} color={colors.text} />
+            <Ionicons name="chevron-back" size={22} color={colors.textMid} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
             {initialBooking ? t("bookings.editBooking") : t("bookings.newBooking")}
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerBackBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center",
   },
   headerTitle: {

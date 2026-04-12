@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { parseApiError } from "../utils/i18n";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import BackButton from "../components/ui/BackButton";
 
 type OtpScreenRouteProp = RouteProp<RootStackParamList, "Otp">;
 type OtpScreenNavigationProp = StackNavigationProp<RootStackParamList, "Otp">;
@@ -146,13 +147,7 @@ const OtpScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         {/* Back button */}
-        <TouchableOpacity
-          style={[styles.backButton, { backgroundColor: colors.bgDark }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={20} color={colors.text} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
 
         {/* Titre + sous-titre */}
         <View style={styles.centerBlock}>
@@ -227,12 +222,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 56 : 24,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#D8CCBA",
-    justifyContent: "center",
-    alignItems: "center",
     marginBottom: 32,
   },
   centerBlock: {

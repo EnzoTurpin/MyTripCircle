@@ -56,7 +56,7 @@ const TripCoverHero: React.FC<Props> = ({
         onPress={onBack}
         activeOpacity={0.8}
       >
-        <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
       </TouchableOpacity>
 
       <View style={[styles.readOnlyBadge, { top: insetTop + 8 }]}>
@@ -96,10 +96,10 @@ const styles = StyleSheet.create({
   backBtn: {
     position: "absolute",
     left: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.22)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
   },

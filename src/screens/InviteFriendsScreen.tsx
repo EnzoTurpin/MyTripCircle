@@ -18,6 +18,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 import { useInviteFriends } from "../hooks/useInviteFriends";
 import MemberRow from "../components/inviteFriends/MemberRow";
+import BackButton from "../components/ui/BackButton";
 import PendingRow from "../components/inviteFriends/PendingRow";
 import MemberActionSheet from "../components/inviteFriends/MemberActionSheet";
 import InvitePanelSheet from "../components/inviteFriends/InvitePanelSheet";
@@ -115,12 +116,7 @@ const InviteFriendsScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
 
       <View style={[s.header, { backgroundColor: colors.bgLight }]}>
-        <TouchableOpacity
-          style={[s.backBtn, { backgroundColor: colors.bgMid }]}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={16} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={{ flex: 1, alignItems: "center" }}>
           {trip && (
             <Text style={[s.headerSub, { color: colors.textLight }]} numberOfLines={1}>
@@ -274,9 +270,8 @@ const s = StyleSheet.create({
   safe: { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 50, paddingTop: 10 },
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14 },
-  backBtn: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   headerSub: { fontFamily: F.sans400, fontSize: 14, textAlign: "center" },
-  headerTitle: { fontFamily: F.sans700, fontSize: 16, textAlign: "center" },
+  headerTitle: { fontFamily: F.sans700, fontSize: 20, textAlign: "center" },
   inviteBtn: { backgroundColor: "#C4714A", borderRadius: 24, paddingHorizontal: 18, paddingVertical: 10, shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 3 },
   inviteBtnTxt: { fontFamily: F.sans600, fontSize: 15, color: "#FFFFFF" },
   linkCard: { borderRadius: 18, borderWidth: 1, padding: 18, marginBottom: 18 },

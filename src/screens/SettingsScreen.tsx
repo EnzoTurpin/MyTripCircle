@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { changeLanguage } from "../utils/i18n";
 import { F } from "../theme/fonts";
 import Toggle from "../components/ui/Toggle";
+import BackButton from "../components/ui/BackButton";
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user, updateSettings, deleteAccount } = useAuth();
@@ -96,13 +97,7 @@ const SettingsScreen: React.FC = () => {
 
       {/* ── Header ── */}
       <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t("settings.title")}</Text>
         <View style={{ width: 38 }} />
       </View>
@@ -294,16 +289,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   headerTitle: {
     fontFamily: F.sans700,
-    fontSize: 26,
+    fontSize: 20,
     textAlign: "center",
   },
 

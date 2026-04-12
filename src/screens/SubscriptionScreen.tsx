@@ -16,6 +16,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useSubscriptionIap } from "../hooks/useSubscriptionIap";
 import PlanCard from "../components/PlanCard";
 import SubscriptionFeaturesCard from "../components/subscription/SubscriptionFeaturesCard";
+import BackButton from "../components/ui/BackButton";
 
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -31,13 +32,7 @@ const SubscriptionScreen: React.FC = () => {
 
         {/* ── Header ── */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: colors.bgMid }]}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
 
           <View style={styles.headerContent}>
             <View style={[styles.iconContainer, { backgroundColor: colors.terraLight, borderColor: colors.bgDark }]}>
@@ -116,8 +111,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   backButton: {
-    width: 44, height: 44, borderRadius: 22,
-    justifyContent: "center", alignItems: "center",
     marginBottom: 16,
   },
   headerContent:  { alignItems: "center" },

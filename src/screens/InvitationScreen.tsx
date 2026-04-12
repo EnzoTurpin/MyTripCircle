@@ -23,6 +23,7 @@ import EmptyState from "../components/invitations/EmptyState";
 import DeclineModal from "../components/invitations/DeclineModal";
 import AcceptedToast from "../components/invitations/AcceptedToast";
 import InvitationDetailView from "../components/invitations/InvitationDetailView";
+import BackButton from "../components/ui/BackButton";
 
 const InvitationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -71,11 +72,10 @@ const InvitationScreen: React.FC = () => {
 
       {/* ── Header ── */}
       <View style={[styles.header, { backgroundColor: colors.bg }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("invitation.myInvitations")}</Text>
+
         </View>
         <View style={{ width: 40 }} />
       </View>
@@ -192,9 +192,8 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 20, paddingVertical: 14,
   },
-  backBtn:      { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },
   headerCenter: { flex: 1, marginLeft: 14 },
-  headerTitle:  { fontSize: 34, fontFamily: F.sans700, color: "#2A2318" },
+  headerTitle:  { fontSize: 28, fontFamily: F.sans700 },
   tabBar: {
     flexDirection: "row", borderBottomWidth: 1,
     marginHorizontal: 20,

@@ -43,7 +43,7 @@ const IdeaHero: React.FC<Props> = ({ ideaId, name, country, onBack }) => (
     />
     <SafeAreaView style={s.heroSafeArea} edges={["top"]}>
       <TouchableOpacity style={s.backBtn} onPress={onBack} activeOpacity={0.8}>
-        <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
       </TouchableOpacity>
     </SafeAreaView>
     <View style={s.heroContent}>
@@ -71,9 +71,9 @@ const s = StyleSheet.create({
   backBtn: {
     marginTop: 10,
     marginLeft: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",

@@ -52,7 +52,7 @@ const FriendProfileScreen: React.FC = () => {
           />
 
           <TouchableOpacity style={[styles.backBtn, { top: insets.top + 2 }]} onPress={goBack} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
           {!loading && (
@@ -212,8 +212,8 @@ const styles = StyleSheet.create({
   backBtn: {
     position: "absolute",
     top: 16, left: 16,
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center", alignItems: "center",
   },
   amiBadge: {

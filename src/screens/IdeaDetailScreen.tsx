@@ -50,7 +50,7 @@ const IdeaDetailScreen: React.FC = () => {
     return (
       <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bg }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={colors.text} />
+          <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={s.errorContainer}>
           <Text style={[s.errorText, { color: colors.textLight }]}>

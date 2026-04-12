@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   headerLogo: { width: 44, height: 44, borderRadius: 12 },
   headerEyebrow: { fontSize: 14, fontFamily: F.sans400, marginBottom: 2 },
-  headerTitle: { fontSize: 26, fontFamily: F.sans700 },
+  headerTitle: { fontSize: 28, fontFamily: F.sans700 },
   addTripBtn: {
     width: 44,
     height: 44,

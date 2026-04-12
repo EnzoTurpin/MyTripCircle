@@ -19,6 +19,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import Toggle from "../components/ui/Toggle";
 import { userApi, ConsentPayload } from "../services/api/userApi";
 import { CONSENT_KEY, ConsentPreferences } from "./ConsentScreen";
+import BackButton from "../components/ui/BackButton";
 
 const ConsentManagementScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -77,13 +78,7 @@ const ConsentManagementScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
 
       <View style={[styles.header, { backgroundColor: colors.bg }]}>
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           {t("consentManagement.title")}
         </Text>
@@ -209,16 +204,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   headerTitle: {
     fontFamily: F.sans700,
-    fontSize: 22,
+    fontSize: 20,
     textAlign: "center",
   },
   scroll: { flex: 1 },

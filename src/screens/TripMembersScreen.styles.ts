@@ -10,13 +10,8 @@ export const s = StyleSheet.create({
     paddingHorizontal: 14, paddingTop: 8, paddingBottom: 8,
     backgroundColor: "#FDFAF5",
   },
-  backBtn: {
-    width: 26, height: 26, borderRadius: 13,
-    backgroundColor: "#EDE5D8",
-    alignItems: "center", justifyContent: "center",
-  },
   headerSub:   { fontFamily: F.sans400, fontSize: 11, color: "#B0A090", textAlign: "center" },
-  headerTitle: { fontFamily: F.sans700, fontSize: 16, color: "#2A2318", textAlign: "center" },
+  headerTitle: { fontFamily: F.sans700, fontSize: 20, textAlign: "center" },
   inviteBtn: {
     backgroundColor: "#C4714A", borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 5,

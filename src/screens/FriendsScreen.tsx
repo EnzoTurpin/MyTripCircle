@@ -26,6 +26,7 @@ import FriendsTabBar from "../components/friends/FriendsTabBar";
 import FriendsTab from "../components/friends/FriendsTab";
 import RequestsTab from "../components/friends/RequestsTab";
 import SuggestionsTab from "../components/friends/SuggestionsTab";
+import BackButton from "../components/ui/BackButton";
 
 type Tab = "friends" | "requests" | "suggestions";
 
@@ -233,9 +234,7 @@ const FriendsScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
 
       <View style={[styles.header, { backgroundColor: colors.bg }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("friends.title")}</Text>
         </View>
@@ -262,9 +261,8 @@ const FriendsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },
   headerCenter: { flex: 1, marginLeft: 14 },
-  headerTitle: { fontSize: 34, fontFamily: F.sans700 },
+  headerTitle: { fontSize: 28, fontFamily: F.sans700 },
   addCircleBtn: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: "#C4714A",
     justifyContent: "center", alignItems: "center",
