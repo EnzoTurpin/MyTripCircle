@@ -1,7 +1,7 @@
 const legal = {
   terms: {
     headerTitle: "Conditions d'utilisation",
-    lastUpdated: "Dernière mise à jour : mars 2026",
+    lastUpdated: "Dernière mise à jour : avril 2026",
     s1Title: "1. Acceptation des conditions",
     s1Body:
       "En utilisant MyTripCircle, vous acceptez les présentes conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser l'application.",
@@ -35,7 +35,7 @@ const legal = {
   },
   privacy: {
     headerTitle: "Politique de confidentialité",
-    lastUpdated: "Dernière mise à jour : mars 2026",
+    lastUpdated: "Dernière mise à jour : avril 2026",
     s1Title: "1. Responsable du traitement",
     s1Body:
       "MyTripCircle est responsable du traitement de vos données personnelles. Pour toute question, contactez-nous à : privacy@mytripcircle.com",
@@ -48,9 +48,9 @@ const legal = {
     s4Title: "4. Base légale",
     s4Body:
       "Le traitement de vos données repose sur votre consentement (lors de la création du compte) et sur l'exécution du contrat de service entre vous et MyTripCircle.",
-    s5Title: "5. Partage des données",
+    s5Title: "5. Partage des données et sous-traitants",
     s5Body:
-      "Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec vos collaborateurs de voyage (uniquement les informations que vous choisissez de partager) et avec nos prestataires techniques nécessaires au fonctionnement du service.",
+      "Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec vos collaborateurs de voyage (uniquement ce que vous choisissez de partager) et avec nos sous-traitants techniques : MongoDB Atlas (hébergement de la base de données, États-Unis), Google LLC (authentification OAuth, géolocalisation via l'API Places, fourniture de la messagerie via Gmail), Groq Inc. (génération d'itinéraires par IA, fonctionnalité optionnelle). Ces sous-traitants sont soumis à des obligations contractuelles conformes au RGPD.",
     s6Title: "6. Durée de conservation",
     s6Body:
       "Vos données sont conservées pendant toute la durée de votre utilisation du service, et supprimées dans un délai de 30 jours suivant la clôture de votre compte, sauf obligation légale contraire.",
@@ -62,7 +62,7 @@ const legal = {
       "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données contre tout accès non autorisé, perte ou divulgation.",
     s9Title: "9. Cookies et traceurs",
     s9Body:
-      "L'application peut utiliser des identifiants anonymes à des fins d'analyse d'utilisation. Aucun cookie publicitaire n'est utilisé.",
+      "L'application mobile MyTripCircle n'utilise pas de cookies. Aucun identifiant de suivi ni cookie publicitaire n'est déposé sur votre appareil. Le stockage local (SecureStore iOS / Keystore Android) est utilisé exclusivement pour sécuriser votre session d'authentification.",
     s10Title: "10. Modifications",
     s10Body:
       "Nous pouvons mettre à jour cette politique à tout moment. Toute modification significative vous sera notifiée par e-mail ou via l'application.",

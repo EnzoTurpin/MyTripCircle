@@ -82,6 +82,7 @@ const common = {
     privacyLink: "Privacy Policy",
     loginFooterPrompt: "No account yet? ",
     registerFooterPrompt: "Already have an account? ",
+    termsRequired: "You must accept the Terms of Use and Privacy Policy to create an account.",
   },
   tabs: {
     myTrips: "My Trips",

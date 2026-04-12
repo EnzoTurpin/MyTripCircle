@@ -208,9 +208,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           {/* Section basse */}
           <View>
             <TouchableOpacity
-              style={[styles.primaryBtn, busy && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, (busy || !termsAccepted) && styles.primaryBtnDisabled]}
               onPress={onSubmit}
-              disabled={busy}
+              disabled={busy || !termsAccepted}
               activeOpacity={0.85}
             >
               <Text style={styles.primaryBtnText}>

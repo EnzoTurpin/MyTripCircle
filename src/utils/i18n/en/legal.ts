@@ -1,7 +1,7 @@
 const legal = {
   terms: {
     headerTitle: "Terms of Use",
-    lastUpdated: "Last updated: March 2026",
+    lastUpdated: "Last updated: April 2026",
     s1Title: "1. Acceptance of terms",
     s1Body:
       "By using MyTripCircle, you agree to these terms of use. If you do not agree, please do not use the app.",
@@ -35,7 +35,7 @@ const legal = {
   },
   privacy: {
     headerTitle: "Privacy Policy",
-    lastUpdated: "Last updated: March 2026",
+    lastUpdated: "Last updated: April 2026",
     s1Title: "1. Data controller",
     s1Body:
       "MyTripCircle is the controller of your personal data. For questions, contact us at: privacy@mytripcircle.com",
@@ -48,9 +48,9 @@ const legal = {
     s4Title: "4. Legal basis",
     s4Body:
       "Processing is based on your consent (when you create an account) and on performing the service contract between you and MyTripCircle.",
-    s5Title: "5. Data sharing",
+    s5Title: "5. Data sharing and sub-processors",
     s5Body:
-      "We never sell your data. It may be shared with trip collaborators (only what you choose to share) and technical providers necessary to operate the service.",
+      "We never sell your data. It may be shared with trip collaborators (only what you choose to share) and with our technical sub-processors: MongoDB Atlas (database hosting, United States), Google LLC (OAuth authentication, location via Places API, email via Gmail), Groq Inc. (AI itinerary generation, optional feature). All sub-processors are bound by GDPR-compliant contractual obligations.",
     s6Title: "6. Retention",
     s6Body:
       "Data is kept while you use the service and deleted within 30 days after account closure, unless the law requires otherwise.",
@@ -62,7 +62,7 @@ const legal = {
       "We implement appropriate technical and organizational measures to protect your data from unauthorized access, loss, or disclosure.",
     s9Title: "9. Cookies and trackers",
     s9Body:
-      "The app may use anonymous identifiers for usage analytics. We do not use advertising cookies.",
+      "The MyTripCircle mobile app does not use cookies. No tracking identifiers or advertising cookies are stored on your device. Local storage (SecureStore on iOS / Keystore on Android) is used exclusively to secure your authentication session.",
     s10Title: "10. Changes",
     s10Body:
       "We may update this policy at any time. Material changes will be notified by email or in the app.",

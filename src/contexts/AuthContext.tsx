@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useMemo,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as secureStorage from "../utils/secureStorage";
 import { User } from "../types";
 import ApiService from "../services/ApiService";
 import { setUnauthorizedCallback, clearUnauthorizedCallback } from "../services/api/apiCore";
@@ -35,7 +35,7 @@ interface AuthContextType {
     fullName?: { givenName?: string | null; familyName?: string | null } | null,
   ) => Promise<AuthResult>;
   logout: () => Promise<void>;
-  deleteAccount: () => Promise<boolean>;
+  deleteAccount: () => Promise<{ success: boolean; scheduledAt?: Date }>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   updateAvatar: (avatar: string) => Promise<void>;
   updateSettings: (data: { isPublicProfile: boolean }) => Promise<void>;
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loadUser = async () => {
     try {
-      const userData = await AsyncStorage.getItem("user");
+      const userData = await secureStorage.getItem("user");
       if (userData) {
         const user = JSON.parse(userData);
         // Convert date strings back to Date objects
@@ -138,9 +138,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, error: i18n.t("common.loginFailed") };
       }
 
-      await AsyncStorage.setItem("token", res.token);
-      if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
-      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      await secureStorage.setItem("token", res.token);
+      if (res.refreshToken) await secureStorage.setItem("refreshToken", res.refreshToken);
+      await secureStorage.setItem("user", JSON.stringify(res.user));
       setUser({
         ...res.user,
         createdAt: new Date(res.user.createdAt),
@@ -187,9 +187,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // If token is provided, user is already verified (no OTP flow)
       if (res.token && res.user) {
-        await AsyncStorage.setItem("token", res.token);
-        if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
-        await AsyncStorage.setItem("user", JSON.stringify(res.user));
+        await secureStorage.setItem("token", res.token);
+        if (res.refreshToken) await secureStorage.setItem("refreshToken", res.refreshToken);
+        await secureStorage.setItem("user", JSON.stringify(res.user));
         setUser({
           ...res.user,
           createdAt: new Date(res.user.createdAt),
@@ -216,9 +216,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           error: res?.error || i18n.t("apiErrors.googleAuthFailed"),
         };
       }
-      await AsyncStorage.setItem("token", res.token);
-      if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
-      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      await secureStorage.setItem("token", res.token);
+      if (res.refreshToken) await secureStorage.setItem("refreshToken", res.refreshToken);
+      await secureStorage.setItem("user", JSON.stringify(res.user));
       setUser({ ...res.user, createdAt: new Date(res.user.createdAt) });
       return { success: true };
     } catch (error) {
@@ -241,9 +241,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           error: res?.error || i18n.t("apiErrors.appleAuthFailed"),
         };
       }
-      await AsyncStorage.setItem("token", res.token);
-      if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
-      await AsyncStorage.setItem("user", JSON.stringify(res.user));
+      await secureStorage.setItem("token", res.token);
+      if (res.refreshToken) await secureStorage.setItem("refreshToken", res.refreshToken);
+      await secureStorage.setItem("user", JSON.stringify(res.user));
       setUser({ ...res.user, createdAt: new Date(res.user.createdAt) });
       return { success: true };
     } catch (error) {
@@ -255,12 +255,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      const refreshToken = await secureStorage.getItem("refreshToken");
       // Révoque le refresh token côté serveur (best-effort, pas bloquant)
       if (refreshToken) {
         ApiService.logout({ refreshToken }).catch(() => {});
       }
-      await AsyncStorage.multiRemove(["token", "refreshToken", "user"]);
+      await secureStorage.multiRemove(["token", "refreshToken", "user"]);
       setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
@@ -283,9 +283,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (res.token && res.user) {
-        await AsyncStorage.setItem("token", res.token);
-        if (res.refreshToken) await AsyncStorage.setItem("refreshToken", res.refreshToken);
-        await AsyncStorage.setItem("user", JSON.stringify(res.user));
+        await secureStorage.setItem("token", res.token);
+        if (res.refreshToken) await secureStorage.setItem("refreshToken", res.refreshToken);
+        await secureStorage.setItem("user", JSON.stringify(res.user));
         setUser({
           ...res.user,
           createdAt: new Date(res.user.createdAt),
@@ -300,20 +300,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const loginWithToken = async (token: string, user: User): Promise<void> => {
-    await AsyncStorage.setItem("token", token);
-    await AsyncStorage.setItem("user", JSON.stringify(user));
+    await secureStorage.setItem("token", token);
+    await secureStorage.setItem("user", JSON.stringify(user));
     setUser({ ...user, createdAt: new Date(user.createdAt) });
   };
 
-  const deleteAccount = async (): Promise<boolean> => {
+  const deleteAccount = async (): Promise<{ success: boolean; scheduledAt?: Date }> => {
     try {
-      await ApiService.deleteAccount();
-      await AsyncStorage.multiRemove(["token", "refreshToken", "user"]);
+      const res = await ApiService.deleteAccount() as any;
+      // La suppression est planifiée (soft delete 7 jours) : on déconnecte l'utilisateur
+      await secureStorage.multiRemove(["token", "refreshToken", "user"]);
       setUser(null);
-      return true;
+      return { success: true, scheduledAt: res?.scheduledAt ? new Date(res.scheduledAt) : undefined };
     } catch (error) {
       console.error("Delete account error:", error);
-      return false;
+      return { success: false };
     }
   };
 

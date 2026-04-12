@@ -1,14 +1,5 @@
-const GOOGLE_PLACES_AUTOCOMPLETE_URL =
-  "https://maps.googleapis.com/maps/api/place/autocomplete/json";
-const GOOGLE_PLACES_DETAILS_URL =
-  "https://maps.googleapis.com/maps/api/place/details/json";
-const GOOGLE_PLACES_TEXT_SEARCH_URL =
-  "https://maps.googleapis.com/maps/api/place/textsearch/json";
-const GOOGLE_PLACES_PHOTO_URL =
-  "https://maps.googleapis.com/maps/api/place/photo";
-
-const GOOGLE_PLACES_API_KEY =
-  process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "";
+import { request } from "./api/apiCore";
+import { API_BASE_URL } from "../config/api";
 
 export interface AddressSuggestion {
   placeId: string;
@@ -34,12 +25,8 @@ export interface TextSearchResult {
   photoUrl?: string;
 }
 
-const buildError = (status: string, message?: string) => {
-  const fallback = `Google Places error: ${status}`;
-  return new Error(message || fallback);
-};
-
-export const hasGooglePlacesApiKey = GOOGLE_PLACES_API_KEY.length > 0;
+// Indique si le proxy Places est disponible (toujours true — dépend du backend)
+export const hasGooglePlacesApiKey = true;
 
 const PLACE_TYPE_MAP: Record<string, string> = {
   hotel:      "lodging",
@@ -48,145 +35,78 @@ const PLACE_TYPE_MAP: Record<string, string> = {
   activity:   "tourist_attraction",
 };
 
-export const getAddressSuggestions = async (
-  input: string,
-  signal?: AbortSignal,
-  location?: { lat: number; lng: number },
-  addressType?: string
-): Promise<AddressSuggestion[]> => {
-  if (!hasGooglePlacesApiKey || !input.trim()) {
-    return [];
-  }
-
-  const params = new URLSearchParams({
-    input,
-    key: GOOGLE_PLACES_API_KEY,
-    language: "fr",
-  });
-
-  if (location) {
-    params.set("location", `${location.lat},${location.lng}`);
-    params.set("radius", "50000");
-  }
-
-  const googleType = addressType ? PLACE_TYPE_MAP[addressType] : undefined;
-  if (googleType) {
-    params.set("types", googleType);
-  }
-
-  const response = await fetch(
-    `${GOOGLE_PLACES_AUTOCOMPLETE_URL}?${params.toString()}`,
-    { signal }
-  );
-  const data = await response.json();
-
-  if (data.status === "ZERO_RESULTS") {
-    return [];
-  }
-
-  if (data.status !== "OK") {
-    throw buildError(data.status, data.error_message);
-  }
-
-  return (data.predictions || []).map((prediction: any) => ({
-    placeId: prediction.place_id,
-    description: prediction.description,
-  }));
-};
-
-const extractComponent = (
-  type: string,
-  components: any[] = [],
-): string | undefined => {
+const extractComponent = (type: string, components: any[] = []): string | undefined => {
   const component = components.find((item) => item.types?.includes(type));
   return component?.long_name;
 };
 
-export const getPlaceDetails = async (
-  placeId: string
-): Promise<PlaceDetailsResult> => {
-  if (!hasGooglePlacesApiKey || !placeId) {
-    return {};
+export const getAddressSuggestions = async (
+  input: string,
+  signal?: AbortSignal,
+  location?: { lat: number; lng: number },
+  addressType?: string,
+): Promise<AddressSuggestion[]> => {
+  if (!input.trim()) return [];
+
+  const params = new URLSearchParams({ input: input.trim(), language: "fr" });
+  if (location) {
+    params.set("location", `${location.lat},${location.lng}`);
+    params.set("radius", "50000");
   }
-
-  const params = new URLSearchParams({
-    place_id: placeId,
-    key: GOOGLE_PLACES_API_KEY,
-    fields: "formatted_address,address_component,name,rating,formatted_phone_number,website,photos",
-    language: "fr",
-  });
-
-  const response = await fetch(
-    `${GOOGLE_PLACES_DETAILS_URL}?${params.toString()}`
-  );
-  const data = await response.json();
-
-  if (data.status !== "OK") {
-    throw buildError(data.status, data.error_message);
-  }
-
-  const components = data.result?.address_components || [];
-
-  const city =
-    extractComponent("locality", components) ||
-    extractComponent("administrative_area_level_1", components);
-  const country = extractComponent("country", components);
-
-  const rawRating = data.result?.rating;
-
-  const firstPhotoRef = data.result?.photos?.[0]?.photo_reference;
-  const photoUrl = firstPhotoRef
-    ? `${GOOGLE_PLACES_PHOTO_URL}?maxwidth=800&photoreference=${firstPhotoRef}&key=${GOOGLE_PLACES_API_KEY}`
-    : undefined;
-
-  return {
-    formattedAddress: data.result?.formatted_address,
-    city:    city || undefined,
-    country: country || undefined,
-    name:    data.result?.name || undefined,
-    phone:   data.result?.formatted_phone_number || undefined,
-    website: data.result?.website || undefined,
-    rating:  typeof rawRating === "number" ? rawRating : undefined,
-    photoUrl,
-  };
-};
-
-/**
- * Recherche un lieu par texte libre via l'API Google Places Text Search.
- * Retourne le premier résultat ou null si aucun résultat / clé absente.
- */
-export const searchPlaceByText = async (
-  query: string,
-): Promise<TextSearchResult | null> => {
-  if (!hasGooglePlacesApiKey || !query.trim()) {
-    return null;
-  }
-
-  const params = new URLSearchParams({
-    query,
-    key: GOOGLE_PLACES_API_KEY,
-    language: "fr",
-  });
+  const googleType = addressType ? PLACE_TYPE_MAP[addressType] : undefined;
+  if (googleType) params.set("types", googleType);
 
   try {
-    const response = await fetch(
-      `${GOOGLE_PLACES_TEXT_SEARCH_URL}?${params.toString()}`,
-    );
-    const data = await response.json();
+    const data = await request<{ predictions: any[] }>(`/places/autocomplete?${params}`);
+    return (data.predictions || []).map((p: any) => ({
+      placeId: p.place_id,
+      description: p.description,
+    }));
+  } catch {
+    return [];
+  }
+};
 
-    if (data.status === "ZERO_RESULTS" || !data.results?.length) {
-      return null;
-    }
+export const getPlaceDetails = async (placeId: string): Promise<PlaceDetailsResult> => {
+  if (!placeId) return {};
 
-    if (data.status !== "OK") {
-      return null;
-    }
+  try {
+    const data = await request<{ result: any }>(`/places/details?placeId=${encodeURIComponent(placeId)}&language=fr`);
+    const result = data.result || {};
+    const components = result.address_components || [];
+
+    const city =
+      extractComponent("locality", components) ||
+      extractComponent("administrative_area_level_1", components);
+    const country = extractComponent("country", components);
+
+    // La photoUrl est déjà une URL proxifiée retournée par le backend (/places/photo?ref=...)
+    const photoUrl = result.photoUrl ? `${API_BASE_URL}${result.photoUrl}` : undefined;
+
+    return {
+      formattedAddress: result.formatted_address,
+      city:    city || undefined,
+      country: country || undefined,
+      name:    result.name || undefined,
+      phone:   result.formatted_phone_number || undefined,
+      website: result.website || undefined,
+      rating:  typeof result.rating === "number" ? result.rating : undefined,
+      photoUrl,
+    };
+  } catch {
+    return {};
+  }
+};
+
+export const searchPlaceByText = async (query: string): Promise<TextSearchResult | null> => {
+  if (!query.trim()) return null;
+
+  try {
+    const data = await request<{ results: any[] }>(`/places/textsearch?query=${encodeURIComponent(query)}&language=fr`);
+    if (!data.results?.length) return null;
 
     const place = data.results[0];
-    const photoRef = place.photos?.[0]?.photo_reference;
-    const photoUrl = photoRef
-      ? `${GOOGLE_PLACES_PHOTO_URL}?maxwidth=800&photoreference=${photoRef}&key=${GOOGLE_PLACES_API_KEY}`
-      : undefined;
+    const photoUrl = place.photoUrl ? `${API_BASE_URL}${place.photoUrl}` : undefined;
 
     return {
       placeId: place.place_id,
