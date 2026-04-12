@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useAuth } from "../contexts/AuthContext";
 import TermsScreen from "../screens/TermsScreen";
 import PrivacyScreen from "../screens/PrivacyScreen";
+import LegalNoticeScreen from "../screens/LegalNoticeScreen";
+import ConsentScreen, { CONSENT_KEY } from "../screens/ConsentScreen";
 import AuthStack from "./stacks/AuthStack";
 import MainStack from "./stacks/MainStack";
 import { RootStack } from "./rootStack";
@@ -24,15 +27,36 @@ const linking = {
 
 const AppNavigator: React.FC = () => {
   const { user, loading } = useAuth();
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
 
-  if (loading) return null;
+  useEffect(() => {
+    AsyncStorage.getItem(CONSENT_KEY).then((value) => {
+      setConsentGiven(value !== null);
+      setConsentChecked(true);
+    });
+  }, []);
+
+  if (loading || !consentChecked) return null;
 
   return (
     <NavigationContainer linking={linking}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? MainStack() : AuthStack()}
+        {!consentGiven ? (
+          <RootStack.Screen
+            name="Consent"
+            options={{ headerShown: false }}
+          >
+            {() => <ConsentScreen onConsentGiven={() => setConsentGiven(true)} />}
+          </RootStack.Screen>
+        ) : (
+          <>
+            {user ? MainStack() : AuthStack()}
+          </>
+        )}
         <RootStack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
         <RootStack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
+        <RootStack.Screen name="LegalNotice" component={LegalNoticeScreen} options={{ headerShown: false }} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

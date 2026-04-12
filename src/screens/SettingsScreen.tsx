@@ -154,6 +154,34 @@ const SettingsScreen: React.FC = () => {
             </View>
             <Toggle value={publicProfile} onToggle={handlePublicProfileToggle} trackColor={colors.terra} />
           </View>
+
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
+
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("Privacy")}
+          >
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>📄</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.privacyPolicy")}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+          </TouchableOpacity>
+
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
+
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("LegalNotice")}
+          >
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>⚖️</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.legalNotice")}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+          </TouchableOpacity>
         </View>
 
         {/* ── Section: APPEARANCE ── */}

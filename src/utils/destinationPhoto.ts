@@ -1,4 +1,5 @@
-const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? "";
+import { request } from "../services/api/apiCore";
+import { API_BASE_URL } from "../config/api";
 
 // Cache en mémoire : destination (lowercase) → URL finale
 const photoCache = new Map<string, string>();
@@ -16,36 +17,24 @@ export async function getCachedDestinationPhoto(destination: string): Promise<st
 }
 
 /**
- * Retourne l'URL d'une photo Google Places pour la destination donnée,
+ * Retourne l'URL d'une photo via le proxy backend pour la destination donnée,
  * ou null si aucune photo n'est disponible / en cas d'erreur.
+ * La clé Google Places n'est jamais exposée côté client.
  */
 export async function fetchDestinationPhotoUrl(destination: string): Promise<string | null> {
-  if (!destination.trim() || !GOOGLE_API_KEY) return null;
+  if (!destination.trim()) return null;
 
   try {
-    const query = encodeURIComponent(destination.trim());
-    const searchUrl =
-      `https://maps.googleapis.com/maps/api/place/textsearch/json` +
-      `?query=${query}&key=${GOOGLE_API_KEY}`;
+    const data = await request<{ results: any[] }>(
+      `/places/textsearch?query=${encodeURIComponent(destination.trim())}&language=fr`
+    );
+    if (!data.results?.length) return null;
 
-    const res = await fetch(searchUrl);
-    if (!res.ok) return null;
+    const photoUrl: string | undefined = data.results[0]?.photoUrl;
+    if (!photoUrl) return null;
 
-    const data = await res.json();
-    const photoRef: string | undefined = data?.results?.[0]?.photos?.[0]?.photo_reference;
-    if (!photoRef) return null;
-
-    // On suit la redirection 302 pour obtenir l'URL CDN finale (stable et directe)
-    // plutôt que de stocker l'URL de redirection que React Native ne suit pas toujours
-    const redirectUrl =
-      `https://maps.googleapis.com/maps/api/place/photo` +
-      `?maxwidth=800&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`;
-
-    const photoRes = await fetch(redirectUrl, { redirect: "follow" });
-    if (!photoRes.ok) return null;
-
-    // .url contient l'URL finale après redirection (URL CDN directe)
-    return photoRes.url || redirectUrl;
+    // photoUrl est déjà une URL proxifiée (/places/photo?ref=...) retournée par le backend
+    return `${API_BASE_URL}${photoUrl}`;
   } catch {
     return null;
   }

@@ -38,7 +38,7 @@ const legal = {
     lastUpdated: "Last updated: April 2026",
     s1Title: "1. Data controller",
     s1Body:
-      "MyTripCircle is the controller of your personal data. For questions, contact us at: privacy@mytripcircle.com",
+      "Data controller: Enzo Turpin, independent developer — MyTripCircle.\n\nDPO / rights contact: privacy@mytripcircle.com\n\nTo exercise your rights (access, rectification, erasure, portability), you can also use the built-in features in the app (Settings > My account).",
     s2Title: "2. Data collected",
     s2Body:
       "We collect: name, email, phone number, trip-related data (destinations, dates, bookings), and app usage data.",
@@ -69,6 +69,33 @@ const legal = {
     s11Title: "11. Complaints",
     s11Body:
       "If you believe your rights are not respected, you may lodge a complaint with the CNIL (www.cnil.fr).",
+  },
+  consent: {
+    title: "Before you start",
+    subtitle: "MyTripCircle respects your privacy. Take a moment to set your preferences.",
+    requiredBadge: "Required",
+    optionalBadge: "Optional",
+    dataTitle: "Personal data processing",
+    dataBody: "Your name, email and trip data are necessary for the service to work. Encrypted and never sold.",
+    locationTitle: "Location",
+    locationBody: "Used only to show your position on the map and suggest nearby addresses. Never stored continuously.",
+    notificationsTitle: "Notifications",
+    notificationsBody: "Receive trip reminders, friend requests and collaboration updates.",
+    acceptAll: "Accept all and continue",
+    acceptRequired: "Continue with essentials only",
+    viewPrivacy: "View privacy policy",
+    viewTerms: "View terms of use",
+  },
+  legalNotice: {
+    title: "Legal notice",
+    publisherTitle: "Publisher",
+    publisherBody: "Enzo Turpin — independent developer\nContact: support@mytripcircle.com",
+    hostingTitle: "Hosting",
+    hostingBody: "Database: MongoDB Atlas (MongoDB, Inc., United States)\nAPI server: personal infrastructure",
+    dataTitle: "Personal data",
+    dataBody: "Data controller: Enzo Turpin\nDPO / GDPR rights: privacy@mytripcircle.com\nSupervisory authority: CNIL — www.cnil.fr",
+    intellectualTitle: "Intellectual property",
+    intellectualBody: "The MyTripCircle app, its design, source code, and content are protected by copyright. Any reproduction without authorization is prohibited.",
   },
   helpSupport: {
     title: "Help & Support",
