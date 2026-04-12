@@ -83,6 +83,9 @@ const ideas = {
       errorMessage: "Impossible de générer l'itinéraire. Réessaie plus tard.",
       notConfiguredMessage: "Le service IA n'est pas encore configuré. Contacte l'administrateur.",
       regenerate: "Regénérer",
+      back: "Retour à l'itinéraire",
+      endDate: "Date de retour",
+      tripSummary: "Récapitulatif du voyage",
     },
   },
 };

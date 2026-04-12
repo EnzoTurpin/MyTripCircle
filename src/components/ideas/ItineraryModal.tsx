@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Modal,
   View,
@@ -219,38 +219,127 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
   onToggleDatePicker, creating, onCreateTrip, onBackFromCreate, colors,
 }) => {
   const { t } = useTranslation();
+  const [tempDate, setTempDate] = useState(startDate);
+
+  const openPicker = () => {
+    setTempDate(startDate);
+    onToggleDatePicker(true);
+  };
+
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + Number.parseInt(daysInput, 10) - 1);
+
   return (
-    <View style={{ flex: 1 }}>
-      <Text style={[styles.cityTitle, { color: colors.text }]}>📍 {itinerary.city}</Text>
-      <Text style={[styles.slotLabel, { color: colors.textLight, marginBottom: 12 }]}>
-        {daysInput} {t("ideas.addModal.days")}
-      </Text>
-      <Text style={[styles.slotLabel, { color: colors.textMid, marginBottom: 8, textTransform: "none", letterSpacing: 0 }]}>
-        {t("ideas.itinerary.pickStartDate")}
-      </Text>
+    <RNScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+      {/* Bouton retour */}
+      <TouchableOpacity style={styles.backBtn} onPress={onBackFromCreate} activeOpacity={0.7}>
+        <Ionicons name="chevron-back" size={17} color={colors.textMid} />
+        <Text style={[styles.backBtnText, { color: colors.textMid }]}>{t("ideas.itinerary.back")}</Text>
+      </TouchableOpacity>
+
+      {/* Carte récapitulatif */}
+      <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text style={[styles.summaryCity, { color: colors.text }]}>📍 {itinerary.city}</Text>
+        <View style={styles.summaryPillRow}>
+          <View style={styles.summaryPill}>
+            <Ionicons name="time-outline" size={13} color="#C4714A" />
+            <Text style={styles.summaryPillText}>{daysInput} {t("ideas.addModal.days")}</Text>
+          </View>
+        </View>
+        <View style={[styles.summaryDatesBlock, { borderTopColor: colors.border }]}>
+          <View style={styles.summaryLabelsRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.summaryDateLabel, { color: colors.textLight }]}>{t("ideas.itinerary.pickStartDate")}</Text>
+            </View>
+            <View style={styles.summaryArrowSpace} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.summaryDateLabel, { color: colors.textLight, textAlign: "right" }]}>{t("ideas.itinerary.endDate")}</Text>
+            </View>
+          </View>
+          <View style={styles.summaryValuesRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.summaryDateValue, { color: colors.text }]}>{formatDate(startDate)}</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={16} color={colors.border} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.summaryDateValue, { color: colors.text, textAlign: "right" }]}>{formatDate(endDate)}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Champ date de départ */}
+      <Text style={[styles.sectionLabel, { color: colors.textMid }]}>{t("ideas.itinerary.pickStartDate")}</Text>
       <TouchableOpacity
-        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, justifyContent: "center" }]}
-        onPress={() => onToggleDatePicker(true)}
+        style={[styles.dateField, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        onPress={openPicker}
         activeOpacity={0.7}
       >
-        <Text style={{ color: colors.text, fontSize: 15, fontFamily: F.sans400 }}>
-          {formatDate(startDate)}
-        </Text>
+        <Ionicons name="calendar-outline" size={20} color="#C4714A" />
+        <Text style={[styles.dateFieldText, { color: colors.text }]}>{formatDate(startDate)}</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
       </TouchableOpacity>
-      {showDatePicker && (
+
+      {/* iOS : modale avec confirm/annuler */}
+      {Platform.OS === "ios" && (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => onToggleDatePicker(false)}
+        >
+          <TouchableOpacity
+            style={styles.datePickerOverlay}
+            activeOpacity={1}
+            onPress={() => onToggleDatePicker(false)}
+          >
+            <TouchableOpacity activeOpacity={1} style={[styles.datePickerSheet, { backgroundColor: colors.bg }]}>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="spinner"
+                minimumDate={new Date()}
+                textColor={colors.text}
+                style={{ alignSelf: "center", width: "100%" }}
+                onChange={(_, date) => { if (date) setTempDate(date); }}
+              />
+              <View style={styles.datePickerActions}>
+                <TouchableOpacity
+                  style={[styles.datePickerCancelBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => onToggleDatePicker(false)}
+                >
+                  <Text style={[styles.primaryBtnText, { color: colors.textMid }]}>{t("common.cancel")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.datePickerConfirmBtn}
+                  onPress={() => { onStartDateChange(tempDate); onToggleDatePicker(false); }}
+                >
+                  <Text style={styles.primaryBtnText}>{t("common.confirm")}</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      )}
+
+      {/* Android : picker natif inline */}
+      {showDatePicker && Platform.OS !== "ios" && (
         <DateTimePicker
           value={startDate}
           mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
+          display="default"
           minimumDate={new Date()}
           onChange={(_, date) => {
-            onToggleDatePicker(Platform.OS === "ios");
+            onToggleDatePicker(false);
             if (date) onStartDateChange(date);
           }}
         />
       )}
+
+      {/* Bouton créer */}
       <TouchableOpacity
-        style={[styles.primaryBtn, { marginTop: 16, opacity: creating ? 0.6 : 1 }]}
+        style={[styles.primaryBtn, { marginTop: 24, opacity: creating ? 0.6 : 1 }]}
         onPress={onCreateTrip}
         disabled={creating}
         activeOpacity={0.8}
@@ -260,14 +349,8 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
           : <Text style={styles.primaryBtnText}>{t("ideas.itinerary.createTrip")}</Text>
         }
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.secondaryBtn, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 8 }]}
-        onPress={onBackFromCreate}
-        activeOpacity={0.8}
-      >
-        <Text style={[styles.primaryBtnText, { color: colors.textMid }]}>←</Text>
-      </TouchableOpacity>
-    </View>
+
+    </RNScrollView>
   );
 };
 
@@ -414,6 +497,125 @@ const styles = StyleSheet.create({
   },
   slotActivity: { fontFamily: F.sans500, fontSize: 13, lineHeight: 18 },
   slotTip: { fontFamily: F.sans400, fontSize: 12, marginTop: 3, fontStyle: "italic" },
+  // CreateTripStep
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 16,
+    alignSelf: "flex-start",
+  },
+  backBtnText: {
+    fontFamily: F.sans500,
+    fontSize: 14,
+  },
+  summaryCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 20,
+  },
+  summaryCity: {
+    fontFamily: F.sans700,
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  summaryPillRow: {
+    flexDirection: "row",
+    marginBottom: 14,
+  },
+  summaryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(196, 113, 74, 0.12)",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  summaryPillText: {
+    fontFamily: F.sans600,
+    fontSize: 13,
+    color: "#C4714A",
+  },
+  summaryDatesBlock: {
+    borderTopWidth: 1,
+    paddingTop: 14,
+    gap: 4,
+  },
+  summaryLabelsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  summaryArrowSpace: {
+    width: 24,
+  },
+  summaryValuesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  summaryDateLabel: {
+    fontFamily: F.sans400,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  summaryDateValue: {
+    fontFamily: F.sans600,
+    fontSize: 14,
+  },
+  sectionLabel: {
+    fontFamily: F.sans500,
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  dateField: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 4,
+  },
+  dateFieldText: {
+    flex: 1,
+    fontFamily: F.sans400,
+    fontSize: 15,
+  },
+  datePickerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  datePickerSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+  datePickerActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+    width: "100%",
+  },
+  datePickerCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  datePickerConfirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    backgroundColor: "#C4714A",
+  },
 });
 
 export default ItineraryModal;

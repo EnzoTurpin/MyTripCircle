@@ -83,6 +83,9 @@ const ideas = {
       errorMessage: "Unable to generate the itinerary. Please try again.",
       notConfiguredMessage: "The AI service is not yet configured. Contact the administrator.",
       regenerate: "Regenerate",
+      back: "Back to itinerary",
+      endDate: "Return date",
+      tripSummary: "Trip summary",
     },
   },
 };
