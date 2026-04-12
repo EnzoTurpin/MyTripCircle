@@ -96,12 +96,14 @@ const EditProfileScreen: React.FC = () => {
         {/* ── Avatar section ── */}
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={handlePickPhoto} activeOpacity={0.85} disabled={uploadingAvatar}>
-            <View style={[styles.avatarCircle, { backgroundColor: getAvatarColor(name || user?.name || "") }]}>
-              {user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatarPhoto} />
-              ) : (
-                <Text style={styles.avatarInitials}>{getInitials(name || user?.name || "")}</Text>
-              )}
+            <View style={styles.avatarWrapper}>
+              <View style={[styles.avatarCircle, { backgroundColor: getAvatarColor(name || user?.name || "") }]}>
+                {user?.avatar ? (
+                  <Image source={{ uri: user.avatar }} style={styles.avatarPhoto} />
+                ) : (
+                  <Text style={styles.avatarInitials}>{getInitials(name || user?.name || "")}</Text>
+                )}
+              </View>
               <View style={styles.cameraOverlay}>
                 {uploadingAvatar ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
@@ -227,6 +229,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 24,
   },
+  avatarWrapper: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
   avatarCircle: {
     width: 80,
     height: 80,
@@ -235,7 +242,6 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
     shadowColor: "#2A2318",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -256,8 +262,8 @@ const styles = StyleSheet.create({
   },
   cameraOverlay: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
+    bottom: -2,
+    right: -2,
     width: 26,
     height: 26,
     borderRadius: 13,
