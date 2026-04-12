@@ -86,6 +86,16 @@ const legal = {
     viewPrivacy: "View privacy policy",
     viewTerms: "View terms of use",
   },
+  consentManagement: {
+    title: "My Consents",
+    description:
+      "Manage your privacy preferences here. Data processing is required to run the service. Other options are optional.",
+    required: "Required — necessary for the service to function",
+    save: "Save my preferences",
+    savedTitle: "Preferences saved",
+    savedMessage: "Your privacy preferences have been updated.",
+    saveError: "Unable to save your preferences. Please try again later.",
+  },
   legalNotice: {
     title: "Legal notice",
     publisherTitle: "Publisher",

@@ -160,6 +160,20 @@ const SettingsScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.row}
             activeOpacity={0.7}
+            onPress={() => navigation.navigate("ConsentManagement")}
+          >
+            <View style={styles.rowLeft}>
+              <Text style={styles.rowEmoji}>🛡️</Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.myConsents")}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+          </TouchableOpacity>
+
+          <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
+
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.7}
             onPress={() => navigation.navigate("Privacy")}
           >
             <View style={styles.rowLeft}>

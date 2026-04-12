@@ -86,6 +86,16 @@ const legal = {
     viewPrivacy: "Voir la politique de confidentialité",
     viewTerms: "Voir les conditions d'utilisation",
   },
+  consentManagement: {
+    title: "Mes consentements",
+    description:
+      "Gérez ici vos préférences de confidentialité. Le traitement de vos données est obligatoire pour faire fonctionner le service. Les autres options sont optionnelles.",
+    required: "Obligatoire — nécessaire au fonctionnement du service",
+    save: "Enregistrer mes préférences",
+    savedTitle: "Préférences enregistrées",
+    savedMessage: "Vos préférences de confidentialité ont bien été mises à jour.",
+    saveError: "Impossible d'enregistrer vos préférences. Réessayez plus tard.",
+  },
   legalNotice: {
     title: "Mentions légales",
     publisherTitle: "Éditeur",
