@@ -49,6 +49,8 @@ const profile = {
     emailReminders: "Reminder Emails",
     friendInvitations: "Friend Invitations",
     publicProfile: "Public Profile",
+    privacyPolicy: "Privacy Policy",
+    legalNotice: "Legal Notice",
     shareLocation: "Share Location",
     language: "Language",
     languageFr: "French",

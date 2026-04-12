@@ -1,0 +1,302 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
+import { useNavigation } from "@react-navigation/native";
+import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
+
+export const CONSENT_KEY = "@mytripcircle_consent_v1";
+
+export interface ConsentPreferences {
+  data: true;        // Obligatoire — traitement des données (toujours true)
+  location: boolean; // Optionnel — géolocalisation
+  notifications: boolean; // Optionnel — notifications
+  acceptedAt: string;
+}
+
+interface ConsentItemProps {
+  icon: string;
+  title: string;
+  body: string;
+  badge: string;
+  badgeRequired: boolean;
+  enabled: boolean;
+  toggleable: boolean;
+  onToggle?: () => void;
+}
+
+const ConsentItem: React.FC<ConsentItemProps> = ({
+  icon, title, body, badge, badgeRequired, enabled, toggleable, onToggle,
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.item, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={styles.itemHeader}>
+        <Text style={styles.itemIcon}>{icon}</Text>
+        <View style={styles.itemTitleRow}>
+          <Text style={[styles.itemTitle, { color: colors.text }]}>{title}</Text>
+          <View style={[
+            styles.badge,
+            { backgroundColor: badgeRequired ? colors.terraLight : colors.bgMid },
+          ]}>
+            <Text style={[
+              styles.badgeText,
+              { color: badgeRequired ? colors.terra : colors.textLight },
+            ]}>{badge}</Text>
+          </View>
+        </View>
+        {toggleable && (
+          <TouchableOpacity
+            onPress={onToggle}
+            activeOpacity={0.7}
+            style={[styles.toggle, { backgroundColor: enabled ? colors.terra : colors.bgDark }]}
+          >
+            <View style={[
+              styles.toggleThumb,
+              { transform: [{ translateX: enabled ? 20 : 2 }] },
+            ]} />
+          </TouchableOpacity>
+        )}
+        {!toggleable && (
+          <View style={[styles.toggle, { backgroundColor: colors.terra }]}>
+            <View style={[styles.toggleThumb, { transform: [{ translateX: 20 }] }]} />
+          </View>
+        )}
+      </View>
+      <Text style={[styles.itemBody, { color: colors.textLight }]}>{body}</Text>
+    </View>
+  );
+};
+
+interface ConsentScreenProps {
+  onConsentGiven?: () => void;
+}
+
+export default function ConsentScreen({ onConsentGiven }: ConsentScreenProps) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const navigation = useNavigation<any>();
+
+  const [locationEnabled, setLocationEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const saveAndContinue = async (acceptAll: boolean) => {
+    const prefs: ConsentPreferences = {
+      data: true,
+      location: acceptAll ? locationEnabled : false,
+      notifications: acceptAll ? notificationsEnabled : false,
+      acceptedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(CONSENT_KEY, JSON.stringify(prefs));
+    // Notifie AppNavigator que le consentement a été donné
+    onConsentGiven?.();
+  };
+
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.logoRow}>
+          <Text style={[styles.logo, { color: colors.terra }]}>✈️</Text>
+        </View>
+
+        <Text style={[styles.title, { color: colors.text }]}>{t("consent.title")}</Text>
+        <Text style={[styles.subtitle, { color: colors.textLight }]}>{t("consent.subtitle")}</Text>
+
+        <View style={styles.items}>
+          <ConsentItem
+            icon="🔐"
+            title={t("consent.dataTitle")}
+            body={t("consent.dataBody")}
+            badge={t("consent.requiredBadge")}
+            badgeRequired
+            enabled
+            toggleable={false}
+          />
+          <ConsentItem
+            icon="📍"
+            title={t("consent.locationTitle")}
+            body={t("consent.locationBody")}
+            badge={t("consent.optionalBadge")}
+            badgeRequired={false}
+            enabled={locationEnabled}
+            toggleable
+            onToggle={() => setLocationEnabled((v) => !v)}
+          />
+          <ConsentItem
+            icon="🔔"
+            title={t("consent.notificationsTitle")}
+            body={t("consent.notificationsBody")}
+            badge={t("consent.optionalBadge")}
+            badgeRequired={false}
+            enabled={notificationsEnabled}
+            toggleable
+            onToggle={() => setNotificationsEnabled((v) => !v)}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.btnPrimary, { backgroundColor: colors.terra }]}
+          activeOpacity={0.85}
+          onPress={() => saveAndContinue(true)}
+        >
+          <Text style={styles.btnPrimaryText}>{t("consent.acceptAll")}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btnSecondary, { borderColor: colors.border }]}
+          activeOpacity={0.7}
+          onPress={() => saveAndContinue(false)}
+        >
+          <Text style={[styles.btnSecondaryText, { color: colors.textLight }]}>
+            {t("consent.acceptRequired")}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.links}>
+          <TouchableOpacity onPress={() => navigation.navigate("Privacy")} activeOpacity={0.7}>
+            <Text style={[styles.link, { color: colors.terra }]}>{t("consent.viewPrivacy")}</Text>
+          </TouchableOpacity>
+          <Text style={[styles.linkSep, { color: colors.textLight }]}>·</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Terms")} activeOpacity={0.7}>
+            <Text style={[styles.link, { color: colors.terra }]}>{t("consent.viewTerms")}</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+  content: {
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  logoRow: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  logo: {
+    fontSize: 52,
+  },
+  title: {
+    fontFamily: F.sans700,
+    fontSize: 26,
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontFamily: F.sans400,
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 28,
+  },
+  items: {
+    gap: 12,
+    marginBottom: 28,
+  },
+  item: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+  },
+  itemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+  itemIcon: {
+    fontSize: 24,
+  },
+  itemTitleRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  itemTitle: {
+    fontFamily: F.sans600,
+    fontSize: 16,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontFamily: F.sans600,
+    fontSize: 11,
+  },
+  itemBody: {
+    fontFamily: F.sans400,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  toggle: {
+    width: 46,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: "center",
+  },
+  toggleThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#fff",
+    position: "absolute",
+  },
+  btnPrimary: {
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  btnPrimaryText: {
+    fontFamily: F.sans700,
+    fontSize: 17,
+    color: "#fff",
+  },
+  btnSecondary: {
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  btnSecondaryText: {
+    fontFamily: F.sans500,
+    fontSize: 16,
+  },
+  links: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  link: {
+    fontFamily: F.sans500,
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
+  linkSep: {
+    fontSize: 16,
+  },
+});

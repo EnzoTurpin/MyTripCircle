@@ -218,6 +218,8 @@ export type RootStackParamList = {
   Subscription: undefined;
   Terms: undefined;
   Privacy: undefined;
+  LegalNotice: undefined;
+  Consent: undefined;
   Notifications: undefined;
   FriendProfile: { friendId: string; friendName: string };
   TripPublicView: { tripId: string; invitationToken?: string };

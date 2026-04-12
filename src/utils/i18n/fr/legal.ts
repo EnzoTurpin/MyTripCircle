@@ -38,7 +38,7 @@ const legal = {
     lastUpdated: "Dernière mise à jour : avril 2026",
     s1Title: "1. Responsable du traitement",
     s1Body:
-      "MyTripCircle est responsable du traitement de vos données personnelles. Pour toute question, contactez-nous à : privacy@mytripcircle.com",
+      "Responsable du traitement : Enzo Turpin, développeur indépendant — MyTripCircle.\n\nContact DPO / exercice des droits : privacy@mytripcircle.com\n\nPour toute demande (accès, rectification, suppression, portabilité), vous pouvez également utiliser les fonctionnalités intégrées à l'application (Paramètres > Mon compte).",
     s2Title: "2. Données collectées",
     s2Body:
       "Nous collectons les données suivantes : nom, adresse e-mail, numéro de téléphone, informations relatives à vos voyages (destinations, dates, réservations), et données d'utilisation de l'application.",
@@ -69,6 +69,33 @@ const legal = {
     s11Title: "11. Réclamation",
     s11Body:
       "Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la CNIL (www.cnil.fr).",
+  },
+  consent: {
+    title: "Avant de commencer",
+    subtitle: "MyTripCircle respecte votre vie privée. Prenez un moment pour configurer vos préférences.",
+    requiredBadge: "Requis",
+    optionalBadge: "Optionnel",
+    dataTitle: "Traitement des données personnelles",
+    dataBody: "Votre nom, email et données de voyage sont nécessaires au fonctionnement du service. Chiffrés et jamais revendus.",
+    locationTitle: "Géolocalisation",
+    locationBody: "Utilisée uniquement pour afficher votre position sur la carte et suggérer des adresses proches. Jamais stockée en continu.",
+    notificationsTitle: "Notifications",
+    notificationsBody: "Recevoir des rappels de voyage, demandes d'amis et mises à jour de vos collaborations.",
+    acceptAll: "Tout accepter et continuer",
+    acceptRequired: "Continuer avec l'essentiel uniquement",
+    viewPrivacy: "Voir la politique de confidentialité",
+    viewTerms: "Voir les conditions d'utilisation",
+  },
+  legalNotice: {
+    title: "Mentions légales",
+    publisherTitle: "Éditeur",
+    publisherBody: "Enzo Turpin — développeur indépendant\nContact : support@mytripcircle.com",
+    hostingTitle: "Hébergement",
+    hostingBody: "Base de données : MongoDB Atlas (MongoDB, Inc., États-Unis)\nServeur API : infrastructure personnelle",
+    dataTitle: "Données personnelles",
+    dataBody: "Responsable du traitement : Enzo Turpin\nDPO / droits RGPD : privacy@mytripcircle.com\nAutorité de contrôle : CNIL — www.cnil.fr",
+    intellectualTitle: "Propriété intellectuelle",
+    intellectualBody: "L'application MyTripCircle, son design, son code source et ses contenus sont protégés par le droit d'auteur. Toute reproduction sans autorisation est interdite.",
   },
   helpSupport: {
     title: "Aide & Support",
