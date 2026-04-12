@@ -42,17 +42,17 @@ const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer linking={linking}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        {!consentGiven ? (
+        {consentGiven ? (
+          <>
+            {user ? MainStack() : AuthStack()}
+          </>
+        ) : (
           <RootStack.Screen
             name="Consent"
             options={{ headerShown: false }}
           >
             {() => <ConsentScreen onConsentGiven={() => setConsentGiven(true)} />}
           </RootStack.Screen>
-        ) : (
-          <>
-            {user ? MainStack() : AuthStack()}
-          </>
         )}
         <RootStack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
         <RootStack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />

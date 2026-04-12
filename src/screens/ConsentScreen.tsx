@@ -8,7 +8,6 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
@@ -82,7 +81,7 @@ interface ConsentScreenProps {
   onConsentGiven?: () => void;
 }
 
-export default function ConsentScreen({ onConsentGiven }: ConsentScreenProps) {
+export default function ConsentScreen({ onConsentGiven }: Readonly<ConsentScreenProps>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
