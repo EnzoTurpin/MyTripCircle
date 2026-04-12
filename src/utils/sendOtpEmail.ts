@@ -11,18 +11,10 @@ try {
 
 export const sendOtpEmail = async (to: string, otp: string) => {
   if (!nodemailer) {
-    // Fallback: log OTP instead of sending email
-    console.log(`[OTP EMAIL] Would send OTP ${otp} to ${to}`);
     return;
   }
 
   if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
-    console.error("❌ MAIL ENV NOT LOADED", {
-      MAIL_USER: process.env.MAIL_USER,
-      MAIL_PASS: process.env.MAIL_PASS ? "OK" : "MISSING",
-    });
-    // Fallback: log OTP instead of throwing
-    console.log(`[OTP EMAIL] Mail credentials missing - OTP ${otp} for ${to}`);
     return;
   }
 
