@@ -27,6 +27,7 @@ import NotificationsScreen from "../../screens/NotificationsScreen";
 import ForgotPasswordScreen from "../../screens/ForgotPasswordScreen";
 import FriendInvitationScreen from "../../screens/FriendInvitationScreen";
 import IdeaDetailScreen from "../../screens/IdeaDetailScreen";
+import ConsentManagementScreen from "../../screens/ConsentManagementScreen";
 
 const MainStack = () => (
   <>
@@ -56,6 +57,7 @@ const MainStack = () => (
     <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
     <RootStack.Screen name="FriendInvitation" component={FriendInvitationScreen} options={{ headerShown: false }} />
     <RootStack.Screen name="IdeaDetail" component={IdeaDetailScreen} options={{ headerShown: false }} />
+    <RootStack.Screen name="ConsentManagement" component={ConsentManagementScreen} options={{ headerShown: false }} />
   </>
 );
 

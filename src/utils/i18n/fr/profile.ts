@@ -62,6 +62,7 @@ const profile = {
     currency: "Devise",
     currencyValue: "EUR €",
     currencySoon: "Sélection de la devise bientôt disponible.",
+    myConsents: "Mes consentements",
     deleteAccount: "Supprimer mon compte",
     deleteAccountTitle: "Supprimer mon compte",
     deleteAccountMessage:

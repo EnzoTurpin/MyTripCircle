@@ -212,6 +212,7 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
+  ConsentManagement: undefined;
   ChangePassword: undefined;
   ForgotPassword: { token?: string };
   HelpSupport: undefined;

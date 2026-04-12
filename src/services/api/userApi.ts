@@ -1,6 +1,19 @@
 import { request } from "./apiCore";
 
+export interface ConsentPayload {
+  data: true;
+  location: boolean;
+  notifications: boolean;
+}
+
 export const userApi = {
+  updateConsent: (consents: ConsentPayload) =>
+    request<{ success: boolean }>("/users/consent", "POST", {
+      consents,
+      version: "1.0",
+      source: "mobile",
+    }),
+
   updateProfile: (data: { name: string; email: string }) =>
     request<{ success: boolean; user: any }>("/users/me", "PUT", data),
 

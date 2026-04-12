@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
-import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { TripsProvider } from "./src/contexts/TripsContext";
@@ -15,8 +14,6 @@ import { Sora_300Light, Sora_400Regular, Sora_500Medium, Sora_600SemiBold, Sora_
 export default function App() {
   useEffect(() => {
     initLanguage();
-    // Demander la permission de localisation dès le lancement
-    Location.requestForegroundPermissionsAsync().catch(() => {});
   }, []);
 
   const [fontsLoaded] = useFonts({
