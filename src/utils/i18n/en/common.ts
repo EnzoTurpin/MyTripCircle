@@ -72,7 +72,7 @@ const common = {
     loginSubtitle: "Sign in to your account",
     registerTitle: "Create account ✨",
     registerSubtitle: "Join MyTripCircle for free",
-    googleButton: "G  Continue with Google",
+    googleButton: "Continue with Google",
     appleButton: "Continue with Apple",
     orDivider: "or",
     createMyAccount: "Create my account",
