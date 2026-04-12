@@ -238,14 +238,14 @@ const SettingsScreen: React.FC = () => {
                   style: "destructive",
                   onPress: async () => {
                     const result = await deleteAccount();
-                    if (!result.success) {
-                      Alert.alert(t("common.error"), t("settings.deleteAccountError"));
-                    } else {
+                    if (result.success) {
                       Alert.alert(
                         t("settings.deleteAccountScheduledTitle"),
                         t("settings.deleteAccountScheduledMessage"),
                         [{ text: t("common.ok") }]
                       );
+                    } else {
+                      Alert.alert(t("common.error"), t("settings.deleteAccountError"));
                     }
                   },
                 },
