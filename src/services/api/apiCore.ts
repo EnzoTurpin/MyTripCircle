@@ -1,5 +1,5 @@
 import { API_URLS } from "../../config/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as secureStorage from "../../utils/secureStorage";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -51,7 +51,7 @@ async function tryRefreshToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
-    const refreshToken = await AsyncStorage.getItem("refreshToken");
+    const refreshToken = await secureStorage.getItem("refreshToken");
     if (!refreshToken) return null;
 
     try {
@@ -66,10 +66,10 @@ async function tryRefreshToken(): Promise<string | null> {
 
       const data = await res.json();
       if (data.success && data.token) {
-        await AsyncStorage.setItem("token", data.token);
+        await secureStorage.setItem("token", data.token);
         // Rotation : sauvegarde le nouveau refresh token si le serveur en a émis un
         if (data.refreshToken) {
-          await AsyncStorage.setItem("refreshToken", data.refreshToken);
+          await secureStorage.setItem("refreshToken", data.refreshToken);
         }
         return data.token;
       }
@@ -85,7 +85,7 @@ async function tryRefreshToken(): Promise<string | null> {
 }
 
 async function clearSession(): Promise<void> {
-  await AsyncStorage.multiRemove(["token", "refreshToken", "user"]);
+  await secureStorage.multiRemove(["token", "refreshToken", "user"]);
   onUnauthorizedCallback?.();
 }
 
@@ -113,7 +113,7 @@ export async function request<T>(
   body?: any,
 ): Promise<T> {
   const baseUrl = await findWorkingUrl();
-  const token = await AsyncStorage.getItem("token");
+  const token = await secureStorage.getItem("token");
   const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {

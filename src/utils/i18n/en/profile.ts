@@ -63,8 +63,11 @@ const profile = {
     deleteAccount: "Delete My Account",
     deleteAccountTitle: "Delete My Account",
     deleteAccountMessage:
-      "This action is irreversible. All your data will be permanently deleted.",
+      "Your account will be deleted in 7 days. A data export will be sent to your email. You can cancel this during the 7-day window.",
     deleteAccountError: "Unable to delete account. Please try again later.",
+    deleteAccountScheduledTitle: "Deletion scheduled",
+    deleteAccountScheduledMessage:
+      "Your account will be deleted in 7 days. An export of your data has been sent to your email address. You can cancel the deletion from the settings.",
   },
   editProfile: {
     title: "Edit Profile",

@@ -83,6 +83,7 @@ const common = {
     privacyLink: "politique de confidentialité",
     loginFooterPrompt: "Pas encore de compte ? ",
     registerFooterPrompt: "Déjà un compte ? ",
+    termsRequired: "Vous devez accepter les conditions d'utilisation et la politique de confidentialité pour créer un compte.",
   },
   tabs: {
     myTrips: "Mes voyages",

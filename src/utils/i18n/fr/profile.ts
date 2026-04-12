@@ -63,9 +63,12 @@ const profile = {
     deleteAccount: "Supprimer mon compte",
     deleteAccountTitle: "Supprimer mon compte",
     deleteAccountMessage:
-      "Cette action est irréversible. Toutes vos données seront définitivement supprimées.",
+      "Votre compte sera supprimé dans 7 jours. Un export de vos données vous sera envoyé par e-mail. Cette action peut être annulée dans ce délai.",
     deleteAccountError:
       "Impossible de supprimer le compte. Réessayez plus tard.",
+    deleteAccountScheduledTitle: "Suppression planifiée",
+    deleteAccountScheduledMessage:
+      "Votre compte sera supprimé dans 7 jours. Un export de vos données a été envoyé à votre adresse e-mail. Vous pouvez annuler la suppression depuis les paramètres.",
   },
   editProfile: {
     title: "Modifier le profil",

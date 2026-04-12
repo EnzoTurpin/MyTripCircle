@@ -37,7 +37,8 @@
       "@react-native-community/datetimepicker",
       "expo-localization",
       "expo-web-browser",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-secure-store"
     ],
     "scheme": "mytripcircle",
     "linking": {

@@ -171,6 +171,11 @@ export function useAuthForm(): UseAuthFormReturn {
 
     if (!isValid) return;
 
+    if (!isLogin && !termsAccepted) {
+      Alert.alert(t("common.error"), t("auth.termsRequired"));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (isLogin) {
