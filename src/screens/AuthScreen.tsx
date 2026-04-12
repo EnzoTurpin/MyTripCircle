@@ -119,6 +119,9 @@ const AuthScreen: React.FC<{ route?: { params?: { initialMode?: "login" | "regis
       onBackToWelcome={() => (navigation as any).navigate("Welcome")}
       onNavigateTerms={() => (navigation as any).navigate("Terms")}
       onNavigatePrivacy={() => (navigation as any).navigate("Privacy")}
+      onGooglePress={() => googlePromptAsync()}
+      onApplePress={form.handleAppleSignIn}
+      googleDisabled={!googleRequest}
       validateEmail={form.validateEmail}
       validatePasswordStrong={form.validatePasswordStrong}
       validateName={form.validateName}
