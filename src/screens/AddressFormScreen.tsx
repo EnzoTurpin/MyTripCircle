@@ -112,7 +112,7 @@ const AddressFormScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={20} color={colors.text} />
+          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
         </TouchableOpacity>
         <Text style={[styles.topBarTitle, { color: colors.text }]}>{screenTitle}</Text>
         <View style={{ width: 40 }} />

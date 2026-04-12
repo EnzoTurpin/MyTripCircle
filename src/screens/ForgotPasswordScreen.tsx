@@ -21,6 +21,7 @@ import { COLORS as C } from "../theme/colors";
 import { parseApiError } from "../utils/i18n";
 import { useTheme } from "../contexts/ThemeContext";
 import LabelledInput from "../components/forgotPassword/LabelledInput";
+import BackButton from "../components/ui/BackButton";
 
 type ForgotPasswordScreenRouteProp     = RouteProp<RootStackParamList, "ForgotPassword">;
 type ForgotPasswordScreenNavigationProp = StackNavigationProp<RootStackParamList, "ForgotPassword">;
@@ -226,13 +227,7 @@ const ForgotPasswordScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity
-          style={[styles.backButton, { backgroundColor: colors.bgDark }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={20} color={colors.text} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
 
         <View style={styles.centerBlock}>
           <Text style={styles.emoji}>🔑</Text>
@@ -262,12 +257,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Platform.OS === "ios" ? 56 : 24,
     left: 24,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#D8CCBA",
-    justifyContent: "center",
-    alignItems: "center",
     zIndex: 10,
   },
   centerBlock: { alignItems: "center", marginBottom: 28 },

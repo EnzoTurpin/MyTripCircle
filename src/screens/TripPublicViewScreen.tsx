@@ -17,6 +17,7 @@ import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
 import { parseApiError } from "../utils/i18n";
 import { useTheme } from "../contexts/ThemeContext";
+import { F } from "../theme/fonts";
 import TripPublicSkeleton from "../components/tripPublicView/TripPublicSkeleton";
 import TripCoverHero from "../components/tripPublicView/TripCoverHero";
 import TripContentTabs from "../components/tripPublicView/TripContentTabs";
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   scroll: { flex: 1 },
   loaderFull: { flex: 1, justifyContent: "center", alignItems: "center", gap: 14 },
-  noAccessText: { fontSize: 15, fontFamily: "System", color: "#B0A090" },
+  noAccessText: { fontSize: 15, fontFamily: F.sans400, color: "#B0A090" },
   backFallback: { marginTop: 8, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: "#EDE5D8", borderRadius: 12 },
   backFallbackText: { fontSize: 14, color: "#7A6A58" },
   statsRow: {
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 3,
   },
-  statValue: { fontSize: 15, fontFamily: "System", fontWeight: "700", color: "#C4714A" },
+  statValue: { fontSize: 15, fontFamily: F.sans700, color: "#C4714A" },
   statLabel: { fontSize: 9, textAlign: "center" },
   descBox: {
     marginHorizontal: 16,

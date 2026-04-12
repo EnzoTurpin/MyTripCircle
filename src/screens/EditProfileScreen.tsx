@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import { F } from "../theme/fonts";
 import * as ImagePicker from "expo-image-picker";
+import BackButton from "../components/ui/BackButton";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -82,13 +83,7 @@ const EditProfileScreen: React.FC = () => {
       >
         {/* ── Header bar ── */}
         <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.text} />
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("editProfile.personalInfo")}</Text>
           <View style={{ width: 40 }} />
         </View>
@@ -208,18 +203,9 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     backgroundColor: "#F5F0E8",
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#EDE5D8",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: F.sans700,
-    color: "#2A2318",
     textAlign: "center",
     flex: 1,
   },

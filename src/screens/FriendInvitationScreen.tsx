@@ -20,6 +20,7 @@ import { parseApiError } from "../utils/i18n";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
+import BackButton from "../components/ui/BackButton";
 
 
 type RouteT = RouteProp<RootStackParamList, "FriendInvitation">;
@@ -235,9 +236,7 @@ const FriendInvitationScreen: React.FC = () => {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={colors.statusBar} />
       <View style={styles.header}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
       </View>
       {renderContent()}
     </SafeAreaView>
@@ -250,14 +249,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#EDE5D8",
-    justifyContent: "center",
-    alignItems: "center",
   },
   centerBox: {
     flex: 1,

@@ -24,6 +24,7 @@ import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 import { useTripMembersData, MemberInfo } from "../hooks/useTripMembersData";
+import BackButton from "../components/ui/BackButton";
 import { useTripMembersActions } from "../hooks/useTripMembersActions";
 import { useBottomSheet } from "../hooks/useBottomSheet";
 import { s } from "./TripMembersScreen.styles";
@@ -182,9 +183,7 @@ const TripMembersScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bgLight} />
 
       <View style={[s.header, { backgroundColor: colors.bgLight }]}>
-        <TouchableOpacity style={[s.backBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={16} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={{ flex: 1, alignItems: "center" }}>
           <Text style={[s.headerSub, { color: colors.textLight }]} numberOfLines={1}>{tripTitle}</Text>
           <Text style={[s.headerTitle, { color: colors.text }]}>{t("tripMembers.title")}</Text>

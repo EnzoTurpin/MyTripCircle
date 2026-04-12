@@ -43,7 +43,7 @@ const AddressHeroCover: React.FC<Props> = ({ address, gradient, badge, insetTop,
         onPress={onBack}
         activeOpacity={0.75}
       >
-        <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
+        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
       </TouchableOpacity>
       <View style={styles.heroBottom}>
         <View style={[styles.typeBadge, { backgroundColor: colors.terraLight }]}>
@@ -67,10 +67,10 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
   },

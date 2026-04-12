@@ -48,7 +48,7 @@ export default function LegalScreen({ headerTitle, lastUpdated, sections }: Lega
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={20} color={colors.text} />
+          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>{headerTitle}</Text>
         <View style={{ width: 36 }} />
@@ -86,16 +86,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#D8CCBA",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    fontFamily: F.sans600,
-    fontSize: 21,
-    color: "#2A2318",
+    fontFamily: F.sans700,
+    fontSize: 20,
     marginHorizontal: 8,
   },
   content: {

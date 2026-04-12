@@ -108,11 +108,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           {/* Section haute */}
           <View>
             <TouchableOpacity
-              style={[styles.backBtn, { backgroundColor: colors.border }]}
+              style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
               onPress={onBackToWelcome}
               activeOpacity={0.8}
             >
-              <Ionicons name="chevron-back" size={18} color={colors.text} />
+              <Ionicons name="chevron-back" size={22} color={colors.textMid} />
             </TouchableOpacity>
             <View style={styles.titleBlock}>
               <Text style={[styles.registerTitle, { color: colors.text }]}>{t("auth.registerTitle")}</Text>
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 24,

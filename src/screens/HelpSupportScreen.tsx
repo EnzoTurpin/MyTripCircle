@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import BackButton from "../components/ui/BackButton";
 
 const HelpSupportScreen: React.FC = () => {
   const [openId, setOpenId] = React.useState<string | null>(null);
@@ -78,13 +79,7 @@ const HelpSupportScreen: React.FC = () => {
       >
         {/* ── Header bar ── */}
         <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.text} />
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("helpSupport.title")}</Text>
           <View style={{ width: 40 }} />
         </View>
@@ -187,14 +182,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: "#F5F0E8",
-  },
-  backBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: "#EDE5D8",
-    justifyContent: "center",
-    alignItems: "center",
   },
   headerTitle: {
     fontSize: 20,

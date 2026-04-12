@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import { F } from "../theme/fonts";
 import { useTheme, AppColors } from "../contexts/ThemeContext";
+import BackButton from "../components/ui/BackButton";
 
 // ─── Labelled password input ──────────────────────────────────────────────────
 interface PasswordInputProps {
@@ -152,13 +153,7 @@ const ChangePasswordScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         {/* Back button */}
-        <TouchableOpacity
-          style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.text} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
 
         {/* Header */}
         <View style={styles.headerBlock}>
@@ -228,12 +223,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 56 : 24,
   },
   backButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
     marginBottom: 32,
   },
   headerBlock: {

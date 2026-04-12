@@ -22,6 +22,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 import NotifItem from "../components/notifications/NotifItem";
 import NotifEmptyState from "../components/notifications/NotifEmptyState";
+import BackButton from "../components/ui/BackButton";
 
 const NotificationsScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -101,13 +102,7 @@ const NotificationsScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} translucent={false} />
 
       <View style={[styles.header, { backgroundColor: colors.bg }]}>
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headerCenter}>
           <Text style={[styles.title, { color: colors.text }]}>{t("notifications.title")}</Text>
         </View>
@@ -178,15 +173,8 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 14,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   headerCenter: { flex: 1, marginLeft: 14 },
-  title:   { fontSize: 34, fontFamily: F.sans700 },
+  title:   { fontSize: 28, fontFamily: F.sans700 },
   markAll: { fontSize: 15, fontFamily: F.sans600, color: "#C4714A" },
 
   scrollContent: { paddingTop: 8, paddingBottom: 32 },

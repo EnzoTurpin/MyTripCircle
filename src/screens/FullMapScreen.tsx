@@ -149,7 +149,7 @@ const FullMapScreen: React.FC = () => {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.bg, borderBottomColor: colors.border, paddingTop: insets.top + 12 }]}>
         <TouchableOpacity style={[styles.closeBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
+          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>{t("addresses.header")}</Text>
         <View style={{ width: 36 }} />
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1,
   },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center" },
+  closeBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
   title:    { fontSize: 18, fontFamily: F.sans700 },
   filters:  { paddingVertical: 10, borderBottomWidth: 1 },
   filtersScroll: { paddingHorizontal: 16, gap: 8 },
