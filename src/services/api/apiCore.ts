@@ -5,6 +5,10 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 let workingUrl: string | null = null;
 
+// Une seule découverte d’URL à la fois : au démarrage, plusieurs requêtes parallèles
+// partagent la même promesse (évite le spam de logs et N appels /health).
+let findWorkingUrlPromise: Promise<string> | null = null;
+
 // Callback déclenché quand le refresh échoue, pour notifier l'AuthContext de déconnecter l'utilisateur
 let onUnauthorizedCallback: (() => void) | null = null;
 
@@ -18,27 +22,36 @@ export function clearUnauthorizedCallback(): void {
 
 async function findWorkingUrl(): Promise<string> {
   if (workingUrl) return workingUrl;
+  if (findWorkingUrlPromise) return findWorkingUrlPromise;
 
-  console.log("[ApiService] Starting to find working URL...");
+  findWorkingUrlPromise = (async () => {
+    console.log("[ApiService] Starting to find working URL...");
 
-  for (const url of API_URLS) {
-    try {
-      console.log(`[ApiService] Trying ${url}...`);
-      const response = await fetch(`${url}/health`, { method: "GET" });
-      if (response.ok) {
-        workingUrl = url;
-        console.log(`[ApiService] ✅ Success! Using URL: ${url}`);
-        return url;
-      } else {
-        console.log(`[ApiService] ❌ ${url} returned status: ${response.status}`);
+    for (const url of API_URLS) {
+      try {
+        console.log(`[ApiService] Trying ${url}...`);
+        const response = await fetch(`${url}/health`, { method: "GET" });
+        if (response.ok) {
+          workingUrl = url;
+          console.log(`[ApiService] ✅ Success! Using URL: ${url}`);
+          return url;
+        } else {
+          console.log(`[ApiService] ❌ ${url} returned status: ${response.status}`);
+        }
+      } catch (error: any) {
+        console.log(`[ApiService] ❌ Failed to connect to ${url}: ${error?.message ?? String(error)}`);
       }
-    } catch (error: any) {
-      console.log(`[ApiService] ❌ Failed to connect to ${url}: ${error?.message ?? String(error)}`);
     }
-  }
 
-  console.log("[ApiService] ❌ No working URL found!");
-  throw new Error("No working API URL found. Make sure the backend is running.");
+    console.log("[ApiService] ❌ No working URL found!");
+    throw new Error("No working API URL found. Make sure the backend is running.");
+  })();
+
+  try {
+    return await findWorkingUrlPromise;
+  } finally {
+    findWorkingUrlPromise = null;
+  }
 }
 
 // Mutex : évite les refreshes parallèles (race condition sur la rotation du refresh token).
