@@ -11,7 +11,6 @@ import {
   Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useFriends } from "../contexts/FriendsContext";
 import { useAuth } from "../contexts/AuthContext";
