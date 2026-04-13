@@ -5,7 +5,7 @@ import { initReactI18next } from "react-i18next";
 import { ApiService } from "../services/ApiService";
 import { resources } from "./i18n/index";
 
-export { formatDate, formatDateLong, formatTime, testDateFormatting } from "./dateFormatters";
+export { formatDate, formatDateLong, formatTime } from "./dateFormatters";
 export { parseApiError, getBookingStatusTranslation } from "./errorHandlers";
 
 const LANGUAGE_KEY = "@mytripcircle_language";

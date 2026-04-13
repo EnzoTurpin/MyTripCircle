@@ -55,19 +55,3 @@ export const formatTime = (time: string | null | undefined) => {
   }
 };
 
-export const testDateFormatting = () => {
-  const testDate = new Date("2024-03-15");
-  const language = i18n.language;
-
-  console.log(`Current language: ${language}`);
-  console.log(`Short date: ${formatDate(testDate)}`);
-  console.log(`Long date: ${formatDateLong(testDate)}`);
-  console.log(`Time: ${formatTime("14:30")}`);
-
-  return {
-    language,
-    shortDate: formatDate(testDate),
-    longDate: formatDateLong(testDate),
-    time: formatTime("14:30"),
-  };
-};
