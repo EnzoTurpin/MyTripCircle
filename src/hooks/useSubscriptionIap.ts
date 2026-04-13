@@ -3,6 +3,8 @@ import { Alert, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import Constants from "expo-constants";
 import { parseApiError } from "../utils/i18n";
+import { request } from "../services/api/apiCore";
+import logger from "../utils/logger";
 
 // Conditionally import react-native-iap only if not in Expo Go
 let RNIap: any = null;
@@ -15,7 +17,7 @@ if (!isExpoGoEnvironment) {
     RNIap = require("react-native-iap");
     isIapAvailable = true;
   } catch (error) {
-    console.warn("react-native-iap not available:", error);
+    logger.warn("react-native-iap not available:", error);
   }
 }
 
@@ -53,7 +55,7 @@ export function useSubscriptionIap() {
         const subs = await RNIap.getSubscriptions(productIds);
         setProducts(subs);
       } catch (err) {
-        console.warn("IAP init error", err);
+        logger.warn("IAP init error", err);
         setProducts(mockProducts);
       }
     }
@@ -62,18 +64,28 @@ export function useSubscriptionIap() {
     const purchaseUpdate = RNIap.purchaseUpdatedListener(async (purchase: any) => {
       try {
         const receipt = purchase.transactionReceipt || purchase.purchaseToken;
-        if (receipt) {
-          await RNIap.finishTransaction(purchase);
-          Alert.alert(t("subscription.purchaseSuccessTitle"), t("subscription.purchaseSuccessMessage"), [{ text: t("common.ok") }]);
-          setLoadingId(null);
-        }
+        if (!receipt) return;
+
+        // Validation server-side du reçu avant de finaliser la transaction
+        await request("/subscriptions/validate-receipt", "POST", {
+          receipt,
+          platform: Platform.OS,
+          productId: purchase.productId,
+        });
+
+        await RNIap.finishTransaction(purchase);
+        setLoadingId(null);
+        Alert.alert(t("subscription.purchaseSuccessTitle"), t("subscription.purchaseSuccessMessage"), [{ text: t("common.ok") }]);
       } catch (err) {
-        console.warn("purchase update handling error", err);
+        logger.warn("purchase update handling error", err);
+        // Si la validation échoue, on ne finalise pas la transaction
+        Alert.alert(t("subscription.purchaseErrorTitle"), t("subscription.purchaseErrorMessage"), [{ text: t("common.ok") }]);
+        setLoadingId(null);
       }
     });
 
     const purchaseError = RNIap.purchaseErrorListener((err: unknown) => {
-      console.warn("purchase error", err);
+      logger.warn("purchase error", err);
       let raw: Error;
       if (err instanceof Error) {
         raw = err;
@@ -107,7 +119,7 @@ export function useSubscriptionIap() {
       setLoadingId(productId);
       await RNIap.requestSubscription(productId);
     } catch (err) {
-      console.warn("requestSubscription err", err);
+      logger.warn("requestSubscription err", err);
       Alert.alert(t("subscription.purchaseErrorTitle"), t("subscription.purchaseErrorMessage"), [{ text: t("common.ok") }]);
       setLoadingId(null);
     }
