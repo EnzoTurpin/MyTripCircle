@@ -259,9 +259,9 @@ const FriendsScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 14, paddingBottom: 14 },
   headerCenter: { flex: 1, marginLeft: 14 },
-  headerTitle: { fontSize: 28, fontFamily: F.sans700 },
+  headerTitle: { fontSize: 20, fontFamily: F.sans700 },
   addCircleBtn: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: "#C4714A",
     justifyContent: "center", alignItems: "center",

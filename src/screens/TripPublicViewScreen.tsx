@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   StatusBar,
   Alert,
 } from "react-native";
@@ -22,6 +21,7 @@ import TripPublicSkeleton from "../components/tripPublicView/TripPublicSkeleton"
 import TripCoverHero from "../components/tripPublicView/TripCoverHero";
 import TripContentTabs from "../components/tripPublicView/TripContentTabs";
 import InvitationCtaBar from "../components/tripPublicView/InvitationCtaBar";
+import BackButton from "../components/ui/BackButton";
 
 const tripDays = (start: string | Date, end: string | Date) =>
   Math.max(1, Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
@@ -122,9 +122,7 @@ const TripPublicViewScreen: React.FC = () => {
       <View style={[styles.loaderFull, { backgroundColor: colors.bg }]}>
         <Ionicons name="lock-closed-outline" size={36} color="#B0A090" />
         <Text style={styles.noAccessText}>{t("tripPublicView.noAccess")}</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backFallback}>
-          <Text style={styles.backFallbackText}>{t("tripPublicView.back")}</Text>
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
       </View>
     );
   }
@@ -213,8 +211,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   loaderFull: { flex: 1, justifyContent: "center", alignItems: "center", gap: 14 },
   noAccessText: { fontSize: 15, fontFamily: F.sans400, color: "#B0A090" },
-  backFallback: { marginTop: 8, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: "#EDE5D8", borderRadius: 12 },
-  backFallbackText: { fontSize: 14, color: "#7A6A58" },
   statsRow: {
     flexDirection: "row",
     marginHorizontal: 16,

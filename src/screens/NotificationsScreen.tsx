@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   headerCenter: { flex: 1, marginLeft: 14 },
-  title:   { fontSize: 28, fontFamily: F.sans700 },
+  title:   { fontSize: 20, fontFamily: F.sans700 },
   markAll: { fontSize: 15, fontFamily: F.sans600, color: "#C4714A" },
 
   scrollContent: { paddingTop: 8, paddingBottom: 32 },
