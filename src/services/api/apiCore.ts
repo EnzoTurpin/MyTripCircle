@@ -1,5 +1,6 @@
 import { API_URLS } from "../../config/api";
 import * as secureStorage from "../../utils/secureStorage";
+import logger from "../../utils/logger";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -25,25 +26,25 @@ async function findWorkingUrl(): Promise<string> {
   if (findWorkingUrlPromise) return findWorkingUrlPromise;
 
   findWorkingUrlPromise = (async () => {
-    console.log("[ApiService] Starting to find working URL...");
+    logger.debug("[ApiService] Starting to find working URL...");
 
     for (const url of API_URLS) {
       try {
-        console.log(`[ApiService] Trying ${url}...`);
+        logger.debug(`[ApiService] Trying ${url}...`);
         const response = await fetch(`${url}/health`, { method: "GET" });
         if (response.ok) {
           workingUrl = url;
-          console.log(`[ApiService] ✅ Success! Using URL: ${url}`);
+          logger.debug(`[ApiService] ✅ Success! Using URL: ${url}`);
           return url;
         } else {
-          console.log(`[ApiService] ❌ ${url} returned status: ${response.status}`);
+          logger.debug(`[ApiService] ❌ ${url} returned status: ${response.status}`);
         }
       } catch (error: any) {
-        console.log(`[ApiService] ❌ Failed to connect to ${url}: ${error?.message ?? String(error)}`);
+        logger.debug(`[ApiService] ❌ Failed to connect to ${url}: ${error?.message ?? String(error)}`);
       }
     }
 
-    console.log("[ApiService] ❌ No working URL found!");
+    logger.debug("[ApiService] ❌ No working URL found!");
     throw new Error("No working API URL found. Make sure the backend is running.");
   })();
 
