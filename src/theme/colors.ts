@@ -33,28 +33,6 @@ export const COLORS = {
   black: '#000000',
 };
 
-export const FONTS = {
-  regular: 'System',
-  medium:  'System',
-  semibold: 'System',
-  bold:    'System',
-};
-
-// ── Border radius tokens ────────────────────────────────────────────────────
-// Noms sémantiques : input=10, button=12, card=16
-export const RADIUS = {
-  input:  10,   // champs de formulaire
-  button: 12,   // boutons CTA
-  card:   16,   // cartes / conteneurs
-  // Utilitaires
-  sm:   8,
-  md:   12,
-  lg:   16,
-  xl:   20,
-  xxl:  24,
-  full: 999,
-};
-
 // ── Shadow tokens ───────────────────────────────────────────────────────────
 // light → cartes à plat  |  medium → dropdowns/FAB  |  strong → modals
 export const SHADOW = {

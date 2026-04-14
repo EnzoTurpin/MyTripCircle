@@ -8,8 +8,7 @@ import { FriendsProvider } from "./src/contexts/FriendsContext";
 import { ThemeProvider } from "./src/contexts/ThemeContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { initLanguage } from "./src/utils/i18n";
-import { useFonts, Lora_400Regular, Lora_600SemiBold, Lora_700Bold, Lora_700Bold_Italic } from "@expo-google-fonts/lora";
-import { Sora_300Light, Sora_400Regular, Sora_500Medium, Sora_600SemiBold, Sora_700Bold } from "@expo-google-fonts/sora";
+import { useFonts, Sora_300Light, Sora_400Regular, Sora_500Medium, Sora_600SemiBold, Sora_700Bold } from "@expo-google-fonts/sora";
 
 export default function App() {
   useEffect(() => {
@@ -17,10 +16,6 @@ export default function App() {
   }, []);
 
   const [fontsLoaded] = useFonts({
-    Lora_400Regular,
-    Lora_600SemiBold,
-    Lora_700Bold,
-    Lora_700Bold_Italic,
     Sora_300Light,
     Sora_400Regular,
     Sora_500Medium,
