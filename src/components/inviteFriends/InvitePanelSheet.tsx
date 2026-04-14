@@ -130,7 +130,7 @@ const InvitePanelSheet: React.FC<Props> = ({
                         style={[
                           s.checkbox,
                           { borderColor: colors.border },
-                          selected && s.checkboxSelected,
+                          selected && [s.checkboxSelected, { backgroundColor: colors.terra, borderColor: colors.terra }],
                         ]}
                       >
                         {selected && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
@@ -173,7 +173,7 @@ const InvitePanelSheet: React.FC<Props> = ({
           )}
 
           <TouchableOpacity
-            style={[s.sendBtn, (sendingInvitations || inviteCount === 0) && s.sendBtnDisabled]}
+            style={[s.sendBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, (sendingInvitations || inviteCount === 0) && [s.sendBtnDisabled, { backgroundColor: colors.border }]]}
             onPress={onSend}
             disabled={sendingInvitations || inviteCount === 0}
           >
@@ -258,7 +258,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxSelected: { backgroundColor: "#C4714A", borderColor: "#C4714A" },
+  checkboxSelected: {},
   alreadyMemberTag: {
     backgroundColor: "#E2EDD9",
     borderRadius: 24,
@@ -267,18 +267,16 @@ const s = StyleSheet.create({
   },
   alreadyMemberTxt: { fontFamily: F.sans500, fontSize: 12, color: "#6B8C5A" },
   sendBtn: {
-    backgroundColor: "#C4714A",
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 14,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 4,
   },
-  sendBtnDisabled: { backgroundColor: "#D8CCBA", shadowOpacity: 0 },
+  sendBtnDisabled: { shadowOpacity: 0 },
   sendBtnTxt: { fontFamily: F.sans600, fontSize: 16, color: "#FFFFFF" },
 });
 

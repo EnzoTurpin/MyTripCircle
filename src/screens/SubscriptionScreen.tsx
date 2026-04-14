@@ -45,7 +45,7 @@ const SubscriptionScreen: React.FC = () => {
         <View style={styles.content}>
           {/* ── Bandeau mode démo ── */}
           {isExpoGo && (
-            <View style={styles.warningCard}>
+            <View style={[styles.warningCard, { backgroundColor: colors.terraLight, borderColor: colors.terra }]}>
               <View style={styles.warningIcon}>
                 <Ionicons name="alert-circle" size={24} color={colors.terra} />
               </View>
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   backButton: {
-    marginBottom: 16,
+    marginBottom: 32,
   },
   headerContent:  { alignItems: "center" },
   iconContainer: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 28, fontFamily: F.sans700,
+    fontSize: 20, fontFamily: F.sans700,
     marginBottom: 8, textAlign: "center",
   },
   headerSubtitle: { fontSize: 16, textAlign: "center", fontFamily: F.sans400 },
@@ -127,17 +127,17 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 24 },
 
   warningCard: {
-    flexDirection: "row", backgroundColor: "#F5E5DC",
+    flexDirection: "row",
     borderRadius: 12, padding: 16, marginBottom: 24,
-    borderWidth: 1, borderColor: "#C4714A",
+    borderWidth: 1,
   },
   warningIcon:    { marginRight: 12 },
   warningContent: { flex: 1 },
-  warningTitle:   { fontSize: 16, fontFamily: F.sans700, color: "#A35830", marginBottom: 4 },
-  warningText:    { fontSize: 14, color: "#7A6A58", lineHeight: 20, fontFamily: F.sans400 },
+  warningTitle:   { fontSize: 16, fontFamily: F.sans700, marginBottom: 4 },
+  warningText:    { fontSize: 14, lineHeight: 20, fontFamily: F.sans400 },
 
   loadingContainer: { alignItems: "center", paddingVertical: 48 },
-  loadingText:      { fontSize: 16, color: "#7A6A58", marginTop: 16, fontFamily: F.sans400 },
+  loadingText:      { fontSize: 16, marginTop: 16, fontFamily: F.sans400 },
 });
 
 export default SubscriptionScreen;

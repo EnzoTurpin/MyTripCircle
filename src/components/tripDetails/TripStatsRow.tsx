@@ -32,7 +32,7 @@ const TripStatsRow: React.FC<Props> = ({
     <View style={s.statsRow}>
       {stats.map((stat) => (
         <View key={stat.label} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
-          <Text style={s.statValue}>{stat.value}</Text>
+          <Text style={[s.statValue, { color: colors.terra }]}>{stat.value}</Text>
           <Text style={[s.statLabel, { color: colors.textLight }]}>{stat.label}</Text>
         </View>
       ))}
@@ -49,7 +49,6 @@ const s = StyleSheet.create({
   },
   statPill: {
     flex: 1,
-    backgroundColor: "#EDE5D8",
     borderRadius: RADIUS.card,
     paddingVertical: 10,
     paddingHorizontal: 6,
@@ -58,12 +57,10 @@ const s = StyleSheet.create({
   statValue: {
     fontSize: 22,
     fontFamily: F.sans700,
-    color: "#C4714A",
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
-    color: "#B0A090",
     fontFamily: F.sans400,
     textTransform: "uppercase",
     letterSpacing: 0.3,

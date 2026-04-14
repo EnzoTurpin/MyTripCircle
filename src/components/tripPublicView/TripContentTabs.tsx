@@ -47,13 +47,13 @@ const TripContentTabs: React.FC<Props> = ({
             <Ionicons
               name={tab === "bookings" ? "receipt-outline" : "location-outline"}
               size={15}
-              color={activeTab === tab ? "#C4714A" : "#B0A090"}
+              color={activeTab === tab ? colors.terra : colors.textLight}
             />
             <Text
               style={[
                 styles.tabText,
                 { color: colors.textLight },
-                activeTab === tab && styles.tabTextActive,
+                activeTab === tab && [styles.tabTextActive, { color: colors.terra }],
               ]}
             >
               {tab === "bookings"
@@ -74,11 +74,11 @@ const TripContentTabs: React.FC<Props> = ({
                 activeOpacity={0.75}
                 onPress={() => onBookingPress(b._id ?? b.id)}
               >
-                <View style={[styles.itemIcon, { backgroundColor: getBookingTypeColors(b.type)?.bg ?? "#F5E5DC" }]}>
+                <View style={[styles.itemIcon, { backgroundColor: getBookingTypeColors(b.type)?.bg ?? colors.terraLight }]}>
                   <Ionicons
                     name={getBookingTypeIcon(b.type) as any}
                     size={18}
-                    color={getBookingTypeColors(b.type)?.stripe ?? "#C4714A"}
+                    color={getBookingTypeColors(b.type)?.stripe ?? colors.terra}
                   />
                 </View>
                 <View style={styles.itemInfo}>
@@ -92,16 +92,16 @@ const TripContentTabs: React.FC<Props> = ({
                   ) : null}
                 </View>
                 {b.price == null ? null : (
-                  <Text style={styles.itemPrice}>
+                  <Text style={[styles.itemPrice, { color: colors.terra }]}>
                     {b.price}{b.currency ? ` ${b.currency}` : t("tripPublicView.currencyFallback")}
                   </Text>
                 )}
-                <Ionicons name="chevron-forward" size={14} color="#D8CCBA" style={{ marginLeft: 4 }} />
+                <Ionicons name="chevron-forward" size={14} color={colors.border} style={{ marginLeft: 4 }} />
               </TouchableOpacity>
             ))
           ) : (
             <View style={styles.emptyBox}>
-              <Ionicons name="receipt-outline" size={28} color="#B0A090" />
+              <Ionicons name="receipt-outline" size={28} color={colors.textLight} />
               <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noBookings")}</Text>
             </View>
           )}
@@ -133,7 +133,7 @@ const TripContentTabs: React.FC<Props> = ({
             ))
           ) : (
             <View style={styles.emptyBox}>
-              <Ionicons name="location-outline" size={28} color="#B0A090" />
+              <Ionicons name="location-outline" size={28} color={colors.textLight} />
               <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noAddresses")}</Text>
             </View>
           )}
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   tabText: { fontSize: 12, fontFamily: F.sans500 },
-  tabTextActive: { color: "#C4714A", fontFamily: F.sans600 },
+  tabTextActive: { fontFamily: F.sans600 },
   list: { paddingHorizontal: 16 },
   emptyBox: { alignItems: "center", gap: 10, paddingVertical: 32 },
   emptyText: { fontSize: 13, fontFamily: F.sans400 },
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   itemInfo: { flex: 1 },
   itemTitle: { fontSize: 14, fontFamily: F.sans600 },
   itemSub: { fontSize: 11, fontFamily: F.sans400, marginTop: 2 },
-  itemPrice: { fontSize: 14, fontFamily: F.sans700, color: "#C4714A" },
+  itemPrice: { fontSize: 14, fontFamily: F.sans700 },
 });
 
 export default TripContentTabs;

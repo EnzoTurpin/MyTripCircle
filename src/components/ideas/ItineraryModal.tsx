@@ -109,7 +109,7 @@ const DayCard: React.FC<DayCardProps> = ({ day, colors }) => {
   ];
   return (
     <View style={[styles.dayCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={styles.dayTitle}>
+      <Text style={[styles.dayTitle, { color: colors.terra }]}>
         {t("ideas.itinerary.day")} {day.day} — {day.title}
       </Text>
       {slots.map(({ emoji, label, data }) => data && (
@@ -152,7 +152,7 @@ const ItineraryPreview: React.FC<ItineraryPreviewProps> = ({
           onPress={() => onDaysChange(String(Math.max(1, daysCount - 1)))}
           activeOpacity={0.7}
         >
-          <Ionicons name="remove" size={16} color="#C4714A" />
+          <Ionicons name="remove" size={16} color={colors.terra} />
         </TouchableOpacity>
         <Text style={[styles.stepperText, { color: colors.text }]}>
           {daysInput} {t("ideas.addModal.days")}
@@ -162,11 +162,11 @@ const ItineraryPreview: React.FC<ItineraryPreviewProps> = ({
           onPress={() => onDaysChange(String(Math.min(30, daysCount + 1)))}
           activeOpacity={0.7}
         >
-          <Ionicons name="add" size={16} color="#C4714A" />
+          <Ionicons name="add" size={16} color={colors.terra} />
         </TouchableOpacity>
         {daysCount !== itinerary.days?.length && (
           <TouchableOpacity
-            style={[styles.regenerateBtn, { opacity: loading ? 0.6 : 1 }]}
+            style={[styles.regenerateBtn, { backgroundColor: colors.terra, opacity: loading ? 0.6 : 1 }]}
             onPress={onGenerate}
             disabled={loading}
             activeOpacity={0.8}
@@ -184,18 +184,18 @@ const ItineraryPreview: React.FC<ItineraryPreviewProps> = ({
       ))}
 
       <TouchableOpacity
-        style={[styles.primaryBtn, { marginBottom: 8 }]}
+        style={[styles.primaryBtn, { backgroundColor: colors.terra, marginBottom: 8 }]}
         onPress={() => { onDaysChange(daysInput); onShowCreateStep(); }}
         activeOpacity={0.8}
       >
         <Text style={styles.primaryBtnText}>{t("ideas.itinerary.createTrip")}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.secondaryBtn, { backgroundColor: colors.surface, borderColor: "#C4714A", marginBottom: 20 }]}
+        style={[styles.secondaryBtn, { backgroundColor: colors.surface, borderColor: colors.terra, marginBottom: 20 }]}
         onPress={onNewSearch}
         activeOpacity={0.8}
       >
-        <Text style={[styles.primaryBtnText, { color: "#C4714A" }]}>{t("ideas.itinerary.newSearch")}</Text>
+        <Text style={[styles.primaryBtnText, { color: colors.terra }]}>{t("ideas.itinerary.newSearch")}</Text>
       </TouchableOpacity>
     </RNScrollView>
   );
@@ -234,7 +234,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
 
       {/* Bouton retour */}
       <TouchableOpacity style={styles.backBtn} onPress={onBackFromCreate} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={17} color={colors.textMid} />
+        <Ionicons name="chevron-back" size={20} color={colors.textMid} />
         <Text style={[styles.backBtnText, { color: colors.textMid }]}>{t("ideas.itinerary.back")}</Text>
       </TouchableOpacity>
 
@@ -243,8 +243,8 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
         <Text style={[styles.summaryCity, { color: colors.text }]}>📍 {itinerary.city}</Text>
         <View style={styles.summaryPillRow}>
           <View style={styles.summaryPill}>
-            <Ionicons name="time-outline" size={13} color="#C4714A" />
-            <Text style={styles.summaryPillText}>{daysInput} {t("ideas.addModal.days")}</Text>
+            <Ionicons name="time-outline" size={13} color={colors.terra} />
+            <Text style={[styles.summaryPillText, { color: colors.terra }]}>{daysInput} {t("ideas.addModal.days")}</Text>
           </View>
         </View>
         <View style={[styles.summaryDatesBlock, { borderTopColor: colors.border }]}>
@@ -276,7 +276,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
         onPress={openPicker}
         activeOpacity={0.7}
       >
-        <Ionicons name="calendar-outline" size={20} color="#C4714A" />
+        <Ionicons name="calendar-outline" size={20} color={colors.terra} />
         <Text style={[styles.dateFieldText, { color: colors.text }]}>{formatDate(startDate)}</Text>
         <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
       </TouchableOpacity>
@@ -312,7 +312,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
                   <Text style={[styles.primaryBtnText, { color: colors.textMid }]}>{t("common.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.datePickerConfirmBtn}
+                  style={[styles.datePickerConfirmBtn, { backgroundColor: colors.terra }]}
                   onPress={() => { onStartDateChange(tempDate); onToggleDatePicker(false); }}
                 >
                   <Text style={styles.primaryBtnText}>{t("common.confirm")}</Text>
@@ -459,7 +459,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryBtn: {
-    backgroundColor: "#C4714A",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
@@ -483,12 +482,12 @@ const styles = StyleSheet.create({
   },
   stepperText: { fontFamily: F.sans600, fontSize: 15, minWidth: 60, textAlign: "center" },
   regenerateBtn: {
-    flex: 1, backgroundColor: "#C4714A", borderRadius: 20,
+    flex: 1, borderRadius: 20,
     paddingVertical: 8, alignItems: "center", justifyContent: "center",
   },
   regenerateBtnText: { fontFamily: F.sans600, fontSize: 13, color: "#FFFFFF" },
   dayCard: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 12 },
-  dayTitle: { fontFamily: F.sans700, fontSize: 15, marginBottom: 12, color: "#C4714A" },
+  dayTitle: { fontFamily: F.sans700, fontSize: 15, marginBottom: 12 },
   slotRow: { flexDirection: "row", gap: 10, marginBottom: 10, alignItems: "flex-start" },
   slotEmoji: { fontSize: 18, marginTop: 1 },
   slotLabel: {
@@ -536,7 +535,6 @@ const styles = StyleSheet.create({
   summaryPillText: {
     fontFamily: F.sans600,
     fontSize: 13,
-    color: "#C4714A",
   },
   summaryDatesBlock: {
     borderTopWidth: 1,
@@ -614,7 +612,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
-    backgroundColor: "#C4714A",
   },
 });
 

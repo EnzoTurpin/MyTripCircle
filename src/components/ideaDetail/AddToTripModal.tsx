@@ -130,7 +130,7 @@ const AddToTripModal: React.FC<Props> = ({
                   onPress={onOpenDatePicker}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="calendar-outline" size={18} color="#C4714A" />
+                  <Ionicons name="calendar-outline" size={18} color={colors.terra} />
                   <Text style={[s.dateText, { color: colors.text }]}>{formatDate(startDate)}</Text>
                   <Ionicons name="chevron-forward" size={16} color={colors.textLight} />
                 </TouchableOpacity>

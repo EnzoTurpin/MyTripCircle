@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import BackButton from "../components/ui/BackButton";
 import { useIdeaDetail } from "../hooks/useIdeaDetail";
 import IdeaHero from "../components/ideaDetail/IdeaHero";
 import IdeaChips from "../components/ideaDetail/IdeaChips";
@@ -49,9 +50,7 @@ const IdeaDetailScreen: React.FC = () => {
   if (!idea) {
     return (
       <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bg }]}>
-        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} style={s.backBtn} />
         <View style={s.errorContainer}>
           <Text style={[s.errorText, { color: colors.textLight }]}>
             {t("ideas.detail.notFound")}
@@ -159,13 +158,6 @@ const s = StyleSheet.create({
   safeArea: { flex: 1 },
   backBtn: {
     marginTop: 10,
-    marginLeft: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   errorContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
   errorText: { fontFamily: F.sans400, fontSize: 15 },

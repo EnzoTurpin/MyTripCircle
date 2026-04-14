@@ -22,7 +22,7 @@ const NotifEmptyState: React.FC = () => {
 const styles = StyleSheet.create({
   emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 80 },
   emptyIconBox: { width: 80, height: 80, borderRadius: 18, alignItems: "center", justifyContent: "center", marginBottom: 18 },
-  emptyTitle: { fontSize: 20, fontFamily: F.serif700, marginBottom: 8 },
+  emptyTitle: { fontSize: 20, fontFamily: F.sans700, marginBottom: 8 },
   emptySub: { fontSize: 15, fontFamily: F.sans400, textAlign: "center", paddingHorizontal: 32, lineHeight: 22 },
 });
 

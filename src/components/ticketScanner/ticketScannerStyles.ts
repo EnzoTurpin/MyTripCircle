@@ -108,14 +108,6 @@ export const styles = StyleSheet.create({
     fontFamily: F.sans600,
     fontSize: 17,
   },
-  closeBtnWhite: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   viewfinderWrapper: {
     flex: 1,
     justifyContent: "center",
@@ -221,7 +213,6 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#C4714A",
     paddingVertical: 15,
     borderRadius: 16,
     marginBottom: 10,
@@ -266,7 +257,6 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
   },
   primaryButton: {
-    backgroundColor: "#C4714A",
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 16,

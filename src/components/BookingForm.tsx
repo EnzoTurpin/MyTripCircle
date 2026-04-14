@@ -24,6 +24,7 @@ import { RADIUS, SHADOW } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useBookingForm, needsEndDate } from "../hooks/useBookingForm";
 import PickerModal from "./bookingForm/PickerModal";
+import BackButton from "./ui/BackButton";
 import AttachmentThumb from "./bookingForm/AttachmentThumb";
 import { TypePill, StatusPillItem } from "./bookingForm/BookingFormPills";
 import {
@@ -66,13 +67,11 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
         {/* ── Header ── */}
         <View style={[styles.header, { paddingTop: insets.top + 6, backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
-          <TouchableOpacity style={[styles.headerBackBtn, { backgroundColor: colors.bgMid }]} onPress={onClose} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-          </TouchableOpacity>
+          <BackButton onPress={onClose} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>
             {initialBooking ? t("bookings.editBooking") : t("bookings.newBooking")}
           </Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -214,7 +213,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                 <AttachmentThumb attachment={attachment} colors={colors} />
                 <Text style={[styles.attachmentName, { color: colors.text }]} numberOfLines={1}>{attachment.name}</Text>
                 <TouchableOpacity style={styles.renameAttachmentButton} onPress={() => form.handleOpenRename(idx)}>
-                  <Ionicons name="pencil" size={16} color="#C4714A" />
+                  <Ionicons name="pencil" size={16} color={colors.terra} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.removeAttachmentButton} onPress={() => form.handleRemoveAttachment(idx)}>
                   <Ionicons name="close-circle" size={22} color="#C04040" />
@@ -222,7 +221,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               </View>
             ))}
             <TouchableOpacity
-              style={styles.attachmentDashedBox}
+              style={[styles.attachmentDashedBox, { borderColor: colors.border }]}
               onPress={() => Alert.alert(t("bookings.attachmentTitle"), t("bookings.chooseFileType"), [
                 { text: t("bookings.imageOption"), onPress: form.handlePickImage },
                 { text: t("bookings.pdfOption"),   onPress: form.handlePickDocument },
@@ -230,12 +229,12 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               ])}
               activeOpacity={0.7}
             >
-              <Text style={styles.attachmentDashedText}>{t("bookings.addAttachment")}</Text>
+              <Text style={[styles.attachmentDashedText, { color: colors.textLight }]}>{t("bookings.addAttachment")}</Text>
             </TouchableOpacity>
           </View>
 
           {/* ── Bouton principal ── */}
-          <TouchableOpacity style={styles.primaryButton} onPress={form.handleSave} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.terra }]} onPress={form.handleSave} activeOpacity={0.8}>
             <Text style={styles.primaryButtonText}>
               {initialBooking ? t("common.save") : t("bookings.newBooking")}
             </Text>
@@ -274,10 +273,10 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                 onSubmitEditing={form.handleConfirmRename}
               />
               <View style={styles.renameButtons}>
-                <TouchableOpacity style={styles.renameCancelBtn} onPress={() => form.setRenamingIndex(null)}>
-                  <Text style={styles.renameCancelText}>{t("common.cancel")}</Text>
+                <TouchableOpacity style={[styles.renameCancelBtn, { borderColor: colors.border }]} onPress={() => form.setRenamingIndex(null)}>
+                  <Text style={[styles.renameCancelText, { color: colors.textMid }]}>{t("common.cancel")}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.renameConfirmBtn, !form.renameValue.trim() && { opacity: 0.5 }]} onPress={form.handleConfirmRename} disabled={!form.renameValue.trim()}>
+                <TouchableOpacity style={[styles.renameConfirmBtn, { backgroundColor: colors.terra }, !form.renameValue.trim() && { opacity: 0.5 }]} onPress={form.handleConfirmRename} disabled={!form.renameValue.trim()}>
                   <Text style={styles.renameConfirmText}>{t("common.confirm")}</Text>
                 </TouchableOpacity>
               </View>
@@ -301,12 +300,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderBottomWidth: 1,
   },
-  headerBackBtn: {
-    width: 44, height: 44, borderRadius: 22,
-    alignItems: "center", justifyContent: "center",
-  },
   headerTitle: {
-    fontSize: 22, fontFamily: F.sans700,
+    fontSize: 20, fontFamily: F.sans700,
     flex: 1, textAlign: "center", marginHorizontal: 8,
   },
   scrollContent: { paddingBottom: 40 },
@@ -334,10 +329,10 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: "row", gap: 8, marginTop: 4 },
   attachmentSection: { marginHorizontal: 20, marginBottom: 10 },
   attachmentDashedBox: {
-    borderRadius: 16, borderWidth: 1.5, borderColor: "#D8CCBA", borderStyle: "dashed",
+    borderRadius: 16, borderWidth: 1.5, borderStyle: "dashed",
     padding: 20, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8,
   },
-  attachmentDashedText: { fontSize: 16, fontFamily: F.sans400, color: "#B0A090" },
+  attachmentDashedText: { fontSize: 16, fontFamily: F.sans400 },
   attachmentItem: {
     flexDirection: "row", alignItems: "center", borderRadius: RADIUS.button,
     padding: 12, marginBottom: 10, borderWidth: 1,
@@ -346,7 +341,7 @@ const styles = StyleSheet.create({
   renameAttachmentButton: { padding: 4, marginRight: 4 },
   removeAttachmentButton: { padding: 4 },
   primaryButton: {
-    backgroundColor: "#C4714A", borderRadius: RADIUS.card,
+    borderRadius: RADIUS.card,
     paddingVertical: 19, marginHorizontal: 20, marginTop: 14,
     alignItems: "center", ...SHADOW.medium,
   },
@@ -365,12 +360,12 @@ const styles = StyleSheet.create({
   renameButtons: { flexDirection: "row", gap: 12 },
   renameCancelBtn: {
     flex: 1, paddingVertical: 12, borderRadius: RADIUS.button,
-    borderWidth: 1.5, borderColor: "#D8CCBA", alignItems: "center",
+    borderWidth: 1.5, alignItems: "center",
   },
-  renameCancelText: { fontSize: 15, fontFamily: F.sans600, color: "#7A6A58" },
+  renameCancelText: { fontSize: 15, fontFamily: F.sans600 },
   renameConfirmBtn: {
     flex: 1, paddingVertical: 12, borderRadius: RADIUS.button,
-    backgroundColor: "#C4714A", alignItems: "center",
+    alignItems: "center",
   },
   renameConfirmText: { fontSize: 15, fontFamily: F.sans700, color: "white" },
   suggestionsContainer: {

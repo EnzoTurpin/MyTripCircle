@@ -1,5 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface ToggleProps {
   value: boolean;
@@ -8,18 +9,21 @@ interface ToggleProps {
   trackColor?: string;
 }
 
-const Toggle: React.FC<ToggleProps> = ({ value, onToggle, disabled = false, trackColor }) => (
+const Toggle: React.FC<ToggleProps> = ({ value, onToggle, disabled = false, trackColor }) => {
+  const { colors } = useTheme();
+  return (
   <TouchableOpacity
     onPress={() => !disabled && onToggle(!value)}
     activeOpacity={disabled ? 1 : 0.8}
     style={[
       styles.track,
-      { backgroundColor: value ? (trackColor ?? "#C4714A") : "#D8CCBA" },
+      { backgroundColor: value ? (trackColor ?? colors.terra) : colors.border },
     ]}
   >
     <View style={[styles.knob, { transform: [{ translateX: value ? 22 : 0 }] }]} />
   </TouchableOpacity>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   track: {

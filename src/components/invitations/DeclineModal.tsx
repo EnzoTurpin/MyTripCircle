@@ -75,7 +75,7 @@ const DeclineModal: React.FC<DeclineModalProps> = ({
           </View>
 
           <TouchableOpacity
-            style={styles.modalConfirm}
+            style={[styles.modalConfirm, { backgroundColor: colors.danger }]}
             onPress={onConfirm}
             disabled={declining}
             activeOpacity={0.85}
@@ -103,19 +103,19 @@ const DeclineModal: React.FC<DeclineModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: "rgba(42,35,24,0.45)", alignItems: "center", justifyContent: "center", padding: 20 },
   modal: {
-    backgroundColor: "#FDFAF5", borderRadius: 24, padding: 24, width: "100%",
+    borderRadius: 24, padding: 24, width: "100%",
     ...SHADOW.strong,
   },
-  modalIcon:        { width: 60, height: 60, borderRadius: 30, backgroundColor: "#EDE5D8", alignItems: "center", justifyContent: "center", alignSelf: "center", marginBottom: 16 },
-  modalTitle:       { fontSize: 20, fontFamily: F.sans700, color: "#2A2318", textAlign: "center", marginBottom: 8 },
-  modalSub:         { fontSize: 14, fontFamily: F.sans400, color: "#7A6A58", textAlign: "center", lineHeight: 22, marginBottom: 18 },
-  modalInput:       { backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D8CCBA", borderRadius: RADIUS.button, padding: 14, marginBottom: 18 },
-  modalInputLabel:  { fontSize: 12, color: "#B0A090", fontFamily: F.sans400, marginBottom: 6 },
-  modalInputText:   { fontSize: 15, color: "#2A2318", fontFamily: F.sans400, minHeight: 50 },
-  modalConfirm:     { backgroundColor: "#C04040", borderRadius: RADIUS.button, paddingVertical: 15, alignItems: "center", marginBottom: 10 },
+  modalIcon:        { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center", alignSelf: "center", marginBottom: 16 },
+  modalTitle:       { fontSize: 20, fontFamily: F.sans700, textAlign: "center", marginBottom: 8 },
+  modalSub:         { fontSize: 14, fontFamily: F.sans400, textAlign: "center", lineHeight: 22, marginBottom: 18 },
+  modalInput:       { borderWidth: 1, borderRadius: RADIUS.button, padding: 14, marginBottom: 18 },
+  modalInputLabel:  { fontSize: 12, fontFamily: F.sans400, marginBottom: 6 },
+  modalInputText:   { fontSize: 15, fontFamily: F.sans400, minHeight: 50 },
+  modalConfirm:     { borderRadius: RADIUS.button, paddingVertical: 15, alignItems: "center", marginBottom: 10 },
   modalConfirmText: { fontSize: 16, fontFamily: F.sans600, color: "#FFFFFF" },
-  modalCancel:      { backgroundColor: "#EDE5D8", borderRadius: RADIUS.button, paddingVertical: 14, alignItems: "center" },
-  modalCancelText:  { fontSize: 16, fontFamily: F.sans600, color: "#7A6A58" },
+  modalCancel:      { borderRadius: RADIUS.button, paddingVertical: 14, alignItems: "center" },
+  modalCancelText:  { fontSize: 16, fontFamily: F.sans600 },
 });
 
 export default DeclineModal;

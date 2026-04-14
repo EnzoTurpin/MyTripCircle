@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { Address } from "../../types";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const MOSS = "#6B8C5A";
 const MOSS_LIGHT = "#E2EDD9";
@@ -46,6 +47,7 @@ interface MapMarkerPopupProps {
 
 const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNavigate }) => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const ic  = getIconColors(address.type);
   const tag = getTagColors(address.type);
 
@@ -58,8 +60,8 @@ const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNav
             <Ionicons name={getTypeIcon(address.type) as any} size={16} color={ic.icon} />
           </View>
           <View style={{ flex: 1, marginRight: 6 }}>
-            <Text style={styles.popupName} numberOfLines={1}>{address.name}</Text>
-            <Text style={styles.popupCity} numberOfLines={1}>{address.city}, {address.country}</Text>
+            <Text style={[styles.popupName, { color: colors.text }]} numberOfLines={1}>{address.name}</Text>
+            <Text style={[styles.popupCity, { color: colors.textMid }]} numberOfLines={1}>{address.city}, {address.country}</Text>
           </View>
           <View style={[styles.popupTag, { backgroundColor: tag.bg }]}>
             <Text style={[styles.popupTagText, { color: tag.text }]}>
@@ -71,14 +73,14 @@ const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNav
             onPress={onClose}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close" size={16} color="#7A6A5A" />
+            <Ionicons name="close" size={16} color={colors.textMid} />
           </TouchableOpacity>
         </View>
         {address.address ? (
-          <Text style={styles.popupAddress} numberOfLines={1}>{address.address}</Text>
+          <Text style={[styles.popupAddress, { color: colors.textMid }]} numberOfLines={1}>{address.address}</Text>
         ) : null}
         <TouchableOpacity
-          style={styles.popupCta}
+          style={[styles.popupCta, { backgroundColor: colors.terraDark }]}
           activeOpacity={0.85}
           onPress={() => onNavigate(address.id)}
         >
@@ -111,8 +113,8 @@ const styles = StyleSheet.create({
     justifyContent: "center", alignItems: "center",
     marginRight: 10, flexShrink: 0,
   },
-  popupName: { fontSize: 14, fontFamily: F.sans700, color: "#2A2318", marginBottom: 2 },
-  popupCity: { fontSize: 12, fontFamily: F.sans400, color: "#7A6A5A" },
+  popupName: { fontSize: 14, fontFamily: F.sans700, marginBottom: 2 },
+  popupCity: { fontSize: 12, fontFamily: F.sans400 },
   popupTag:  { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9999, flexShrink: 0, marginRight: 6 },
   popupTagText: { fontSize: 11, fontFamily: F.sans600 },
   popupClose: {
@@ -120,10 +122,10 @@ const styles = StyleSheet.create({
     justifyContent: "center", alignItems: "center",
     backgroundColor: "#F5F0EB",
   },
-  popupAddress: { fontSize: 12, fontFamily: F.sans400, color: "#7A6A5A", marginBottom: 10 },
+  popupAddress: { fontSize: 12, fontFamily: F.sans400, marginBottom: 10 },
   popupCta: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 6, backgroundColor: "#A35830", borderRadius: 9, paddingVertical: 8,
+    gap: 6, borderRadius: 9, paddingVertical: 8,
   },
   popupCtaText: { color: "#FFFFFF", fontSize: 13, fontFamily: F.sans600 },
 });

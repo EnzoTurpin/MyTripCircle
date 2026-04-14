@@ -1,9 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, StyleSheet, Image, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { F } from "../../theme/fonts";
+import BackButton from "../ui/BackButton";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const HERO_H = SCREEN_H * 0.46;
@@ -28,30 +28,33 @@ interface Props {
   onBack: () => void;
 }
 
-const IdeaHero: React.FC<Props> = ({ ideaId, name, country, onBack }) => (
-  <View style={s.heroContainer}>
-    <Image
-      source={{ uri: DESTINATION_IMAGES[ideaId] }}
-      style={s.heroImage}
-      resizeMode="cover"
-    />
-    <LinearGradient
-      colors={["rgba(0,0,0,0.25)", "transparent", "rgba(15,8,2,0.65)"]}
-      style={s.heroGradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-    />
-    <SafeAreaView style={s.heroSafeArea} edges={["top"]}>
-      <TouchableOpacity style={s.backBtn} onPress={onBack} activeOpacity={0.8}>
-        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-      </TouchableOpacity>
-    </SafeAreaView>
-    <View style={s.heroContent}>
-      <Text style={s.heroName}>{name}</Text>
-      <Text style={s.heroCountry}>{country}</Text>
+const IdeaHero: React.FC<Props> = ({ ideaId, name, country, onBack }) => {
+  const { top: insetTop } = useSafeAreaInsets();
+  return (
+    <View style={s.heroContainer}>
+      <Image
+        source={{ uri: DESTINATION_IMAGES[ideaId] }}
+        style={s.heroImage}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={["rgba(0,0,0,0.25)", "transparent", "rgba(15,8,2,0.65)"]}
+        style={s.heroGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+      <BackButton
+        variant="overlay"
+        onPress={onBack}
+        style={[s.backBtn, { top: insetTop + 10 }]}
+      />
+      <View style={s.heroContent}>
+        <Text style={s.heroName}>{name}</Text>
+        <Text style={s.heroCountry}>{country}</Text>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const s = StyleSheet.create({
   heroContainer: {
@@ -67,21 +70,16 @@ const s = StyleSheet.create({
     top: 0,
     bottom: 0,
   },
-  heroSafeArea: { position: "absolute", top: 0, left: 0, right: 0 },
   backBtn: {
-    marginTop: 10,
-    marginLeft: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
+    position: "absolute",
+    left: 16,
+    zIndex: 10,
   },
   heroContent: { position: "absolute", bottom: 24, left: 24, right: 24 },
   heroName: {
     fontFamily: F.sans700,
-    fontSize: 38,
+    fontSize: 28,
+    lineHeight: 34,
     color: "#FFFFFF",
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },

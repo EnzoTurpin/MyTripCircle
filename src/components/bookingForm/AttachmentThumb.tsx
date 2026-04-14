@@ -20,7 +20,7 @@ const AttachmentThumb: React.FC<AttachmentThumbProps> = ({ attachment, colors })
 
   return (
     <View style={[styles.icon, { backgroundColor: colors.bgLight }]}>
-      <Ionicons name={attachment.type === "pdf" ? "document" : "image"} size={22} color="#C4714A" />
+      <Ionicons name={attachment.type === "pdf" ? "document" : "image"} size={22} color={colors.terra} />
     </View>
   );
 };

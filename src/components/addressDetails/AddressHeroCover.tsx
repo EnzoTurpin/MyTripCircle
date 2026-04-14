@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Address } from "../../types";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+import BackButton from "../ui/BackButton";
 
 interface Props {
   address: Address;
@@ -38,13 +38,11 @@ const AddressHeroCover: React.FC<Props> = ({ address, gradient, badge, insetTop,
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
-      <TouchableOpacity
-        style={[styles.backButton, { top: insetTop + 10 }]}
+      <BackButton
+        variant="overlay"
         onPress={onBack}
-        activeOpacity={0.75}
-      >
-        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-      </TouchableOpacity>
+        style={[styles.backButton, { top: insetTop + 10 }]}
+      />
       <View style={styles.heroBottom}>
         <View style={[styles.typeBadge, { backgroundColor: colors.terraLight }]}>
           <Text style={[styles.typeBadgeText, { color: colors.terra }]}>
@@ -67,12 +65,6 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   heroBottom: {
     paddingHorizontal: 18,
@@ -91,7 +83,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 28,
-    fontFamily: F.serif700,
+    fontFamily: F.sans700,
     color: "#FFFFFF",
     lineHeight: 34,
   },

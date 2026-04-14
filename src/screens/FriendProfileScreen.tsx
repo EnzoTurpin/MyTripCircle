@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
+import BackButton from "../components/ui/BackButton";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFriendProfileActions } from "../hooks/useFriendProfileActions";
@@ -44,19 +45,17 @@ const FriendProfileScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Cover ── */}
-        <View style={styles.cover}>
+        <View style={[styles.cover, { backgroundColor: colors.textMid }]}>
           <LinearGradient
             colors={["rgba(0,0,0,0.08)", "rgba(0,0,0,0.0)", "rgba(0,0,0,0.72)"]}
             locations={[0, 0.3, 1]}
             style={StyleSheet.absoluteFill}
           />
 
-          <TouchableOpacity style={[styles.backBtn, { top: insets.top + 2 }]} onPress={goBack} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
+          <BackButton variant="overlay" onPress={goBack} style={[styles.backBtn, { top: insets.top + 10 }]} />
 
           {!loading && (
-            <View style={[styles.amiBadge, { top: insets.top + 2 }, !isFriend && styles.amiBadgeStranger]}>
+            <View style={[styles.amiBadge, { top: insets.top + 10 }, !isFriend && styles.amiBadgeStranger]}>
               <Ionicons name={isFriend ? "checkmark" : "earth-outline"} size={15} color="#FFFFFF" />
               <Text style={styles.amiBadgeText}>{isFriend ? t("friendProfile.badgeFriend") : t("friendProfile.badgePublic")}</Text>
             </View>
@@ -126,7 +125,7 @@ const FriendProfileScreen: React.FC = () => {
                     { value: profile?.stats?.totalBookings ?? 0, label: t("friendProfile.statBookings") },
                   ].map((s) => (
                     <View key={s.label} style={[styles.statBox, { backgroundColor: colors.bgMid }]}>
-                      <Text style={styles.statValue}>{s.value}</Text>
+                      <Text style={[styles.statValue, { color: colors.terra }]}>{s.value}</Text>
                       <Text style={[styles.statLabel, { color: colors.textLight }]} numberOfLines={1} adjustsFontSizeToFit>{s.label}</Text>
                     </View>
                   ))}
@@ -199,22 +198,18 @@ const FriendProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safe:        { flex: 1, backgroundColor: "#F5F0E8" },
+  safe:        { flex: 1 },
   scroll:      { flex: 1 },
   scrollContent: { paddingBottom: 40 },
 
   cover: {
     height: 300,
-    backgroundColor: "#7A6A58",
     position: "relative",
     justifyContent: "flex-end",
   },
   backBtn: {
     position: "absolute",
-    top: 16, left: 16,
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center", alignItems: "center",
+    left: 16,
   },
   amiBadge: {
     position: "absolute",
@@ -243,7 +238,7 @@ const styles = StyleSheet.create({
   coverName:   { fontSize: 26, fontFamily: F.sans700, color: "#FFFFFF" },
   coverSub:    { fontSize: 13, fontFamily: F.sans400, color: "rgba(255,255,255,0.7)", marginTop: 3 },
 
-  body: { flex: 1, backgroundColor: "#F5F0E8" },
+  body: { flex: 1 },
 
   statsRow: {
     flexDirection: "row",
@@ -253,8 +248,8 @@ const styles = StyleSheet.create({
     flex: 1, borderRadius: 10,
     paddingVertical: 14, paddingHorizontal: 4, alignItems: "center",
   },
-  statValue: { fontSize: 22, fontFamily: F.sans700, color: "#C4714A" },
-  statLabel: { fontSize: 11, fontFamily: F.sans400, color: "#B0A090", textAlign: "center", marginTop: 4 },
+  statValue: { fontSize: 22, fontFamily: F.sans700 },
+  statLabel: { fontSize: 11, fontFamily: F.sans400, textAlign: "center", marginTop: 4 },
 
   privateCard: {
     marginHorizontal: 14, marginTop: 24, marginBottom: 8,
@@ -263,7 +258,7 @@ const styles = StyleSheet.create({
   },
   privateTitle: { fontSize: 16, fontFamily: F.sans600, textAlign: "center" },
   privateSubtitle: {
-    fontSize: 13, fontFamily: F.sans400, color: "#7A6A58",
+    fontSize: 13, fontFamily: F.sans400,
     textAlign: "center", lineHeight: 19,
   },
 });

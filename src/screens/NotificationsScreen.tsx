@@ -106,7 +106,7 @@ const NotificationsScreen: React.FC = () => {
           <Text style={[styles.title, { color: colors.text }]}>{t("notifications.title")}</Text>
         </View>
         <TouchableOpacity onPress={() => markAllAsRead()} activeOpacity={0.7}>
-          <Text style={styles.markAll}>{t("notifications.markAllRead")}</Text>
+          <Text style={[styles.markAll, { color: colors.terra }]}>{t("notifications.markAllRead")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -172,9 +172,9 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 14,
   },
-  headerCenter: { flex: 1, marginLeft: 14 },
-  title:   { fontSize: 20, fontFamily: F.sans700 },
-  markAll: { fontSize: 15, fontFamily: F.sans600, color: "#C4714A" },
+  headerCenter: { flex: 1 },
+  title:   { fontSize: 20, fontFamily: F.sans700, textAlign: "center" },
+  markAll: { fontSize: 15, fontFamily: F.sans600 },
 
   scrollContent: { paddingTop: 8, paddingBottom: 32 },
   scrollEmpty:   { flex: 1 },

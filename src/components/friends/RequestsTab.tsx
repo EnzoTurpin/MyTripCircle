@@ -32,7 +32,7 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
   onCancel,
 }) => {
   const renderReceivedItem = ({ item }: { item: FriendRequest }) => (
-    <View style={[styles.card, styles.receivedCard, { backgroundColor: colors.surface }]}>
+    <View style={[styles.card, styles.receivedCard, { backgroundColor: colors.surface, borderColor: `${colors.terra}4D` }]}>
       <View style={styles.receivedTop}>
         <View style={[styles.receivedAvatar, { backgroundColor: getAvatarColor(item.senderName || "?") }]}>
           <Text style={styles.receivedAvatarText}>{getInitials(item.senderName || "?")}</Text>
@@ -48,7 +48,7 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
         </View>
       </View>
       <View style={styles.receivedActions}>
-        <TouchableOpacity style={styles.acceptBtn} onPress={() => onRespond(item.id, "accept")} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: colors.terra }]} onPress={() => onRespond(item.id, "accept")} activeOpacity={0.8}>
           <Ionicons name="checkmark" size={16} color="#FFFFFF" />
           <Text style={styles.acceptBtnText}>{t("friends.accept")}</Text>
         </TouchableOpacity>
@@ -105,26 +105,26 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D8CCBA", borderRadius: RADIUS.card, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8, marginHorizontal: 20 },
-  receivedCard: { flexDirection: "column", gap: 0, borderColor: "rgba(196,113,74,0.3)", borderWidth: 1.5, paddingVertical: 16, paddingHorizontal: 16 },
+  card: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderRadius: RADIUS.card, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8, marginHorizontal: 20 },
+  receivedCard: { flexDirection: "column", gap: 0, borderWidth: 1.5, paddingVertical: 16, paddingHorizontal: 16 },
   receivedTop: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 14 },
   receivedActions: { flexDirection: "row", gap: 10 },
   avatar: { width: 48, height: 48, borderRadius: 24, overflow: "hidden", justifyContent: "center", alignItems: "center", flexShrink: 0 },
   avatarText: { fontSize: 17, fontFamily: F.sans600, color: "#FFFFFF" },
   cardInfo: { flex: 1 },
-  cardName: { fontSize: 17, fontFamily: F.sans600, color: "#2A2318" },
-  cardSub: { fontSize: 14, fontFamily: F.sans400, color: "#B0A090", marginTop: 2 },
+  cardName: { fontSize: 17, fontFamily: F.sans600 },
+  cardSub: { fontSize: 14, fontFamily: F.sans400, marginTop: 2 },
   receivedAvatar: { width: 58, height: 58, borderRadius: 29, overflow: "hidden", justifyContent: "center", alignItems: "center", flexShrink: 0 },
   receivedAvatarText: { fontSize: 20, fontFamily: F.sans600, color: "#FFFFFF" },
-  receivedName: { fontSize: 19, fontFamily: F.sans700, color: "#2A2318" },
-  receivedSub: { fontSize: 15, fontFamily: F.sans400, color: "#7A6A58", marginTop: 3 },
-  acceptBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#C4714A", borderRadius: RADIUS.button, paddingVertical: 13 },
+  receivedName: { fontSize: 19, fontFamily: F.sans700 },
+  receivedSub: { fontSize: 15, fontFamily: F.sans400, marginTop: 3 },
+  acceptBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: RADIUS.button, paddingVertical: 13 },
   acceptBtnText: { fontSize: 17, fontFamily: F.sans600, color: "#FFFFFF" },
-  declineBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#EDE5D8", borderRadius: RADIUS.button, paddingVertical: 13 },
-  declineBtnText: { fontSize: 17, fontFamily: F.sans600, color: "#7A6A58" },
-  pendingPill: { backgroundColor: "#EDE5D8", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
-  pendingPillText: { fontSize: 14, fontFamily: F.sans600, color: "#7A6A58" },
-  cancelBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#FDEAEA", justifyContent: "center", alignItems: "center" },
+  declineBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: RADIUS.button, paddingVertical: 13 },
+  declineBtnText: { fontSize: 17, fontFamily: F.sans600 },
+  pendingPill: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
+  pendingPillText: { fontSize: 14, fontFamily: F.sans600 },
+  cancelBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center" },
   sectionLabel: { fontSize: 13, fontFamily: F.sans600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10, marginTop: 4, marginHorizontal: 20 },
   emptyState: { alignItems: "center", paddingVertical: 48 },
   emptyText: { fontSize: 15, fontFamily: F.sans400, textAlign: "center", paddingHorizontal: 32 },

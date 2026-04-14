@@ -16,6 +16,7 @@ import { CameraView } from "expo-camera";
 import { useTicketScanner } from "../hooks/useTicketScanner";
 import ResultPanel from "./ticketScanner/ResultPanel";
 import { styles } from "./ticketScanner/ticketScannerStyles";
+import BackButton from "./ui/BackButton";
 import { useTheme } from "../contexts/ThemeContext";
 
 export type { ScannedBookingData } from "../hooks/useTicketScanner";
@@ -71,7 +72,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
           <Text style={[styles.permissionSubtitle, { color: colors.textMid }]}>
             {t("bookings.scanCameraPermissionSubtitle")}
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={requestPermission}>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.terra }]} onPress={requestPermission}>
             <Text style={styles.primaryButtonText}>{t("bookings.scanCameraPermissionGrant")}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setMode("choose")} style={styles.linkButton}>
@@ -93,7 +94,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
               <Ionicons name="close" size={20} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.chooseTitle, { color: colors.text }]}>{t("bookings.scanTitle")}</Text>
-            <View style={{ width: 40 }} />
+            <View style={{ width: 44 }} />
           </View>
 
           <View style={styles.chooseBody}>
@@ -156,11 +157,9 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
       <Modal visible={visible} animationType="slide">
         <View style={[styles.galleryContainer, { backgroundColor: colors.bg }]}>
           <SafeAreaView edges={["top"]} style={[styles.galleryHeader, { borderBottomColor: colors.bgMid }]}>
-            <TouchableOpacity onPress={() => { reset(); setMode("choose"); }} style={[styles.closeBtn, { backgroundColor: colors.bgMid }]}>
-              <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-            </TouchableOpacity>
+            <BackButton onPress={() => { reset(); setMode("choose"); }} />
             <Text style={[styles.chooseTitle, { color: colors.text }]}>{t("bookings.scanGalleryOption")}</Text>
-            <View style={{ width: 40 }} />
+            <View style={{ width: 44 }} />
           </SafeAreaView>
 
           {previewUri && (
@@ -228,9 +227,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
 
         <View style={styles.overlay}>
           <View style={[styles.cameraHeader, { paddingTop: insets.top + 4 }]}>
-            <TouchableOpacity style={styles.closeBtnWhite} onPress={() => { reset(); setMode("choose"); }} activeOpacity={0.8}>
-              <Ionicons name="chevron-back" size={22} color="white" />
-            </TouchableOpacity>
+            <BackButton variant="overlay" onPress={() => { reset(); setMode("choose"); }} />
             <Text style={styles.cameraHeaderTitle}>{t("bookings.scanTitle")}</Text>
             <View style={{ width: 44 }} />
           </View>

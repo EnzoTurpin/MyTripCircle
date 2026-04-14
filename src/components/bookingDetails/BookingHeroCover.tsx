@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import BackButton from "../ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { getBookingStatusTranslation } from "../../utils/i18n";
 import { getBookingTypeIcon, getBookingTypeColorsDetail, getBookingStatusColorsDetail } from "../../utils/bookingHelpers";
@@ -30,13 +31,11 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
       />
       <View style={styles.heroOverlay} />
 
-      <TouchableOpacity
-        style={[styles.backButton, { top: insetTop + 10 }]}
+      <BackButton
+        variant="overlay"
         onPress={onBack}
-        activeOpacity={0.75}
-      >
-        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-      </TouchableOpacity>
+        style={[styles.backButton, { top: insetTop + 10 }]}
+      />
 
       <View style={styles.heroBottom}>
         <View style={styles.heroBadgeRow}>
@@ -72,12 +71,6 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   heroBottom: { paddingHorizontal: 18, paddingBottom: 16 },
   heroBadgeRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
@@ -90,7 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   heroBadgeText: { fontSize: 11, fontFamily: F.sans600 },
-  heroTitle: { fontSize: 26, fontFamily: F.sans700, color: "#FFFFFF", lineHeight: 32 },
+  heroTitle: { fontSize: 28, fontFamily: F.sans700, color: "#FFFFFF", lineHeight: 34 },
 });
 
 export default BookingHeroCover;

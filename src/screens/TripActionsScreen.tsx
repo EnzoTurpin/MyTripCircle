@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import BackButton from "../components/ui/BackButton";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
 import { useTrips } from "../contexts/TripsContext";
@@ -104,9 +105,7 @@ const TripActionsScreen: React.FC = () => {
 
         {/* Back button */}
         <SafeAreaView edges={["top"]} style={s.heroOverlay}>
-          <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
+          <BackButton variant="overlay" onPress={() => navigation.goBack()} style={s.backBtn} />
         </SafeAreaView>
 
         {/* Trip info overlay */}
@@ -124,7 +123,7 @@ const TripActionsScreen: React.FC = () => {
           { value: budget > 0 ? `${budget}€` : "—", label: t("tripActions.statsBudget") },
         ].map((stat) => (
           <View key={stat.label} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
-            <Text style={s.statValue}>{stat.value}</Text>
+            <Text style={[s.statValue, { color: colors.terra }]}>{stat.value}</Text>
             <Text style={[s.statLabel, { color: colors.textLight }]}>{stat.label}</Text>
           </View>
         ))}
@@ -199,7 +198,6 @@ const TripActionsScreen: React.FC = () => {
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
 
   // ── Hero
@@ -220,12 +218,6 @@ const s = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 0 : 12,
   },
   backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    alignItems: "center",
     marginTop: 10,
   },
   heroBottom: {
@@ -254,13 +246,10 @@ const s = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingVertical: 18,
-    backgroundColor: "#FDFAF5",
     borderBottomWidth: 1,
-    borderBottomColor: "#D8CCBA",
   },
   statPill: {
     flex: 1,
-    backgroundColor: "#EDE5D8",
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
@@ -268,23 +257,19 @@ const s = StyleSheet.create({
   statValue: {
     fontSize: 22,
     fontFamily: F.sans700,
-    color: "#C4714A",
   },
   statLabel: {
     fontSize: 12,
-    color: "#B0A090",
     marginTop: 3,
     fontFamily: F.sans400,
   },
 
   // ── Menu card
   menuCard: {
-    backgroundColor: "#FFFFFF",
     marginHorizontal: 20,
     marginTop: 28,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     overflow: "hidden",
     shadowColor: "#2A2318",
     shadowOffset: { width: 0, height: 4 },
@@ -301,7 +286,6 @@ const s = StyleSheet.create({
   },
   menuDivider: {
     height: 1,
-    backgroundColor: "#F5F0E8",
   },
   menuIcon: {
     width: 52,
@@ -317,11 +301,9 @@ const s = StyleSheet.create({
   menuLabel: {
     fontSize: 17,
     fontFamily: F.sans600,
-    color: "#2A2318",
   },
   menuDesc: {
     fontSize: 13,
-    color: "#B0A090",
     marginTop: 2,
     fontFamily: F.sans400,
   },

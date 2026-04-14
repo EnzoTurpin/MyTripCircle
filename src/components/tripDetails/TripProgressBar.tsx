@@ -23,7 +23,7 @@ const TripProgressBar: React.FC<Props> = ({ progressPercent, daysPassed, duratio
         </Text>
       </View>
       <View style={[s.progressTrack, { backgroundColor: colors.bgMid }]}>
-        <View style={[s.progressFill, { width: `${progressPercent}%` as any }]} />
+        <View style={[s.progressFill, { width: `${progressPercent}%` as any, backgroundColor: colors.terra }]} />
       </View>
     </View>
   );
@@ -43,22 +43,18 @@ const s = StyleSheet.create({
   progressLabel: {
     fontSize: 16,
     fontFamily: F.sans600,
-    color: "#2A2318",
   },
   progressDays: {
     fontSize: 16,
-    color: "#7A6A58",
     fontFamily: F.sans400,
   },
   progressTrack: {
     height: 14,
-    backgroundColor: "#EDE5D8",
     borderRadius: 20,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#C4714A",
     borderRadius: 20,
   },
 });

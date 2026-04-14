@@ -17,9 +17,9 @@ const TripDraftBanner: React.FC<Props> = ({ onValidate }) => {
 
   return (
     <View style={[s.validateContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={s.draftBanner}>
-        <Ionicons name="information-circle" size={22} color="#C4714A" />
-        <Text style={s.draftBannerText}>{t("tripDetails.draftMessage")}</Text>
+      <View style={[s.draftBanner, { backgroundColor: colors.terraLight, borderColor: colors.terra }]}>
+        <Ionicons name="information-circle" size={22} color={colors.terra} />
+        <Text style={[s.draftBannerText, { color: colors.terraDark ?? colors.terra }]}>{t("tripDetails.draftMessage")}</Text>
       </View>
       <ModernButton
         title={t("tripDetails.validateTrip")}
@@ -37,27 +37,22 @@ const TripDraftBanner: React.FC<Props> = ({ onValidate }) => {
 
 const s = StyleSheet.create({
   validateContainer: {
-    backgroundColor: "#FFFFFF",
     borderRadius: RADIUS.card,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
   },
   draftBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5E5DC",
     padding: 12,
     borderRadius: RADIUS.input,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#C4714A",
   },
   draftBannerText: {
     fontSize: 14,
-    color: "#A35830",
     marginLeft: 8,
     fontFamily: F.sans400,
     flex: 1,

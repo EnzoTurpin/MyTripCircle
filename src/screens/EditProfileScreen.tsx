@@ -85,7 +85,7 @@ const EditProfileScreen: React.FC = () => {
         <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
           <BackButton onPress={() => navigation.goBack()} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("editProfile.personalInfo")}</Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         {/* ── Avatar section ── */}
@@ -99,7 +99,7 @@ const EditProfileScreen: React.FC = () => {
                   <Text style={styles.avatarInitials}>{getInitials(name || user?.name || "")}</Text>
                 )}
               </View>
-              <View style={styles.cameraOverlay}>
+              <View style={[styles.cameraOverlay, { backgroundColor: colors.terra }]}>
                 {uploadingAvatar ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
@@ -109,7 +109,7 @@ const EditProfileScreen: React.FC = () => {
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handlePickPhoto} activeOpacity={0.7} disabled={uploadingAvatar}>
-            <Text style={styles.changeAvatarLink}>{t("editProfile.changePhoto")}</Text>
+            <Text style={[styles.changeAvatarLink, { color: colors.terra }]}>{t("editProfile.changePhoto")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -158,8 +158,8 @@ const EditProfileScreen: React.FC = () => {
             onPress={() => navigation.navigate("ChangePassword")}
           >
             <View style={styles.securityLeft}>
-              <View style={styles.securityIconBg}>
-                <Ionicons name="lock-closed-outline" size={20} color="#C4714A" />
+              <View style={[styles.securityIconBg, { backgroundColor: colors.terraLight }]}>
+                <Ionicons name="lock-closed-outline" size={20} color={colors.terra} />
               </View>
               <Text style={[styles.securityLabel, { color: colors.text }]}>{t("editProfile.changePassword")}</Text>
             </View>
@@ -169,7 +169,7 @@ const EditProfileScreen: React.FC = () => {
 
         {/* ── Save button ── */}
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, { backgroundColor: colors.terra }]}
           onPress={handleSave}
           activeOpacity={0.8}
         >
@@ -184,7 +184,6 @@ const EditProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
   container: {
     flex: 1,
@@ -201,7 +200,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 60 : 20,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: "#F5F0E8",
   },
   headerTitle: {
     fontSize: 20,
@@ -253,7 +251,6 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: "#C4714A",
     borderWidth: 2,
     borderColor: "#FFFFFF",
     justifyContent: "center",
@@ -261,17 +258,14 @@ const styles = StyleSheet.create({
   },
   changeAvatarLink: {
     fontSize: 14,
-    color: "#C4714A",
     fontFamily: F.sans600,
   },
 
   // Form card
   formCard: {
     marginHorizontal: 16,
-    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     marginBottom: 16,
     overflow: "hidden",
   },
@@ -281,7 +275,6 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 11,
-    color: "#B0A090",
     fontFamily: F.sans600,
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -297,23 +290,19 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: "#2A2318",
     paddingVertical: 0,
     fontFamily: F.sans400,
   },
   fieldDivider: {
     height: 1,
-    backgroundColor: "#EDE5D8",
     marginHorizontal: 16,
   },
 
   // Security card
   sectionCard: {
     marginHorizontal: 16,
-    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     marginBottom: 24,
     overflow: "hidden",
   },
@@ -333,7 +322,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F5E5DC",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -341,13 +329,11 @@ const styles = StyleSheet.create({
   securityLabel: {
     fontSize: 15,
     fontFamily: F.sans600,
-    color: "#2A2318",
   },
 
   // Save button
   saveButton: {
     marginHorizontal: 16,
-    backgroundColor: "#C4714A",
     borderRadius: 10,
     paddingVertical: 15,
     flexDirection: "row",

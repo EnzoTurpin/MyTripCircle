@@ -207,7 +207,7 @@ export const ExistingAddressPicker: React.FC<AddressPickerProps> = ({
                       {[item.city, item.country].filter(Boolean).join(", ")}
                     </Text>
                   </View>
-                  <Ionicons name="add-circle" size={24} color="#C4714A" />
+                  <Ionicons name="add-circle" size={24} color={colors.terra} />
                 </TouchableOpacity>
               )}
             />

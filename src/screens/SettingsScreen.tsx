@@ -99,7 +99,7 @@ const SettingsScreen: React.FC = () => {
       <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
         <BackButton onPress={() => navigation.goBack()} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t("settings.title")}</Text>
-        <View style={{ width: 38 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView

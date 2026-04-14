@@ -189,7 +189,7 @@ const ChangePasswordScreen: React.FC = () => {
 
           {/* Save button */}
           <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+            style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }, loading && styles.primaryButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
             activeOpacity={0.85}
@@ -247,16 +247,13 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 6,
   },
-  // Primary button
   primaryButton: {
-    backgroundColor: "#C4714A", // terra — identique light/dark
     borderRadius: 12,
     paddingVertical: 18,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     marginTop: 4,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

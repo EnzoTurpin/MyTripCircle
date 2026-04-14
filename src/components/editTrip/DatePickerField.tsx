@@ -18,17 +18,17 @@ const DatePickerField: React.FC<Props> = ({ label, isActive, dateValue, onPress 
         styles.field,
         styles.fieldNoMargin,
         { backgroundColor: colors.surface, borderColor: colors.border },
-        isActive && styles.fieldActive,
+        isActive && [styles.fieldActive, { borderColor: colors.terra, shadowColor: colors.terra }],
       ]}
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Text style={[styles.fieldLbl, { color: colors.textLight }, isActive && { color: "#C4714A" }]}>
+      <Text style={[styles.fieldLbl, { color: isActive ? colors.terra : colors.textLight }]}>
         {label}{isActive ? " ✎" : ""}
       </Text>
       <View style={styles.fieldRow}>
         <Text style={styles.fieldEmoji}>📅</Text>
-        <Text style={[styles.dateVal, { color: colors.text }, isActive && { color: "#C4714A", fontFamily: F.sans700 }]}>
+        <Text style={[styles.dateVal, { color: isActive ? colors.terra : colors.text, fontFamily: isActive ? F.sans700 : F.sans500 }]}>
           {dateValue}
         </Text>
       </View>
@@ -39,15 +39,12 @@ const DatePickerField: React.FC<Props> = ({ label, isActive, dateValue, onPress 
 const styles = StyleSheet.create({
   field: {
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 14,
     marginBottom: 12,
   },
   fieldActive: {
-    borderColor: "#C4714A",
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.18,
     shadowRadius: 5,
@@ -63,7 +60,7 @@ const styles = StyleSheet.create({
   },
   fieldRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   fieldEmoji: { fontSize: 18 },
-  dateVal: { fontSize: 17, fontFamily: F.sans500 },
+  dateVal: { fontSize: 17 },
 });
 
 export default DatePickerField;

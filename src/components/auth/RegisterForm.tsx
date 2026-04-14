@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { AppColors } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
@@ -107,13 +108,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         >
           {/* Section haute */}
           <View>
-            <TouchableOpacity
-              style={[styles.backBtn, { backgroundColor: colors.bgMid }]}
+            <BackButton
               onPress={onBackToWelcome}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-            </TouchableOpacity>
+              style={styles.backButton}
+            />
             <View style={styles.titleBlock}>
               <Text style={[styles.registerTitle, { color: colors.text }]}>{t("auth.registerTitle")}</Text>
               <Text style={[styles.welcomeSub, { color: colors.textLight }]}>{t("auth.registerSubtitle")}</Text>
@@ -195,7 +193,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             </View>
             <View style={styles.termsRow}>
               <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} activeOpacity={0.8}>
-                <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: colors.surface }, termsAccepted && styles.checkboxChecked]}>
+                <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: colors.surface }, termsAccepted && [styles.checkboxChecked, { backgroundColor: colors.terra, borderColor: colors.terra }]]}>
                   {termsAccepted && <Ionicons name="checkmark" size={9} color={colors.white} />}
                 </View>
               </TouchableOpacity>
@@ -215,7 +213,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           {/* Section basse */}
           <View>
             <TouchableOpacity
-              style={[styles.primaryBtn, (busy || !termsAccepted) && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, { backgroundColor: colors.terra }, (busy || !termsAccepted) && styles.primaryBtnDisabled]}
               onPress={onSubmit}
               disabled={busy || !termsAccepted}
               activeOpacity={0.85}
@@ -249,6 +247,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   flex: { flex: 1 },
+  backButton: {
+    marginLeft: 24,
+    marginTop: 12,
+    marginBottom: 8,
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "space-between",
@@ -273,18 +276,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginTop: 32,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 24,
-    marginTop: 12,
-    marginBottom: 8,
-  },
   primaryBtn: {
-    backgroundColor: "#C4714A",
     borderRadius: RADIUS.button,
     marginHorizontal: 24,
     paddingVertical: 17,
@@ -330,10 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  checkboxChecked: {
-    backgroundColor: "#C4714A",
-    borderColor: "#C4714A",
-  },
+  checkboxChecked: {},
   termsText: {
     fontFamily: F.sans400,
     fontSize: 13,

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../components/ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utils/i18n";
 import { useTheme } from "../contexts/ThemeContext";
@@ -62,17 +63,11 @@ const CreateTripScreen: React.FC = () => {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: colors.bgMid }]}
-            onPress={handleCancel}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-          </TouchableOpacity>
+          <BackButton onPress={handleCancel} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>
             {t("createTrip.screenTitle")}
           </Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         {/* ── Cover Photo ── */}

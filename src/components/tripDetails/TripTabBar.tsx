@@ -30,11 +30,11 @@ const TripTabBar: React.FC<Props> = ({ activeTab, onTabChange }) => {
         return (
           <TouchableOpacity
             key={tab}
-            style={[s.tabItem, isActive && s.tabItemActive]}
+            style={[s.tabItem, isActive && { borderBottomColor: colors.terra }]}
             onPress={() => onTabChange(tab)}
             activeOpacity={0.7}
           >
-            <Text style={[s.tabText, { color: colors.textLight }, isActive && s.tabTextActive]}>
+            <Text style={[s.tabText, { color: isActive ? colors.terra : colors.textLight }]}>
               {labels[tab]}
             </Text>
           </TouchableOpacity>
@@ -48,7 +48,6 @@ const s = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#D8CCBA",
     marginHorizontal: 20,
   },
   tabItem: {
@@ -58,16 +57,9 @@ const s = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },
-  tabItemActive: {
-    borderBottomColor: "#C4714A",
-  },
   tabText: {
     fontSize: 15,
     fontFamily: F.sans600,
-    color: "#B0A090",
-  },
-  tabTextActive: {
-    color: "#C4714A",
   },
 });
 

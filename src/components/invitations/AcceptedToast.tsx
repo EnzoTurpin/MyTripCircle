@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 
 interface AcceptedToastProps {
@@ -12,6 +13,7 @@ interface AcceptedToastProps {
 
 const AcceptedToast: React.FC<AcceptedToastProps> = ({ toastTrip, toastAnim, onView }) => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   if (!toastTrip) return null;
 
@@ -49,7 +51,7 @@ const AcceptedToast: React.FC<AcceptedToastProps> = ({ toastTrip, toastAnim, onV
         }}
         activeOpacity={0.8}
       >
-        <Text style={styles.toastAction}>{t("invitation.toastView")}</Text>
+        <Text style={[styles.toastAction, { color: colors.terra }]}>{t("invitation.toastView")}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
   toastBody:   { flex: 1 },
   toastTitle:  { fontSize: 14, fontFamily: F.sans600, color: "#FFFFFF" },
   toastSub:    { fontSize: 12, fontFamily: F.sans400, color: "rgba(255,255,255,0.55)", marginTop: 2 },
-  toastAction: { fontSize: 14, fontFamily: F.sans600, color: "#C4714A" },
+  toastAction: { fontSize: 14, fontFamily: F.sans600 },
 });
 
 export default AcceptedToast;

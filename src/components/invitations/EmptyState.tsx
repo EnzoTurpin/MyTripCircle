@@ -49,8 +49,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({ tab }) => {
 const styles = StyleSheet.create({
   emptyWrap:   { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 60 },
   emptyCircle: { width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center", marginBottom: 20 },
-  emptyTitle:  { fontSize: 20, fontFamily: F.sans600, color: "#2A2318", marginBottom: 10 },
-  emptySub:    { fontSize: 15, fontFamily: F.sans400, color: "#7A6A58", textAlign: "center", paddingHorizontal: 32, lineHeight: 22 },
+  emptyTitle:  { fontSize: 20, fontFamily: F.sans600, marginBottom: 10 },
+  emptySub:    { fontSize: 15, fontFamily: F.sans400, textAlign: "center", paddingHorizontal: 32, lineHeight: 22 },
 });
 
 export default EmptyState;

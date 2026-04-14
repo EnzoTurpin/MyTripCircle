@@ -1,10 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, StyleProp, ViewStyle } from "react-native";
+import { View, Text, StyleSheet, Image, StyleProp, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../ui/BackButton";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface TripSummary {
   title: string;
@@ -33,9 +35,10 @@ const TripCoverHero: React.FC<Props> = ({
   trip, statusLabel, statusColor, statusBg, insetTop, onBack,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.cover}>
+    <View style={[styles.cover, { backgroundColor: colors.textMid }]}>
       {trip.coverImage ? (
         <Image
           source={{ uri: trip.coverImage }}
@@ -43,7 +46,7 @@ const TripCoverHero: React.FC<Props> = ({
           resizeMode="cover"
         />
       ) : (
-        <View style={[StyleSheet.absoluteFill as StyleProp<ViewStyle>, { backgroundColor: "#7A6A58" }]} />
+        <View style={[StyleSheet.absoluteFill as StyleProp<ViewStyle>, { backgroundColor: colors.textMid }]} />
       )}
       <LinearGradient
         colors={["rgba(0,0,0,0.08)", "rgba(0,0,0,0)", "rgba(0,0,0,0.75)"]}
@@ -51,15 +54,13 @@ const TripCoverHero: React.FC<Props> = ({
         style={StyleSheet.absoluteFill as StyleProp<ViewStyle>}
       />
 
-      <TouchableOpacity
-        style={[styles.backBtn, { top: insetTop + 8 }]}
+      <BackButton
+        variant="overlay"
         onPress={onBack}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-      </TouchableOpacity>
+        style={[styles.backBtn, { top: insetTop + 10 }]}
+      />
 
-      <View style={[styles.readOnlyBadge, { top: insetTop + 8 }]}>
+      <View style={[styles.readOnlyBadge, { top: insetTop + 10 }]}>
         <Ionicons name="eye-outline" size={13} color="#FFFFFF" />
         <Text style={styles.readOnlyText}>{t("tripPublicView.readOnly")}</Text>
       </View>
@@ -91,17 +92,10 @@ const styles = StyleSheet.create({
     height: 280,
     position: "relative",
     justifyContent: "flex-end",
-    backgroundColor: "#7A6A58",
   },
   backBtn: {
     position: "absolute",
     left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   readOnlyBadge: {
     position: "absolute",
@@ -126,7 +120,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statusText: { fontSize: 11, fontFamily: F.sans600 },
-  coverTitle: { fontSize: 26, fontFamily: F.sans700, color: "#FFFFFF" },
+  coverTitle: { fontSize: 28, fontFamily: F.sans700, color: "#FFFFFF", lineHeight: 34 },
   coverRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   coverSub: { fontSize: 14, fontFamily: F.sans400, color: "rgba(255,255,255,0.85)" },
   coverDates: { fontSize: 12, fontFamily: F.sans400, color: "rgba(255,255,255,0.7)" },

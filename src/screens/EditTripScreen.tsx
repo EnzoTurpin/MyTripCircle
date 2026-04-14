@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../components/ui/BackButton";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
@@ -58,13 +58,13 @@ const EditTripScreen: React.FC = () => {
   const kvaBehavior = Platform.OS === "ios" ? "padding" : "height";
 
   const visibilityOptions: RadioOption<"private" | "friends" | "public">[] = [
-    { value: "private", label: t("editTrip.visibilityPrivate"), desc: t("editTrip.visibilityPrivateDesc"), emoji: "🔒", selBg: "#F5E5DC", selColor: "#C4714A", dotColor: "#C4714A" },
+    { value: "private", label: t("editTrip.visibilityPrivate"), desc: t("editTrip.visibilityPrivateDesc"), emoji: "🔒", selBg: colors.terraLight, selColor: colors.terra, dotColor: colors.terra },
     { value: "friends", label: t("editTrip.visibilityFriends"), desc: t("editTrip.visibilityFriendsDesc"), emoji: "👥", selBg: "#DCF0F5", selColor: "#5A8FAA", dotColor: "#5A8FAA" },
     { value: "public",  label: t("editTrip.visibilityPublic"),  desc: t("editTrip.visibilityPublicDesc"),  emoji: "🌐", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
   ];
 
   const statusOptions: RadioOption<"draft" | "validated">[] = [
-    { value: "draft",     label: t("editTrip.statusDraft"),     desc: t("editTrip.statusDraftDesc"),     emoji: "📝", selBg: "#EDE5D8", selColor: "#7A6A58", dotColor: "#7A6A58" },
+    { value: "draft",     label: t("editTrip.statusDraft"),     desc: t("editTrip.statusDraftDesc"),     emoji: "📝", selBg: colors.bgMid, selColor: colors.textMid, dotColor: colors.textMid },
     { value: "validated", label: t("editTrip.statusValidated"), desc: t("editTrip.statusValidatedDesc"), emoji: "✅", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
   ];
 
@@ -77,11 +77,9 @@ const EditTripScreen: React.FC = () => {
 
         {/* ── Header ── */}
         <View style={[s.header, { backgroundColor: colors.bgLight, borderBottomColor: colors.border }]}>
-          <TouchableOpacity style={[s.backBtn, { backgroundColor: colors.bgMid }]} onPress={handleCancel} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-          </TouchableOpacity>
+          <BackButton onPress={handleCancel} />
           <Text style={[s.headerTitle, { color: colors.text }]}>{t("editTrip.screenTitle")}</Text>
-          <TouchableOpacity style={[s.savePill, loading && s.savePillDisabled]} onPress={handleUpdateTrip} disabled={loading} activeOpacity={0.85}>
+          <TouchableOpacity style={[s.savePill, { backgroundColor: loading ? colors.textLight : colors.terra, shadowColor: loading ? undefined : colors.terra }, loading && { shadowOpacity: 0, elevation: 0 }]} onPress={handleUpdateTrip} disabled={loading} activeOpacity={0.85}>
             <Text style={s.savePillText}>{loading ? "…" : t("editTrip.saveButton")}</Text>
           </TouchableOpacity>
         </View>
@@ -101,7 +99,7 @@ const EditTripScreen: React.FC = () => {
               )}
               <View style={s.coverBtn}>
                 <Text style={s.coverBtnEmoji}>📸</Text>
-                <Text style={s.coverBtnText}>{t("editTrip.changeCoverPhoto")}</Text>
+                <Text style={[s.coverBtnText, { color: colors.text }]}>{t("editTrip.changeCoverPhoto")}</Text>
               </View>
             </TouchableOpacity>
 
@@ -109,7 +107,7 @@ const EditTripScreen: React.FC = () => {
 
               {/* ── Nom du voyage ── */}
               <FocusableField
-                baseStyle={[s.field, { backgroundColor: colors.surface }]}
+                baseStyle={[s.field, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 render={({ onFocus, onBlur }) => (
                   <>
                     <Text style={[s.fieldLbl, { color: colors.textLight }]}>{t("editTrip.tripNameLabel")}</Text>
@@ -129,7 +127,7 @@ const EditTripScreen: React.FC = () => {
 
               {/* ── Destination ── */}
               <FocusableField
-                baseStyle={[s.field, { backgroundColor: colors.surface }]}
+                baseStyle={[s.field, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 render={({ onFocus, onBlur }) => (
                   <>
                     <Text style={[s.fieldLbl, { color: colors.textLight }]}>{t("editTrip.mainDestination")}</Text>
@@ -190,7 +188,7 @@ const EditTripScreen: React.FC = () => {
 
               {/* ── Description ── */}
               <FocusableField
-                baseStyle={[s.field, { backgroundColor: colors.surface }]}
+                baseStyle={[s.field, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 render={({ onFocus, onBlur }) => (
                   <>
                     <Text style={[s.fieldLbl, { color: colors.textLight }]}>{t("editTrip.descriptionLabel")}</Text>
@@ -281,12 +279,11 @@ const s = StyleSheet.create({
 
   header: {
     flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 22, paddingVertical: 14, borderBottomWidth: 1,
+    paddingHorizontal: 24, paddingVertical: 14, borderBottomWidth: 1,
   },
-  backBtn:       { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
   headerTitle:   { flex: 1, textAlign: "center", fontSize: 20, fontFamily: F.sans700, marginHorizontal: 8 },
-  savePill:      { backgroundColor: "#C4714A", borderRadius: 24, paddingHorizontal: 20, paddingVertical: 11, shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 6, elevation: 3 },
-  savePillDisabled: { backgroundColor: "#B0A090", shadowOpacity: 0, elevation: 0 },
+  savePill:      { borderRadius: 24, paddingHorizontal: 20, paddingVertical: 11, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 6, elevation: 3 },
+  savePillDisabled: { shadowOpacity: 0, elevation: 0 },
   savePillText:  { fontSize: 15, fontFamily: F.sans700, color: "#FFFFFF" },
 
   cover: {
@@ -295,11 +292,11 @@ const s = StyleSheet.create({
   },
   coverBtn:      { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.90)", paddingHorizontal: 20, paddingVertical: 11, borderRadius: 28 },
   coverBtnEmoji: { fontSize: 18 },
-  coverBtnText:  { fontSize: 15, fontFamily: F.sans600, color: "#2A2318" },
+  coverBtnText:  { fontSize: 15, fontFamily: F.sans600 },
 
   form: { paddingHorizontal: 18, paddingTop: 16 },
 
-  field:         { borderWidth: 1, borderColor: "#D8CCBA", borderRadius: 16, paddingHorizontal: 18, paddingVertical: 14, marginBottom: 12 },
+  field:         { borderWidth: 1, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 14, marginBottom: 12 },
   fieldLbl:      { fontSize: 12, fontFamily: F.sans600, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
   fieldInput:    { fontSize: 18, fontFamily: F.sans400, padding: 0, margin: 0 },
   fieldMultiline: { minHeight: 90, textAlignVertical: "top" },

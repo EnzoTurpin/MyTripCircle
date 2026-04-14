@@ -161,7 +161,7 @@ const TripDetailsScreen: React.FC = () => {
   if (!trip) {
     return (
       <View style={[s.errorContainer, { backgroundColor: colors.bg }]}>
-        <Text style={s.errorText}>{t("tripDetails.notFound")}</Text>
+        <Text style={[s.errorText, { color: colors.danger }]}>{t("tripDetails.notFound")}</Text>
       </View>
     );
   }
@@ -289,11 +289,9 @@ const TripDetailsScreen: React.FC = () => {
 const s = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
   scroll: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
   scrollContent: {
     paddingBottom: 0,
@@ -305,22 +303,18 @@ const s = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F0E8",
   },
   loadingText: {
     fontSize: 16,
-    color: "#7A6A58",
     fontFamily: F.sans400,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F0E8",
   },
   errorText: {
     fontSize: 18,
-    color: "#C04040",
     fontFamily: F.sans400,
   },
   toast: {

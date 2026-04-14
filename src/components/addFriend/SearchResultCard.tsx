@@ -59,7 +59,7 @@ const SearchResultCard: React.FC<Props> = ({ result: r, sending, onSend, onViewP
   } else {
     actionEl = (
       <TouchableOpacity
-        style={[styles.actionBtn, sending && { opacity: 0.6 }]}
+        style={[styles.actionBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, sending && { opacity: 0.6 }]}
         onPress={onSend}
         disabled={sending}
         activeOpacity={0.85}
@@ -99,21 +99,21 @@ const SearchResultCard: React.FC<Props> = ({ result: r, sending, onSend, onViewP
             <Text style={[styles.resultEmail, { color: colors.textLight }]}>{r.email}</Text>
           </View>
           <TouchableOpacity onPress={onViewProfile}>
-            <Text style={styles.seeProfileLink}>{t("addFriend.viewProfile")}</Text>
+            <Text style={[styles.seeProfileLink, { color: colors.terra }]}>{t("addFriend.viewProfile")}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.statsRow}>
           <View style={[styles.statBox, { backgroundColor: colors.bgMid }]}>
-            <Text style={styles.statValue}>{r.stats.totalTrips}</Text>
+            <Text style={[styles.statValue, { color: colors.terra }]}>{r.stats.totalTrips}</Text>
             <Text style={[styles.statLabel, { color: colors.textLight }]}>{t("addFriend.statTrips")}</Text>
           </View>
           <View style={[styles.statBox, { backgroundColor: colors.bgMid }]}>
-            <Text style={styles.statValue}>{r.stats.countries}</Text>
+            <Text style={[styles.statValue, { color: colors.terra }]}>{r.stats.countries}</Text>
             <Text style={[styles.statLabel, { color: colors.textLight }]}>{t("addFriend.statCountries")}</Text>
           </View>
           <View style={[styles.statBox, { backgroundColor: colors.bgMid }]}>
-            <Text style={styles.statValue}>{r.stats.commonFriends}</Text>
+            <Text style={[styles.statValue, { color: colors.terra }]}>{r.stats.commonFriends}</Text>
             <Text style={[styles.statLabel, { color: colors.textLight }]}>{t("addFriend.statCommonFriends")}</Text>
           </View>
         </View>
@@ -139,7 +139,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -157,20 +156,18 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 17, fontFamily: F.sans700, color: "#FFFFFF" },
   resultName: { fontSize: 17, fontFamily: F.sans600 },
   resultEmail: { fontSize: 13, fontFamily: F.sans400, marginTop: 2 },
-  seeProfileLink: { fontSize: 14, fontFamily: F.sans600, color: "#C4714A" },
+  seeProfileLink: { fontSize: 14, fontFamily: F.sans600 },
   statsRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
   statBox: { flex: 1, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
-  statValue: { fontSize: 20, fontFamily: F.sans700, color: "#C4714A" },
+  statValue: { fontSize: 20, fontFamily: F.sans700 },
   statLabel: { fontSize: 11, fontFamily: F.sans400, marginTop: 2 },
   actionBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#C4714A",
     borderRadius: 12,
     paddingVertical: 14,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

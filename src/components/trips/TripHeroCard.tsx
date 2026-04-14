@@ -40,7 +40,7 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
           </Text>
         </View>
         <View style={styles.heroArrowBtn}>
-          <Ionicons name="arrow-forward-outline" size={16} color="#A35830" />
+          <Ionicons name="arrow-forward-outline" size={16} color={colors.terraDark} />
         </View>
         <View style={styles.heroBottom}>
           <Text style={styles.heroTitle} numberOfLines={1}>{trip.title}</Text>

@@ -21,12 +21,12 @@ const PickerModal: React.FC<PickerModalProps> = ({ visible, title, onClose, chil
         style={[styles.content, { backgroundColor: colors.surface }]}
       >
         <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-        <View style={styles.pickerWrapper}>{children}</View>
+        <View style={[styles.pickerWrapper, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>{children}</View>
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelText}>{t("common.cancel")}</Text>
+          <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onClose}>
+            <Text style={[styles.cancelText, { color: colors.textMid }]}>{t("common.cancel")}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.confirmButton} onPress={onClose}>
+          <TouchableOpacity style={[styles.confirmButton, { backgroundColor: colors.terra }]} onPress={onClose}>
             <Text style={styles.confirmText}>{t("common.confirm")}</Text>
           </TouchableOpacity>
         </View>
@@ -55,11 +55,9 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 20, fontFamily: F.sans700, marginBottom: 15, textAlign: "center" },
   pickerWrapper: {
-    backgroundColor: "#FDFAF5",
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     minHeight: 200,
     justifyContent: "center",
     alignItems: "center",
@@ -67,17 +65,14 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, gap: 12 },
   cancelButton: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
     paddingVertical: 14,
     borderRadius: RADIUS.button,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#D8CCBA",
   },
-  cancelText: { color: "#7A6A58", fontSize: 16, fontFamily: F.sans600 },
+  cancelText: { fontSize: 16, fontFamily: F.sans600 },
   confirmButton: {
     flex: 1,
-    backgroundColor: "#C4714A",
     paddingVertical: 14,
     borderRadius: RADIUS.button,
     alignItems: "center",

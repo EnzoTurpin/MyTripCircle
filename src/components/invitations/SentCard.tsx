@@ -37,7 +37,7 @@ const SentCard: React.FC<SentProps> = ({ invitation: inv, onViewTrip, onCancel }
     pending:  { emoji: "⏳", label: t("invitation.statusPendingLabel"),  color: "#C07A20" },
     accepted: { emoji: "✓",  label: t("invitation.statusAcceptedLabel"), color: "#6B8C5A" },
     declined: { emoji: "✕",  label: t("invitation.statusDeclinedLabel"), color: "#C04040" },
-    expired:  { emoji: "⏰", label: t("invitation.statusExpiredLabel"),  color: "#B0A090" },
+    expired:  { emoji: "⏰", label: t("invitation.statusExpiredLabel"),  color: colors.textLight },
   };
   const sc = statusConfig[status] ?? statusConfig.pending;
 
@@ -57,9 +57,9 @@ const SentCard: React.FC<SentProps> = ({ invitation: inv, onViewTrip, onCancel }
     );
   } else if (status === "pending") {
     actionEl = (
-      <TouchableOpacity style={cardStyles.cancelInviteBtn} onPress={onCancel} activeOpacity={0.85}>
-        <Ionicons name="close-outline" size={18} color="#C04040" />
-        <Text style={cardStyles.cancelInviteText}>{t("invitation.cancelInviteBtn")}</Text>
+      <TouchableOpacity style={[cardStyles.cancelInviteBtn, { backgroundColor: colors.dangerLight }]} onPress={onCancel} activeOpacity={0.85}>
+        <Ionicons name="close-outline" size={18} color={colors.danger} />
+        <Text style={[cardStyles.cancelInviteText, { color: colors.danger }]}>{t("invitation.cancelInviteBtn")}</Text>
       </TouchableOpacity>
     );
   }
