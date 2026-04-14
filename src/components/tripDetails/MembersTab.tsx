@@ -51,7 +51,7 @@ const MembersTab: React.FC<Props> = ({
         </TouchableOpacity>
       )}
       <View style={[s.memberRow, { borderBottomColor: colors.bgMid }]}>
-        <View style={[s.memberAvatar, { backgroundColor: isOwner ? "#C4714A" : "#B0A090" }]}>
+        <View style={[s.memberAvatar, { backgroundColor: isOwner ? colors.terra : colors.textLight }]}>
           {user?.avatar
             ? <Image source={{ uri: user.avatar }} style={s.memberAvatarPhoto} />
             : <Text style={s.memberAvatarText}>{(user?.name || "V")[0].toUpperCase()}</Text>
@@ -68,8 +68,8 @@ const MembersTab: React.FC<Props> = ({
             </Text>
           )}
         </View>
-        <View style={[s.memberTag, { backgroundColor: isOwner ? "#F5E5DC" : colors.bgMid }]}>
-          <Text style={[s.memberTagText, { color: isOwner ? "#A35830" : colors.textMid }]}>
+        <View style={[s.memberTag, { backgroundColor: isOwner ? colors.terraLight : colors.bgMid }]}>
+          <Text style={[s.memberTagText, { color: isOwner ? colors.terraDark : colors.textMid }]}>
             {t("tripDetails.you")}
           </Text>
         </View>
@@ -142,7 +142,6 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#EDE5D8",
   },
   memberAvatar: {
     width: 48,
@@ -165,17 +164,14 @@ const s = StyleSheet.create({
   memberName: {
     fontSize: 16,
     fontFamily: F.sans600,
-    color: "#2A2318",
     marginBottom: 2,
   },
   memberRole: {
     fontSize: 13,
-    color: "#7A6A58",
     fontFamily: F.sans400,
   },
   memberInvited: {
     fontSize: 12,
-    color: "#B0A090",
     fontFamily: F.sans400,
     fontStyle: "italic",
     marginTop: 2,

@@ -19,14 +19,6 @@ const createTripStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: C.sandMid,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   headerTitle: {
     flex: 1,
     textAlign: "center",

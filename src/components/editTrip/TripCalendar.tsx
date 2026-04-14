@@ -81,7 +81,7 @@ const TripCalendar: React.FC<Props> = ({
       {/* En-têtes jours */}
       <View style={s.calDaysRow}>
         {days.map((d, i) => (
-          <Text key={d} style={[s.calDayHeader, i >= 5 && s.calDayHeaderWeekend]}>
+          <Text key={d} style={[s.calDayHeader, { color: colors.textLight }, i >= 5 && { color: colors.border }]}>
             {d}
           </Text>
         ))}
@@ -113,7 +113,7 @@ const TripCalendar: React.FC<Props> = ({
               style={[
                 s.calCell,
                 (isStart || isEnd || inRange) && {
-                  backgroundColor: isStart || isEnd ? "#C4714A" : "rgba(196,113,74,0.15)",
+                  backgroundColor: isStart || isEnd ? colors.terra : "rgba(196,113,74,0.15)",
                   borderTopLeftRadius: roundLeft ? 8 : 0,
                   borderBottomLeftRadius: roundLeft ? 8 : 0,
                   borderTopRightRadius: roundRight ? 8 : 0,
@@ -127,7 +127,7 @@ const TripCalendar: React.FC<Props> = ({
                 style={[
                   s.calDayText,
                   { color: colors.text },
-                  inRange && s.calDayTextRange,
+                  inRange && { color: colors.terra, fontFamily: F.sans500 },
                   (isStart || isEnd) && s.calDayTextSelected,
                 ]}
               >
@@ -141,7 +141,7 @@ const TripCalendar: React.FC<Props> = ({
       {/* Légende */}
       <View style={s.calLegend}>
         <View style={s.calLegendItem}>
-          <View style={[s.calLegendDot, { backgroundColor: "#C4714A" }]} />
+          <View style={[s.calLegendDot, { backgroundColor: colors.terra }]} />
           <Text style={[s.calLegendText, { color: colors.textMid }]}>{periodLabel}</Text>
         </View>
         <View style={s.calLegendItem}>
@@ -178,17 +178,15 @@ const s = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  calNavTitle: { fontSize: 17, fontFamily: F.sans600, color: "#2A2318" },
+  calNavTitle: { fontSize: 17, fontFamily: F.sans600 },
   calDaysRow: { flexDirection: "row", marginBottom: 8 },
   calDayHeader: {
     flex: 1,
     textAlign: "center",
     fontSize: 12,
     fontFamily: F.sans600,
-    color: "#B0A090",
     paddingVertical: 5,
   },
-  calDayHeaderWeekend: { color: "#D8CCBA" },
   calGrid: { flexDirection: "row", flexWrap: "wrap" },
   calCell: {
     width: `${100 / 7}%` as any,
@@ -196,8 +194,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  calDayText: { fontSize: 16, lineHeight: 22, fontFamily: F.sans400, color: "#2A2318" },
-  calDayTextRange: { color: "#C4714A", fontFamily: F.sans500 },
+  calDayText: { fontSize: 16, lineHeight: 22, fontFamily: F.sans400 },
   calDayTextSelected: { color: "#FFFFFF", fontFamily: F.sans700 },
   calLegend: {
     flexDirection: "row",
@@ -210,7 +207,7 @@ const s = StyleSheet.create({
   },
   calLegendItem: { flexDirection: "row", alignItems: "center", gap: 7 },
   calLegendDot: { width: 12, height: 12, borderRadius: 4 },
-  calLegendText: { fontSize: 12, fontFamily: F.sans400, color: "#7A6A58" },
+  calLegendText: { fontSize: 12, fontFamily: F.sans400 },
 });
 
 export default TripCalendar;

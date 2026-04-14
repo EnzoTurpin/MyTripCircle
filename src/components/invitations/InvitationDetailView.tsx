@@ -10,8 +10,10 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import BackButton from "../ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDate } from "../../utils/i18n";
@@ -45,7 +47,7 @@ const LoadingView: React.FC<{ colors: Colors }> = ({ colors }) => {
   const { t } = useTranslation();
   return (
     <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
-      <ActivityIndicator size="large" color="#C4714A" />
+      <ActivityIndicator size="large" color={colors.terra} />
       <Text style={[styles.loadingText, { color: colors.textMid }]}>{t("invitation.loading")}</Text>
     </View>
   );
@@ -63,7 +65,7 @@ const ErrorView: React.FC<ErrorViewProps> = ({ colors, onNavigateBack }) => {
       <Ionicons name="alert-circle" size={64} color="#C04040" />
       <Text style={[styles.errorTitle, { color: colors.text }]}>{t("invitation.notFound")}</Text>
       <Text style={[styles.errorMessage, { color: colors.textMid }]}>{t("invitation.notFoundMessage")}</Text>
-      <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
+      <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.terra }]} onPress={onNavigateBack}>
         <Text style={styles.backButtonText}>{t("common.back")}</Text>
       </TouchableOpacity>
     </View>
@@ -116,7 +118,9 @@ interface InvitationBannerProps {
 
 const InvitationBanner: React.FC<InvitationBannerProps> = ({
   tripName, destination, dateRange, hasImage, coverImage, bannerGrad, onBack,
-}) => (
+}) => {
+  const insets = useSafeAreaInsets();
+  return (
   <View style={styles.detailBanner}>
     {hasImage
       ? <Image source={{ uri: coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
@@ -128,9 +132,7 @@ const InvitationBanner: React.FC<InvitationBannerProps> = ({
       start={{ x: 0, y: 0.3 }}
       end={{ x: 0, y: 1 }}
     />
-    <TouchableOpacity style={styles.detailBackBtn} onPress={onBack} activeOpacity={0.85}>
-      <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-    </TouchableOpacity>
+    <BackButton variant="overlay" onPress={onBack} style={[styles.detailBackBtn, { top: insets.top + 10 }]} />
     <View style={styles.detailBannerContent}>
       {destination && (
         <View style={styles.detailDestRow}>
@@ -142,7 +144,8 @@ const InvitationBanner: React.FC<InvitationBannerProps> = ({
       {dateRange && <Text style={styles.detailDateRange}>📅 {dateRange}</Text>}
     </View>
   </View>
-);
+  );
+};
 
 interface DetailChipsProps {
   duration: number | null;
@@ -159,7 +162,7 @@ const DetailChips: React.FC<DetailChipsProps> = ({ duration, destination, invita
     <View style={styles.detailChips}>
       {duration && (
         <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="time-outline" size={18} color="#C4714A" />
+          <Ionicons name="time-outline" size={18} color={colors.terra} />
           <Text style={[styles.detailChipValue, { color: colors.text }]}>{duration}</Text>
           <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>{t("invitation.days")}</Text>
         </View>
@@ -212,7 +215,7 @@ const DetailCta: React.FC<DetailCtaProps> = ({ canRespond, isLinkType, respondin
         </TouchableOpacity>
       )}
       <TouchableOpacity
-        style={[styles.detailCtaAccept, isLinkType ? undefined : { flex: 2 }]}
+        style={[styles.detailCtaAccept, isLinkType ? undefined : { flex: 2 }, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
         onPress={onAccept}
         disabled={responding}
         activeOpacity={0.85}
@@ -302,7 +305,7 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
               </Text>
             </View>
             {invitation.message && (
-              <View style={styles.detailMessage}>
+              <View style={[styles.detailMessage, { backgroundColor: colors.terraLight, borderLeftColor: colors.terra }]}>
                 <Text style={[styles.detailMessageText, { color: colors.text }]}>"{invitation.message}"</Text>
               </View>
             )}
@@ -332,21 +335,17 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
 const styles = StyleSheet.create({
   wrapper:          { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
-  loadingText:      { fontSize: 16, fontFamily: F.sans400, color: "#7A6A58" },
+  loadingText:      { fontSize: 16, fontFamily: F.sans400 },
   errorContainer:   { flex: 1, justifyContent: "center", alignItems: "center", padding: 32 },
-  errorTitle:       { fontSize: 24, fontFamily: F.sans700, color: "#2A2318", marginTop: 24, marginBottom: 12 },
-  errorMessage:     { fontSize: 15, fontFamily: F.sans400, color: "#7A6A58", textAlign: "center", marginBottom: 32, lineHeight: 24 },
-  backButton:       { backgroundColor: "#C4714A", paddingHorizontal: 32, paddingVertical: 16, borderRadius: RADIUS.button },
+  errorTitle:       { fontSize: 24, fontFamily: F.sans700, marginTop: 24, marginBottom: 12 },
+  errorMessage:     { fontSize: 15, fontFamily: F.sans400, textAlign: "center", marginBottom: 32, lineHeight: 24 },
+  backButton:       { paddingHorizontal: 32, paddingVertical: 16, borderRadius: RADIUS.button },
   backButtonText:   { color: "#FFFFFF", fontSize: 16, fontFamily: F.sans600 },
 
   detailBanner: { height: 280, position: "relative" },
   detailBackBtn: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 54 : 20,
     left: 16,
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center", justifyContent: "center",
     zIndex: 10,
   },
   detailBannerContent: { position: "absolute", bottom: 20, left: 20, right: 20 },
@@ -362,27 +361,26 @@ const styles = StyleSheet.create({
     flex: 1, borderRadius: RADIUS.card, borderWidth: 1,
     padding: 14, alignItems: "center", gap: 4,
   },
-  detailChipValue: { fontSize: 20, fontFamily: F.sans700, color: "#2A2318" },
-  detailChipLabel: { fontSize: 12, fontFamily: F.sans400, color: "#7A6A58", textAlign: "center" },
+  detailChipValue: { fontSize: 20, fontFamily: F.sans700 },
+  detailChipLabel: { fontSize: 12, fontFamily: F.sans400, textAlign: "center" },
 
   detailSection: { borderRadius: RADIUS.card, borderWidth: 1, padding: 16, gap: 12 },
   detailSectionTitle: {
     fontSize: 11, fontFamily: F.sans600,
-    color: "#B0A090", textTransform: "uppercase", letterSpacing: 0.8,
+    textTransform: "uppercase", letterSpacing: 0.8,
   },
   detailInviterRow:   { flexDirection: "row", alignItems: "center", gap: 12 },
   detailAvatar:       { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   detailAvatarText:   { fontSize: 18, fontFamily: F.sans700, color: "#FFFFFF" },
-  detailInviterName:  { fontSize: 17, fontFamily: F.sans600, color: "#2A2318", marginBottom: 2 },
-  detailInviterEmail: { fontSize: 13, fontFamily: F.sans400, color: "#7A6A58" },
-  detailRelTime:      { fontSize: 12, fontFamily: F.sans400, color: "#B0A090" },
+  detailInviterName:  { fontSize: 17, fontFamily: F.sans600, marginBottom: 2 },
+  detailInviterEmail: { fontSize: 13, fontFamily: F.sans400 },
+  detailRelTime:      { fontSize: 12, fontFamily: F.sans400 },
   detailMessage: {
-    backgroundColor: "#F5E5DC",
-    borderLeftWidth: 3, borderLeftColor: "#C4714A",
+    borderLeftWidth: 3,
     borderTopRightRadius: 10, borderBottomRightRadius: 10,
     padding: 12,
   },
-  detailMessageText: { fontSize: 14, fontFamily: F.sans400, color: "#2A2318", fontStyle: "italic", lineHeight: 22 },
+  detailMessageText: { fontSize: 14, fontFamily: F.sans400, fontStyle: "italic", lineHeight: 22 },
 
   detailStatusBanner: { flexDirection: "row", alignItems: "center", gap: 10, padding: 16, borderRadius: RADIUS.button, borderWidth: 1 },
   detailStatusText:   { fontSize: 15, fontFamily: F.sans600 },
@@ -406,11 +404,11 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
     borderRadius: RADIUS.button, paddingVertical: 16, gap: 8,
   },
-  detailCtaDeclineText: { fontSize: 16, fontFamily: F.sans600, color: "#7A6A58" },
+  detailCtaDeclineText: { fontSize: 16, fontFamily: F.sans600 },
   detailCtaAccept: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: "#C4714A", borderRadius: RADIUS.button, paddingVertical: 16, gap: 8,
-    shadowColor: "#C4714A", shadowOffset: { width: 0, height: 4 },
+    borderRadius: RADIUS.button, paddingVertical: 16, gap: 8,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
   },
   detailCtaAcceptText: { fontSize: 16, fontFamily: F.sans600, color: "#FFFFFF" },

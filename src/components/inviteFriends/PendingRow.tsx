@@ -97,8 +97,8 @@ const s = StyleSheet.create({
     overflow: "hidden",
   },
   avatarTxt: { fontFamily: F.sans600, color: "#FFFFFF" },
-  mn: { fontFamily: F.sans600, fontSize: 18, color: "#2A2318" },
-  ms: { fontFamily: F.sans400, fontSize: 14, color: "#B0A090", marginTop: 4 },
+  mn: { fontFamily: F.sans600, fontSize: 18 },
+  ms: { fontFamily: F.sans400, fontSize: 14, marginTop: 4 },
   cancelTxt: { fontFamily: F.sans600, fontSize: 15, color: "#C04040" },
 });
 

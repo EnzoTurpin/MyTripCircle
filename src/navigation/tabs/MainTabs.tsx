@@ -9,7 +9,6 @@ import BookingsScreen from "../../screens/BookingsScreen";
 import AddressesScreen from "../../screens/AddressesScreen";
 import ProfileScreen from "../../screens/ProfileScreen";
 import IdeasScreen from "../../screens/IdeasScreen";
-import { F } from "../../theme/fonts";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -25,19 +24,7 @@ const MainTabs: React.FC = () => {
   return (
     <Tab.Navigator
       tabBar={renderTabBar}
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: "#FFFFFF",
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0,
-        },
-        headerTintColor: "#212121",
-        headerTitleStyle: {
-          fontFamily: F.sans700,
-          fontSize: 20,
-        },
-      }}
+      screenOptions={{}}
     >
       <Tab.Screen name="Trips" component={TripsScreen} options={{ title: t("tabs.myTrips"), headerShown: false }} />
       <Tab.Screen name="Bookings" component={BookingsScreen} options={{ title: t("tabs.bookings"), headerShown: false }} />

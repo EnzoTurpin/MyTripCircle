@@ -17,16 +17,16 @@ const InvitationCtaBar: React.FC<Props> = ({ responding, onAccept, onDecline, in
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.inviteCta, { backgroundColor: colors.surface, paddingBottom: insetBottom + 12 }]}>
-      <View style={styles.inviteCtaHint}>
-        <Ionicons name="mail-outline" size={16} color="#C4714A" />
-        <Text style={styles.inviteCtaHintText} numberOfLines={1}>
+    <View style={[styles.inviteCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insetBottom + 12 }]}>
+      <View style={[styles.inviteCtaHint, { backgroundColor: colors.terraLight }]}>
+        <Ionicons name="mail-outline" size={16} color={colors.terra} />
+        <Text style={[styles.inviteCtaHintText, { color: colors.terra }]} numberOfLines={1}>
           {t("tripPublicView.inviteHint")}
         </Text>
       </View>
       <View style={styles.inviteCtaButtons}>
         <TouchableOpacity
-          style={styles.inviteCtaDecline}
+          style={[styles.inviteCtaDecline, { backgroundColor: colors.bgMid }]}
           onPress={onDecline}
           disabled={responding}
           activeOpacity={0.85}
@@ -37,7 +37,7 @@ const InvitationCtaBar: React.FC<Props> = ({ responding, onAccept, onDecline, in
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.inviteCtaAccept}
+          style={[styles.inviteCtaAccept, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
           onPress={onAccept}
           disabled={responding}
           activeOpacity={0.85}
@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#D8CCBA",
     shadowColor: "#2A2318",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
@@ -77,12 +76,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#F5E5DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  inviteCtaHintText: { fontSize: 13, fontFamily: F.sans500, color: "#C4714A", flex: 1 },
+  inviteCtaHintText: { fontSize: 13, fontFamily: F.sans500, flex: 1 },
   inviteCtaButtons: { flexDirection: "row", gap: 10 },
   inviteCtaDecline: {
     flex: 1,
@@ -90,7 +88,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#EDE5D8",
     borderRadius: 14,
     paddingVertical: 15,
   },
@@ -101,10 +98,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#C4714A",
     borderRadius: 14,
     paddingVertical: 15,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,

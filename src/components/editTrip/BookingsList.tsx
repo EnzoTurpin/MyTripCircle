@@ -51,8 +51,8 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
           onPress={onAdd}
           activeOpacity={0.8}
         >
-          <Ionicons name="add" size={17} color="#C4714A" />
-          <Text style={s.addBtnText}>{t("bookings.addBooking")}</Text>
+          <Ionicons name="add" size={17} color={colors.terra} />
+          <Text style={[s.addBtnText, { color: colors.terra }]}>{t("bookings.addBooking")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -68,12 +68,12 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
               key={booking.id || index}
               style={[s.item, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
-              <View style={[s.stripe, { backgroundColor: BOOKING_STRIPE_COLOR[booking.type] ?? "#C4714A" }]} />
+              <View style={[s.stripe, { backgroundColor: BOOKING_STRIPE_COLOR[booking.type] ?? colors.terra }]} />
               <View style={s.content}>
                 <Ionicons
                   name={(BOOKING_ICON[booking.type] ?? "receipt") as any}
                   size={18}
-                  color="#C4714A"
+                  color={colors.terra}
                 />
                 <View style={s.info}>
                   <Text style={[s.title, { color: colors.text }]}>{booking.title}</Text>
@@ -125,7 +125,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  addBtnText: { fontSize: 14, color: "#C4714A", fontFamily: F.sans600 },
+  addBtnText: { fontSize: 14, fontFamily: F.sans600 },
   empty: { alignItems: "center", paddingVertical: 32, gap: 12 },
   emptyText: { fontSize: 15, fontFamily: F.sans400 },
   list: { gap: 10, marginBottom: 10 },

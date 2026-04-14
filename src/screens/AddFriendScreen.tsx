@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 14,
   },
-  headerTitle: { fontSize: 28, fontFamily: F.sans700 },
+  headerTitle: { fontSize: 20, fontFamily: F.sans700 },
   centerRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -55,7 +55,7 @@ const IdeaChips: React.FC<Props> = ({
           },
         ]}
       >
-        <Ionicons name="calendar-outline" size={14} color="#C4714A" />
+        <Ionicons name="calendar-outline" size={14} color={colors.terra} />
         <TouchableOpacity onPress={onDecrement} activeOpacity={0.7} style={s.stepperBtn}>
           <Ionicons name="remove" size={14} color={colors.textMid} />
         </TouchableOpacity>
@@ -70,7 +70,7 @@ const IdeaChips: React.FC<Props> = ({
       </View>
 
       <View style={[s.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Ionicons name="card-outline" size={14} color="#C4714A" />
+        <Ionicons name="card-outline" size={14} color={colors.terra} />
         <Text style={[s.chipText, { color: colors.text }]}>
           {`${budgetMin}–${budgetMax} ${currency}`}
         </Text>

@@ -155,7 +155,7 @@ const AddressDetailsScreen: React.FC = () => {
             {[1, 2, 3, 4, 5].map((star) => {
               const filled = address.rating == null ? false : star <= Math.round(address.rating);
               return (
-                <Text key={star} style={[styles.star, !filled && styles.starEmpty]}>★</Text>
+                <Text key={star} style={[styles.star, { color: filled ? colors.terra : "#D4C4B0" }]}>★</Text>
               );
             })}
           </View>
@@ -280,8 +280,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   starsRow:     { flexDirection: "row", gap: 3 },
-  star:         { fontSize: 18, color: "#C4714A" },
-  starEmpty:    { color: "#D4C4B0" },
+  star:         { fontSize: 18 },
   shortAddress: { flex: 1, fontSize: 13, fontFamily: F.sans400, textAlign: "right", marginLeft: 12 },
 
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 18, paddingBottom: 14 },

@@ -75,7 +75,7 @@ const MemberActionSheet: React.FC<Props> = ({
               style={[s.sheetRow, { backgroundColor: colors.bgMid }]}
               onPress={onTransfer}
             >
-              <View style={[s.sheetIcon, { backgroundColor: "#F5E5DC" }]}>
+              <View style={[s.sheetIcon, { backgroundColor: colors.terraLight }]}>
                 <Text style={{ fontSize: 26 }}>👑</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -142,8 +142,8 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     marginBottom: 18,
   },
-  sheetName: { fontFamily: F.sans600, fontSize: 22, color: "#2A2318" },
-  sheetRole: { fontFamily: F.sans400, fontSize: 15, color: "#B0A090", marginTop: 3 },
+  sheetName: { fontFamily: F.sans600, fontSize: 22 },
+  sheetRole: { fontFamily: F.sans400, fontSize: 15, marginTop: 3 },
   sheetRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -164,8 +164,8 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  sheetRowLabel: { fontFamily: F.sans600, fontSize: 19, color: "#2A2318" },
-  sheetRowSub: { fontFamily: F.sans400, fontSize: 14, color: "#B0A090", marginTop: 3 },
+  sheetRowLabel: { fontFamily: F.sans600, fontSize: 19 },
+  sheetRowSub: { fontFamily: F.sans400, fontSize: 14, marginTop: 3 },
 });
 
 export default MemberActionSheet;

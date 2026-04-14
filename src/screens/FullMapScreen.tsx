@@ -28,6 +28,7 @@ import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import BackButton from "../components/ui/BackButton";
 import { useAddressGeocoding } from "../hooks/useAddressGeocoding";
 import MapMarkerPopup from "../components/fullMap/MapMarkerPopup";
 
@@ -148,11 +149,9 @@ const FullMapScreen: React.FC = () => {
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.bg, borderBottomColor: colors.border, paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity style={[styles.closeBtn, { backgroundColor: colors.bgMid }]} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={[styles.title, { color: colors.text }]}>{t("addresses.header")}</Text>
-        <View style={{ width: 36 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       {/* Filtres */}
@@ -251,11 +250,10 @@ const FullMapScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    flexDirection: "row", alignItems: "center",
     paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1,
   },
-  closeBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
-  title:    { fontSize: 18, fontFamily: F.sans700 },
+  title:    { flex: 1, fontSize: 20, fontFamily: F.sans700, textAlign: "center" },
   filters:  { paddingVertical: 10, borderBottomWidth: 1 },
   filtersScroll: { paddingHorizontal: 16, gap: 8 },
   chip:     { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 9999 },

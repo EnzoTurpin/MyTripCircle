@@ -136,7 +136,7 @@ const ForgotPasswordScreen: React.FC = () => {
   if (showVerifying) {
     mainContent = (
       <View style={styles.successContainer}>
-        <Text style={styles.successTitle}>{t("forgotPassword.verifyingToken")}</Text>
+        <Text style={[styles.successTitle, { color: colors.text }]}>{t("forgotPassword.verifyingToken")}</Text>
       </View>
     );
   } else if (showInvalidToken) {
@@ -145,7 +145,7 @@ const ForgotPasswordScreen: React.FC = () => {
         <Ionicons name="lock-closed" size={56} color={colors.danger} />
         <Text style={[styles.successTitle, { color: colors.danger }]}>{t("forgotPassword.invalidLinkTitle")}</Text>
         <Text style={[styles.successMessage, { color: colors.textMid }]}>{t("forgotPassword.invalidLinkMessage")}</Text>
-        <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate("Auth")} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={() => navigation.navigate("Auth")} activeOpacity={0.85}>
           <Text style={styles.primaryButtonText}>{t("forgotPassword.backToLogin")}</Text>
         </TouchableOpacity>
       </View>
@@ -178,7 +178,7 @@ const ForgotPasswordScreen: React.FC = () => {
           hasError={!!confirmPasswordError}
           errorText={confirmPasswordError}
         />
-        <TouchableOpacity style={[styles.primaryButton, btnDisabledStyle]} onPress={handleResetPassword} disabled={loading} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }, btnDisabledStyle]} onPress={handleResetPassword} disabled={loading} activeOpacity={0.85}>
           <Text style={styles.primaryButtonText}>{btnLabels.reset}</Text>
         </TouchableOpacity>
       </>
@@ -208,7 +208,7 @@ const ForgotPasswordScreen: React.FC = () => {
           hasError={!!emailError}
           errorText={emailError}
         />
-        <TouchableOpacity style={[styles.primaryButton, btnDisabledStyle]} onPress={handleRequestReset} disabled={loading} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }, btnDisabledStyle]} onPress={handleRequestReset} disabled={loading} activeOpacity={0.85}>
           <Text style={styles.primaryButtonText}>{btnLabels.request}</Text>
         </TouchableOpacity>
         <View style={styles.hintBox}>
@@ -244,20 +244,15 @@ const ForgotPasswordScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === "ios" ? 80 : 60,
+    paddingTop: Platform.OS === "ios" ? 56 : 24,
     paddingBottom: 48,
-    justifyContent: "center",
   },
   backButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 56 : 24,
-    left: 24,
-    zIndex: 10,
+    marginBottom: 32,
   },
   centerBlock: { alignItems: "center", marginBottom: 28 },
   emoji:    { fontSize: 52, marginBottom: 16 },
@@ -275,11 +270,9 @@ const styles = StyleSheet.create({
   hintText: { flex: 1, fontSize: 13, color: "#6B8C5A", lineHeight: 18, fontFamily: F.sans400 },
 
   primaryButton: {
-    backgroundColor: "#C4714A",
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: "center",
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -292,7 +285,6 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 20,
     fontFamily: F.sans700,
-    color: "#2A2318",
     marginTop: 16,
     marginBottom: 8,
     textAlign: "center",

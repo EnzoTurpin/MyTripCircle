@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../components/ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { DISABLED_OPACITY } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -107,15 +108,9 @@ const AddressFormScreen: React.FC = () => {
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
 
       <View style={[styles.topBar, { backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
-        <TouchableOpacity
-          style={[styles.backButton, { backgroundColor: colors.bgMid }]}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.textMid} />
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={[styles.topBarTitle, { color: colors.text }]}>{screenTitle}</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView
@@ -153,11 +148,11 @@ const AddressFormScreen: React.FC = () => {
 
         {googleRating != null && (
           <View style={[styles.ratingRow, { backgroundColor: colors.bgMid }]}>
-            <Ionicons name="star" size={17} color="#C4714A" />
+            <Ionicons name="star" size={17} color={colors.terra} />
             <Text style={[styles.ratingLabel, { color: colors.textMid }]}>Note Google :</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((s) => (
-                <Text key={s} style={[styles.star, { color: s <= Math.round(googleRating) ? "#C4714A" : "#D4C4B0" }]}>★</Text>
+                <Text key={s} style={[styles.star, { color: s <= Math.round(googleRating) ? colors.terra : "#D4C4B0" }]}>★</Text>
               ))}
             </View>
             <Text style={[styles.ratingValue, { color: colors.textMid }]}>{googleRating.toFixed(1)}</Text>
@@ -226,7 +221,7 @@ const AddressFormScreen: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.primaryButton, (submitting || fetchingPlaceDetails) && { opacity: DISABLED_OPACITY }]}
+          style={[styles.primaryButton, { backgroundColor: colors.terra }, (submitting || fetchingPlaceDetails) && { opacity: DISABLED_OPACITY }]}
           onPress={handleSubmit}
           disabled={submitting || fetchingPlaceDetails}
           activeOpacity={0.85}

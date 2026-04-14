@@ -52,8 +52,8 @@ const FriendRequestConfirmationScreen: React.FC = () => {
 
       <View style={styles.container}>
         {/* Icône centrale */}
-        <View style={styles.iconCircle}>
-          <Ionicons name="people" size={52} color="#C4714A" />
+        <View style={[styles.iconCircle, { backgroundColor: colors.terraLight, borderColor: colors.terra, shadowColor: colors.terra }]}>
+          <Ionicons name="people" size={52} color={colors.terra} />
         </View>
 
         {/* Titre */}
@@ -77,7 +77,7 @@ const FriendRequestConfirmationScreen: React.FC = () => {
           <View style={styles.profileInfo}>
             <View style={styles.profileNameRow}>
               <Text style={[styles.profileName, { color: colors.text }]}>{recipientName}</Text>
-              <View style={[styles.statusBadge, autoAccepted && styles.statusBadgeAccepted]}>
+              <View style={[styles.statusBadge, autoAccepted ? styles.statusBadgeAccepted : { backgroundColor: colors.terraLight }]}>
                 {autoAccepted ? (
                   <>
                     <Ionicons name="checkmark-circle" size={13} color="#6B8C5A" />
@@ -87,8 +87,8 @@ const FriendRequestConfirmationScreen: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Ionicons name="hourglass-outline" size={13} color="#C4714A" />
-                    <Text style={styles.statusText}>{t("friendRequestConfirmation.statusPending")}</Text>
+                    <Ionicons name="hourglass-outline" size={13} color={colors.terra} />
+                    <Text style={[styles.statusText, { color: colors.terra }]}>{t("friendRequestConfirmation.statusPending")}</Text>
                   </>
                 )}
               </View>
@@ -102,7 +102,7 @@ const FriendRequestConfirmationScreen: React.FC = () => {
         {/* Boutons d'action */}
         <View style={styles.actions}>
           <TouchableOpacity
-            style={styles.btnPrimary}
+            style={[styles.btnPrimary, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
             onPress={handleAddAnother}
             activeOpacity={0.85}
           >
@@ -124,7 +124,7 @@ const FriendRequestConfirmationScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F5F0E8" },
+  safe: { flex: 1 },
   container: {
     flex: 1,
     alignItems: "center",
@@ -136,13 +136,10 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#F5E5DC",
     borderWidth: 4,
-    borderColor: "#C4714A",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 28,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -152,7 +149,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: F.sans700,
-    color: "#2A2318",
     marginBottom: 12,
     textAlign: "center",
   },
@@ -160,22 +156,18 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     fontFamily: F.sans400,
-    color: "#7A6A58",
     textAlign: "center",
     lineHeight: 28,
     marginBottom: 36,
   },
   subtitleBold: {
     fontFamily: F.sans600,
-    color: "#2A2318",
   },
 
   // Profile card
   profileCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
-    borderColor: "#D8CCBA",
     borderRadius: 20,
     padding: 20,
     flexDirection: "row",
@@ -204,14 +196,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  profileName: { fontSize: 18, fontFamily: F.sans600, color: "#2A2318", flexShrink: 1 },
-  profileEmail: { fontSize: 14, fontFamily: F.sans400, color: "#B0A090", marginTop: 4 },
+  profileName: { fontSize: 18, fontFamily: F.sans600, flexShrink: 1 },
+  profileEmail: { fontSize: 14, fontFamily: F.sans400, marginTop: 4 },
 
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#F5E5DC",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -223,7 +214,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontFamily: F.sans600,
-    color: "#C4714A",
   },
 
   // Buttons
@@ -236,10 +226,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: "#C4714A",
     borderRadius: 18,
     paddingVertical: 20,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -248,12 +236,11 @@ const styles = StyleSheet.create({
   btnPrimaryText: { fontSize: 19, fontFamily: F.sans600, color: "#FFFFFF" },
 
   btnSecondary: {
-    backgroundColor: "#EDE5D8",
     borderRadius: 18,
     paddingVertical: 19,
     alignItems: "center",
   },
-  btnSecondaryText: { fontSize: 19, fontFamily: F.sans600, color: "#7A6A58" },
+  btnSecondaryText: { fontSize: 19, fontFamily: F.sans600 },
 });
 
 export default FriendRequestConfirmationScreen;

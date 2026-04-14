@@ -26,7 +26,7 @@ const AddressTypeSelector: React.FC<Props> = ({ selectedType, onSelect }) => {
             style={[
               styles.typeButton,
               { backgroundColor: colors.bgLight, borderColor: colors.border },
-              selected && styles.typeButtonSelected,
+              selected && [styles.typeButtonSelected, { backgroundColor: colors.terra, borderColor: colors.terra, shadowColor: colors.terra }],
             ]}
             onPress={() => onSelect(type)}
             activeOpacity={0.75}
@@ -83,9 +83,6 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   typeButtonSelected: {
-    backgroundColor: "#C4714A",
-    borderColor: "#C4714A",
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

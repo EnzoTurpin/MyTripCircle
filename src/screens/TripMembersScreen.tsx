@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -74,7 +75,7 @@ const TripMembersScreen: React.FC = () => {
     <View style={[
       s.avatar,
       { width: size, height: size, backgroundColor: getAvatarColor(name) },
-      isOwnerAvatar && { borderWidth: 2, borderColor: "#F5E5DC" },
+      isOwnerAvatar && { borderWidth: 2, borderColor: colors.terraLight },
     ]}>
       {avatar
         ? <Image source={{ uri: avatar }} style={{ width: size, height: size, borderRadius: size / 2 }} />
@@ -197,7 +198,7 @@ const TripMembersScreen: React.FC = () => {
         contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#C4714A" colors={["#C4714A"]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.terra} colors={[colors.terra]} />
         }
       >
         {inviteLink ? (
@@ -248,7 +249,7 @@ const TripMembersScreen: React.FC = () => {
           onPress={() => navigation.navigate("InviteFriends", { tripId })}
         >
           <View style={s.addBtnIcon}>
-            <Text style={{ fontSize: 15, color: "#C4714A" }}>+</Text>
+            <Text style={{ fontSize: 15, color: colors.terra, fontFamily: F.sans400 }}>+</Text>
           </View>
           <Text style={[s.addBtnTxt, { color: colors.textLight }]}>{t("tripMembers.inviteFromFriends")}</Text>
         </TouchableOpacity>
@@ -256,7 +257,7 @@ const TripMembersScreen: React.FC = () => {
 
       {actionLoading && (
         <View style={s.loadingOverlay}>
-          <ActivityIndicator size="large" color="#C4714A" />
+          <ActivityIndicator size="large" color={colors.terra} />
         </View>
       )}
 
@@ -286,12 +287,12 @@ const TripMembersScreen: React.FC = () => {
                   <Text style={{ fontSize: 14 }}>👤</Text>
                 </View>
                 <Text style={[s.sheetRowLabel, { flex: 1, color: colors.text }]}>{t("tripMembers.viewProfile")}</Text>
-                <Text style={{ fontSize: 15, color: colors.border, fontFamily: F.sans300 }}>›</Text>
+                <Ionicons name="chevron-forward" size={15} color={colors.border} />
               </TouchableOpacity>
 
               {isOwner && (
                 <TouchableOpacity style={[s.sheetRow, { backgroundColor: colors.bgMid }]} onPress={() => handleTransferOwnership(selectedMember, closeSheet)} activeOpacity={0.75}>
-                  <View style={[s.sheetIcon, { backgroundColor: "#F5E5DC" }]}>
+                  <View style={[s.sheetIcon, { backgroundColor: colors.terraLight }]}>
                     <Text style={{ fontSize: 14 }}>👑</Text>
                   </View>
                   <View style={{ flex: 1 }}>

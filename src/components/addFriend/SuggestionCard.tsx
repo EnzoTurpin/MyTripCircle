@@ -41,10 +41,10 @@ const SuggestionCard: React.FC<Props> = ({ item, sending, onSend, onViewProfile 
         <Text style={[styles.suggSub, { color: colors.textLight }]}>
           {t("addFriend.commonFriend", { count: item.commonFriends })}
         </Text>
-        <Text style={styles.suggViewProfile}>{t("addFriend.viewProfile")}</Text>
+        <Text style={[styles.suggViewProfile, { color: colors.terra }]}>{t("addFriend.viewProfile")}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.addSuggBtn}
+        style={[styles.addSuggBtn, { backgroundColor: colors.terra }]}
         onPress={() => onSend(item.email, undefined, item.name)}
         disabled={sending}
         activeOpacity={0.8}
@@ -79,9 +79,8 @@ const styles = StyleSheet.create({
   suggAvatarWrap: { flexShrink: 0 },
   suggName: { fontSize: 15, fontFamily: F.sans600 },
   suggSub: { fontSize: 12, fontFamily: F.sans400, marginTop: 2 },
-  suggViewProfile: { fontSize: 12, fontFamily: F.sans500, color: "#C4714A", marginTop: 4 },
+  suggViewProfile: { fontSize: 12, fontFamily: F.sans500, marginTop: 4 },
   addSuggBtn: {
-    backgroundColor: "#C4714A",
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,

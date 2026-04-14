@@ -14,8 +14,6 @@ import { useTranslation } from 'react-i18next';
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 
-const TERRA = '#C4714A';
-
 export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
@@ -114,6 +112,7 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
               style={[
                 styles.pip,
                 {
+                  backgroundColor: colors.terra,
                   opacity: pipAnimations[index],
                   transform: [{ scaleX: pipScale }],
                 },
@@ -123,10 +122,10 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
             <Ionicons
               name={iconName}
               size={28}
-              color={isFocused ? TERRA : colors.textLight}
+              color={isFocused ? colors.terra : colors.textLight}
             />
 
-            <Text style={[styles.label, { color: colors.textLight }, isFocused && styles.labelActive]}>
+            <Text style={[styles.label, { color: isFocused ? colors.terra : colors.textLight }, isFocused && styles.labelActive]}>
               {getTabLabel(route.name)}
             </Text>
           </TouchableOpacity>
@@ -155,7 +154,6 @@ const styles = StyleSheet.create({
     width: 16,
     height: 2.5,
     borderRadius: 999,
-    backgroundColor: TERRA,
   },
   label: {
     fontSize: 12,
@@ -163,7 +161,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   labelActive: {
-    color: TERRA,
     fontFamily: F.sans600,
   },
 });

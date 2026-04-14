@@ -112,7 +112,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           {/* Section basse */}
           <View style={{ marginTop: 48 }}>
             <TouchableOpacity
-              style={[styles.primaryBtn, busy && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, { backgroundColor: colors.terra }, busy && styles.primaryBtnDisabled]}
               onPress={onSubmit}
               disabled={busy}
               activeOpacity={0.85}
@@ -188,7 +188,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   primaryBtn: {
-    backgroundColor: "#C4714A",
     borderRadius: RADIUS.button,
     marginHorizontal: 24,
     paddingVertical: 17,

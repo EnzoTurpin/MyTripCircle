@@ -23,13 +23,6 @@ const addressFormStyles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   topBarTitle: {
     flex: 1,
     fontSize: 20,
@@ -99,7 +92,6 @@ const addressFormStyles = StyleSheet.create({
   },
   primaryButton: {
     flex: 2,
-    backgroundColor: "#C4714A",
     paddingVertical: 16,
     borderRadius: RADIUS.button,
     alignItems: "center",

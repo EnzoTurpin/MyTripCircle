@@ -45,7 +45,7 @@ interface StatusPillItemProps {
 }
 
 export const StatusPillItem: React.FC<StatusPillItemProps> = ({ status, label, isSelected, colors, onPress }) => {
-  const color = STATUS_COLORS[status] || "#7A6A58";
+  const color = STATUS_COLORS[status] || colors.textMid;
   return (
     <TouchableOpacity
       style={[styles.statusPill, {

@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { Animated } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Props {
   baseStyle: object;
@@ -11,8 +12,9 @@ interface Props {
  * Utilise Animated pour éviter les re-renders React sur chaque frappe.
  */
 const FocusableField: React.FC<Props> = ({ baseStyle, render }) => {
+  const { colors } = useTheme();
   const anim = useRef(new Animated.Value(0)).current;
-  const borderColor = anim.interpolate({ inputRange: [0, 1], outputRange: ["#D8CCBA", "#C4714A"] });
+  const borderColor = anim.interpolate({ inputRange: [0, 1], outputRange: [colors.border, colors.terra] });
   const shadowOpacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] });
 
   const onFocus = useRef(
@@ -28,7 +30,7 @@ const FocusableField: React.FC<Props> = ({ baseStyle, render }) => {
         baseStyle,
         {
           borderColor,
-          shadowColor: "#C4714A",
+          shadowColor: colors.terra,
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity,
           shadowRadius: 5,

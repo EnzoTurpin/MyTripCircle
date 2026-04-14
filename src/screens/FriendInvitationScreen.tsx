@@ -114,7 +114,7 @@ const FriendInvitationScreen: React.FC = () => {
             </View>
             <Text style={[styles.titleText, { color: colors.text }]}>{t("friendInvitation.errorTitle")}</Text>
             <Text style={[styles.subtitleText, { color: colors.textMid }]}>{state.message}</Text>
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
+            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={() => navigation.goBack()} activeOpacity={0.85}>
               <Text style={styles.primaryBtnText}>{t("friendInvitation.back")}</Text>
             </TouchableOpacity>
           </View>
@@ -124,11 +124,11 @@ const FriendInvitationScreen: React.FC = () => {
         return (
           <View style={styles.centerBox}>
             <View style={[styles.iconCircle, { backgroundColor: colors.terraLight }]}>
-              <Ionicons name="person-outline" size={52} color="#C4714A" />
+              <Ionicons name="person-outline" size={52} color={colors.terra} />
             </View>
             <Text style={[styles.titleText, { color: colors.text }]}>{t("friendInvitation.selfTitle")}</Text>
             <Text style={[styles.subtitleText, { color: colors.textMid }]}>{t("friendInvitation.selfSubtitle")}</Text>
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
+            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={() => navigation.goBack()} activeOpacity={0.85}>
               <Text style={styles.primaryBtnText}>{t("friendInvitation.back")}</Text>
             </TouchableOpacity>
           </View>
@@ -145,7 +145,7 @@ const FriendInvitationScreen: React.FC = () => {
               {t("friendInvitation.alreadyFriendsSubtitle", { name: state.ownerName })}
             </Text>
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
               onPress={() => navigation.navigate("Friends")}
               activeOpacity={0.85}
             >
@@ -165,7 +165,7 @@ const FriendInvitationScreen: React.FC = () => {
               {t("friendInvitation.successSubtitle", { name: state.ownerName })}
             </Text>
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
               onPress={() => navigation.navigate("Friends")}
               activeOpacity={0.85}
             >
@@ -195,36 +195,36 @@ const FriendInvitationScreen: React.FC = () => {
                 </View>
               )}
             </View>
-            <Text style={styles.eyebrowText}>{t("friendInvitation.eyebrow")}</Text>
-            <Text style={styles.titleText}>{ownerName}</Text>
-            <Text style={styles.subtitleText}>{t("friendInvitation.readySubtitle")}</Text>
+            <Text style={[styles.eyebrowText, { color: colors.textLight }]}>{t("friendInvitation.eyebrow")}</Text>
+            <Text style={[styles.titleText, { color: colors.text }]}>{ownerName}</Text>
+            <Text style={[styles.subtitleText, { color: colors.textMid }]}>{t("friendInvitation.readySubtitle")}</Text>
 
             {user ? (
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleAccept} activeOpacity={0.85}>
+              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={handleAccept} activeOpacity={0.85}>
                 <Ionicons name="person-add-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
                 <Text style={styles.primaryBtnText}>{t("friendInvitation.addAsFriend")}</Text>
               </TouchableOpacity>
             ) : (
               <>
                 <TouchableOpacity
-                  style={styles.primaryBtn}
+                  style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
                   onPress={() => navigation.navigate("Auth", { initialMode: "login" })}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.primaryBtnText}>{t("friendInvitation.loginToAccept")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.secondaryBtn}
+                  style={[styles.secondaryBtn, { backgroundColor: colors.bg, borderColor: colors.terra }]}
                   onPress={() => navigation.navigate("Auth", { initialMode: "register" })}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.secondaryBtnText}>{t("friendInvitation.createAccount")}</Text>
+                  <Text style={[styles.secondaryBtnText, { color: colors.terra }]}>{t("friendInvitation.createAccount")}</Text>
                 </TouchableOpacity>
               </>
             )}
 
             <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <Text style={styles.ghostBtnText}>{t("friendInvitation.decline")}</Text>
+              <Text style={[styles.ghostBtnText, { color: colors.textLight }]}>{t("friendInvitation.decline")}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -244,7 +244,7 @@ const FriendInvitationScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F5F0E8" },
+  safeArea: { flex: 1 },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -285,7 +285,6 @@ const styles = StyleSheet.create({
   eyebrowText: {
     fontSize: 13,
     fontFamily: F.sans500,
-    color: "#B0A090",
     letterSpacing: 1,
     textTransform: "uppercase",
     marginBottom: 6,
@@ -293,14 +292,12 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 26,
     fontFamily: F.sans700,
-    color: "#2A2318",
     textAlign: "center",
     marginBottom: 12,
   },
   subtitleText: {
     fontSize: 16,
     fontFamily: F.sans400,
-    color: "#7A6A58",
     textAlign: "center",
     lineHeight: 24,
     marginBottom: 32,
@@ -308,20 +305,17 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontFamily: F.sans400,
-    color: "#7A6A58",
     marginTop: 16,
   },
   primaryBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#C4714A",
     borderRadius: 30,
     paddingVertical: 16,
     paddingHorizontal: 32,
     width: "100%",
     marginBottom: 12,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
@@ -335,9 +329,7 @@ const styles = StyleSheet.create({
   secondaryBtn: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
-    borderColor: "#C4714A",
     borderRadius: 30,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -347,7 +339,6 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     fontSize: 17,
     fontFamily: F.sans600,
-    color: "#C4714A",
   },
   ghostBtn: {
     alignItems: "center",
@@ -357,7 +348,6 @@ const styles = StyleSheet.create({
   ghostBtnText: {
     fontSize: 15,
     fontFamily: F.sans400,
-    color: "#B0A090",
   },
 });
 

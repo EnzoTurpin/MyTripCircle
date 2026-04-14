@@ -65,7 +65,7 @@ const IdeasScreen: React.FC = () => {
             onPress={openModal}
             activeOpacity={0.8}
           >
-            <Text style={styles.sparkleBtnText}>✦</Text>
+            <Text style={[styles.sparkleBtnText, { color: colors.terra }]}>✦</Text>
           </TouchableOpacity>
         </View>
 
@@ -98,7 +98,7 @@ const IdeasScreen: React.FC = () => {
               style={[
                 styles.catChip,
                 { backgroundColor: colors.bgMid },
-                activeCategory === cat.id && styles.catChipActive,
+                activeCategory === cat.id && { backgroundColor: colors.terra },
               ]}
               onPress={() => setActiveCategory(cat.id)}
               activeOpacity={0.7}
@@ -106,7 +106,7 @@ const IdeasScreen: React.FC = () => {
               <Text style={[
                 styles.catChipText,
                 { color: colors.textMid },
-                activeCategory === cat.id && styles.catChipTextActive,
+                activeCategory === cat.id && { color: "#FFFFFF", fontFamily: F.sans600 },
               ]}>
                 {cat.label}
               </Text>
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   headerEyebrow: {
     fontFamily: F.sans400,
-    fontSize: 13,
+    fontSize: 14,
     marginBottom: 4,
   },
   headerTitle: {
@@ -185,7 +185,6 @@ const styles = StyleSheet.create({
   },
   sparkleBtnText: {
     fontSize: 20,
-    color: "#C4714A",
     fontFamily: F.sans400,
   },
   searchBar: {
@@ -227,16 +226,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 8,
   },
-  catChipActive: {
-    backgroundColor: "#C4714A",
-  },
   catChipText: {
     fontSize: 13,
     fontFamily: F.sans500,
-  },
-  catChipTextActive: {
-    color: "#FFFFFF",
-    fontFamily: F.sans600,
   },
   grid: {
     paddingHorizontal: 24,

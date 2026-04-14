@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 
 interface ProfileActionsProps {
@@ -19,12 +20,13 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
   onInvite, onRemove, onAddFriend,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
     <View style={styles.actions}>
       {isFriend ? (
         <>
-          <TouchableOpacity style={styles.inviteBtn} activeOpacity={0.85} onPress={onInvite}>
+          <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} activeOpacity={0.85} onPress={onInvite}>
             <Ionicons name="airplane" size={16} color="#FFFFFF" />
             <Text style={styles.inviteBtnText}>{t("friendProfile.inviteToTrip")}</Text>
           </TouchableOpacity>
@@ -38,7 +40,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
         </>
       ) : (
         <TouchableOpacity
-          style={[styles.inviteBtn, sending && { opacity: 0.6 }]}
+          style={[styles.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, sending && { opacity: 0.6 }]}
           activeOpacity={0.85}
           onPress={onAddFriend}
           disabled={sending}
@@ -67,10 +69,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#C4714A",
     borderRadius: 12,
     paddingVertical: 14,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 10,

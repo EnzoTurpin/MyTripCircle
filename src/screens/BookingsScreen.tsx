@@ -61,11 +61,11 @@ const BookingsScreen: React.FC = () => {
     return (
       <TouchableOpacity
         key={filter}
-        style={[styles.filterPill, { backgroundColor: colors.bgMid }, active && styles.filterPillActive]}
+        style={[styles.filterPill, { backgroundColor: active ? colors.terra : colors.bgMid }]}
         onPress={() => setSelectedFilter(filter)}
         activeOpacity={0.75}
       >
-        <Text style={[styles.filterPillText, { color: colors.textMid }, active && styles.filterPillTextActive]}>
+        <Text style={[styles.filterPillText, { color: active ? colors.white : colors.textMid }]}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -114,7 +114,7 @@ const BookingsScreen: React.FC = () => {
                   ? t("bookings.emptyAll")
                   : t("bookings.emptyFiltered", { type: t(`bookings.filters.${selectedFilter}`) })}
               </Text>
-              <TouchableOpacity style={styles.emptyAddButton} onPress={() => setShowBookingForm(true)} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.emptyAddButton, { backgroundColor: colors.terra }]} onPress={() => setShowBookingForm(true)} activeOpacity={0.8}>
                 <Ionicons name="add-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
                 <Text style={styles.emptyAddButtonText}>{t("bookings.addBooking")}</Text>
               </TouchableOpacity>
@@ -166,15 +166,13 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 20,
   },
-  headerEyebrow: { fontFamily: F.sans400, fontSize: 13, marginBottom: 4 },
+  headerEyebrow: { fontFamily: F.sans400, fontSize: 14, marginBottom: 4 },
   headerTitle: { fontFamily: F.sans700, fontSize: 28 },
-  filterIconBtn: { width: 42, height: 42, borderRadius: 21, justifyContent: "center", alignItems: "center" },
+  filterIconBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
   filtersWrapper: { paddingBottom: 14 },
   filtersScroll: { paddingHorizontal: 24, gap: 10, flexDirection: "row", alignItems: "center" },
   filterPill: { paddingHorizontal: 20, paddingVertical: 9, borderRadius: 20 },
-  filterPillActive: { backgroundColor: "#C4714A" },
   filterPillText: { fontFamily: F.sans600, fontSize: 15 },
-  filterPillTextActive: { fontFamily: F.sans600, fontSize: 15, color: "white" },
   listWrapper: { flex: 1 },
   bookingsList: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 },
   totalBar: {
@@ -193,7 +191,6 @@ const styles = StyleSheet.create({
   emptyAddButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#C4714A",
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,

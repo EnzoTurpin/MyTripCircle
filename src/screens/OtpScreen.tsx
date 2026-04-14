@@ -126,13 +126,13 @@ const OtpScreen: React.FC = () => {
 
   let resendEl: React.ReactNode;
   if (!canResend && !hasResent) {
-    resendEl = <Text style={styles.resendText}>{t("otp.resendCountdown", { count: countdown })}</Text>;
+    resendEl = <Text style={[styles.resendText, { color: colors.textLight }]}>{t("otp.resendCountdown", { count: countdown })}</Text>;
   } else if (hasResent) {
-    resendEl = <Text style={styles.resendDone}>{t("otp.resendDone")}</Text>;
+    resendEl = <Text style={[styles.resendDone, { color: colors.textMid }]}>{t("otp.resendDone")}</Text>;
   } else {
     resendEl = (
       <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
-        <Text style={styles.resendLink}>{t("otp.resendLink")}</Text>
+        <Text style={[styles.resendLink, { color: colors.terra }]}>{t("otp.resendLink")}</Text>
       </TouchableOpacity>
     );
   }
@@ -167,7 +167,7 @@ const OtpScreen: React.FC = () => {
               style={[
                 styles.otpBox,
                 { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
-                !!digit && styles.otpBoxFilled,
+                !!digit && [styles.otpBoxFilled, { borderColor: colors.terra }],
                 !!otpError && styles.otpBoxError,
               ]}
               value={digit}
@@ -191,6 +191,7 @@ const OtpScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.primaryButton,
+            { backgroundColor: colors.terra, shadowColor: colors.terra },
             (loading || otp.length !== OTP_LENGTH) && styles.primaryButtonDisabled,
           ]}
           onPress={handleVerify}
@@ -212,7 +213,6 @@ const OtpScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
   scrollContent: {
     flexGrow: 1,
@@ -234,19 +234,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: F.sans700,
-    color: "#2A2318",
     textAlign: "center",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 14,
-    color: "#7A6A58",
     textAlign: "center",
     lineHeight: 22,
     fontFamily: F.sans400,
   },
   emailHighlight: {
-    color: "#2A2318",
     fontFamily: F.sans600,
   },
   boxesRow: {
@@ -258,16 +255,12 @@ const styles = StyleSheet.create({
   otpBox: {
     width: 44,
     height: 52,
-    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     fontSize: 22,
     fontFamily: F.sans700,
-    color: "#2A2318",
   },
   otpBoxFilled: {
-    borderColor: "#C4714A",
     borderWidth: 2,
   },
   otpBoxError: {
@@ -281,12 +274,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryButton: {
-    backgroundColor: "#C4714A",
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 8,
-    shadowColor: "#C4714A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -306,21 +297,17 @@ const styles = StyleSheet.create({
   },
   resendText: {
     fontSize: 14,
-    color: "#B0A090",
     fontFamily: F.sans400,
   },
   resendCountdown: {
-    color: "#7A6A58",
     fontFamily: F.sans600,
   },
   resendLink: {
     fontSize: 14,
-    color: "#C4714A",
     fontFamily: F.sans600,
   },
   resendDone: {
     fontSize: 14,
-    color: "#7A6A58",
     fontFamily: F.sans400,
   },
 });

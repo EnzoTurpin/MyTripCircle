@@ -40,8 +40,8 @@ const HelpSupportScreen: React.FC = () => {
       icon: "airplane-outline",
       title: t("helpSupport.faq1Question"),
       description: t("helpSupport.faq1Answer"),
-      iconColor: "#C4714A",
-      iconBg: "#F5E5DC",
+      iconColor: colors.terra,
+      iconBg: colors.terraLight,
     },
     {
       id: "faq-2",
@@ -64,8 +64,8 @@ const HelpSupportScreen: React.FC = () => {
       icon: "map-outline",
       title: t("helpSupport.faq4Question"),
       description: t("helpSupport.faq4Answer"),
-      iconColor: "#7A6A58",
-      iconBg: "#EDE5D8",
+      iconColor: colors.textMid,
+      iconBg: colors.bgMid,
     },
   ];
 
@@ -81,7 +81,7 @@ const HelpSupportScreen: React.FC = () => {
         <View style={[styles.headerBar, { backgroundColor: colors.bg }]}>
           <BackButton onPress={() => navigation.goBack()} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("helpSupport.title")}</Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         <View style={styles.body}>
@@ -131,7 +131,7 @@ const HelpSupportScreen: React.FC = () => {
 
           {/* ── Contact button ── */}
           <TouchableOpacity
-            style={styles.contactButton}
+            style={[styles.contactButton, { backgroundColor: colors.terra }]}
             onPress={openEmail}
             activeOpacity={0.8}
           >
@@ -164,7 +164,6 @@ const HelpSupportScreen: React.FC = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: "#F5F0E8",
   },
   container: {
     flex: 1,
@@ -181,12 +180,10 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 60 : 20,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: "#F5F0E8",
   },
   headerTitle: {
     fontSize: 20,
     fontFamily: F.sans700,
-    color: "#2A2318",
     textAlign: "center",
     flex: 1,
   },
@@ -199,10 +196,8 @@ const styles = StyleSheet.create({
 
   // Info card
   infoCard: {
-    backgroundColor: "#F5E5DC",
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     padding: 16,
     marginBottom: 20,
   },
@@ -223,11 +218,9 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 19,
     fontFamily: F.sans700,
-    color: "#2A2318",
   },
   infoParagraph: {
     fontSize: 16,
-    color: "#7A6A58",
     lineHeight: 26,
     fontFamily: F.sans400,
     marginBottom: 8,
@@ -236,7 +229,6 @@ const styles = StyleSheet.create({
   // Section label
   sectionLabel: {
     fontSize: 13,
-    color: "#B0A090",
     fontFamily: F.sans600,
     letterSpacing: 0.8,
     marginBottom: 6,
@@ -245,10 +237,8 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     overflow: "hidden",
     marginBottom: 16,
   },
@@ -256,7 +246,6 @@ const styles = StyleSheet.create({
   // Row divider
   rowDivider: {
     height: 1,
-    backgroundColor: "#EDE5D8",
     marginLeft: 56,
   },
 
@@ -279,7 +268,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontFamily: F.sans600,
-    color: "#2A2318",
   },
   faqAnswer: {
     paddingHorizontal: 62,
@@ -287,14 +275,12 @@ const styles = StyleSheet.create({
   },
   faqAnswerText: {
     fontSize: 15,
-    color: "#7A6A58",
     lineHeight: 24,
     fontFamily: F.sans400,
   },
 
   // Contact button
   contactButton: {
-    backgroundColor: "#C4714A",
     borderRadius: 10,
     paddingVertical: 15,
     flexDirection: "row",
@@ -324,14 +310,12 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: "#EDE5D8",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
   contactText: {
     fontSize: 16,
-    color: "#7A6A58",
     fontFamily: F.sans400,
   },
 });

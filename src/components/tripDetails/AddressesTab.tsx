@@ -108,7 +108,6 @@ const s = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: "#7A6A58",
     fontFamily: F.sans400,
   },
   addBtn: {
@@ -138,9 +137,7 @@ const s = StyleSheet.create({
   listItem: {
     marginHorizontal: 20,
     marginBottom: 9,
-    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#D8CCBA",
     borderRadius: RADIUS.card,
     flexDirection: "row",
     alignItems: "center",
@@ -174,12 +171,10 @@ const s = StyleSheet.create({
   listTitle: {
     fontSize: 17,
     fontFamily: F.sans600,
-    color: "#2A2318",
     marginBottom: 4,
   },
   listSub: {
     fontSize: 14,
-    color: "#B0A090",
     fontFamily: F.sans400,
   },
 });

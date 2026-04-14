@@ -19,12 +19,13 @@ export const AvatarBubble: React.FC<{
   ownerBorder?: boolean;
   avatar?: string | null;
 }> = ({ name, size = 58, ownerBorder = false, avatar }) => {
+  const { colors } = useTheme();
   return (
     <View
       style={[
         s.avatar,
         { width: size, height: size, backgroundColor: getAvatarColor(name) },
-        ownerBorder && { borderWidth: 2, borderColor: "#F5E5DC" },
+        ownerBorder && { borderWidth: 2, borderColor: colors.terraLight },
       ]}
     >
       {avatar ? (
@@ -56,9 +57,9 @@ const MemberRow: React.FC<Props> = ({ member, isOwner, onPress }) => {
 
   let trailingEl: React.ReactNode = null;
   if (isMe) {
-    trailingEl = <View style={s.meTag}><Text style={s.meTagTxt}>{t("inviteFriends.meLabel")}</Text></View>;
+    trailingEl = <View style={[s.meTag, { backgroundColor: colors.terraLight }]}><Text style={[s.meTagTxt, { color: colors.terra }]}>{t("inviteFriends.meLabel")}</Text></View>;
   } else if (canTap) {
-    trailingEl = <Text style={s.rowChevron}>›</Text>;
+    trailingEl = <Text style={[s.rowChevron, { color: colors.border }]}>›</Text>;
   }
 
   const inner = (
@@ -110,16 +111,15 @@ const s = StyleSheet.create({
     overflow: "hidden",
   },
   avatarTxt: { fontFamily: F.sans600, color: "#FFFFFF" },
-  mn: { fontFamily: F.sans600, fontSize: 18, color: "#2A2318" },
-  ms: { fontFamily: F.sans400, fontSize: 14, color: "#B0A090", marginTop: 4 },
+  mn: { fontFamily: F.sans600, fontSize: 18 },
+  ms: { fontFamily: F.sans400, fontSize: 14, marginTop: 4 },
   meTag: {
-    backgroundColor: "#F5E5DC",
     borderRadius: 24,
     paddingHorizontal: 14,
     paddingVertical: 7,
   },
-  meTagTxt: { fontFamily: F.sans600, fontSize: 13, color: "#C4714A" },
-  rowChevron: { fontSize: 22, color: "#D8CCBA", fontFamily: F.sans300, marginLeft: 4 },
+  meTagTxt: { fontFamily: F.sans600, fontSize: 13 },
+  rowChevron: { fontSize: 22, fontFamily: F.sans300, marginLeft: 4 },
 });
 
 export default MemberRow;

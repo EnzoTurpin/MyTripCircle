@@ -49,7 +49,7 @@ const NotifItem: React.FC<NotifItemProps> = ({
         {status === "pending" && (
           <View style={styles.actions}>
             <TouchableOpacity
-              style={[styles.actionBtn, styles.acceptBtn]}
+              style={[styles.actionBtn, styles.acceptBtn, { backgroundColor: colors.terra }]}
               onPress={onAccept}
               disabled={responding}
               activeOpacity={0.8}
@@ -76,7 +76,7 @@ const NotifItem: React.FC<NotifItemProps> = ({
         )}
       </View>
 
-      {unread && <View style={styles.unreadDot} />}
+      {unread && <View style={[styles.unreadDot, { backgroundColor: colors.terra }]} />}
     </TouchableOpacity>
   );
 };
@@ -106,12 +106,12 @@ const styles = StyleSheet.create({
 
   actions: { flexDirection: "row", gap: 10, marginTop: 14 },
   actionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, borderRadius: 20 },
-  acceptBtn: { backgroundColor: "#C4714A" },
-  declineBtn: { backgroundColor: "#EDE5D8" },
+  acceptBtn: {},
+  declineBtn: {},
   acceptText: { fontSize: 14, fontFamily: F.sans600, color: "#FFFFFF" },
   declineText: { fontSize: 14, fontFamily: F.sans600 },
 
-  unreadDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: "#C4714A", flexShrink: 0, marginTop: 6 },
+  unreadDot: { width: 12, height: 12, borderRadius: 6, flexShrink: 0, marginTop: 6 },
 });
 
 export default NotifItem;

@@ -106,7 +106,7 @@ const TripsScreen: React.FC = () => {
                 <Text style={[styles.headerTitle, { color: colors.text }]}>{t("trips.header")}</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.addTripBtn} onPress={handleCreateTrip} activeOpacity={0.85}>
+            <TouchableOpacity style={[styles.addTripBtn, { backgroundColor: colors.terra }]} onPress={handleCreateTrip} activeOpacity={0.85}>
               <Ionicons name="add" size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -197,7 +197,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#C4714A",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#A35830",

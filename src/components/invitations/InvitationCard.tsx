@@ -122,7 +122,9 @@ const InvitationCard: React.FC<CardProps> = ({
   const inviterBodyEl = buildInviterBody(expanded, inviterName, relTime, dateRange, colors, t);
   const acceptContentEl = buildAcceptContent(accepting, t);
 
-  const cardBorderStyle = (isUnread && status === "pending") ? cardStyles.cardActive : cardStyles.cardDefault;
+  const cardBorderStyle = (isUnread && status === "pending")
+    ? [cardStyles.cardActive, { borderColor: colors.terra, shadowColor: colors.terra }]
+    : cardStyles.cardDefault;
 
   const bannerBgEl = hasImage
     ? <Image source={{ uri: inv.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
@@ -131,7 +133,7 @@ const InvitationCard: React.FC<CardProps> = ({
   const destinationEl = buildDestinationEl(destination, dateRange);
 
   const messageEl  = expanded && inv.message
-    ? <View style={cardStyles.messageBox}><Text style={cardStyles.messageText}>"{inv.message}"</Text></View>
+    ? <View style={[cardStyles.messageBox, { backgroundColor: colors.terraLight, borderLeftColor: colors.terra }]}><Text style={[cardStyles.messageText, { color: colors.text }]}>"{inv.message}"</Text></View>
     : null;
 
   const durationEl = expanded && duration
@@ -164,7 +166,7 @@ const InvitationCard: React.FC<CardProps> = ({
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         />
-        {isUnread && <View style={cardStyles.unreadDot} />}
+        {isUnread && <View style={[cardStyles.unreadDot, { backgroundColor: colors.terra }]} />}
         {badgeEl}
         <View style={cardStyles.bannerBottom}>
           <View style={{ flex: 1 }}>
@@ -189,7 +191,7 @@ const InvitationCard: React.FC<CardProps> = ({
         {canAct && (
           <View style={[cardStyles.actions, expandedActionsStyle]}>
             <TouchableOpacity
-              style={[cardStyles.btnAccept, expandedBtnStyle]}
+              style={[cardStyles.btnAccept, expandedBtnStyle, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
               onPress={onAccept}
               disabled={accepting}
               activeOpacity={0.85}

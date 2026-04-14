@@ -126,7 +126,7 @@ const InviteFriendsScreen: React.FC = () => {
             {t("inviteFriends.manageMembers")}
           </Text>
         </View>
-        <TouchableOpacity style={s.inviteBtn} onPress={openInvitePanel}>
+        <TouchableOpacity style={[s.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={openInvitePanel}>
           <Text style={s.inviteBtnTxt}>{t("inviteFriends.inviteBtn")}</Text>
         </TouchableOpacity>
       </View>
@@ -149,7 +149,7 @@ const InviteFriendsScreen: React.FC = () => {
               {invitationLink || t("inviteFriends.linkGenerating")}
             </Text>
             <TouchableOpacity
-              style={s.copyBtn}
+              style={[s.copyBtn, { backgroundColor: colors.terra }]}
               onPress={handleShareLink}
               disabled={!invitationLink}
             >
@@ -216,8 +216,8 @@ const InviteFriendsScreen: React.FC = () => {
           style={[s.addBtn, { backgroundColor: colors.bg, borderColor: colors.border }]}
           onPress={openInvitePanel}
         >
-          <View style={s.addBtnIcon}>
-            <Text style={{ fontSize: 22, color: "#C4714A" }}>+</Text>
+          <View style={[s.addBtnIcon, { backgroundColor: colors.terraLight }]}>
+            <Text style={{ fontSize: 22, color: colors.terra, fontFamily: F.sans400 }}>+</Text>
           </View>
           <Text style={[s.addBtnTxt, { color: colors.textLight }]}>
             {t("inviteFriends.inviteFromFriends")}
@@ -227,7 +227,7 @@ const InviteFriendsScreen: React.FC = () => {
 
       {actionLoading && (
         <View style={s.loadingOverlay}>
-          <ActivityIndicator size="large" color="#C4714A" />
+          <ActivityIndicator size="large" color={colors.terra} />
         </View>
       )}
 
@@ -268,21 +268,21 @@ const InviteFriendsScreen: React.FC = () => {
 const s = StyleSheet.create({
   safe: { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 50, paddingTop: 10 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 14, paddingBottom: 14 },
   headerSub: { fontFamily: F.sans400, fontSize: 14, textAlign: "center" },
   headerTitle: { fontFamily: F.sans700, fontSize: 20, textAlign: "center" },
-  inviteBtn: { backgroundColor: "#C4714A", borderRadius: 24, paddingHorizontal: 18, paddingVertical: 10, shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 3 },
+  inviteBtn: { borderRadius: 24, paddingHorizontal: 18, paddingVertical: 10, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 3 },
   inviteBtnTxt: { fontFamily: F.sans600, fontSize: 15, color: "#FFFFFF" },
   linkCard: { borderRadius: 18, borderWidth: 1, padding: 18, marginBottom: 18 },
   linkTitle: { fontFamily: F.sans600, fontSize: 14, marginBottom: 10 },
   linkRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   linkUrl: { flex: 1, fontFamily: F.sans400, fontSize: 13, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  copyBtn: { backgroundColor: "#C4714A", borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
+  copyBtn: { borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
   copyBtnTxt: { fontFamily: F.sans600, fontSize: 13, color: "#FFFFFF" },
   expiryTxt: { fontFamily: F.sans400, fontSize: 12 },
   sec: { fontFamily: F.sans700, fontSize: 16, textTransform: "uppercase", letterSpacing: 1.2, paddingTop: 10, paddingBottom: 10 },
   addBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, borderWidth: 2, borderStyle: "dashed", borderRadius: 18, paddingVertical: 16, paddingHorizontal: 16, marginTop: 8 },
-  addBtnIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F5E5DC", alignItems: "center", justifyContent: "center" },
+  addBtnIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   addBtnTxt: { fontFamily: F.sans400, fontSize: 15 },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(253,250,245,0.65)", alignItems: "center", justifyContent: "center" },
 });

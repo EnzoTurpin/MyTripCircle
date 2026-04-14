@@ -120,8 +120,8 @@ const TripPublicViewScreen: React.FC = () => {
   if (!trip) {
     return (
       <View style={[styles.loaderFull, { backgroundColor: colors.bg }]}>
-        <Ionicons name="lock-closed-outline" size={36} color="#B0A090" />
-        <Text style={styles.noAccessText}>{t("tripPublicView.noAccess")}</Text>
+        <Ionicons name="lock-closed-outline" size={36} color={colors.textLight} />
+        <Text style={[styles.noAccessText, { color: colors.textLight }]}>{t("tripPublicView.noAccess")}</Text>
         <BackButton onPress={() => navigation.goBack()} />
       </View>
     );
@@ -172,8 +172,8 @@ const TripPublicViewScreen: React.FC = () => {
             { icon: "location-outline", value: String(addresses.length),label: t("tripPublicView.statAddresses") },
           ].map((s) => (
             <View key={s.label} style={[styles.statBox, { backgroundColor: colors.bgMid }]}>
-              <Ionicons name={s.icon as any} size={16} color="#C4714A" />
-              <Text style={styles.statValue}>{s.value}</Text>
+              <Ionicons name={s.icon as any} size={16} color={colors.terra} />
+              <Text style={[styles.statValue, { color: colors.terra }]}>{s.value}</Text>
               <Text style={[styles.statLabel, { color: colors.textLight }]}>{s.label}</Text>
             </View>
           ))}
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   scroll: { flex: 1 },
   loaderFull: { flex: 1, justifyContent: "center", alignItems: "center", gap: 14 },
-  noAccessText: { fontSize: 15, fontFamily: F.sans400, color: "#B0A090" },
+  noAccessText: { fontSize: 15, fontFamily: F.sans400 },
   statsRow: {
     flexDirection: "row",
     marginHorizontal: 16,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 3,
   },
-  statValue: { fontSize: 15, fontFamily: F.sans700, color: "#C4714A" },
+  statValue: { fontSize: 15, fontFamily: F.sans700 },
   statLabel: { fontSize: 9, textAlign: "center" },
   descBox: {
     marginHorizontal: 16,

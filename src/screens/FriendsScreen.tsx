@@ -237,7 +237,7 @@ const FriendsScreen: React.FC = () => {
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("friends.title")}</Text>
         </View>
-        <TouchableOpacity style={styles.addCircleBtn} onPress={() => navigation.navigate("AddFriend" as never)} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.addCircleBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={() => navigation.navigate("AddFriend" as never)} activeOpacity={0.8}>
           <Text style={styles.addCirclePlus}>+</Text>
         </TouchableOpacity>
       </View>
@@ -263,9 +263,9 @@ const styles = StyleSheet.create({
   headerCenter: { flex: 1, marginLeft: 14 },
   headerTitle: { fontSize: 20, fontFamily: F.sans700 },
   addCircleBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: "#C4714A",
+    width: 44, height: 44, borderRadius: 22,
     justifyContent: "center", alignItems: "center",
-    shadowColor: "#C4714A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
+    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
   },
   addCirclePlus: { fontSize: 22, color: "#FFFFFF", lineHeight: 26, marginTop: -1, fontFamily: F.sans400 },
   scroll: { flex: 1 },

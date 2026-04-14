@@ -41,7 +41,7 @@ const ResultPanel: React.FC<ResultPanelProps> = ({ parsedData, rawData, colors, 
       )}
     </View>
 
-    <TouchableOpacity style={styles.fillButton} onPress={onFill} activeOpacity={0.85}>
+    <TouchableOpacity style={[styles.fillButton, { backgroundColor: colors.terra }]} onPress={onFill} activeOpacity={0.85}>
       <Ionicons name="create-outline" size={18} color="white" style={{ marginRight: 8 }} />
       <Text style={styles.fillButtonText}>{t("bookings.scanFillButton")}</Text>
     </TouchableOpacity>

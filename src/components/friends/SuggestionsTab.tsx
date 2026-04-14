@@ -44,7 +44,7 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({
         </View>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.addBtn}
+        style={[styles.addBtn, { backgroundColor: colors.terra }]}
         onPress={() => onAddSuggestion(item)}
         disabled={sending}
         activeOpacity={0.8}
@@ -75,14 +75,14 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D8CCBA", borderRadius: RADIUS.card, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8, marginHorizontal: 20 },
+  card: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderRadius: RADIUS.card, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8, marginHorizontal: 20 },
   avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: "center", alignItems: "center", flexShrink: 0 },
   avatarText: { fontSize: 17, fontFamily: F.sans600, color: "#FFFFFF" },
   cardInfo: { flex: 1 },
-  cardName: { fontSize: 17, fontFamily: F.sans600, color: "#2A2318" },
-  cardSub: { fontSize: 14, fontFamily: F.sans400, color: "#B0A090", marginTop: 2 },
+  cardName: { fontSize: 17, fontFamily: F.sans600 },
+  cardSub: { fontSize: 14, fontFamily: F.sans400, marginTop: 2 },
   suggLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
-  addBtn: { backgroundColor: "#C4714A", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
+  addBtn: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText: { fontSize: 14, fontFamily: F.sans600, color: "#FFFFFF" },
   sectionLabel: { fontSize: 13, fontFamily: F.sans600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10, marginTop: 4, marginHorizontal: 20 },
   emptyState: { alignItems: "center", paddingVertical: 48 },

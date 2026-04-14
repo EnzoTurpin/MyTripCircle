@@ -40,7 +40,7 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
         </Text>
         {highlights.map((h) => (
           <View key={h} style={s.highlightRow}>
-            <View style={s.highlightDot} />
+            <View style={[s.highlightDot, { backgroundColor: colors.terra }]} />
             <Text style={[s.highlightText, { color: colors.textMid }]}>{h}</Text>
           </View>
         ))}
@@ -59,7 +59,7 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
               style={[s.dayCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <View style={s.dayHeader}>
-                <View style={s.dayBadge}>
+                <View style={[s.dayBadge, { backgroundColor: colors.terra }]}>
                   <Text style={s.dayBadgeText}>{day.day}</Text>
                 </View>
                 <Text style={[s.dayTitle, { color: colors.text }]}>{dayTitle}</Text>
@@ -67,7 +67,7 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
               <View style={s.activitiesList}>
                 {activities.map((act) => (
                   <View key={act} style={s.activityRow}>
-                    <View style={s.activityBullet} />
+                    <View style={[s.activityBullet, { backgroundColor: colors.terra }]} />
                     <Text style={[s.activityText, { color: colors.textMid }]}>{act}</Text>
                   </View>
                 ))}
@@ -92,7 +92,7 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
               style={[s.bookingRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <View style={[s.bookingIconBg, { backgroundColor: colors.terraLight }]}>
-                <Ionicons name={BOOKING_ICONS[b.type] as any} size={16} color="#C4714A" />
+                <Ionicons name={BOOKING_ICONS[b.type] as any} size={16} color={colors.terra} />
               </View>
               <Text style={[s.bookingTitle, { color: colors.text }]} numberOfLines={1}>
                 {title}
@@ -124,7 +124,6 @@ const s = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#C4714A",
     marginTop: 7,
     flexShrink: 0,
   },
@@ -135,7 +134,6 @@ const s = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#C4714A",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -148,7 +146,6 @@ const s = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#C4714A",
     marginTop: 9,
     opacity: 0.6,
     flexShrink: 0,

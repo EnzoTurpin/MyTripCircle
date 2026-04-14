@@ -14,6 +14,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types";
 import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
 
 const { height } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ const BG_IMAGE = require("../../assets/icon.png");
 export default function WelcomeScreen() {
   const navigation = useNavigation<WelcomeNavProp>();
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
     <View style={styles.background}>
@@ -44,7 +46,7 @@ export default function WelcomeScreen() {
         {/* Titre centré verticalement */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>
-            MyTrip<Text style={styles.titleOrange}>Circle</Text>
+            MyTrip<Text style={[styles.titleOrange, { color: colors.terra }]}>Circle</Text>
           </Text>
           <Text style={styles.subtitle}>{t("welcome.subtitle")}</Text>
         </View>
@@ -55,7 +57,7 @@ export default function WelcomeScreen() {
         {/* Boutons en bas */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, { backgroundColor: colors.terra }]}
             activeOpacity={0.85}
             onPress={() => navigation.navigate("Auth", { initialMode: "register" })}
           >
@@ -74,8 +76,6 @@ export default function WelcomeScreen() {
     </View>
   );
 }
-
-const ORANGE = "#C4714A";
 
 const styles = StyleSheet.create({
   background: {
@@ -103,9 +103,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     letterSpacing: 0.5,
   },
-  titleOrange: {
-    color: ORANGE,
-  },
+  titleOrange: {},
   subtitle: {
     fontFamily: F.sans400,
     fontSize: 16,
@@ -118,7 +116,6 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   primaryButton: {
-    backgroundColor: ORANGE,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",

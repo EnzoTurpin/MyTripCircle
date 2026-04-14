@@ -36,7 +36,7 @@ const SearchBarWithHistory: React.FC<Props> = ({
       style={[
         styles.searchWrapper,
         { backgroundColor: colors.surface, borderColor: colors.border },
-        (input.trim() || focused) && styles.searchWrapperActive,
+        (input.trim() || focused) && [styles.searchWrapperActive, { borderColor: colors.terra, shadowColor: colors.terra }],
       ]}
     >
       <View style={styles.searchBar}>
@@ -92,7 +92,7 @@ const SearchBarWithHistory: React.FC<Props> = ({
             style={[styles.historyClearRow, { borderTopColor: colors.bgMid }]}
             onPress={onHistoryClear}
           >
-            <Text style={styles.historyClear}>{t("addFriend.clearHistory")}</Text>
+            <Text style={[styles.historyClear, { color: colors.terra }]}>{t("addFriend.clearHistory")}</Text>
           </TouchableOpacity>
         </>
       )}
@@ -114,8 +114,6 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   searchWrapperActive: {
-    borderColor: "#C4714A",
-    shadowColor: "#C4714A",
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 3,
@@ -158,7 +156,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderTopWidth: 1,
   },
-  historyClear: { fontSize: 12, fontFamily: F.sans500, color: "#C4714A" },
+  historyClear: { fontSize: 12, fontFamily: F.sans500 },
 });
 
 export default SearchBarWithHistory;

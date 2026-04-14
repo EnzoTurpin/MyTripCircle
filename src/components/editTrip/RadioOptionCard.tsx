@@ -77,8 +77,8 @@ const s = StyleSheet.create({
   icon: { width: 50, height: 50, borderRadius: 13, justifyContent: "center", alignItems: "center" },
   emoji: { fontSize: 24 },
   info: { flex: 1 },
-  label: { fontSize: 17, fontFamily: F.sans600, color: "#2A2318" },
-  desc: { fontSize: 13, fontFamily: F.sans400, color: "#B0A090", marginTop: 2 },
+  label: { fontSize: 17, fontFamily: F.sans600 },
+  desc: { fontSize: 13, fontFamily: F.sans400, marginTop: 2 },
   dot: {
     width: 24,
     height: 24,

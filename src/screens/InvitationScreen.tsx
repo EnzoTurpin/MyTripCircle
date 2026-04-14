@@ -76,7 +76,7 @@ const InvitationScreen: React.FC = () => {
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("invitation.myInvitations")}</Text>
 
         </View>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       {/* ── Tabs ── */}
@@ -88,11 +88,11 @@ const InvitationScreen: React.FC = () => {
         ] as { key: TabKey; label: string }[]).map(({ key, label }) => (
           <TouchableOpacity
             key={key}
-            style={[styles.tabItem, tab === key && styles.tabItemActive]}
+            style={[styles.tabItem, tab === key && [styles.tabItemActive, { borderBottomColor: colors.terra }]]}
             onPress={() => setTab(key)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabText, { color: colors.textLight }, tab === key && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: colors.textLight }, tab === key && [styles.tabTextActive, { color: colors.terra }]]}>
               {label}
             </Text>
           </TouchableOpacity>
@@ -124,7 +124,7 @@ const InvitationScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scroll, displayed.length === 0 && styles.scrollEmpty]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#C4714A" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.terra} />
           }
         >
           {(() => {
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
   },
   headerCenter: { flex: 1, marginLeft: 14 },
-  headerTitle:  { fontSize: 28, fontFamily: F.sans700 },
+  headerTitle:  { fontSize: 20, fontFamily: F.sans700 },
   tabBar: {
     flexDirection: "row", borderBottomWidth: 1,
     marginHorizontal: 20,
@@ -201,9 +201,9 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: "center", justifyContent: "center",
     paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: "transparent",
   },
-  tabItemActive: { borderBottomColor: "#C4714A" },
-  tabText:       { fontSize: 15, fontFamily: F.sans600, color: "#B0A090" },
-  tabTextActive: { color: "#C4714A" },
+  tabItemActive: {},
+  tabText:       { fontSize: 15, fontFamily: F.sans600 },
+  tabTextActive: {},
   scroll:        { padding: 16, gap: 14 },
   scrollEmpty:   { flex: 1 },
 });

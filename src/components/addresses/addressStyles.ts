@@ -30,10 +30,8 @@ export const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerEyebrow: {
-    fontSize: 12,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 2,
+    fontSize: 14,
+    marginBottom: 4,
     fontFamily: F.sans400,
   },
   headerTitle: {

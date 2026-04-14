@@ -1,16 +1,16 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../ui/BackButton";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RootStackParamList, Trip } from "../../types";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 
 type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
-
-const SAFE_TOP = Platform.OS === "ios" ? 64 : 40;
 
 const heroColors = (status: string): [string, string, string] => {
   if (status === "active" || status === "validated") {
@@ -39,6 +39,7 @@ const TripHero: React.FC<Props> = ({
   addressesCount,
 }) => {
   const navigation = useNavigation<NavigationProp>();
+  const { top: insetTop } = useSafeAreaInsets();
   const gradientColors = heroColors(trip.status);
 
   return (
@@ -59,17 +60,15 @@ const TripHero: React.FC<Props> = ({
       )}
       <View style={[StyleSheet.absoluteFill, s.heroOverlay]} />
 
-      <TouchableOpacity
-        style={s.heroBackBtn}
+      <BackButton
+        variant="overlay"
         onPress={() => navigation.goBack()}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-      </TouchableOpacity>
+        style={[s.heroBackBtn, { top: insetTop + 10 }]}
+      />
 
       {(isOwner || canEdit) && (
         <TouchableOpacity
-          style={s.heroHeartBtn}
+          style={[s.heroHeartBtn, { top: insetTop + 10 }]}
           onPress={() =>
             navigation.navigate("TripActions", {
               tripId,
@@ -117,19 +116,11 @@ const s = StyleSheet.create({
   },
   heroBackBtn: {
     position: "absolute",
-    top: SAFE_TOP,
-    left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    justifyContent: "center",
-    alignItems: "center",
+    left: 16,
     zIndex: 10,
   },
   heroHeartBtn: {
     position: "absolute",
-    top: SAFE_TOP,
     right: 20,
     width: 40,
     height: 40,
@@ -151,6 +142,7 @@ const s = StyleSheet.create({
     fontSize: 28,
     fontFamily: F.sans700,
     color: "#FFFFFF",
+    lineHeight: 34,
     marginBottom: 4,
   },
   heroDestRow: {
