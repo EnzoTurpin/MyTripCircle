@@ -83,8 +83,12 @@ const TripsScreen: React.FC = () => {
   if (loading) return <TripsScreenSkeleton />;
 
   const now = new Date();
-  const upcomingTrips = trips.filter((t) => new Date(t.endDate) >= now);
-  const heroTrip: Trip | null = upcomingTrips.find((t) => t.status !== "draft") ?? upcomingTrips[0] ?? null;
+  const upcomingTrips = trips
+    .filter((t) => new Date(t.endDate) >= now)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+  // Priorité : voyage en cours (déjà commencé), sinon le plus proche à venir
+  const heroTrip: Trip | null =
+    upcomingTrips.find((t) => new Date(t.startDate) <= now) ?? upcomingTrips[0] ?? null;
   const miniTrips: Trip[] = heroTrip ? upcomingTrips.filter((t) => t.id !== heroTrip.id) : [];
 
   return (
