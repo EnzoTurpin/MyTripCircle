@@ -131,7 +131,7 @@ export function useTripData(tripId: string) {
   };
 
   const handleEditAddress = (address: Address) => {
-    navigation.navigate("AddressForm", { addressId: address.id });
+    navigation.navigate("AddressDetails", { addressId: address.id });
   };
 
   const handleCopyBooking = async (booking: Booking) => {
