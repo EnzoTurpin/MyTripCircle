@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 20, paddingVertical: 14,
   },
-  headerCenter: { flex: 1, marginLeft: 14 },
+  headerCenter: { flex: 1, alignItems: "center" },
   headerTitle:  { fontSize: 20, fontFamily: F.sans700 },
   tabBar: {
     flexDirection: "row", borderBottomWidth: 1,
