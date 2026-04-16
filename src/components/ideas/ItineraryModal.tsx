@@ -81,7 +81,7 @@ const SearchForm: React.FC<SearchFormProps> = ({
         returnKeyType="done"
       />
       <TouchableOpacity
-        style={[styles.primaryBtn, { opacity: loading || !cityInput.trim() ? 0.6 : 1 }]}
+        style={[styles.primaryBtn, { backgroundColor: colors.terra, opacity: loading || !cityInput.trim() ? 0.6 : 1 }]}
         onPress={onGenerate}
         disabled={loading || !cityInput.trim()}
         activeOpacity={0.8}
@@ -339,7 +339,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
 
       {/* Bouton créer */}
       <TouchableOpacity
-        style={[styles.primaryBtn, { marginTop: 24, opacity: creating ? 0.6 : 1 }]}
+        style={[styles.primaryBtn, { backgroundColor: colors.terra, marginTop: 24, opacity: creating ? 0.6 : 1 }]}
         onPress={onCreateTrip}
         disabled={creating}
         activeOpacity={0.8}
