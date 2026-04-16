@@ -16,7 +16,15 @@ const addressStripeColor = (type: string): string => {
   }
 };
 
-const addressIconBg = (type: string): string => {
+const addressIconBg = (type: string, isDark: boolean): string => {
+  if (isDark) {
+    switch (type) {
+      case "hotel":       return "#1E2E1A";
+      case "restaurant":  return "#2E1E15";
+      case "activity":    return "#251E35";
+      default:            return "#1A2E35";
+    }
+  }
   switch (type) {
     case "hotel":       return "#E2EDD9";
     case "restaurant":  return "#F5E5DC";
@@ -25,12 +33,12 @@ const addressIconBg = (type: string): string => {
   }
 };
 
-const addressIconEmoji = (type: string): string => {
+const addressIconName = (type: string): any => {
   switch (type) {
-    case "hotel":       return "🏨";
-    case "restaurant":  return "🍽️";
-    case "activity":    return "🎯";
-    default:            return "📍";
+    case "hotel":       return "bed";
+    case "restaurant":  return "restaurant";
+    case "activity":    return "star";
+    default:            return "location";
   }
 };
 
@@ -43,7 +51,7 @@ interface Props {
 
 const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress, canAdd }) => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   if (addresses.length === 0) {
     return (
@@ -71,7 +79,7 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
       )}
       {addresses.map((address: Address) => {
         const stripe = addressStripeColor(address.type);
-        const iconBg = addressIconBg(address.type);
+        const iconBg = addressIconBg(address.type, isDark);
         return (
           <TouchableOpacity
             key={address.id}
@@ -81,7 +89,7 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
           >
             <View style={[s.listStripe, { backgroundColor: stripe }]} />
             <View style={[s.listIconWrap, { backgroundColor: iconBg }]}>
-              <Text style={s.listIconEmoji}>{addressIconEmoji(address.type)}</Text>
+              <Ionicons name={addressIconName(address.type)} size={22} color={stripe} />
             </View>
             <View style={s.listInfo}>
               <Text style={[s.listTitle, { color: colors.text }]} numberOfLines={1}>{address.name}</Text>
@@ -160,9 +168,6 @@ const s = StyleSheet.create({
     alignSelf: "center",
     marginLeft: 12,
     marginRight: 12,
-  },
-  listIconEmoji: {
-    fontSize: 20,
   },
   listInfo: {
     flex: 1,
