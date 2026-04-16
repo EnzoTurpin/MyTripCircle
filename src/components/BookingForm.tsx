@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   Platform,
   FlatList,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,6 +36,8 @@ import {
   getSafeDate,
 } from "./bookingForm/bookingFormConstants";
 
+const SCREEN_WIDTH = Dimensions.get("window").width;
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BookingFormProps {
@@ -51,18 +55,42 @@ interface BookingFormProps {
 const BookingForm: React.FC<BookingFormProps> = (props) => {
   const { visible, onClose, initialBooking } = props;
   const { t }      = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets     = useSafeAreaInsets();
   const TYPE_LABELS = getTypeLabels(t);
 
   const form = useBookingForm(props);
+
+  const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const [internalVisible, setInternalVisible] = useState(false);
+
+  const springConfig = {
+    damping: 1000,
+    stiffness: 1000,
+    mass: 3,
+    overshootClamping: true,
+    restDisplacementThreshold: 0.01,
+    restSpeedThreshold: 0.01,
+    useNativeDriver: true,
+  };
+
+  useEffect(() => {
+    if (visible) {
+      setInternalVisible(true);
+      slideAnim.setValue(SCREEN_WIDTH);
+      Animated.spring(slideAnim, { toValue: 0, ...springConfig }).start();
+    } else if (internalVisible) {
+      Animated.spring(slideAnim, { toValue: SCREEN_WIDTH, ...springConfig }).start(() => setInternalVisible(false));
+    }
+  }, [visible]);
 
   const safeDate    = getSafeDate(form.formData.date);
   const safeEndDate = getSafeDate(form.formData.endDate);
   const locale      = i18n.language === "fr" ? "fr_FR" : "en_US";
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false}>
+    <Modal visible={internalVisible} animationType="none" transparent={true}>
+      <Animated.View style={{ flex: 1, backgroundColor: colors.bg, transform: [{ translateX: slideAnim }] }}>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["bottom", "left", "right"]}>
 
         {/* ── Header ── */}
@@ -90,12 +118,12 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           <View style={styles.typePillsContainer}>
             <View style={styles.typePillsRow}>
               {(["flight", "train", "hotel"] as Booking["type"][]).map((type) => (
-                <TypePill key={type} type={type} isSelected={form.formData.type === type} label={TYPE_LABELS[type]} colors={colors} onPress={() => form.handleInputChange("type", type)} />
+                <TypePill key={type} type={type} isSelected={form.formData.type === type} label={TYPE_LABELS[type]} colors={colors} isDark={isDark} onPress={() => form.handleInputChange("type", type)} />
               ))}
             </View>
             <View style={styles.typePillsRow}>
               {(["restaurant", "activity"] as Booking["type"][]).map((type) => (
-                <TypePill key={type} type={type} isSelected={form.formData.type === type} label={TYPE_LABELS[type]} colors={colors} onPress={() => form.handleInputChange("type", type)} />
+                <TypePill key={type} type={type} isSelected={form.formData.type === type} label={TYPE_LABELS[type]} colors={colors} isDark={isDark} onPress={() => form.handleInputChange("type", type)} />
               ))}
             </View>
           </View>
@@ -285,6 +313,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         </Modal>
 
       </SafeAreaView>
+      </Animated.View>
     </Modal>
   );
 };
