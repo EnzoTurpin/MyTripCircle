@@ -49,7 +49,10 @@ export function useTripCountdown(trip: Trip | null) {
       const diff = start - now;
       if (diff <= 0) {
         setCountdown(null);
-        if (countdownRef.current) clearInterval(countdownRef.current);
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
         return;
       }
       setCountdown({
@@ -62,7 +65,10 @@ export function useTripCountdown(trip: Trip | null) {
     updateCountdown();
     countdownRef.current = setInterval(updateCountdown, 1000);
     return () => {
-      if (countdownRef.current) clearInterval(countdownRef.current);
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
     };
   }, [trip?.startDate]);
 
