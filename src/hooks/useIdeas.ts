@@ -127,8 +127,12 @@ export const useIdeas = () => {
         hotelName = place.name;
         hotelRating = place.rating;
         hotelPhotoUrl = place.photoUrl;
+      } else {
+        console.warn(`[useIdeas] Places: aucun résultat pour "hotel ${city}"`);
       }
-    } catch { /* échec silencieux */ }
+    } catch (e) {
+      console.error(`[useIdeas] Places textsearch échoué pour "hotel ${city}":`, e);
+    }
 
     await createBooking({
       tripId, type: "hotel",
@@ -144,24 +148,30 @@ export const useIdeas = () => {
         type: "hotel", name: hotelName, address: hotelAddress,
         city: placeCity, country: placeCountry,
         rating: hotelRating, photoUrl: hotelPhotoUrl, tripId,
-      }).catch(() => { /* échec silencieux */ });
+      }).catch((e) => { console.error("[useIdeas] createAddress (hotel) échoué:", e); });
     }
   };
 
-  const createActivityEntry = async (tripId: string, activityTitle: string, city: string, dayDate: Date) => {
+  const createActivityEntry = async (tripId: string, activityTitle: string, city: string, dayDate: Date, placeQuery?: string) => {
     let realAddress: string | undefined;
     let placeName: string | undefined;
     let placeRating: number | undefined;
     let placePhotoUrl: string | undefined;
+    // Utilise le nom de lieu précis fourni par l'IA si disponible, sinon le titre de l'activité
+    const searchQuery = placeQuery ? `${placeQuery} ${city}` : `${activityTitle} ${city}`;
     try {
-      const place = await searchPlaceByText(`${activityTitle} ${city}`);
+      const place = await searchPlaceByText(searchQuery);
       if (place) {
         realAddress = place.formattedAddress;
         placeName = place.name;
         placeRating = place.rating;
         placePhotoUrl = place.photoUrl;
+      } else {
+        console.warn(`[useIdeas] Places: aucun résultat pour "${searchQuery}"`);
       }
-    } catch { /* échec silencieux */ }
+    } catch (e) {
+      console.error(`[useIdeas] Places textsearch échoué pour "${searchQuery}":`, e);
+    }
 
     try {
       await createBooking({
@@ -169,7 +179,9 @@ export const useIdeas = () => {
         address: realAddress, date: dayDate,
         currency: "€", status: "pending",
       });
-    } catch { /* échec silencieux */ }
+    } catch (e) {
+      console.error(`[useIdeas] createBooking échoué pour "${activityTitle}":`, e);
+    }
 
     if (realAddress && placeName) {
       const { city: placeCity, country: placeCountry } = extractCityCountry(realAddress, city);
@@ -177,7 +189,7 @@ export const useIdeas = () => {
         type: "activity", name: placeName, address: realAddress,
         city: placeCity, country: placeCountry,
         rating: placeRating, photoUrl: placePhotoUrl, tripId,
-      }).catch(() => { /* échec silencieux */ });
+      }).catch((e) => { console.error(`[useIdeas] createAddress échoué pour "${placeName}":`, e); });
     }
   };
 
@@ -197,7 +209,7 @@ export const useIdeas = () => {
       for (const slot of slots) {
         const slotData = day[slot.key];
         if (!slotData?.activity) continue;
-        await createActivityEntry(tripId, slotData.activity as string, city, dayDate);
+        await createActivityEntry(tripId, slotData.activity as string, city, dayDate, slotData.place as string | undefined);
       }
     }
   };
