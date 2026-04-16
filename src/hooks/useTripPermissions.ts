@@ -12,7 +12,7 @@ export function useTripPermissions(
   const isOwner = trip && userId ? trip.ownerId === userId : false;
   const userCollaborator = trip?.collaborators?.find((c: Collaborator) => c.userId === userId);
   const canInvite = isOwner || userCollaborator?.permissions?.canInvite;
-  const totalMembers = trip ? trip.collaborators.length + 1 : 0;
+  const totalMembers = trip ? (trip.collaborators?.length ?? 0) + 1 : 0;
   const totalBudget = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
 
   useEffect(() => {

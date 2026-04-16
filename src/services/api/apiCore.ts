@@ -65,10 +65,10 @@ async function tryRefreshToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
-    const refreshToken = await secureStorage.getItem("refreshToken");
-    if (!refreshToken) return null;
-
     try {
+      const refreshToken = await secureStorage.getItem("refreshToken");
+      if (!refreshToken) return null;
+
       const baseUrl = await findWorkingUrl();
       const res = await fetch(`${baseUrl}/users/refresh`, {
         method: "POST",
