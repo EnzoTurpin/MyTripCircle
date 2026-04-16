@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useTranslation } from "react-i18next";
-import { RootStackParamList, Booking } from "../types";
+import { RootStackParamList, Booking, Address } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
 import { parseApiError } from "../utils/i18n";
 import ApiService from "../services/ApiService";
 import useCalendarPicker, { UseCalendarPickerReturn } from "./useCalendarPicker";
 import useTripBookings, { UseTripBookingsReturn } from "./useTripBookings";
+import useTripAddresses, { UseTripAddressesReturn } from "./useTripAddresses";
 import { fetchDestinationPhotoUrl } from "../utils/destinationPhoto";
 
 type EditTripRouteProp = RouteProp<RootStackParamList, "EditTrip">;
@@ -42,18 +43,28 @@ export type UseEditTripReturn = {
   loading: boolean;
   initialLoading: boolean;
   isOwner: boolean;
+  otherBookings: Booking[];
+  otherAddresses: Address[];
+  handleCopyBooking: (booking: Booking) => Promise<void>;
+  handleCopyAddress: (address: Address) => Promise<void>;
   handlePickCoverPhoto: () => Promise<void>;
   handleUpdateTrip: () => Promise<void>;
   handleDeleteTrip: () => void;
   handleCancel: () => void;
-} & UseCalendarPickerReturn & UseTripBookingsReturn;
+} & UseCalendarPickerReturn & UseTripBookingsReturn & UseTripAddressesReturn;
 
 const useEditTrip = (): UseEditTripReturn => {
   const route      = useRoute<EditTripRouteProp>();
   const navigation = useNavigation<EditTripNavigationProp>();
   const { tripId } = route.params;
 
-  const { updateTrip, deleteTrip, createBooking, updateBooking, deleteBooking } = useTrips();
+  const {
+    updateTrip, deleteTrip,
+    createBooking, updateBooking, deleteBooking,
+    createAddress, updateAddress, deleteAddress,
+    bookings: allBookings, addresses: allAddresses,
+    getAddressesByTripId,
+  } = useTrips();
   const { user } = useAuth();
   const { t }    = useTranslation();
 
@@ -88,6 +99,14 @@ const useEditTrip = (): UseEditTripReturn => {
     t,
   });
 
+  const addressesState = useTripAddresses({
+    tripId,
+    createAddress,
+    updateAddress,
+    deleteAddress,
+    t,
+  });
+
   // ── Auto-fetch photo si destination change et pas de photo manuelle ─────────
   useEffect(() => {
     if (isManualCover.current) return;
@@ -110,11 +129,21 @@ const useEditTrip = (): UseEditTripReturn => {
   // ── Chargement initial ──────────────────────────────────────────────────────
   useEffect(() => { loadTripData(); }, [tripId]);
 
+  // ── Resync adresses au retour sur l'écran (après AddressFormScreen) ─────────
+  useFocusEffect(
+    useCallback(() => {
+      if (initialLoading) return;
+      const synced = getAddressesByTripId(tripId);
+      if (synced.length > 0) addressesState.setAddresses(synced);
+    }, [tripId, initialLoading, getAddressesByTripId])
+  );
+
   const loadTripData = async () => {
     try {
-      const [tripData, bookingsData] = await Promise.all([
+      const [tripData, bookingsData, addressesData] = await Promise.all([
         ApiService.getTripById(tripId),
         ApiService.getBookingsByTripId(tripId),
+        ApiService.getAddressesByTripId(tripId).catch(() => []),
       ]);
 
       if (tripData) {
@@ -155,6 +184,25 @@ const useEditTrip = (): UseEditTripReturn => {
         attachments: b.attachments, createdAt: new Date(b.createdAt), updatedAt: new Date(b.updatedAt),
       }));
       bookingsState.setBookings(mappedBookings);
+
+      const mappedAddresses: Address[] = (addressesData || []).map((a: any) => ({
+        id: a._id,
+        type: a.type,
+        name: a.name,
+        address: a.address,
+        city: a.city,
+        country: a.country,
+        phone: a.phone,
+        website: a.website,
+        notes: a.notes,
+        rating: a.rating,
+        photoUrl: a.photoUrl,
+        tripId: a.tripId,
+        userId: a.userId,
+        createdAt: new Date(a.createdAt),
+        updatedAt: new Date(a.updatedAt),
+      }));
+      addressesState.setAddresses(mappedAddresses);
     } catch (error) {
       console.error("[useEditTrip] Erreur lors du chargement des données:", error);
     } finally {
@@ -230,6 +278,30 @@ const useEditTrip = (): UseEditTripReturn => {
     ]);
   };
 
+  // ── Copie depuis d'autres voyages ───────────────────────────────────────────
+  const otherBookings = allBookings.filter((b) => b.tripId !== tripId);
+  const otherAddresses = allAddresses.filter((a) => a.tripId !== tripId);
+
+  const handleCopyBooking = async (booking: Booking) => {
+    try {
+      const { id, createdAt, updatedAt, attachments, ...data } = booking;
+      const newBooking = await createBooking({ ...data, tripId });
+      bookingsState.setBookings((prev) => [...prev, newBooking]);
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error) || t("editTrip.saveError"));
+    }
+  };
+
+  const handleCopyAddress = async (address: Address) => {
+    try {
+      const { id, createdAt, updatedAt, ...data } = address;
+      const newAddress = await createAddress({ ...data, tripId });
+      addressesState.setAddresses((prev) => [...prev, newAddress]);
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error));
+    }
+  };
+
   const handleCancel = () => {
     Alert.alert(t("editTrip.cancelTitle"), t("editTrip.cancelMessage"), [
       { text: t("common.cancel"), style: "cancel" },
@@ -240,9 +312,17 @@ const useEditTrip = (): UseEditTripReturn => {
   return {
     formData, setFormData,
     loading, initialLoading, isOwner,
+    otherBookings, otherAddresses,
+    handleCopyBooking, handleCopyAddress,
     handlePickCoverPhoto, handleUpdateTrip, handleDeleteTrip, handleCancel,
     ...calendar,
     ...bookingsState,
+    ...addressesState,
+    handleAddAddress:  () => navigation.navigate("AddressForm", { tripId }),
+    handleEditAddress: (index: number) => {
+      const addr = addressesState.addresses[index];
+      if (addr?.id) navigation.navigate("AddressForm", { addressId: addr.id });
+    },
   };
 };
 

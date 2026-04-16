@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -20,6 +21,10 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
 import BookingForm from "../components/BookingForm";
+import {
+  ExistingBookingPicker,
+  ExistingAddressPicker,
+} from "../components/tripDetails/ExistingItemPicker";
 import { formatDate } from "../utils/i18n";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
@@ -29,6 +34,7 @@ import FocusableField from "../components/editTrip/FocusableField";
 import TripCalendar from "../components/editTrip/TripCalendar";
 import RadioOptionCard, { RadioOption } from "../components/editTrip/RadioOptionCard";
 import BookingsList from "../components/editTrip/BookingsList";
+import AddressesList from "../components/editTrip/AddressesList";
 import DatePickerField from "../components/editTrip/DatePickerField";
 import EditTripSkeleton from "../components/editTrip/EditTripSkeleton";
 import EditTripDangerZone from "../components/editTrip/EditTripDangerZone";
@@ -50,8 +56,34 @@ const EditTripScreen: React.FC = () => {
     openCalendar, closeCalendar, handleCalendarDayPress, goToPrevMonth, goToNextMonth,
     bookings, showBookingForm, editingBookingIndex,
     handleAddBooking, handleEditBooking, handleDeleteBooking, handleSaveBooking, closeBookingForm,
+    addresses,
+    handleAddAddress, handleEditAddress, handleDeleteAddress,
+    otherBookings, otherAddresses, handleCopyBooking, handleCopyAddress,
     handlePickCoverPhoto, handleUpdateTrip, handleDeleteTrip, handleCancel,
   } = useEditTrip();
+
+  const [showBookingPicker, setShowBookingPicker] = useState(false);
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
+
+  const handleAddBookingPress = () => {
+    if (!otherBookings.length) {
+      handleAddBooking();
+      return;
+    }
+    Alert.alert(t("tripDetails.addBooking"), undefined, [
+      { text: t("tripDetails.createNew"), onPress: handleAddBooking },
+      { text: t("tripDetails.chooseExisting"), onPress: () => setShowBookingPicker(true) },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  };
+
+  const handleAddAddressPress = () => {
+    Alert.alert(t("tripDetails.addAddress"), undefined, [
+      { text: t("tripDetails.createNew"), onPress: handleAddAddress },
+      { text: t("tripDetails.chooseExisting"), onPress: () => setShowAddressPicker(true) },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  };
 
   const MONTHS = t("editTrip.monthNames").split(",");
   const DAYS   = t("editTrip.dayInitials").split(",");
@@ -97,7 +129,7 @@ const EditTripScreen: React.FC = () => {
               ) : (
                 <LinearGradient colors={["#3A3020", "#1E1A10"]} style={StyleSheet.absoluteFillObject} />
               )}
-              <View style={s.coverBtn}>
+              <View style={[s.coverBtn, { backgroundColor: isDark ? "rgba(30,30,30,0.85)" : "rgba(255,255,255,0.90)" }]}>
                 <Text style={s.coverBtnEmoji}>📸</Text>
                 <Text style={[s.coverBtnText, { color: colors.text }]}>{t("editTrip.changeCoverPhoto")}</Text>
               </View>
@@ -214,6 +246,7 @@ const EditTripScreen: React.FC = () => {
                 border={colors.border}
                 text={colors.text}
                 textLight={colors.textLight}
+                iconBg={isDark ? "#1A2E35" : "#DCF0F5"}
                 onPress={() => navigation.navigate("InviteFriends", { tripId: route.params.tripId })}
               />
 
@@ -241,15 +274,25 @@ const EditTripScreen: React.FC = () => {
               <BookingsList
                 bookings={bookings}
                 colors={colors}
-                onAdd={handleAddBooking}
+                onAdd={handleAddBookingPress}
                 onEdit={handleEditBooking}
                 onDelete={handleDeleteBooking}
+              />
+
+              {/* ── Adresses ── */}
+              <AddressesList
+                addresses={addresses}
+                colors={colors}
+                onAdd={handleAddAddressPress}
+                onEdit={handleEditAddress}
+                onDelete={handleDeleteAddress}
               />
 
               {/* ── Zone dangereuse ── */}
               {isOwner && (
                 <EditTripDangerZone
                   dangerLight={colors.dangerLight}
+                  sectionLabelColor={colors.textLight}
                   onDelete={handleDeleteTrip}
                 />
               )}
@@ -267,6 +310,20 @@ const EditTripScreen: React.FC = () => {
         initialBooking={editingBookingIndex === null ? undefined : bookings[editingBookingIndex]}
         tripStartDate={formData.startDate}
         tripEndDate={formData.endDate}
+      />
+
+      <ExistingBookingPicker
+        visible={showBookingPicker}
+        bookings={otherBookings}
+        onSelect={(booking) => { handleCopyBooking(booking); setShowBookingPicker(false); }}
+        onClose={() => setShowBookingPicker(false)}
+      />
+
+      <ExistingAddressPicker
+        visible={showAddressPicker}
+        addresses={otherAddresses}
+        onSelect={(address) => { handleCopyAddress(address); setShowAddressPicker(false); }}
+        onClose={() => setShowAddressPicker(false)}
       />
     </KeyboardAvoidingView>
   );
@@ -290,7 +347,7 @@ const s = StyleSheet.create({
     height: 160, marginHorizontal: 16, marginTop: 18, marginBottom: 6,
     borderRadius: 18, overflow: "hidden", justifyContent: "center", alignItems: "center",
   },
-  coverBtn:      { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.90)", paddingHorizontal: 20, paddingVertical: 11, borderRadius: 28 },
+  coverBtn:      { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 20, paddingVertical: 11, borderRadius: 28 },
   coverBtnEmoji: { fontSize: 18 },
   coverBtnText:  { fontSize: 15, fontFamily: F.sans600 },
 
