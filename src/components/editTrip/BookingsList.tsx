@@ -44,6 +44,7 @@ interface Props {
   bookings: Booking[];
   colors: {
     textLight: string;
+    terra: string;
     terraLight: string;
     surface: string;
     border: string;

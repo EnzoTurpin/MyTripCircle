@@ -26,6 +26,7 @@ interface ThemeColors {
   textLight: string;
   textMid: string;
   bgMid: string;
+  terra: string;
 }
 
 interface Props {

@@ -30,6 +30,8 @@ interface Props {
     bgMid: string;
     text: string;
     textMid: string;
+    textLight: string;
+    terra: string;
   };
   onPrevMonth: () => void;
   onNextMonth: () => void;
