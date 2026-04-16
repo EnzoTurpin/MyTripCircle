@@ -25,6 +25,7 @@ const IdeaDetailScreen: React.FC = () => {
     idea,
     lang,
     colors,
+    isDark,
     t,
     destinationName,
     destinationCountry,
@@ -120,6 +121,7 @@ const IdeaDetailScreen: React.FC = () => {
         backdropOpacity={backdropOpacity}
         sheetTranslateY={sheetTranslateY}
         colors={colors}
+        isDark={isDark}
         onClose={closeModal}
         onChangeTripTitle={setTripTitle}
         onOpenDatePicker={() => setShowDatePicker(true)}
