@@ -12,6 +12,7 @@ interface ThemeColors {
   surface: string;
   border: string;
   terraLight: string;
+  terra: string;
 }
 
 const BOOKING_ICONS: Record<string, string> = {

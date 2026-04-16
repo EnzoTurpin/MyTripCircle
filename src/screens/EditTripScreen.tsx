@@ -211,7 +211,7 @@ const EditTripScreen: React.FC = () => {
                   days={DAYS}
                   periodLabel={t("editTrip.period")}
                   periodRangeLabel={t("editTrip.periodLabel")}
-                  colors={{ surface: colors.surface, border: colors.border, bgMid: colors.bgMid, text: colors.text, textMid: colors.textMid }}
+                  colors={{ surface: colors.surface, border: colors.border, bgMid: colors.bgMid, text: colors.text, textMid: colors.textMid, textLight: colors.textLight, terra: colors.terra }}
                   onPrevMonth={goToPrevMonth}
                   onNextMonth={goToNextMonth}
                   onDayPress={handleCalendarDayPress}

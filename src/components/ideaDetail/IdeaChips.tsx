@@ -10,6 +10,7 @@ interface ThemeColors {
   border: string;
   text: string;
   textMid: string;
+  terra: string;
 }
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { icon: string; colorKey: string }> = {
