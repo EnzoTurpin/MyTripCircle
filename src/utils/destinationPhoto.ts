@@ -1,18 +1,54 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { request } from "../services/api/apiCore";
 import { API_BASE_URL } from "../config/api";
 
-// Cache en mémoire : destination (lowercase) → URL finale
-const photoCache = new Map<string, string>();
+const STORAGE_PREFIX = "destination_photo::";
+
+// Cache en mémoire pour éviter les lectures AsyncStorage répétées dans la session
+const memCache = new Map<string, string>();
 
 /**
- * Comme fetchDestinationPhotoUrl mais utilise un cache en mémoire
- * pour éviter les appels répétés pour la même destination.
+ * Retourne la photo en cache mémoire de façon synchrone, ou null si absente.
+ * Permet d'initialiser l'état d'un composant sans flash lors d'un re-mount.
+ */
+export function getSyncCachedPhoto(destination: string): string | null {
+  const key = destination.trim().toLowerCase();
+  return memCache.get(key) ?? null;
+}
+
+/**
+ * Retourne la photo d'une destination en cherchant dans cet ordre :
+ * 1. Cache mémoire (session)
+ * 2. AsyncStorage (persistant entre sessions)
+ * 3. Fetch via le proxy backend Google Places
+ *
+ * Une fois fetchée, l'URL est sauvegardée en mémoire et dans AsyncStorage
+ * pour garantir que la même photo s'affiche toujours pour une destination donnée.
  */
 export async function getCachedDestinationPhoto(destination: string): Promise<string | null> {
   const key = destination.trim().toLowerCase();
-  if (photoCache.has(key)) return photoCache.get(key)!;
+  if (!key) return null;
+
+  // 1. Cache mémoire
+  if (memCache.has(key)) return memCache.get(key)!;
+
+  // 2. AsyncStorage
+  try {
+    const stored = await AsyncStorage.getItem(STORAGE_PREFIX + key);
+    if (stored) {
+      memCache.set(key, stored);
+      return stored;
+    }
+  } catch {}
+
+  // 3. Fetch
   const url = await fetchDestinationPhotoUrl(destination);
-  if (url) photoCache.set(key, url);
+  if (url) {
+    memCache.set(key, url);
+    try {
+      await AsyncStorage.setItem(STORAGE_PREFIX + key, url);
+    } catch {}
+  }
   return url;
 }
 
