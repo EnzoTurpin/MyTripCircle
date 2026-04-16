@@ -1,10 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Address } from "../../types";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import BackButton from "../ui/BackButton";
+import { getCachedDestinationPhoto, getSyncCachedPhoto } from "../../utils/destinationPhoto";
+
+const FALLBACK_PHOTOS = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&q=80&fit=crop",
+];
 
 interface Props {
   address: Address;
@@ -16,22 +24,28 @@ interface Props {
 
 const AddressHeroCover: React.FC<Props> = ({ address, gradient, badge, insetTop, onBack }) => {
   const { colors } = useTheme();
+  const fallbackPhoto = FALLBACK_PHOTOS[address.id.charCodeAt(0) % FALLBACK_PHOTOS.length];
+  const syncQuery = address.name || `${address.city} ${address.country}`;
+  const [coverUri, setCoverUri] = useState<string>(
+    address.photoUrl || getSyncCachedPhoto(syncQuery) || fallbackPhoto
+  );
+
+  useEffect(() => {
+    if (address.photoUrl) return;
+    const query = address.name || `${address.city} ${address.country}`;
+    getCachedDestinationPhoto(query).then((url) => {
+      if (url) setCoverUri(url);
+    });
+  }, [address.photoUrl, address.name, address.city]);
+
   return (
     <View style={styles.heroCover}>
-      {address.photoUrl ? (
-        <Image
-          source={{ uri: address.photoUrl }}
-          style={StyleSheet.absoluteFillObject}
-          resizeMode="cover"
-        />
-      ) : (
-        <LinearGradient
-          colors={gradient}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
-        />
-      )}
+      <Image
+        source={{ uri: coverUri }}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+        onError={() => setCoverUri(fallbackPhoto)}
+      />
       <LinearGradient
         colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.70)"]}
         start={{ x: 0, y: 0 }}
@@ -57,7 +71,7 @@ const AddressHeroCover: React.FC<Props> = ({ address, gradient, badge, insetTop,
 
 const styles = StyleSheet.create({
   heroCover: {
-    height: 270,
+    height: 305,
     position: "relative",
     overflow: "hidden",
     justifyContent: "flex-end",

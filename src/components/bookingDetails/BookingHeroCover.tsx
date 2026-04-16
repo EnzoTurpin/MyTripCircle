@@ -1,13 +1,20 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import BackButton from "../ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { getBookingStatusTranslation } from "../../utils/i18n";
 import { getBookingTypeIcon, getBookingTypeColorsDetail, getBookingStatusColorsDetail } from "../../utils/bookingHelpers";
 import { Booking } from "../../types";
 import { F } from "../../theme/fonts";
+import { getCachedDestinationPhoto, getSyncCachedPhoto } from "../../utils/destinationPhoto";
+
+const FALLBACK_PHOTOS = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&q=80&fit=crop",
+];
 
 interface Props {
   booking: Booking;
@@ -20,16 +27,33 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
   const { t } = useTranslation();
   const typeC   = getBookingTypeColorsDetail(booking.type);
   const statusC = getBookingStatusColorsDetail(booking.status);
+  const fallbackPhoto = FALLBACK_PHOTOS[booking.id.charCodeAt(0) % FALLBACK_PHOTOS.length];
+  const syncQuery = booking.address || booking.title;
+  const [coverUri, setCoverUri] = useState<string>(
+    getSyncCachedPhoto(syncQuery) || fallbackPhoto
+  );
+
+  useEffect(() => {
+    const query = booking.address || booking.title;
+    getCachedDestinationPhoto(query).then((url) => {
+      setCoverUri(url ?? fallbackPhoto);
+    });
+  }, [booking.id, booking.address, booking.title]);
 
   return (
     <View style={styles.heroCover}>
+      <Image
+        source={{ uri: coverUri }}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+        onError={() => setCoverUri(fallbackPhoto)}
+      />
       <LinearGradient
-        colors={gradient}
+        colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.70)"]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
-      <View style={styles.heroOverlay} />
 
       <BackButton
         variant="overlay"
@@ -59,14 +83,10 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
 
 const styles = StyleSheet.create({
   heroCover: {
-    height: 200,
+    height: 305,
     position: "relative",
     overflow: "hidden",
     justifyContent: "flex-end",
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
   },
   backButton: {
     position: "absolute",

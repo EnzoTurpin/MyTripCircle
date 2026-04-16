@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../ui/BackButton";
@@ -9,6 +9,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RootStackParamList, Trip } from "../../types";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
+import { getCachedDestinationPhoto, getSyncCachedPhoto } from "../../utils/destinationPhoto";
+
+const FALLBACK_PHOTOS = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=600&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&q=80&fit=crop",
+];
 
 type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 
@@ -41,12 +49,26 @@ const TripHero: React.FC<Props> = ({
   const navigation = useNavigation<NavigationProp>();
   const { top: insetTop } = useSafeAreaInsets();
   const gradientColors = heroColors(trip.status);
+  const fallbackPhoto = FALLBACK_PHOTOS[tripId.charCodeAt(0) % FALLBACK_PHOTOS.length];
+  const [fetchedCover, setFetchedCover] = useState<string>(
+    trip.coverImage || getSyncCachedPhoto(trip.destination) || fallbackPhoto
+  );
+
+  useEffect(() => {
+    if (!trip.coverImage && trip.destination) {
+      getCachedDestinationPhoto(trip.destination).then((url) => {
+        if (url) setFetchedCover(url);
+      });
+    }
+  }, [trip.coverImage, trip.destination]);
+
+  const coverUri = trip.coverImage || fetchedCover;
 
   return (
     <View style={s.hero}>
-      {trip.coverImage ? (
+      {coverUri ? (
         <Image
-          source={{ uri: trip.coverImage }}
+          source={{ uri: coverUri }}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
         />
