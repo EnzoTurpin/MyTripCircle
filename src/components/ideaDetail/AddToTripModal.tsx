@@ -40,6 +40,7 @@ interface Props {
   backdropOpacity: Animated.Value;
   sheetTranslateY: Animated.Value;
   colors: ThemeColors;
+  isDark: boolean;
   onClose: () => void;
   onChangeTripTitle: (v: string) => void;
   onOpenDatePicker: () => void;
@@ -61,6 +62,7 @@ const AddToTripModal: React.FC<Props> = ({
   backdropOpacity,
   sheetTranslateY,
   colors,
+  isDark,
   onClose,
   onChangeTripTitle,
   onOpenDatePicker,
@@ -143,16 +145,19 @@ const AddToTripModal: React.FC<Props> = ({
                 </View>
 
                 {showDatePicker && (
-                  <DateTimePicker
-                    value={startDate}
-                    mode="date"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    minimumDate={new Date()}
-                    onChange={(_e, date) => {
-                      if (Platform.OS === "android") onCloseDatePicker();
-                      onChangeDate(date);
-                    }}
-                  />
+                  <View style={s.datePickerWrapper}>
+                    <DateTimePicker
+                      value={startDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      themeVariant={isDark ? "dark" : "light"}
+                      minimumDate={new Date()}
+                      onChange={(_e, date) => {
+                        if (Platform.OS === "android") onCloseDatePicker();
+                        onChangeDate(date);
+                      }}
+                    />
+                  </View>
                 )}
 
                 <TouchableOpacity
@@ -250,6 +255,7 @@ const s = StyleSheet.create({
     marginBottom: 20,
   },
   dateTextReadonly: { fontFamily: F.sans400, fontSize: 13 },
+  datePickerWrapper: { alignItems: "center" },
   createBtn: { borderRadius: 28, overflow: "hidden" },
   createBtnDisabled: { opacity: 0.7 },
   createBtnGradient: {

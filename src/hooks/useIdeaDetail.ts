@@ -21,7 +21,7 @@ export function useIdeaDetail() {
   const navigation = useNavigation<IdeaDetailNavigationProp>();
   const route = useRoute<IdeaDetailRouteProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { createTrip, createBooking, createAddress } = useTrips();
   const { user } = useAuth();
 
@@ -178,6 +178,7 @@ export function useIdeaDetail() {
     idea,
     lang,
     colors,
+    isDark,
     t,
     destinationName,
     destinationCountry,
