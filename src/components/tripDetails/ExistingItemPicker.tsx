@@ -61,12 +61,21 @@ const bookingColor = (type: string): string => {
   }
 };
 
-const addressEmoji = (type: string): string => {
+const addressIconName = (type: string): any => {
   switch (type) {
-    case "hotel":      return "🏨";
-    case "restaurant": return "🍽️";
-    case "activity":   return "🎯";
-    default:           return "📍";
+    case "hotel":      return "bed";
+    case "restaurant": return "restaurant";
+    case "activity":   return "star";
+    default:           return "location";
+  }
+};
+
+const addressColor = (type: string): string => {
+  switch (type) {
+    case "hotel":      return "#6B8C5A";
+    case "restaurant": return "#C4714A";
+    case "activity":   return "#8B70C0";
+    default:           return "#5A8FAA";
   }
 };
 
@@ -192,24 +201,27 @@ export const ExistingAddressPicker: React.FC<AddressPickerProps> = ({
               keyExtractor={(item) => item.id}
               contentContainerStyle={s.list}
               showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[s.item, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => onSelect(item)}
-                  activeOpacity={0.75}
-                >
-                  <View style={[s.iconWrap, { backgroundColor: colors.bgMid }]}>
-                    <Text style={{ fontSize: 20 }}>{addressEmoji(item.type)}</Text>
-                  </View>
-                  <View style={s.info}>
-                    <Text style={[s.itemTitle, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
-                    <Text style={[s.itemSub, { color: colors.textLight }]} numberOfLines={1}>
-                      {[item.city, item.country].filter(Boolean).join(", ")}
-                    </Text>
-                  </View>
-                  <Ionicons name="add-circle" size={24} color={colors.terra} />
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const color = addressColor(item.type);
+                return (
+                  <TouchableOpacity
+                    style={[s.item, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() => onSelect(item)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[s.iconWrap, { backgroundColor: color + "22" }]}>
+                      <Ionicons name={addressIconName(item.type)} size={20} color={color} />
+                    </View>
+                    <View style={s.info}>
+                      <Text style={[s.itemTitle, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
+                      <Text style={[s.itemSub, { color: colors.textLight }]} numberOfLines={1}>
+                        {[item.city, item.country].filter(Boolean).join(", ")}
+                      </Text>
+                    </View>
+                    <Ionicons name="add-circle" size={24} color={color} />
+                  </TouchableOpacity>
+                );
+              }}
             />
           )}
         </TouchableOpacity>
