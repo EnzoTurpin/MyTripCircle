@@ -43,7 +43,7 @@ const TripActionsScreen: React.FC = () => {
   } = route.params;
   const { deleteTrip } = useTrips();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const startDateObj = new Date(startDate);
   const endDateObj = new Date(endDate);
@@ -148,7 +148,7 @@ const TripActionsScreen: React.FC = () => {
           <>
             <View style={[s.menuDivider, { backgroundColor: colors.bg }]} />
             <TouchableOpacity style={s.menuItem} onPress={handleMembers} activeOpacity={0.75}>
-              <View style={[s.menuIcon, { backgroundColor: "#DCF0F5" }]}>
+              <View style={[s.menuIcon, { backgroundColor: isDark ? "#1A2E35" : "#DCF0F5" }]}>
                 <Text style={s.menuEmoji}>👥</Text>
               </View>
               <View style={s.menuInfo}>
@@ -164,7 +164,7 @@ const TripActionsScreen: React.FC = () => {
 
         {/* 🔗 Partager */}
         <TouchableOpacity style={s.menuItem} onPress={handleShare} activeOpacity={0.75}>
-          <View style={[s.menuIcon, { backgroundColor: "#E2EDD9" }]}>
+          <View style={[s.menuIcon, { backgroundColor: isDark ? "#1E2E1A" : "#E2EDD9" }]}>
             <Text style={s.menuEmoji}>🔗</Text>
           </View>
           <View style={s.menuInfo}>

@@ -8,13 +8,13 @@ export const getTypeLabels = (t: (key: string) => string): Record<string, string
   activity:   t("bookings.typeLabels.activity"),
 });
 
-export const TYPE_COLORS: Record<string, { border: string; bg: string; text: string }> = {
-  flight:     { border: "#5A8FAA", bg: "#DCF0F5", text: "#5A8FAA" },
-  hotel:      { border: "#6B8C5A", bg: "#E2EDD9", text: "#6B8C5A" },
-  train:      { border: "#C4714A", bg: "#F5E5DC", text: "#C4714A" },
-  restaurant: { border: "#C4714A", bg: "#F5E5DC", text: "#C4714A" },
-  activity:   { border: "#8B70C0", bg: "#EDE8F5", text: "#8B70C0" },
-};
+export const getTypeColors = (isDark: boolean): Record<string, { border: string; bg: string; text: string }> => ({
+  flight:     { border: "#5A8FAA", bg: isDark ? "#1A2E38" : "#DCF0F5", text: "#5A8FAA" },
+  hotel:      { border: "#6B8C5A", bg: isDark ? "#1E2E1A" : "#E2EDD9", text: "#6B8C5A" },
+  train:      { border: "#C4714A", bg: isDark ? "#3D2418" : "#F5E5DC", text: "#C4714A" },
+  restaurant: { border: "#C4714A", bg: isDark ? "#3D2418" : "#F5E5DC", text: "#C4714A" },
+  activity:   { border: "#8B70C0", bg: isDark ? "#2A1E3A" : "#EDE8F5", text: "#8B70C0" },
+});
 
 export const STATUS_COLORS: Record<string, string> = {
   confirmed: "#6B8C5A",

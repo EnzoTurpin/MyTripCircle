@@ -2,7 +2,7 @@ import React from "react";
 import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Booking } from "../../types";
 import { F } from "../../theme/fonts";
-import { TYPE_COLORS, STATUS_COLORS } from "./bookingFormConstants";
+import { getTypeColors, STATUS_COLORS } from "./bookingFormConstants";
 
 // ─── TypePill ────────────────────────────────────────────────────────────────
 
@@ -11,11 +11,12 @@ interface TypePillProps {
   isSelected: boolean;
   label: string;
   colors: any;
+  isDark: boolean;
   onPress: () => void;
 }
 
-export const TypePill: React.FC<TypePillProps> = ({ type, isSelected, label, colors, onPress }) => {
-  const typeColor = TYPE_COLORS[type];
+export const TypePill: React.FC<TypePillProps> = ({ type, isSelected, label, colors, isDark, onPress }) => {
+  const typeColor = getTypeColors(isDark)[type];
   return (
     <TouchableOpacity
       style={[

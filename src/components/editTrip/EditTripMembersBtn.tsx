@@ -9,11 +9,12 @@ interface EditTripMembersBtnProps {
   border: string;
   text: string;
   textLight: string;
+  iconBg: string;
   onPress: () => void;
 }
 
 const EditTripMembersBtn: React.FC<EditTripMembersBtnProps> = ({
-  surface, border, text, textLight, onPress,
+  surface, border, text, textLight, iconBg, onPress,
 }) => {
   const { t } = useTranslation();
 
@@ -23,7 +24,7 @@ const EditTripMembersBtn: React.FC<EditTripMembersBtnProps> = ({
       onPress={onPress}
       activeOpacity={0.75}
     >
-      <View style={styles.iconWrap}>
+      <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
         <Text style={{ fontSize: 16 }}>👥</Text>
       </View>
       <View style={{ flex: 1 }}>
@@ -49,7 +50,6 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: "#DCF0F5",
     alignItems: "center",
     justifyContent: "center",
   },

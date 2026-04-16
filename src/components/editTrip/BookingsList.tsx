@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Booking } from "../../types";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const BOOKING_ICON: Record<Booking["type"], string> = {
   flight:     "airplane",
@@ -19,7 +20,24 @@ const BOOKING_STRIPE_COLOR: Record<Booking["type"], string> = {
   train:      "#C4714A",
   hotel:      "#6B8C5A",
   restaurant: "#C4714A",
-  activity:   "#C4714A",
+  activity:   "#8B70C0",
+};
+
+const bookingIconBg = (type: Booking["type"], isDark: boolean): string => {
+  if (isDark) {
+    switch (type) {
+      case "flight":     return "#1A2E35";
+      case "hotel":      return "#1E2E1A";
+      case "activity":   return "#251E35";
+      default:           return "#2E1E15";
+    }
+  }
+  switch (type) {
+    case "flight":     return "#DCF0F5";
+    case "hotel":      return "#E2EDD9";
+    case "activity":   return "#EDE8F5";
+    default:           return "#F5E5DC";
+  }
 };
 
 interface Props {
@@ -41,6 +59,7 @@ interface Props {
 
 const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDelete }) => {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   return (
     <>
@@ -68,13 +87,15 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
               key={booking.id || index}
               style={[s.item, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
-              <View style={[s.stripe, { backgroundColor: BOOKING_STRIPE_COLOR[booking.type] ?? colors.terra }]} />
+              <View style={[s.stripe, { backgroundColor: BOOKING_STRIPE_COLOR[booking.type] ?? "#C4714A" }]} />
               <View style={s.content}>
-                <Ionicons
-                  name={(BOOKING_ICON[booking.type] ?? "receipt") as any}
-                  size={18}
-                  color={colors.terra}
-                />
+                <View style={[s.iconWrap, { backgroundColor: bookingIconBg(booking.type, isDark) }]}>
+                  <Ionicons
+                    name={(BOOKING_ICON[booking.type] ?? "receipt") as any}
+                    size={20}
+                    color={BOOKING_STRIPE_COLOR[booking.type] ?? "#C4714A"}
+                  />
+                </View>
                 <View style={s.info}>
                   <Text style={[s.title, { color: colors.text }]}>{booking.title}</Text>
                   <Text style={[s.date, { color: colors.textLight }]}>
@@ -136,7 +157,14 @@ const s = StyleSheet.create({
     overflow: "hidden",
   },
   stripe: { width: 5 },
-  content: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
+  content: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   info: { flex: 1 },
   title: { fontSize: 16, fontFamily: F.sans600 },
   date: { fontSize: 13, fontFamily: F.sans400, marginTop: 3 },

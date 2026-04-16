@@ -23,7 +23,17 @@ const bookingStripeColor = (type: string): string => {
   }
 };
 
-const bookingIconBg = (type: string): string => {
+const bookingIconBg = (type: string, isDark: boolean): string => {
+  if (isDark) {
+    switch (type) {
+      case "flight":      return "#1A2E35";
+      case "hotel":       return "#1E2E1A";
+      case "train":
+      case "restaurant":  return "#2E1E15";
+      case "activity":    return "#251E35";
+      default:            return "#2E1E15";
+    }
+  }
   switch (type) {
     case "flight":      return "#DCF0F5";
     case "hotel":       return "#E2EDD9";
@@ -56,7 +66,7 @@ interface Props {
 const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking }) => {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const canAdd = isOwner || canEdit;
 
@@ -86,7 +96,7 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking
       )}
       {bookings.map((booking: Booking) => {
         const stripe = bookingStripeColor(booking.type);
-        const iconBg = bookingIconBg(booking.type);
+        const iconBg = bookingIconBg(booking.type, isDark);
         const isConfirmed = booking.status === "confirmed";
         return (
           <TouchableOpacity
