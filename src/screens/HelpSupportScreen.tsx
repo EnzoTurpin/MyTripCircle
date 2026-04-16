@@ -20,7 +20,7 @@ import BackButton from "../components/ui/BackButton";
 const HelpSupportScreen: React.FC = () => {
   const [openId, setOpenId] = React.useState<string | null>(null);
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const toggle = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -48,16 +48,16 @@ const HelpSupportScreen: React.FC = () => {
       icon: "people-outline",
       title: t("helpSupport.faq2Question"),
       description: t("helpSupport.faq2Answer"),
-      iconColor: "#6B8C5A",
-      iconBg: "#E2EDD9",
+      iconColor: isDark ? "#8BBF76" : "#6B8C5A",
+      iconBg: isDark ? "#1E2E1A" : "#E2EDD9",
     },
     {
       id: "faq-3",
       icon: "calendar-outline",
       title: t("helpSupport.faq3Question"),
       description: t("helpSupport.faq3Answer"),
-      iconColor: "#5A8FAA",
-      iconBg: "#DCF0F5",
+      iconColor: isDark ? "#76AACC" : "#5A8FAA",
+      iconBg: isDark ? "#162230" : "#DCF0F5",
     },
     {
       id: "faq-4",
@@ -65,7 +65,7 @@ const HelpSupportScreen: React.FC = () => {
       title: t("helpSupport.faq4Question"),
       description: t("helpSupport.faq4Answer"),
       iconColor: colors.textMid,
-      iconBg: colors.bgMid,
+      iconBg: colors.bgDark,
     },
   ];
 
@@ -142,14 +142,14 @@ const HelpSupportScreen: React.FC = () => {
           {/* ── Contact info card ── */}
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.contactRow}>
-              <View style={[styles.contactIconBg, { backgroundColor: colors.bgMid }]}>
+              <View style={[styles.contactIconBg, { backgroundColor: colors.bgDark }]}>
                 <Ionicons name="mail-outline" size={18} color={colors.textMid} />
               </View>
               <Text style={[styles.contactText, { color: colors.textMid }]}>support@mytripcircle.com</Text>
             </View>
             <View style={[styles.rowDivider, { backgroundColor: colors.bgMid }]} />
             <View style={styles.contactRow}>
-              <View style={[styles.contactIconBg, { backgroundColor: colors.bgMid }]}>
+              <View style={[styles.contactIconBg, { backgroundColor: colors.bgDark }]}>
                 <Ionicons name="time-outline" size={18} color={colors.textMid} />
               </View>
               <Text style={[styles.contactText, { color: colors.textMid }]}>{t("helpSupport.availability")}</Text>
