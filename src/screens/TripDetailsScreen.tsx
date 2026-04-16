@@ -16,7 +16,6 @@ import { RootStackParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import BookingForm from "../components/BookingForm";
-import { AddressForm } from "../components/AddressForm";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTripDetails } from "../hooks/useTripDetails";
 import TripHero from "../components/tripDetails/TripHero";
@@ -56,10 +55,6 @@ const TripDetailsScreen: React.FC = () => {
     setActiveTab,
     showBookingForm,
     setShowBookingForm,
-    showAddressForm,
-    setShowAddressForm,
-    editingAddress,
-    setEditingAddress,
     collaboratorUsers,
     showToast,
     setShowToast,
@@ -75,7 +70,6 @@ const TripDetailsScreen: React.FC = () => {
     handleCopyBooking,
     handleCopyAddress,
     handleEditAddress,
-    handleSaveAddress,
     handleValidateTrip,
     otherBookings,
     otherAddresses,
@@ -99,12 +93,8 @@ const TripDetailsScreen: React.FC = () => {
   };
 
   const handleAddAddressPress = () => {
-    if (!otherAddresses.length) {
-      setShowAddressForm(true);
-      return;
-    }
     Alert.alert(t("tripDetails.addAddress"), undefined, [
-      { text: t("tripDetails.createNew"), onPress: () => setShowAddressForm(true) },
+      { text: t("tripDetails.createNew"), onPress: () => navigation.navigate("AddressForm", { tripId }) },
       { text: t("tripDetails.chooseExisting"), onPress: () => setShowAddressPicker(true) },
       { text: t("common.cancel"), style: "cancel" },
     ]);
@@ -246,13 +236,6 @@ const TripDetailsScreen: React.FC = () => {
           preselectedTripId={tripId}
         />
       )}
-
-      <AddressForm
-        visible={showAddressForm}
-        onClose={() => { setShowAddressForm(false); setEditingAddress(undefined); }}
-        onSave={handleSaveAddress}
-        initialAddress={editingAddress}
-      />
 
       <ExistingBookingPicker
         visible={showBookingPicker}

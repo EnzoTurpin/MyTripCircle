@@ -13,15 +13,13 @@ type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 export function useTripData(tripId: string) {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { validateTrip, createBooking, createAddress, updateAddress, bookings: allBookings, addresses: allAddresses } = useTrips();
+  const { validateTrip, createBooking, createAddress, bookings: allBookings, addresses: allAddresses } = useTrips();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<Address | undefined>(undefined);
 
   const loadTripData = async () => {
     try {
@@ -129,13 +127,11 @@ export function useTripData(tripId: string) {
   };
 
   const handleAddAddress = () => {
-    setEditingAddress(undefined);
-    setShowAddressForm(true);
+    navigation.navigate("AddressForm", { tripId });
   };
 
   const handleEditAddress = (address: Address) => {
-    setEditingAddress(address);
-    setShowAddressForm(true);
+    navigation.navigate("AddressForm", { addressId: address.id });
   };
 
   const handleCopyBooking = async (booking: Booking) => {
@@ -155,18 +151,6 @@ export function useTripData(tripId: string) {
       setAddresses((prev) => [...prev, newAddress]);
     } catch (error) {
       Alert.alert(t("common.error"), parseApiError(error));
-    }
-  };
-
-  const handleSaveAddress = async (addressData: Omit<Address, "id" | "createdAt" | "updatedAt">) => {
-    if (editingAddress) {
-      const updated = await updateAddress(editingAddress.id, addressData);
-      if (updated) {
-        setAddresses((prev) => prev.map((a) => (a.id === editingAddress.id ? updated : a)));
-      }
-    } else {
-      const newAddress = await createAddress({ ...addressData, tripId });
-      setAddresses((prev) => [...prev, newAddress]);
     }
   };
 
@@ -217,10 +201,6 @@ export function useTripData(tripId: string) {
     loading,
     showBookingForm,
     setShowBookingForm,
-    showAddressForm,
-    setShowAddressForm,
-    editingAddress,
-    setEditingAddress,
     loadTripData,
     handleAddBooking,
     handleSaveBooking,
@@ -228,7 +208,6 @@ export function useTripData(tripId: string) {
     handleCopyAddress,
     handleAddAddress,
     handleEditAddress,
-    handleSaveAddress,
     handleValidateTrip,
     otherBookings,
     otherAddresses,

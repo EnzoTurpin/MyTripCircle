@@ -48,7 +48,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   } = useAddressFormModal({ visible, initialAddress, onSave, onClose });
 
   return (
-    <Modal visible={visible} animationType="fade" transparent>
+    <Modal visible={visible} animationType="none" transparent>
       <View style={styles.overlay}>
         <Animated.View
           style={[

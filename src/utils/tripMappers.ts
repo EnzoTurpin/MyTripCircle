@@ -97,6 +97,8 @@ export function mapAddress(raw: any): Address {
     website: raw.website,
     notes: raw.notes,
     rating: typeof raw.rating === "number" ? raw.rating : undefined,
+    tripId: raw.tripId,
+    userId: raw.userId,
     createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date(),
   };
