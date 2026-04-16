@@ -246,11 +246,6 @@ const ProfileScreen: React.FC = () => {
             <Text style={[styles.logoutText, { color: colors.danger }]}>{t("profile.logout")}</Text>
           </TouchableOpacity>
 
-          {/* ── Footer ── */}
-          <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: colors.textLight }]}>{t("profile.footerVersion")}</Text>
-            <Text style={[styles.footerSub, { color: colors.textLight }]}>{t("profile.footerMadeWithLove")}</Text>
-          </View>
         </ScrollView>
       </View>
     </SwipeToNavigate>
@@ -377,10 +372,6 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: 17, fontFamily: F.sans500 },
 
-  // Footer
-  footer: { alignItems: "center", paddingVertical: 24, marginTop: 8 },
-  footerText: { fontSize: 12, fontFamily: F.sans400, marginBottom: 2 },
-  footerSub: { fontSize: 11, fontFamily: F.sans400 },
 });
 
 export default ProfileScreen;
