@@ -88,8 +88,8 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
   if (mode === "choose") {
     return (
       <Modal visible={visible} animationType="slide">
-        <SafeAreaView style={[styles.chooseContainer, { backgroundColor: colors.bg }]}>
-          <View style={[styles.chooseHeader, { borderBottomColor: colors.bgMid }]}>
+        <SafeAreaView style={[styles.chooseContainer, { backgroundColor: colors.bg }]} edges={["bottom", "left", "right"]}>
+          <View style={[styles.chooseHeader, { paddingTop: insets.top + 6, backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.bgMid }]}>
               <Ionicons name="close" size={20} color={colors.text} />
             </TouchableOpacity>
@@ -156,11 +156,11 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
     return (
       <Modal visible={visible} animationType="slide">
         <View style={[styles.galleryContainer, { backgroundColor: colors.bg }]}>
-          <SafeAreaView edges={["top"]} style={[styles.galleryHeader, { borderBottomColor: colors.bgMid }]}>
+          <View style={[styles.galleryHeader, { paddingTop: insets.top + 10, borderBottomColor: colors.bgMid }]}>
             <BackButton onPress={() => { reset(); setMode("choose"); }} />
             <Text style={[styles.chooseTitle, { color: colors.text }]}>{t("bookings.scanGalleryOption")}</Text>
             <View style={{ width: 44 }} />
-          </SafeAreaView>
+          </View>
 
           {previewUri && (
             <Image source={{ uri: previewUri }} style={styles.previewImage} resizeMode="contain" />

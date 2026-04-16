@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingBottom: 6,
     borderBottomWidth: 1,
   },
   chooseTitle: {
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingBottom: 10,
     borderBottomWidth: 1,
   },
   previewImage: {

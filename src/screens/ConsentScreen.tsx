@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -106,7 +107,11 @@ export default function ConsentScreen({ onConsentGiven }: Readonly<ConsentScreen
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
       <View style={styles.content}>
 
-        <View style={styles.top}>
+        <ScrollView
+          style={styles.top}
+          contentContainerStyle={styles.topContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.logoRow}>
             <Image
               source={require("../../assets/icon.png")}
@@ -150,7 +155,7 @@ export default function ConsentScreen({ onConsentGiven }: Readonly<ConsentScreen
               onToggle={() => setNotificationsEnabled((v) => !v)}
             />
           </View>
-        </View>
+        </ScrollView>
 
         <View style={styles.bottom}>
           <TouchableOpacity
@@ -203,6 +208,9 @@ const styles = StyleSheet.create({
   top: {
     flex: 1,
   },
+  topContent: {
+    paddingBottom: 12,
+  },
   bottom: {
     paddingTop: 12,
   },
@@ -250,11 +258,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    flexWrap: "wrap",
   },
   itemTitle: {
     fontFamily: F.sans600,
     fontSize: 15,
+    flexShrink: 1,
   },
   badge: {
     paddingHorizontal: 8,
