@@ -12,7 +12,7 @@ const tripManagement = {
     deleteConfirmMsg:   "Toutes les réservations et adresses associées seront supprimées. Cette action est irréversible.",
     deleteError:     "Erreur lors de la suppression",
     shareMessage:    "Rejoins mon voyage \"{{title}}\" sur MyTripCircle ! 🌍\n\nOuvre ce lien pour nous rejoindre :\n{{link}}",
-    statsBookings:   "Résas",
+    statsBookings:   "Réservations",
     statsAddresses:  "Adresses",
     statsBudget:     "Budget",
   },
@@ -58,7 +58,7 @@ const tripManagement = {
     appointOrganizer:   "Nommer organisateur",
     appointOrganizerSub:"Lui transférer la gestion du voyage",
     removeFromTrip:     "Retirer du voyage",
-    removeFromTripSub:  "Il perdra accès aux résas et adresses",
+    removeFromTripSub:  "Il perdra accès aux réservations et adresses",
     shareMsg:           "Rejoins mon voyage sur MyTripCircle ! 🌍\n{{link}}",
   },
 };

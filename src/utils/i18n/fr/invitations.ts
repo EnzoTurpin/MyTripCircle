@@ -69,7 +69,7 @@ const invitations = {
     appointOrganizer:   "Nommer organisateur",
     appointOrganizerSub:"Lui transférer la gestion du voyage",
     removeFromTrip:     "Retirer du voyage",
-    removeFromTripSub:  "Il perdra accès aux résas et adresses",
+    removeFromTripSub:  "Il perdra accès aux réservations et adresses",
     shareMsg:           "Rejoins mon voyage sur MyTripCircle ! 🌍\n\nOuvre ce lien pour nous rejoindre :\n{{link}}",
     inviteSheetTitle:   "Inviter au voyage",
     emailPlaceholder:   "Email de l'invité...",
