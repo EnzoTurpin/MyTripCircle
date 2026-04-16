@@ -46,6 +46,7 @@ export const useAddressForm = () => {
   const currentLocation = useCurrentLocation();
 
   const addressId = route.params?.addressId;
+  const tripId = route.params?.tripId;
 
   const existingAddress = useMemo(() => {
     if (!addressId) return null;
@@ -175,7 +176,7 @@ export const useAddressForm = () => {
         await updateAddress(addressId, payload);
       } else {
         await createAddress(
-          payload as Omit<Address, "id" | "createdAt" | "updatedAt">
+          { ...payload, tripId } as Omit<Address, "id" | "createdAt" | "updatedAt">
         );
       }
       navigation.goBack();

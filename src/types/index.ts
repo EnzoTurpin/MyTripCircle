@@ -190,7 +190,7 @@ export type RootStackParamList = {
   TripDetails: { tripId: string; showValidateButton?: boolean; showToast?: boolean };
   BookingDetails: { bookingId: string; readOnly?: boolean };
   AddressDetails: { addressId: string };
-  AddressForm: { addressId?: string } | undefined;
+  AddressForm: { addressId?: string; tripId?: string } | undefined;
   FullMap: undefined;
   InviteFriends: { tripId: string };
   Invitation: { token?: string };
