@@ -134,6 +134,14 @@
         {
           "locationWhenInUsePermission": "MyTripCircle utilise votre position pour l'afficher sur la carte et suggérer des adresses à proximité."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#C8785A",
+          "sounds": []
+        }
       ]
     ],
     "scheme": "mytripcircle",

@@ -30,4 +30,7 @@ export const userApi = {
     request<{ success: boolean }>("/users/change-password", "PUT", data),
 
   deleteAccount: () => request<{ success: boolean }>("/users/me", "DELETE"),
+
+  registerPushToken: (token: string) =>
+    request<{ success: boolean }>("/users/push-token", "POST", { token, platform: "expo" }),
 };

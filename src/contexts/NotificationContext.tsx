@@ -10,6 +10,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TripInvitation } from "../types";
 import { useTrips } from "./TripsContext";
 import { useAuth } from "./AuthContext";
+import { requestPermissionAndRegisterToken, clearStoredPushToken } from "../hooks/usePushNotifications";
+import { CONSENT_KEY, ConsentPreferences } from "../screens/ConsentScreen";
 
 interface NotificationContextType {
   invitations: TripInvitation[];
@@ -53,13 +55,27 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   useEffect(() => {
     if (user) {
       loadPersistedReadIds().then(() => loadInvitations());
+      refreshPushTokenIfConsented();
     } else {
-      // Reset all state on logout so the next user starts fresh
       setInvitations([]);
       setUnreadCount(0);
       setReadIds(new Set());
+      clearStoredPushToken();
     }
   }, [user]);
+
+  const refreshPushTokenIfConsented = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(CONSENT_KEY);
+      if (!stored) return;
+      const prefs: ConsentPreferences = JSON.parse(stored);
+      if (prefs.notifications) {
+        await requestPermissionAndRegisterToken();
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const loadPersistedReadIds = async () => {
     if (!user) return;

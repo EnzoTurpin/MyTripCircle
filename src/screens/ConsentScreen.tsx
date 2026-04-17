@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { requestPermissionAndRegisterToken } from "../hooks/usePushNotifications";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { F } from "../theme/fonts";
@@ -92,13 +93,17 @@ export default function ConsentScreen({ onConsentGiven }: Readonly<ConsentScreen
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const saveAndContinue = async (acceptAll: boolean) => {
+    const notifConsented = acceptAll ? notificationsEnabled : false;
     const prefs: ConsentPreferences = {
       data: true,
       location: acceptAll ? locationEnabled : false,
-      notifications: acceptAll ? notificationsEnabled : false,
+      notifications: notifConsented,
       acceptedAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(CONSENT_KEY, JSON.stringify(prefs));
+    if (notifConsented) {
+      await requestPermissionAndRegisterToken();
+    }
     onConsentGiven?.();
   };
 
