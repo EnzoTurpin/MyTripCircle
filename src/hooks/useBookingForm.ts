@@ -65,6 +65,8 @@ export function useBookingForm({
       date:               initialDate,
       endDate:            initialEnd,
       time:               initialBooking?.time || "",
+      arrivalDate:        initialBooking?.arrivalDate ? parseDate(initialBooking.arrivalDate, initialDate) : undefined,
+      arrivalTime:        initialBooking?.arrivalTime || "",
       address:            initialBooking?.address || "",
       confirmationNumber: initialBooking?.confirmationNumber || "",
       returnTime:         initialBooking?.returnTime || "",
@@ -78,7 +80,9 @@ export function useBookingForm({
   const [fieldErrors, setFieldErrors] = useState<{ title?: string; endDate?: string; origin?: string; destination?: string }>({});
   const [showDatePicker,         setShowDatePicker]         = useState(false);
   const [showEndDatePicker,      setShowEndDatePicker]      = useState(false);
+  const [showArrivalDatePicker,  setShowArrivalDatePicker]  = useState(false);
   const [showTimePicker,         setShowTimePicker]         = useState(false);
+  const [showArrivalTimePicker,  setShowArrivalTimePicker]  = useState(false);
   const [showReturnTimePicker,   setShowReturnTimePicker]   = useState(false);
   const [showScanner,            setShowScanner]            = useState(false);
 
@@ -93,6 +97,15 @@ export function useBookingForm({
     );
     setFieldErrors({});
   }, [visible, initialBooking]);
+
+  const buildFlightTitle = (direction: string | undefined, origin: string, destination: string): string => {
+    if (!origin.trim() || !destination.trim()) return "";
+    const short = (place: string) => place.split(",")[0].trim();
+    const dirLabel = direction === "return" ? t("bookings.directionLabels.return")
+      : direction === "roundtrip" ? t("bookings.directionLabels.roundtrip")
+      : t("bookings.directionLabels.outbound");
+    return `${t("bookings.flightPrefix")} ${dirLabel}: ${short(origin)} → ${short(destination)}`;
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => {
@@ -110,6 +123,9 @@ export function useBookingForm({
       if (field === "tripDirection") {
         if (!needsEndDate(prev.type, value)) next.endDate = undefined;
         else if (!prev.endDate) next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
+      }
+      if (next.type === "flight" && ["origin", "destination", "tripDirection", "type"].includes(field)) {
+        next.title = buildFlightTitle(next.tripDirection, next.origin ?? "", next.destination ?? "");
       }
       return next;
     });
@@ -159,6 +175,28 @@ export function useBookingForm({
     }
   };
 
+  const handleArrivalDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") setShowArrivalDatePicker(false);
+    if (selectedDate) {
+      const date = selectedDate instanceof Date ? selectedDate : new Date(selectedDate);
+      if (Number.isNaN(date.getTime())) return;
+      setFormData((prev) => ({ ...prev, arrivalDate: date }));
+    } else if (Platform.OS === "ios" && event.type === "dismissed") {
+      setShowArrivalDatePicker(false);
+    }
+  };
+
+  const handleArrivalTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === "android") setShowArrivalTimePicker(false);
+    if (selectedTime) {
+      const hh = selectedTime.getHours().toString().padStart(2, "0");
+      const mm = selectedTime.getMinutes().toString().padStart(2, "0");
+      setFormData((prev) => ({ ...prev, arrivalTime: `${hh}:${mm}` }));
+    } else if (Platform.OS === "ios" && event.type === "dismissed") {
+      setShowArrivalTimePicker(false);
+    }
+  };
+
   const getTimePickerValue = (): Date => {
     const base = new Date(formData.date);
     if (formData.time) {
@@ -174,6 +212,17 @@ export function useBookingForm({
     const base = formData.endDate ? new Date(formData.endDate) : new Date(formData.date);
     if (formData.returnTime) {
       const [h, m] = formData.returnTime.split(":");
+      base.setHours(Number.parseInt(h, 10), Number.parseInt(m, 10), 0, 0);
+      return base;
+    }
+    base.setHours(12, 0, 0, 0);
+    return base;
+  };
+
+  const getArrivalTimePickerValue = (): Date => {
+    const base = formData.arrivalDate ? new Date(formData.arrivalDate) : new Date(formData.date);
+    if (formData.arrivalTime) {
+      const [h, m] = formData.arrivalTime.split(":");
       base.setHours(Number.parseInt(h, 10), Number.parseInt(m, 10), 0, 0);
       return base;
     }
@@ -237,6 +286,8 @@ export function useBookingForm({
       tripDirection:      isTransport(formData.type) ? formData.tripDirection : undefined,
       endDate:            needsEndDate(formData.type, formData.tripDirection) && formData.endDate ? formData.endDate : undefined,
       time:               formData.time || undefined,
+      arrivalDate:        isTransport(formData.type) ? formData.arrivalDate : undefined,
+      arrivalTime:        isTransport(formData.type) ? formData.arrivalTime || undefined : undefined,
       returnTime:         isTransport(formData.type) && formData.tripDirection === "roundtrip" ? formData.returnTime || undefined : undefined,
       origin:             isTransport(formData.type) ? formData.origin.trim() || undefined : undefined,
       destination:        isTransport(formData.type) ? formData.destination.trim() || undefined : undefined,
@@ -253,11 +304,14 @@ export function useBookingForm({
     fieldErrors, setFieldErrors,
     showDatePicker, setShowDatePicker,
     showEndDatePicker, setShowEndDatePicker,
+    showArrivalDatePicker, setShowArrivalDatePicker,
     showTimePicker, setShowTimePicker,
+    showArrivalTimePicker, setShowArrivalTimePicker,
     showReturnTimePicker, setShowReturnTimePicker,
     showScanner, setShowScanner,
-    handleInputChange, handleDateChange, handleTimeChange, handleReturnTimeChange,
-    getTimePickerValue, getReturnTimePickerValue,
+    handleInputChange, handleDateChange,
+    handleTimeChange, handleArrivalDateChange, handleArrivalTimeChange, handleReturnTimeChange,
+    getTimePickerValue, getArrivalTimePickerValue, getReturnTimePickerValue,
     handleScanFill, handleSave,
     // Attachments
     attachments:           attachments.attachments,

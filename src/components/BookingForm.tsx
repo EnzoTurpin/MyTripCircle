@@ -221,17 +221,23 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           {/* ── Titre ── */}
           <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.title ? styles.fieldBoxError : null]}>
             <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.title")} *</Text>
-            <TextInput
-              style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.title ? styles.fieldInputError : null]}
-              value={form.formData.title}
-              onChangeText={(v) => { form.handleInputChange("title", v); if (form.fieldErrors.title) form.setFieldErrors((e) => ({ ...e, title: undefined })); }}
-              placeholder={t("bookings.titlePlaceholder")}
-              placeholderTextColor={colors.textLight}
-            />
+            {form.formData.type === "flight" ? (
+              <Text style={[styles.fieldValue, { color: form.formData.title ? colors.text : colors.textLight }]}>
+                {form.formData.title || t("bookings.flightTitlePlaceholder")}
+              </Text>
+            ) : (
+              <TextInput
+                style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.title ? styles.fieldInputError : null]}
+                value={form.formData.title}
+                onChangeText={(v) => { form.handleInputChange("title", v); if (form.fieldErrors.title) form.setFieldErrors((e) => ({ ...e, title: undefined })); }}
+                placeholder={t("bookings.titlePlaceholder")}
+                placeholderTextColor={colors.textLight}
+              />
+            )}
             {form.fieldErrors.title ? <Text style={styles.inlineError}>{form.fieldErrors.title}</Text> : null}
           </View>
 
-          {/* ── Date + Heure ── */}
+          {/* ── Date + Heure de départ ── */}
           <View style={styles.dateRow}>
             <TouchableOpacity
               style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -240,8 +246,8 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
             >
               <Text style={[styles.fieldLabel, { color: colors.textLight }]}>
                 {needsEndDate(form.formData.type, form.formData.tripDirection)
-                  ? (form.formData.type === "hotel" ? t("bookings.startDate") : t("bookings.directionLabels.outbound"))
-                  : t("bookings.date")}
+                  ? (form.formData.type === "hotel" ? t("bookings.startDate") : t("bookings.departureDate"))
+                  : (isTransport(form.formData.type) ? t("bookings.departureDate") : t("bookings.date"))}
               </Text>
               <Text style={[styles.fieldValue, { color: colors.text }]}>{formatDate(form.formData.date)}</Text>
             </TouchableOpacity>
@@ -250,21 +256,55 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               onPress={() => form.setShowTimePicker(true)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.time")}</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textLight }]}>
+                {isTransport(form.formData.type) ? t("bookings.departureTime") : t("bookings.time")}
+              </Text>
               <Text style={[styles.fieldValue, { color: form.formData.time ? colors.text : colors.textLight }]}>
                 {form.formData.time || "12:00"}
               </Text>
             </TouchableOpacity>
           </View>
 
+          {/* ── Date + Heure d'arrivée (vol / train) ── */}
+          {isTransport(form.formData.type) && (
+            <View style={styles.dateRow}>
+              <TouchableOpacity
+                style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => form.setShowArrivalDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.arrivalDate")}</Text>
+                <Text style={[styles.fieldValue, { color: form.formData.arrivalDate ? colors.text : colors.textLight }]}>
+                  {form.formData.arrivalDate ? formatDate(form.formData.arrivalDate) : "—"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => form.setShowArrivalTimePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.arrivalTime")}</Text>
+                <Text style={[styles.fieldValue, { color: form.formData.arrivalTime ? colors.text : colors.textLight }]}>
+                  {form.formData.arrivalTime || "12:00"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* iOS pickers */}
           {Platform.OS === "ios" && (
             <>
-              <PickerModal visible={form.showDatePicker} title={needsEndDate(form.formData.type, form.formData.tripDirection) ? (form.formData.type === "hotel" ? t("bookings.startDate") : t("bookings.directionLabels.outbound")) : t("bookings.date")} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
+              <PickerModal visible={form.showDatePicker} title={isTransport(form.formData.type) ? t("bookings.departureDate") : (needsEndDate(form.formData.type, form.formData.tripDirection) ? t("bookings.startDate") : t("bookings.date"))} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
                 <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={locale} />
               </PickerModal>
-              <PickerModal visible={form.showTimePicker} title={t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
+              <PickerModal visible={form.showTimePicker} title={isTransport(form.formData.type) ? t("bookings.departureTime") : t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
                 <DateTimePicker value={form.getTimePickerValue()} mode="time" display="spinner" onChange={form.handleTimeChange} textColor={colors.text} />
+              </PickerModal>
+              <PickerModal visible={form.showArrivalDatePicker} title={t("bookings.arrivalDate")} onClose={() => form.setShowArrivalDatePicker(false)} colors={colors} t={t}>
+                <DateTimePicker value={form.formData.arrivalDate ? new Date(form.formData.arrivalDate) : safeDate} mode="date" display="spinner" onChange={form.handleArrivalDateChange} textColor={colors.text} locale={locale} />
+              </PickerModal>
+              <PickerModal visible={form.showArrivalTimePicker} title={t("bookings.arrivalTime")} onClose={() => form.setShowArrivalTimePicker(false)} colors={colors} t={t}>
+                <DateTimePicker value={form.getArrivalTimePickerValue()} mode="time" display="spinner" onChange={form.handleArrivalTimeChange} textColor={colors.text} />
               </PickerModal>
             </>
           )}
@@ -402,6 +442,12 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         )}
         {Platform.OS === "android" && form.showTimePicker && (
           <DateTimePicker value={form.getTimePickerValue()} mode="time" display="default" onChange={form.handleTimeChange} />
+        )}
+        {Platform.OS === "android" && form.showArrivalDatePicker && (
+          <DateTimePicker value={form.formData.arrivalDate ? new Date(form.formData.arrivalDate) : safeDate} mode="date" display="default" onChange={form.handleArrivalDateChange} />
+        )}
+        {Platform.OS === "android" && form.showArrivalTimePicker && (
+          <DateTimePicker value={form.getArrivalTimePickerValue()} mode="time" display="default" onChange={form.handleArrivalTimeChange} />
         )}
         {Platform.OS === "android" && form.showReturnTimePicker && (
           <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="default" onChange={form.handleReturnTimeChange} />
