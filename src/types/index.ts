@@ -57,11 +57,15 @@ export interface Booking {
   _id?: string;
   tripId: string;
   type: "flight" | "train" | "hotel" | "restaurant" | "activity";
+  tripDirection?: "outbound" | "return" | "roundtrip";
+  origin?: string;
+  destination?: string;
   title: string;
   description?: string;
   date: Date;
-  endDate?: Date; // Date de fin (pour les hôtels par exemple)
+  endDate?: Date; // Date de fin (hôtels et vols/trains aller-retour)
   time?: string;
+  returnTime?: string;
   address?: string;
   confirmationNumber?: string;
   price?: number;
