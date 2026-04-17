@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -18,18 +18,20 @@ import { useFriendProfileActions } from "../hooks/useFriendProfileActions";
 import TripSection from "../components/friendProfile/TripSection";
 import ProfileSkeleton from "../components/friendProfile/ProfileSkeleton";
 import ProfileActions from "../components/friendProfile/ProfileActions";
+import ReportSheet from "../components/moderation/ReportSheet";
 
 const FriendProfileScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { colors }  = useTheme();
   const insets      = useSafeAreaInsets();
   const locale      = i18n.language === "fr" ? "fr-FR" : "en-US";
+  const [reportSheetVisible, setReportSheetVisible] = useState(false);
 
   const {
     profile, loading, sending,
     name, initials, avatarColor, isFriend,
     friendName,
-    handleRemove, handleAddFriend,
+    handleRemove, handleAddFriend, handleReport, handleBlock,
     goToTrip, navigateInvite, goBack,
   } = useFriendProfileActions();
 
@@ -103,6 +105,8 @@ const FriendProfileScreen: React.FC = () => {
                   onInvite={navigateInvite}
                   onRemove={handleRemove}
                   onAddFriend={handleAddFriend}
+                  onReport={() => setReportSheetVisible(true)}
+                  onBlock={handleBlock}
                 />
               </>
             );
@@ -186,12 +190,24 @@ const FriendProfileScreen: React.FC = () => {
                   onInvite={navigateInvite}
                   onRemove={handleRemove}
                   onAddFriend={handleAddFriend}
+                  onReport={() => setReportSheetVisible(true)}
+                  onBlock={handleBlock}
                 />
               </>
             );
           })()}
         </View>
       </ScrollView>
+
+      <ReportSheet
+        visible={reportSheetVisible}
+        targetType="user"
+        onClose={() => setReportSheetVisible(false)}
+        onSubmit={async (reason) => {
+          setReportSheetVisible(false);
+          await handleReport(reason);
+        }}
+      />
     </View>
   );
 };

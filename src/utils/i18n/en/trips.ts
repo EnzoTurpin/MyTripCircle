@@ -103,6 +103,9 @@ const trips = {
     declineError:      "Unable to decline this invitation.",
     unexpectedError:   "An unexpected error occurred.",
     currencyFallback:  "€",
+    reportTrip:        "Report this trip",
+    reportedSuccess:   "Report sent. Thank you for helping keep the community safe.",
+    reportError:       "Unable to send the report.",
   },
   createTrip: {
     title: "Create Trip",

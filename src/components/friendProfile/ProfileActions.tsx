@@ -13,11 +13,13 @@ interface ProfileActionsProps {
   onInvite: () => void;
   onRemove: () => void;
   onAddFriend: () => void;
+  onReport: () => void;
+  onBlock: () => void;
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({
   isFriend, sending, dangerBg, dangerColor,
-  onInvite, onRemove, onAddFriend,
+  onInvite, onRemove, onAddFriend, onReport, onBlock,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -31,7 +33,15 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
             <Text style={styles.inviteBtnText}>{t("friendProfile.inviteToTrip")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.removeBtn, { backgroundColor: dangerBg }]}
+            style={[styles.iconBtn, { backgroundColor: colors.bgMid }]}
+            onPress={onReport}
+            activeOpacity={0.8}
+            accessibilityLabel={t("friendProfile.reportUser")}
+          >
+            <Ionicons name="flag-outline" size={18} color={colors.textLight} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: dangerBg }]}
             onPress={onRemove}
             activeOpacity={0.8}
           >
@@ -39,18 +49,36 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
           </TouchableOpacity>
         </>
       ) : (
-        <TouchableOpacity
-          style={[styles.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, sending && { opacity: 0.6 }]}
-          activeOpacity={0.85}
-          onPress={onAddFriend}
-          disabled={sending}
-        >
-          {sending
-            ? <ActivityIndicator size="small" color="#FFFFFF" />
-            : <Ionicons name="person-add" size={16} color="#FFFFFF" />
-          }
-          <Text style={styles.inviteBtnText}>{t("friendProfile.addFriend")}</Text>
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity
+            style={[styles.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, sending && { opacity: 0.6 }]}
+            activeOpacity={0.85}
+            onPress={onAddFriend}
+            disabled={sending}
+          >
+            {sending
+              ? <ActivityIndicator size="small" color="#FFFFFF" />
+              : <Ionicons name="person-add" size={16} color="#FFFFFF" />
+            }
+            <Text style={styles.inviteBtnText}>{t("friendProfile.addFriend")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.bgMid }]}
+            onPress={onReport}
+            activeOpacity={0.8}
+            accessibilityLabel={t("friendProfile.reportUser")}
+          >
+            <Ionicons name="flag-outline" size={18} color={colors.textLight} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: dangerBg }]}
+            onPress={onBlock}
+            activeOpacity={0.8}
+            accessibilityLabel={t("friendProfile.blockUser")}
+          >
+            <Ionicons name="ban-outline" size={18} color={dangerColor} />
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
@@ -77,7 +105,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   inviteBtnText: { fontSize: 14, fontFamily: F.sans600, color: "#FFFFFF" },
-  removeBtn: {
+  iconBtn: {
     width: 48,
     height: 48,
     borderRadius: 12,
