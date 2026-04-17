@@ -103,6 +103,9 @@ const trips = {
     declineError:      "Impossible de refuser cette invitation.",
     unexpectedError:   "Une erreur est survenue.",
     currencyFallback:  "€",
+    reportTrip:        "Signaler ce voyage",
+    reportedSuccess:   "Signalement envoyé. Merci de contribuer à la sécurité de la communauté.",
+    reportError:       "Impossible d'envoyer le signalement.",
   },
   createTrip: {
     title: "Créer un voyage",

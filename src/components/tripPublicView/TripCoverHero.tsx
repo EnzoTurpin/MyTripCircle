@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, StyleProp, ViewStyle } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, StyleProp, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../ui/BackButton";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,6 +23,7 @@ interface Props {
   statusBg: string;
   insetTop: number;
   onBack: () => void;
+  onReport?: () => void;
 }
 
 const fmtDate = (d: string | Date) =>
@@ -32,7 +33,7 @@ const fmtDateShort = (d: string | Date) =>
   formatDate(d, { day: "numeric", month: "short" });
 
 const TripCoverHero: React.FC<Props> = ({
-  trip, statusLabel, statusColor, statusBg, insetTop, onBack,
+  trip, statusLabel, statusColor, statusBg, insetTop, onBack, onReport,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -60,9 +61,21 @@ const TripCoverHero: React.FC<Props> = ({
         style={[styles.backBtn, { top: insetTop + 10 }]}
       />
 
-      <View style={[styles.readOnlyBadge, { top: insetTop + 10 }]}>
-        <Ionicons name="eye-outline" size={13} color="#FFFFFF" />
-        <Text style={styles.readOnlyText}>{t("tripPublicView.readOnly")}</Text>
+      <View style={[styles.topRight, { top: insetTop + 10 }]}>
+        <View style={styles.readOnlyBadge}>
+          <Ionicons name="eye-outline" size={13} color="#FFFFFF" />
+          <Text style={styles.readOnlyText}>{t("tripPublicView.readOnly")}</Text>
+        </View>
+        {onReport && (
+          <TouchableOpacity
+            onPress={onReport}
+            style={styles.reportBtn}
+            activeOpacity={0.8}
+            accessibilityLabel={t("tripPublicView.reportTrip")}
+          >
+            <Ionicons name="flag-outline" size={15} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.coverBottom}>
@@ -97,9 +110,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 16,
   },
-  readOnlyBadge: {
+  topRight: {
     position: "absolute",
     right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  readOnlyBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
@@ -109,6 +127,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 6,
+  },
+  reportBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   readOnlyText: { fontSize: 12, fontFamily: F.sans600, color: "#FFFFFF" },
   coverBottom: { padding: 18, gap: 5 },

@@ -22,6 +22,8 @@ import TripCoverHero from "../components/tripPublicView/TripCoverHero";
 import TripContentTabs from "../components/tripPublicView/TripContentTabs";
 import InvitationCtaBar from "../components/tripPublicView/InvitationCtaBar";
 import BackButton from "../components/ui/BackButton";
+import ReportSheet from "../components/moderation/ReportSheet";
+import { moderationApi } from "../services/api/moderationApi";
 
 const tripDays = (start: string | Date, end: string | Date) =>
   Math.max(1, Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
@@ -45,6 +47,7 @@ const TripPublicViewScreen: React.FC = () => {
   const [invitationStatus, setInvitationStatus] = useState<"pending" | "accepted" | "declined" | null>(
     invitationToken ? "pending" : null
   );
+  const [reportSheetVisible, setReportSheetVisible] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -161,6 +164,7 @@ const TripPublicViewScreen: React.FC = () => {
           statusBg={statusBg}
           insetTop={insets.top}
           onBack={() => navigation.goBack()}
+          onReport={trip.ownerId !== user?.id ? () => setReportSheetVisible(true) : undefined}
         />
 
         {/* Stats */}
@@ -202,6 +206,21 @@ const TripPublicViewScreen: React.FC = () => {
           insetBottom={insets.bottom}
         />
       )}
+
+      <ReportSheet
+        visible={reportSheetVisible}
+        targetType="trip"
+        onClose={() => setReportSheetVisible(false)}
+        onSubmit={async (reason) => {
+          setReportSheetVisible(false);
+          try {
+            await moderationApi.reportTrip(tripId, reason);
+            Alert.alert(t("common.ok"), t("tripPublicView.reportedSuccess"));
+          } catch {
+            Alert.alert(t("common.error"), t("tripPublicView.reportError"));
+          }
+        }}
+      />
     </View>
   );
 };

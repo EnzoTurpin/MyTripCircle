@@ -6,6 +6,7 @@ import { ApiService } from "../services/ApiService";
 import { useFriends } from "../contexts/FriendsContext";
 import { parseApiError } from "../utils/i18n";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
+import { moderationApi, ReportReason } from "../services/api/moderationApi";
 
 export function useFriendProfileActions() {
   const navigation = useNavigation<any>();
@@ -67,6 +68,40 @@ export function useFriendProfileActions() {
     }
   };
 
+  const handleReport = async (reason: ReportReason) => {
+    try {
+      await moderationApi.reportUser(friendId, reason);
+      Alert.alert(t("friends.success"), t("friendProfile.reportedSuccess"));
+    } catch {
+      Alert.alert(t("common.error"), t("friendProfile.reportError"));
+    }
+  };
+
+  const handleBlock = () => {
+    const name = profile?.name || friendName;
+    Alert.alert(
+      t("friendProfile.blockConfirmTitle", { name }),
+      t("friendProfile.blockConfirmMsg"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("friendProfile.blockConfirmAction"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await moderationApi.blockUser(friendId);
+              Alert.alert(t("friends.success"), t("friendProfile.blockedSuccess", { name }), [
+                { text: t("common.ok"), onPress: () => navigation.goBack() },
+              ]);
+            } catch {
+              Alert.alert(t("common.error"), t("friendProfile.blockError"));
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const name        = profile?.name || friendName;
   const initials    = getInitials(name);
   const avatarColor = getAvatarColor(name);
@@ -76,7 +111,7 @@ export function useFriendProfileActions() {
     profile, loading, sending,
     name, initials, avatarColor, isFriend,
     friendId, friendName,
-    handleRemove, handleAddFriend,
+    handleRemove, handleAddFriend, handleReport, handleBlock,
     goToTrip: (tripId: string) => navigation.navigate("TripPublicView", { tripId }),
     navigateInvite: () => navigation.navigate("InviteFriends", { preselectedFriend: friendId }),
     goBack: () => navigation.goBack(),
