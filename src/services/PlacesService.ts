@@ -29,10 +29,12 @@ export interface TextSearchResult {
 export const hasGooglePlacesApiKey = true;
 
 const PLACE_TYPE_MAP: Record<string, string> = {
-  hotel:      "lodging",
-  restaurant: "restaurant",
-  transport:  "transit_station",
-  activity:   "tourist_attraction",
+  hotel:         "lodging",
+  restaurant:    "restaurant",
+  transport:     "transit_station",
+  activity:      "tourist_attraction",
+  airport:       "airport",
+  train_station: "train_station",
 };
 
 const extractComponent = (type: string, components: any[] = []): string | undefined => {

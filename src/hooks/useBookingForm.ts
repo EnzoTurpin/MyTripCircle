@@ -6,6 +6,7 @@ import { type AddressSuggestion } from "../services/PlacesService";
 import { type ScannedBookingData } from "../components/TicketScannerModal";
 import useAttachmentManager from "./useAttachmentManager";
 import useAddressAutocomplete from "./useAddressAutocomplete";
+import useTransportAutocomplete from "./useTransportAutocomplete";
 
 export type { Attachment } from "./useAttachmentManager";
 
@@ -28,7 +29,10 @@ const parseDate = (date: Date | string | undefined, fallback: Date): Date => {
   return Number.isNaN(parsed.getTime()) ? fallback : parsed;
 };
 
-export const needsEndDate = (type: Booking["type"]): boolean => type === "hotel";
+export const isTransport = (type: Booking["type"]): boolean => type === "flight" || type === "train";
+
+export const needsEndDate = (type: Booking["type"], direction?: string): boolean =>
+  type === "hotel" || (isTransport(type) && direction === "roundtrip");
 
 export function useBookingForm({
   visible,
@@ -41,8 +45,9 @@ export function useBookingForm({
 }: Props) {
   const { t } = useTranslation();
 
-  const attachments = useAttachmentManager(t);
-  const addressAC   = useAddressAutocomplete();
+  const attachments  = useAttachmentManager(t);
+  const addressAC    = useAddressAutocomplete();
+  const transportAC  = useTransportAutocomplete();
 
   const buildInitialFormData = () => {
     const now = new Date();
@@ -51,8 +56,10 @@ export function useBookingForm({
     const initialEnd = (initialBooking as any)?.endDate
       ? parseDate((initialBooking as any).endDate, new Date(initialDate.getTime() + ONE_DAY_MS))
       : new Date(initialDate.getTime() + ONE_DAY_MS);
+    const initialType = initialBooking?.type ?? "flight";
     return {
-      type:               initialBooking?.type ?? "flight",
+      type:               initialType,
+      tripDirection:      isTransport(initialType) ? (initialBooking?.tripDirection ?? "outbound") : undefined,
       title:              initialBooking?.title || "",
       description:        initialBooking?.description || "",
       date:               initialDate,
@@ -60,16 +67,20 @@ export function useBookingForm({
       time:               initialBooking?.time || "",
       address:            initialBooking?.address || "",
       confirmationNumber: initialBooking?.confirmationNumber || "",
+      returnTime:         initialBooking?.returnTime || "",
+      origin:             initialBooking?.origin || "",
+      destination:        initialBooking?.destination || "",
       status:             initialBooking?.status ?? "pending",
     };
   };
 
   const [formData, setFormData] = useState(buildInitialFormData);
-  const [fieldErrors, setFieldErrors] = useState<{ title?: string; endDate?: string }>({});
-  const [showDatePicker,    setShowDatePicker]    = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [showTimePicker,    setShowTimePicker]    = useState(false);
-  const [showScanner,       setShowScanner]       = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string; endDate?: string; origin?: string; destination?: string }>({});
+  const [showDatePicker,         setShowDatePicker]         = useState(false);
+  const [showEndDatePicker,      setShowEndDatePicker]      = useState(false);
+  const [showTimePicker,         setShowTimePicker]         = useState(false);
+  const [showReturnTimePicker,   setShowReturnTimePicker]   = useState(false);
+  const [showScanner,            setShowScanner]            = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -87,7 +98,17 @@ export function useBookingForm({
     setFormData((prev) => {
       const next: any = { ...prev, [field]: value };
       if (field === "type") {
-        if (!needsEndDate(value as Booking["type"])) next.endDate = undefined;
+        const newType = value as Booking["type"];
+        if (isTransport(newType)) {
+          if (!next.tripDirection) next.tripDirection = "outbound";
+        } else {
+          next.tripDirection = undefined;
+        }
+        if (!needsEndDate(newType, next.tripDirection)) next.endDate = undefined;
+        else if (!prev.endDate) next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
+      }
+      if (field === "tripDirection") {
+        if (!needsEndDate(prev.type, value)) next.endDate = undefined;
         else if (!prev.endDate) next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
       }
       return next;
@@ -127,6 +148,17 @@ export function useBookingForm({
     }
   };
 
+  const handleReturnTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === "android") setShowReturnTimePicker(false);
+    if (selectedTime) {
+      const hh = selectedTime.getHours().toString().padStart(2, "0");
+      const mm = selectedTime.getMinutes().toString().padStart(2, "0");
+      setFormData((prev) => ({ ...prev, returnTime: `${hh}:${mm}` }));
+    } else if (Platform.OS === "ios" && event.type === "dismissed") {
+      setShowReturnTimePicker(false);
+    }
+  };
+
   const getTimePickerValue = (): Date => {
     const base = new Date(formData.date);
     if (formData.time) {
@@ -138,10 +170,25 @@ export function useBookingForm({
     return base;
   };
 
+  const getReturnTimePickerValue = (): Date => {
+    const base = formData.endDate ? new Date(formData.endDate) : new Date(formData.date);
+    if (formData.returnTime) {
+      const [h, m] = formData.returnTime.split(":");
+      base.setHours(Number.parseInt(h, 10), Number.parseInt(m, 10), 0, 0);
+      return base;
+    }
+    base.setHours(12, 0, 0, 0);
+    return base;
+  };
+
   const validateForm = (): boolean => {
     const errors: typeof fieldErrors = {};
     if (!formData.title.trim()) errors.title = t("bookings.titleRequired");
-    if (needsEndDate(formData.type) && formData.endDate && formData.endDate < formData.date)
+    if (isTransport(formData.type)) {
+      if (!formData.origin.trim()) errors.origin = t("bookings.originRequired");
+      if (!formData.destination.trim()) errors.destination = t("bookings.destinationRequired");
+    }
+    if (needsEndDate(formData.type, formData.tripDirection) && formData.endDate && formData.endDate < formData.date)
       errors.endDate = t("bookings.endDateBeforeStart");
     if (Object.keys(errors).length > 0) { setFieldErrors(errors); return false; }
     setFieldErrors({});
@@ -167,6 +214,18 @@ export function useBookingForm({
   const handleSelectAddress = (suggestion: AddressSuggestion) =>
     addressAC.handleSelectAddress(suggestion, (desc) => handleInputChange("address", desc));
 
+  const handleOriginChange = (text: string) =>
+    transportAC.handleOriginChange(text, (v) => handleInputChange("origin", v), formData.type as "flight" | "train");
+
+  const handleDestinationChange = (text: string) =>
+    transportAC.handleDestinationChange(text, (v) => handleInputChange("destination", v), formData.type as "flight" | "train");
+
+  const handleSelectOrigin = (suggestion: AddressSuggestion) =>
+    transportAC.handleSelectOrigin(suggestion, (desc) => handleInputChange("origin", desc));
+
+  const handleSelectDestination = (suggestion: AddressSuggestion) =>
+    transportAC.handleSelectDestination(suggestion, (desc) => handleInputChange("destination", desc));
+
   const handleSave = () => {
     if (!validateForm()) return;
     onSave({
@@ -175,8 +234,12 @@ export function useBookingForm({
       title:              formData.title.trim(),
       description:        formData.description.trim() || undefined,
       date:               formData.date,
-      endDate:            needsEndDate(formData.type) && formData.endDate ? formData.endDate : undefined,
+      tripDirection:      isTransport(formData.type) ? formData.tripDirection : undefined,
+      endDate:            needsEndDate(formData.type, formData.tripDirection) && formData.endDate ? formData.endDate : undefined,
       time:               formData.time || undefined,
+      returnTime:         isTransport(formData.type) && formData.tripDirection === "roundtrip" ? formData.returnTime || undefined : undefined,
+      origin:             isTransport(formData.type) ? formData.origin.trim() || undefined : undefined,
+      destination:        isTransport(formData.type) ? formData.destination.trim() || undefined : undefined,
       address:            formData.address.trim() || undefined,
       confirmationNumber: formData.confirmationNumber.trim() || undefined,
       status:             formData.status,
@@ -191,8 +254,10 @@ export function useBookingForm({
     showDatePicker, setShowDatePicker,
     showEndDatePicker, setShowEndDatePicker,
     showTimePicker, setShowTimePicker,
+    showReturnTimePicker, setShowReturnTimePicker,
     showScanner, setShowScanner,
-    handleInputChange, handleDateChange, handleTimeChange, getTimePickerValue,
+    handleInputChange, handleDateChange, handleTimeChange, handleReturnTimeChange,
+    getTimePickerValue, getReturnTimePickerValue,
     handleScanFill, handleSave,
     // Attachments
     attachments:           attachments.attachments,
@@ -210,5 +275,14 @@ export function useBookingForm({
     showAddressSuggestions: addressAC.showAddressSuggestions,
     handleAddressChange,
     handleSelectAddress,
+    // Transport origin/destination
+    originSuggestions:          transportAC.originSuggestions,
+    showOriginSuggestions:      transportAC.showOriginSuggestions,
+    destinationSuggestions:     transportAC.destinationSuggestions,
+    showDestinationSuggestions: transportAC.showDestinationSuggestions,
+    handleOriginChange,
+    handleDestinationChange,
+    handleSelectOrigin,
+    handleSelectDestination,
   };
 }

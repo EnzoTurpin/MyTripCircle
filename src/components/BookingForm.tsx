@@ -24,7 +24,7 @@ import i18n from "i18next";
 import { F } from "../theme/fonts";
 import { RADIUS, SHADOW } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
-import { useBookingForm, needsEndDate } from "../hooks/useBookingForm";
+import { useBookingForm, needsEndDate, isTransport } from "../hooks/useBookingForm";
 import PickerModal from "./bookingForm/PickerModal";
 import BackButton from "./ui/BackButton";
 import AttachmentThumb from "./bookingForm/AttachmentThumb";
@@ -128,6 +128,96 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
             </View>
           </View>
 
+          {/* ── Direction (vol / train) ── */}
+          {isTransport(form.formData.type) && (
+            <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.direction")}</Text>
+              <View style={styles.statusRow}>
+                {(["outbound", "return", "roundtrip"] as const).map((dir) => (
+                  <TouchableOpacity
+                    key={dir}
+                    style={[
+                      styles.directionPill,
+                      { borderColor: colors.border, backgroundColor: colors.bgMid },
+                      form.formData.tripDirection === dir && { backgroundColor: colors.terra, borderColor: colors.terra },
+                    ]}
+                    onPress={() => form.handleInputChange("tripDirection", dir)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.directionPillText, { color: colors.textMid }, form.formData.tripDirection === dir && { color: "#FFFFFF" }]}>
+                      {t(`bookings.directionLabels.${dir}`)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── Origine / Destination (vol / train) ── */}
+          {isTransport(form.formData.type) && (
+            <>
+              <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.origin ? styles.fieldBoxError : null]}>
+                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.origin")} *</Text>
+                <TextInput
+                  style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.origin ? styles.fieldInputError : null]}
+                  value={form.formData.origin}
+                  onChangeText={(v) => { form.handleOriginChange(v); if (form.fieldErrors.origin) form.setFieldErrors((e) => ({ ...e, origin: undefined })); }}
+                  placeholder={t("bookings.originPlaceholder")}
+                  placeholderTextColor={colors.textLight}
+                />
+                {form.fieldErrors.origin ? <Text style={styles.inlineError}>{form.fieldErrors.origin}</Text> : null}
+                {form.showOriginSuggestions && form.originSuggestions.length > 0 && (
+                  <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <FlatList
+                      data={form.originSuggestions}
+                      keyExtractor={(item) => item.placeId}
+                      scrollEnabled={false}
+                      style={styles.suggestionsList}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectOrigin(item)}>
+                          <Ionicons name={form.formData.type === "flight" ? "airplane-outline" : "train-outline"} size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                          <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
+                        </TouchableOpacity>
+                      )}
+                    />
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.transportArrowRow}>
+                <Ionicons name="arrow-down" size={18} color={colors.textLight} />
+              </View>
+
+              <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.destination ? styles.fieldBoxError : null]}>
+                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.destination")} *</Text>
+                <TextInput
+                  style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.destination ? styles.fieldInputError : null]}
+                  value={form.formData.destination}
+                  onChangeText={(v) => { form.handleDestinationChange(v); if (form.fieldErrors.destination) form.setFieldErrors((e) => ({ ...e, destination: undefined })); }}
+                  placeholder={t("bookings.destinationPlaceholder")}
+                  placeholderTextColor={colors.textLight}
+                />
+                {form.fieldErrors.destination ? <Text style={styles.inlineError}>{form.fieldErrors.destination}</Text> : null}
+                {form.showDestinationSuggestions && form.destinationSuggestions.length > 0 && (
+                  <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <FlatList
+                      data={form.destinationSuggestions}
+                      keyExtractor={(item) => item.placeId}
+                      scrollEnabled={false}
+                      style={styles.suggestionsList}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectDestination(item)}>
+                          <Ionicons name={form.formData.type === "flight" ? "airplane-outline" : "train-outline"} size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                          <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
+                        </TouchableOpacity>
+                      )}
+                    />
+                  </View>
+                )}
+              </View>
+            </>
+          )}
+
           {/* ── Titre ── */}
           <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.title ? styles.fieldBoxError : null]}>
             <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.title")} *</Text>
@@ -149,7 +239,9 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               activeOpacity={0.7}
             >
               <Text style={[styles.fieldLabel, { color: colors.textLight }]}>
-                {needsEndDate(form.formData.type) ? t("bookings.startDate") : t("bookings.date")}
+                {needsEndDate(form.formData.type, form.formData.tripDirection)
+                  ? (form.formData.type === "hotel" ? t("bookings.startDate") : t("bookings.directionLabels.outbound"))
+                  : t("bookings.date")}
               </Text>
               <Text style={[styles.fieldValue, { color: colors.text }]}>{formatDate(form.formData.date)}</Text>
             </TouchableOpacity>
@@ -168,7 +260,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           {/* iOS pickers */}
           {Platform.OS === "ios" && (
             <>
-              <PickerModal visible={form.showDatePicker} title={needsEndDate(form.formData.type) ? t("bookings.startDate") : t("bookings.date")} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
+              <PickerModal visible={form.showDatePicker} title={needsEndDate(form.formData.type, form.formData.tripDirection) ? (form.formData.type === "hotel" ? t("bookings.startDate") : t("bookings.directionLabels.outbound")) : t("bookings.date")} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
                 <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={locale} />
               </PickerModal>
               <PickerModal visible={form.showTimePicker} title={t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
@@ -178,7 +270,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           )}
 
           {/* ── Date de fin (hôtel) ── */}
-          {needsEndDate(form.formData.type) && (
+          {needsEndDate(form.formData.type, form.formData.tripDirection) && form.formData.type === "hotel" && (
             <TouchableOpacity
               style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.endDate ? styles.fieldBoxError : null]}
               onPress={() => form.setShowEndDatePicker(true)}
@@ -189,10 +281,41 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               {form.fieldErrors.endDate ? <Text style={styles.inlineError}>{form.fieldErrors.endDate}</Text> : null}
             </TouchableOpacity>
           )}
+
+          {/* ── Date + Heure de retour (aller-retour vol/train) ── */}
+          {needsEndDate(form.formData.type, form.formData.tripDirection) && isTransport(form.formData.type) && (
+            <View style={styles.dateRow}>
+              <TouchableOpacity
+                style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.endDate ? styles.fieldBoxError : null]}
+                onPress={() => form.setShowEndDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.directionLabels.return")} *</Text>
+                <Text style={[styles.fieldValue, { color: colors.text }]}>{formatDate(form.formData.endDate || new Date())}</Text>
+                {form.fieldErrors.endDate ? <Text style={styles.inlineError}>{form.fieldErrors.endDate}</Text> : null}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.fieldBox, styles.dateRowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => form.setShowReturnTimePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.time")}</Text>
+                <Text style={[styles.fieldValue, { color: form.formData.returnTime ? colors.text : colors.textLight }]}>
+                  {form.formData.returnTime || "12:00"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {Platform.OS === "ios" && (
-            <PickerModal visible={form.showEndDatePicker} title={t("bookings.endDate")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
-              <DateTimePicker value={safeEndDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={locale} />
-            </PickerModal>
+            <>
+              <PickerModal visible={form.showEndDatePicker} title={form.formData.type === "hotel" ? t("bookings.endDate") : t("bookings.directionLabels.return")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
+                <DateTimePicker value={safeEndDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={locale} />
+              </PickerModal>
+              <PickerModal visible={form.showReturnTimePicker} title={t("bookings.returnTime")} onClose={() => form.setShowReturnTimePicker(false)} colors={colors} t={t}>
+                <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="spinner" onChange={form.handleReturnTimeChange} textColor={colors.text} />
+              </PickerModal>
+            </>
           )}
 
           {/* ── Adresse ── */}
@@ -280,6 +403,9 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         {Platform.OS === "android" && form.showTimePicker && (
           <DateTimePicker value={form.getTimePickerValue()} mode="time" display="default" onChange={form.handleTimeChange} />
         )}
+        {Platform.OS === "android" && form.showReturnTimePicker && (
+          <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="default" onChange={form.handleReturnTimeChange} />
+        )}
 
         {/* Scanner */}
         <TicketScannerModal visible={form.showScanner} onClose={() => form.setShowScanner(false)} onFill={form.handleScanFill} />
@@ -356,6 +482,15 @@ const styles = StyleSheet.create({
   dateRow: { flexDirection: "row", marginHorizontal: 20, marginBottom: 0, gap: 10 },
   dateRowItem: { flex: 1, marginHorizontal: 0, marginBottom: 10 },
   statusRow: { flexDirection: "row", gap: 8, marginTop: 4 },
+  transportArrowRow: {
+    alignItems: "center", marginTop: -4, marginBottom: 8,
+  },
+  directionPill: {
+    flex: 1, paddingVertical: 9, paddingHorizontal: 4,
+    borderRadius: RADIUS.button, borderWidth: 1.5,
+    alignItems: "center", justifyContent: "center",
+  },
+  directionPillText: { fontSize: 14, fontFamily: F.sans600 },
   attachmentSection: { marginHorizontal: 20, marginBottom: 10 },
   attachmentDashedBox: {
     borderRadius: 16, borderWidth: 1.5, borderStyle: "dashed",
