@@ -103,8 +103,6 @@ const bookings = {
     },
     departureDate: "Date de départ",
     departureTime: "Heure de départ",
-    arrivalDate: "Date d'arrivée",
-    arrivalTime: "Heure d'arrivée",
     returnTime: "Heure de retour",
     origin: "Départ",
     originPlaceholder: "Ville ou aéroport",
