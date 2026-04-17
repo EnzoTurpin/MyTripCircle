@@ -65,6 +65,8 @@ export interface Booking {
   date: Date;
   endDate?: Date; // Date de fin (hôtels et vols/trains aller-retour)
   time?: string;
+  arrivalDate?: Date;
+  arrivalTime?: string;
   returnTime?: string;
   address?: string;
   confirmationNumber?: string;
