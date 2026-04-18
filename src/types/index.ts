@@ -167,7 +167,6 @@ export interface SubscriptionFeatures {
   maxTrips: number;
   maxCollaborators: number;
   canExport: boolean;
-  hasAds: boolean;
   prioritySupport: boolean;
   maxAttachments: number;
 }
