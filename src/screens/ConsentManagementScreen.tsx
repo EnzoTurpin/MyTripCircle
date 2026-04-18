@@ -46,12 +46,9 @@ const ConsentManagementScreen: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      let effectiveLocation = locationEnabled;
-
       if (locationEnabled) {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          effectiveLocation = false;
           setLocationEnabled(false);
           Alert.alert(
             t("consentManagement.locationDeniedTitle"),
@@ -68,7 +65,7 @@ const ConsentManagementScreen: React.FC = () => {
 
       const prefs: ConsentPreferences = {
         data: true,
-        location: effectiveLocation,
+        location: locationEnabled,
         notifications: notificationsEnabled,
         acceptedAt: new Date().toISOString(),
       };
@@ -77,7 +74,7 @@ const ConsentManagementScreen: React.FC = () => {
 
       const payload: ConsentPayload = {
         data: true,
-        location: effectiveLocation,
+        location: locationEnabled,
         notifications: notificationsEnabled,
       };
       await userApi.updateConsent(payload);

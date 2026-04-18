@@ -56,6 +56,63 @@ const CalendarExportScreen: React.FC = () => {
     }
   };
 
+  const renderUrlSection = () => {
+    if (loading) {
+      return (
+        <Text style={[styles.placeholder, { color: colors.textLight }]}>
+          {t("common.loading")}
+        </Text>
+      );
+    }
+    if (calendarUrl) {
+      return (
+        <>
+          <View style={[styles.urlBox, { backgroundColor: colors.bgMid }]}>
+            <Text
+              style={[styles.urlText, { color: colors.text }]}
+              numberOfLines={2}
+              selectable
+            >
+              {calendarUrl}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.btnPrimary, { backgroundColor: colors.terra }]}
+            onPress={handleCopy}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="copy-outline" size={18} color="#fff" />
+            <Text style={styles.btnPrimaryText}>{t("calendar.copyBtn")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.btnSecondary, { borderColor: colors.danger + "60" }]}
+            onPress={handleRegenerate}
+            activeOpacity={0.8}
+            disabled={generating}
+          >
+            <Ionicons name="refresh-outline" size={16} color={colors.danger} />
+            <Text style={[styles.btnSecondaryText, { color: colors.danger }]}>
+              {generating ? t("calendar.generating") : t("calendar.regenerateBtn")}
+            </Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
+    return (
+      <TouchableOpacity
+        style={[styles.btnPrimary, { backgroundColor: colors.terra }]}
+        onPress={handleGenerate}
+        activeOpacity={0.8}
+        disabled={generating}
+      >
+        <Ionicons name="calendar-outline" size={18} color="#fff" />
+        <Text style={styles.btnPrimaryText}>
+          {generating ? t("calendar.generating") : t("calendar.generateBtn")}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   const handleRegenerate = () => {
     Alert.alert(
       t("calendar.regenerateTitle"),
@@ -108,56 +165,7 @@ const CalendarExportScreen: React.FC = () => {
 
         {/* Zone URL */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {loading ? (
-            <Text style={[styles.placeholder, { color: colors.textLight }]}>
-              {t("common.loading")}
-            </Text>
-          ) : calendarUrl ? (
-            <>
-              <View style={[styles.urlBox, { backgroundColor: colors.bgMid }]}>
-                <Text
-                  style={[styles.urlText, { color: colors.text }]}
-                  numberOfLines={2}
-                  selectable
-                >
-                  {calendarUrl}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[styles.btnPrimary, { backgroundColor: colors.terra }]}
-                onPress={handleCopy}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="copy-outline" size={18} color="#fff" />
-                <Text style={styles.btnPrimaryText}>{t("calendar.copyBtn")}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.btnSecondary, { borderColor: colors.danger + "60" }]}
-                onPress={handleRegenerate}
-                activeOpacity={0.8}
-                disabled={generating}
-              >
-                <Ionicons name="refresh-outline" size={16} color={colors.danger} />
-                <Text style={[styles.btnSecondaryText, { color: colors.danger }]}>
-                  {generating ? t("calendar.generating") : t("calendar.regenerateBtn")}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <TouchableOpacity
-              style={[styles.btnPrimary, { backgroundColor: colors.terra }]}
-              onPress={handleGenerate}
-              activeOpacity={0.8}
-              disabled={generating}
-            >
-              <Ionicons name="calendar-outline" size={18} color="#fff" />
-              <Text style={styles.btnPrimaryText}>
-                {generating ? t("calendar.generating") : t("calendar.generateBtn")}
-              </Text>
-            </TouchableOpacity>
-          )}
+          {renderUrlSection()}
         </View>
 
         {/* Instructions iOS */}
@@ -170,7 +178,7 @@ const CalendarExportScreen: React.FC = () => {
           </View>
           {(t("calendar.iosSteps", { returnObjects: true }) as string[]).map(
             (step: string, i: number) => (
-              <View key={i} style={styles.step}>
+              <View key={step} style={styles.step}>
                 <View style={[styles.stepNum, { backgroundColor: colors.terraLight }]}>
                   <Text style={[styles.stepNumText, { color: colors.terra }]}>{i + 1}</Text>
                 </View>
@@ -190,7 +198,7 @@ const CalendarExportScreen: React.FC = () => {
           </View>
           {(t("calendar.androidSteps", { returnObjects: true }) as string[]).map(
             (step: string, i: number) => (
-              <View key={i} style={styles.step}>
+              <View key={step} style={styles.step}>
                 <View style={[styles.stepNum, { backgroundColor: colors.terraLight }]}>
                   <Text style={[styles.stepNumText, { color: colors.terra }]}>{i + 1}</Text>
                 </View>
