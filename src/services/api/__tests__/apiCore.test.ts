@@ -18,12 +18,12 @@ jest.mock('../../../utils/secureStorage', () => ({
   multiRemove: jest.fn().mockResolvedValue(undefined),
 }));
 
-global.fetch = jest.fn();
+globalThis.fetch = jest.fn();
 
 import { request, setUnauthorizedCallback, clearUnauthorizedCallback } from '../apiCore';
 import * as secureStorage from '../../../utils/secureStorage';
 
-const mockFetch = global.fetch as jest.Mock;
+const mockFetch = globalThis.fetch as jest.Mock;
 const mockGetItem = secureStorage.getItem as jest.Mock;
 const mockSetItem = secureStorage.setItem as jest.Mock;
 const mockMultiRemove = secureStorage.multiRemove as jest.Mock;

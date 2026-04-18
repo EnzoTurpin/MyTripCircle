@@ -52,6 +52,47 @@ function getDatePickerTitle(t: (k: string) => string, type: Booking["type"], dir
   return needsEndDate(type, direction) ? t("bookings.startDate") : t("bookings.date");
 }
 
+function getLocale(language: string): string {
+  return language === "fr" ? "fr_FR" : "en_US";
+}
+
+type FormHandle = ReturnType<typeof useBookingForm>;
+type ThemeColors = ReturnType<typeof useTheme>["colors"];
+
+function AndroidDatePickers({ form, safeDate, safeEndDate }: { form: FormHandle; safeDate: Date; safeEndDate: Date }) {
+  if (Platform.OS !== "android") return null;
+  return (
+    <>
+      {form.showDatePicker && <DateTimePicker value={safeDate} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "start")} />}
+      {form.showEndDatePicker && <DateTimePicker value={safeEndDate} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "end")} />}
+      {form.showTimePicker && <DateTimePicker value={form.getTimePickerValue()} mode="time" display="default" onChange={form.handleTimeChange} />}
+      {form.showReturnTimePicker && <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="default" onChange={form.handleReturnTimeChange} />}
+    </>
+  );
+}
+
+function IosPickersBlock({ form, safeDate, safeEndDate, colors, t, locale }: {
+  form: FormHandle; safeDate: Date; safeEndDate: Date; colors: ThemeColors; t: (k: string) => string; locale: string;
+}) {
+  if (Platform.OS !== "ios") return null;
+  return (
+    <>
+      <PickerModal visible={form.showDatePicker} title={getDatePickerTitle(t, form.formData.type, form.formData.tripDirection)} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
+        <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={locale} />
+      </PickerModal>
+      <PickerModal visible={form.showTimePicker} title={isTransport(form.formData.type) ? t("bookings.departureTime") : t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
+        <DateTimePicker value={form.getTimePickerValue()} mode="time" display="spinner" onChange={form.handleTimeChange} textColor={colors.text} />
+      </PickerModal>
+      <PickerModal visible={form.showEndDatePicker} title={form.formData.type === "hotel" ? t("bookings.endDate") : t("bookings.directionLabels.return")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
+        <DateTimePicker value={safeEndDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={locale} />
+      </PickerModal>
+      <PickerModal visible={form.showReturnTimePicker} title={t("bookings.returnTime")} onClose={() => form.setShowReturnTimePicker(false)} colors={colors} t={t}>
+        <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="spinner" onChange={form.handleReturnTimeChange} textColor={colors.text} />
+      </PickerModal>
+    </>
+  );
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BookingFormProps {
@@ -100,7 +141,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
   const safeDate    = getSafeDate(form.formData.date);
   const safeEndDate = getSafeDate(form.formData.endDate);
-  const locale      = i18n.language === "fr" ? "fr_FR" : "en_US";
+  const locale      = getLocale(i18n.language);
 
   return (
     <Modal visible={internalVisible} animationType="none" transparent={true}>
@@ -278,16 +319,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           </View>
 
           {/* iOS pickers */}
-          {Platform.OS === "ios" && (
-            <>
-              <PickerModal visible={form.showDatePicker} title={getDatePickerTitle(t, form.formData.type, form.formData.tripDirection)} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
-                <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={locale} />
-              </PickerModal>
-              <PickerModal visible={form.showTimePicker} title={isTransport(form.formData.type) ? t("bookings.departureTime") : t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>
-                <DateTimePicker value={form.getTimePickerValue()} mode="time" display="spinner" onChange={form.handleTimeChange} textColor={colors.text} />
-              </PickerModal>
-            </>
-          )}
+          <IosPickersBlock form={form} safeDate={safeDate} safeEndDate={safeEndDate} colors={colors} t={t} locale={locale} />
 
           {/* ── Date de fin (hôtel) ── */}
           {needsEndDate(form.formData.type, form.formData.tripDirection) && form.formData.type === "hotel" && (
@@ -327,16 +359,6 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
             </View>
           )}
 
-          {Platform.OS === "ios" && (
-            <>
-              <PickerModal visible={form.showEndDatePicker} title={form.formData.type === "hotel" ? t("bookings.endDate") : t("bookings.directionLabels.return")} onClose={() => form.setShowEndDatePicker(false)} colors={colors} t={t}>
-                <DateTimePicker value={safeEndDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "end")} textColor={colors.text} locale={locale} />
-              </PickerModal>
-              <PickerModal visible={form.showReturnTimePicker} title={t("bookings.returnTime")} onClose={() => form.setShowReturnTimePicker(false)} colors={colors} t={t}>
-                <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="spinner" onChange={form.handleReturnTimeChange} textColor={colors.text} />
-              </PickerModal>
-            </>
-          )}
 
           {/* ── Adresse ── */}
           <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -413,19 +435,8 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
         </ScrollView>
 
-        {/* Android pickers */}
-        {Platform.OS === "android" && form.showDatePicker && (
-          <DateTimePicker value={safeDate} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "start")} />
-        )}
-        {Platform.OS === "android" && form.showEndDatePicker && (
-          <DateTimePicker value={safeEndDate} mode="date" display="default" onChange={(e, d) => form.handleDateChange(e, d, "end")} />
-        )}
-        {Platform.OS === "android" && form.showTimePicker && (
-          <DateTimePicker value={form.getTimePickerValue()} mode="time" display="default" onChange={form.handleTimeChange} />
-        )}
-        {Platform.OS === "android" && form.showReturnTimePicker && (
-          <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="default" onChange={form.handleReturnTimeChange} />
-        )}
+        {/* Platform pickers */}
+        <AndroidDatePickers form={form} safeDate={safeDate} safeEndDate={safeEndDate} />
 
         {/* Scanner */}
         <TicketScannerModal visible={form.showScanner} onClose={() => form.setShowScanner(false)} onFill={form.handleScanFill} />

@@ -109,7 +109,7 @@ async function parseErrorAndThrow(res: Response, statusCode: number): Promise<ne
   let parsed: string;
   try {
     parsed = JSON.stringify(JSON.parse(errText));
-  } catch (_e) {
+  } catch {
     parsed = errText || `HTTP ${statusCode}`;
   }
   throw new Error(parsed);

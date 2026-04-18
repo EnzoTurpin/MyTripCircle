@@ -21,14 +21,14 @@ jest.mock('../../../utils/secureStorage', () => ({
 describe('apiCore — découverte de l’URL de base', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn();
+    globalThis.fetch = jest.fn();
     const secureStorage = require('../../../utils/secureStorage');
     secureStorage.getItem.mockResolvedValue('token');
     secureStorage.multiRemove.mockResolvedValue(undefined);
   });
 
   it('should use the first base URL whose /health responds OK', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     mockFetch.mockImplementation((url: string) => {
       if (url === 'https://primary.test/health') {
         return Promise.resolve({ ok: true, status: 200 });
@@ -52,7 +52,7 @@ describe('apiCore — découverte de l’URL de base', () => {
   });
 
   it('should try the next base URL when /health is not OK', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     mockFetch.mockImplementation((url: string) => {
       if (url === 'https://primary.test/health') {
         return Promise.resolve({ ok: false, status: 503 });
@@ -78,10 +78,10 @@ describe('apiCore — découverte de l’URL de base', () => {
   });
 
   it('should stringify unknown errors when /health throws', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     mockFetch.mockImplementation((url: string) => {
       if (url === 'https://primary.test/health') {
-        return Promise.reject(42);
+        return Promise.reject(new Error('42'));
       }
       if (url === 'https://secondary.test/health') {
         return Promise.resolve({ ok: true, status: 200 });
@@ -102,7 +102,7 @@ describe('apiCore — découverte de l’URL de base', () => {
   });
 
   it('should try the next base URL when /health throws', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     mockFetch.mockImplementation((url: string) => {
       if (url === 'https://primary.test/health') {
         return Promise.reject(new Error('econnrefused'));
@@ -126,7 +126,7 @@ describe('apiCore — découverte de l’URL de base', () => {
   });
 
   it('should throw when no base URL is healthy', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     mockFetch.mockImplementation((url: string) => {
       if (url.endsWith('/health')) {
         return Promise.resolve({ ok: false, status: 500 });
@@ -139,7 +139,7 @@ describe('apiCore — découverte de l’URL de base', () => {
   });
 
   it('should share in-flight URL discovery across concurrent requests', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     let releaseHealth!: () => void;
     const healthGate = new Promise<void>((resolve) => {
       releaseHealth = resolve;
@@ -147,7 +147,7 @@ describe('apiCore — découverte de l’URL de base', () => {
 
     mockFetch.mockImplementation((url: string) => {
       if (url.endsWith('/health')) {
-        return healthGate.then(() => Promise.resolve({ ok: true, status: 200 }));
+        return healthGate.then(() => ({ ok: true, status: 200 }));
       }
       if (url.startsWith('https://primary.test')) {
         return Promise.resolve({
@@ -162,7 +162,7 @@ describe('apiCore — découverte de l’URL de base', () => {
     const { request } = require('../apiCore');
     const p1 = request('/r1');
     const p2 = request('/r2');
-    releaseHealth!();
+    releaseHealth();
     await expect(Promise.all([p1, p2])).resolves.toEqual([
       { concurrent: true },
       { concurrent: true },
@@ -173,7 +173,7 @@ describe('apiCore — découverte de l’URL de base', () => {
   });
 
   it('should reuse the cached base URL without calling /health again', async () => {
-    const mockFetch = global.fetch as jest.Mock;
+    const mockFetch = globalThis.fetch as jest.Mock;
     mockFetch.mockImplementation((url: string) => {
       if (url.endsWith('/health')) {
         return Promise.resolve({ ok: true, status: 200 });
