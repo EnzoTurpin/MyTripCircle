@@ -53,7 +53,7 @@ function parseBCBP(raw: string): ScannedBookingData | null {
 }
 
 const ISO_DATE_RE = /(\d{4}-\d{2}-\d{2})/;
-const FR_DATE_RE = /(\d{2})[/\-.](\d{2})[/\-.](\d{4})/;
+const FR_DATE_RE = /(\d{2})[/\-.](\d{2})[/\-.](\d{4})/; // NOSONAR — \- gardé pour clarté
 const TIME_RE = /\b(\d{2}):(\d{2})\b/;
 const ROUTE_RE = /([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})\s*[>→]\s*([A-ZÉÈÊ-]{2,30}(?:\s[A-ZÉÈÊ-]{1,30}){0,4})/i;
 const PNR_RE = /\b([A-Z0-9]{5,9})\b/;
@@ -174,7 +174,8 @@ export function useTicketScanner(
       } else {
         setScanError(t("bookings.scanNoCodeFound"));
       }
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useTicketScanner] Erreur scan:", e);
       setScanError(t("bookings.scanNoCodeFound"));
     } finally {
       setScanning(false);
