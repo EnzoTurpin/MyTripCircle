@@ -97,9 +97,14 @@ export function useBookingForm({
   const buildFlightTitle = (direction: string | undefined, origin: string, destination: string): string => {
     if (!origin.trim() || !destination.trim()) return "";
     const short = (place: string) => place.split(",")[0].trim();
-    const dirLabel = direction === "return" ? t("bookings.directionLabels.return")
-      : direction === "roundtrip" ? t("bookings.directionLabels.roundtrip")
-      : t("bookings.directionLabels.outbound");
+    let dirLabel: string;
+    if (direction === "return") {
+      dirLabel = t("bookings.directionLabels.return");
+    } else if (direction === "roundtrip") {
+      dirLabel = t("bookings.directionLabels.roundtrip");
+    } else {
+      dirLabel = t("bookings.directionLabels.outbound");
+    }
     return `${t("bookings.flightPrefix")} ${dirLabel}: ${short(origin)} → ${short(destination)}`;
   };
 

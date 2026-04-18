@@ -9,7 +9,8 @@ import {
   StatusBar,
   RefreshControl,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { RootStackParamList } from "../types";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { F } from "../theme/fonts";
@@ -25,7 +26,7 @@ import InvitationDetailView from "../components/invitations/InvitationDetailView
 import BackButton from "../components/ui/BackButton";
 
 const InvitationScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { t }      = useTranslation();
   const { colors } = useTheme();
 

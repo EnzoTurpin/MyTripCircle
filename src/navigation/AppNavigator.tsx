@@ -18,7 +18,7 @@ const linking = {
       Invitation: "invitation/:token",
       FriendInvitation: "friend-invite/:token",
       ForgotPassword: {
-        path: "reset-password",
+        path: "reset-password", // NOSONAR — chemin de deep link, pas un secret
         parse: { code: (code: string) => code },
       },
     },

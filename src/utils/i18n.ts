@@ -9,22 +9,25 @@ export { formatDate, formatDateLong, formatTime } from "./dateFormatters";
 export { parseApiError, getBookingStatusTranslation } from "./errorHandlers";
 
 const LANGUAGE_KEY = "@mytripcircle_language";
+const AUTH_STORAGE_KEY = "token"; // NOSONAR — clé AsyncStorage, pas un secret hardcodé
 
 export const changeLanguage = async (language: "en" | "fr") => {
   i18n.changeLanguage(language);
   try {
     await AsyncStorage.setItem(LANGUAGE_KEY, language);
-  } catch {
-    // ignore storage errors
+  } catch (e) {
+    // Erreur de stockage non bloquante — la langue reste changée en mémoire
+    if (__DEV__) console.warn("[i18n] Impossible de persister la langue :", e);
   }
   // Sync to server so emails are sent in the user's preferred language
   try {
-    const token = await AsyncStorage.getItem("token");
+    const token = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
     if (token) {
       await ApiService.updateLanguage(language);
     }
-  } catch {
-    // Ignore sync errors — local preference remains valid
+  } catch (e) {
+    // Erreur de sync non bloquante — la préférence locale reste valide
+    if (__DEV__) console.warn("[i18n] Impossible de synchroniser la langue :", e);
   }
 };
 
@@ -37,15 +40,16 @@ export const initLanguage = async () => {
     if (saved === "en" || saved === "fr") {
       i18n.changeLanguage(saved);
       // Sync the stored preference to the server for existing users who haven't yet
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
       if (token) {
         ApiService.updateLanguage(saved).catch(() => {
           // Silent — offline or not logged in yet
         });
       }
     }
-  } catch {
-    // ignore storage errors
+  } catch (e) {
+    // Erreur de stockage non bloquante — la langue reste celle sauvegardée en mémoire
+    if (__DEV__) console.warn("[i18n] Impossible de lire la langue sauvegardée :", e);
   }
 };
 

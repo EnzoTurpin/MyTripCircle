@@ -243,7 +243,8 @@ export const useIdeas = () => {
       closeModal();
       setItinerary(null);
       navigation.navigate("TripDetails", { tripId: newTrip.id, showToast: true });
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useIdeas] Erreur création voyage:", e);
       Alert.alert(t("ideas.itinerary.errorTitle"), t("ideas.itinerary.createError"));
     } finally {
       setCreating(false);

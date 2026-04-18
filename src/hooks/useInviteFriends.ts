@@ -11,10 +11,11 @@ import { useBottomSheet } from "./useBottomSheet";
 import { useSendInvitations } from "./useSendInvitations";
 import { useInvitationLink } from "./useInvitationLink";
 import { usePendingInvitations } from "./usePendingInvitations";
-import { useTripMembers, CollabInfo } from "./useTripMembers";
+import { useTripMembers } from "./useTripMembers";
 
 // Re-exporté pour la compatibilité descendante (MemberRow, MemberActionSheet)
 export type { CollabInfo } from "./useTripMembers";
+import type { CollabInfo } from "./useTripMembers";
 
 type ScreenNavProp = StackNavigationProp<RootStackParamList, "InviteFriends">;
 
