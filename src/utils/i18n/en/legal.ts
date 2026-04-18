@@ -95,6 +95,9 @@ const legal = {
     savedTitle: "Preferences saved",
     savedMessage: "Your privacy preferences have been updated.",
     saveError: "Unable to save your preferences. Please try again later.",
+    locationDeniedTitle: "Permission denied",
+    locationDeniedMessage: "Location access was denied. You can enable it in the app settings.",
+    openSettings: "Open Settings",
   },
   legalNotice: {
     title: "Legal notice",

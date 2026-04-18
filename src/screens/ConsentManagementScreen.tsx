@@ -7,12 +7,14 @@ import {
   ScrollView,
   StatusBar,
   Alert,
+  Linking,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 import Toggle from "../components/ui/Toggle";
@@ -44,9 +46,29 @@ const ConsentManagementScreen: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      let effectiveLocation = locationEnabled;
+
+      if (locationEnabled) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          effectiveLocation = false;
+          setLocationEnabled(false);
+          Alert.alert(
+            t("consentManagement.locationDeniedTitle"),
+            t("consentManagement.locationDeniedMessage"),
+            [
+              { text: t("common.cancel"), style: "cancel" },
+              { text: t("consentManagement.openSettings"), onPress: () => Linking.openSettings() },
+            ]
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const prefs: ConsentPreferences = {
         data: true,
-        location: locationEnabled,
+        location: effectiveLocation,
         notifications: notificationsEnabled,
         acceptedAt: new Date().toISOString(),
       };
@@ -55,7 +77,7 @@ const ConsentManagementScreen: React.FC = () => {
 
       const payload: ConsentPayload = {
         data: true,
-        location: locationEnabled,
+        location: effectiveLocation,
         notifications: notificationsEnabled,
       };
       await userApi.updateConsent(payload);

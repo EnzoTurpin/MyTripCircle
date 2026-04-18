@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 import { requestPermissionAndRegisterToken } from "../hooks/usePushNotifications";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
@@ -101,6 +102,9 @@ export default function ConsentScreen({ onConsentGiven }: Readonly<ConsentScreen
       acceptedAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(CONSENT_KEY, JSON.stringify(prefs));
+    if (prefs.location) {
+      await Location.requestForegroundPermissionsAsync();
+    }
     if (notifConsented) {
       await requestPermissionAndRegisterToken();
     }
