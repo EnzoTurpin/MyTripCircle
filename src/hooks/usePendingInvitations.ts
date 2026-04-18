@@ -21,7 +21,7 @@ export function usePendingInvitations(tripId: string, userId: string | undefined
           (inv.inviteeEmail || inv.inviteePhone),
       );
       setPendingInvitations(forTrip);
-    } catch { /* non-bloquant */ }
+    } catch (e) { if (__DEV__) console.warn("[usePendingInvitations] Erreur non-bloquante:", e); }
   }, [tripId, userId]);
 
   const handleCancelInvitation = (inv: any, onRefresh: () => Promise<void>) => {
@@ -39,7 +39,8 @@ export function usePendingInvitations(tripId: string, userId: string | undefined
               setActionLoading(true);
               await ApiService.cancelInvitation(inv._id || inv.id);
               await onRefresh();
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[usePendingInvitations] Erreur annulation invitation:", e);
               Alert.alert(t("common.error"), t("inviteFriends.cancelInviteError"));
             } finally {
               setActionLoading(false);

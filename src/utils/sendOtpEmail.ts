@@ -4,8 +4,8 @@
 let nodemailer: any;
 try {
   nodemailer = require("nodemailer");
-} catch {
-  // nodemailer not installed - function will log instead
+} catch (e) {
+  if (__DEV__) console.warn("[sendOtpEmail] nodemailer non disponible:", e);
   nodemailer = null;
 }
 

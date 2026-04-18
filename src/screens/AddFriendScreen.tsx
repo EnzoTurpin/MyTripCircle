@@ -68,7 +68,7 @@ const AddFriendScreen: React.FC = () => {
         setSearchResult(result);
         saveToHistory(trimmed);
       } catch (e: any) {
-        const msg = (() => { try { return JSON.parse(e.message)?.error; } catch { return e.message; } })();
+        const msg = (() => { try { return JSON.parse(e.message)?.error; } catch (_pe) { return e.message; } })();
         if (msg?.includes("not found") || msg?.includes("404")) setSearchError(t("addFriend.errorNotFound"));
         else if (msg?.includes("yourself")) setSearchError(t("addFriend.errorYourself"));
         setSearchResult(null);

@@ -107,7 +107,7 @@ const InvitationCard: React.FC<CardProps> = ({
   const tripName    = inv.tripName   ?? inv.trip?.title       ?? t("invitation.thisTripRef");
   const destination = inv.trip?.destination ?? "";
   const inviterName = inv.inviterName ?? inv.inviter?.name    ?? t("invitation.someoneRef");
-  const isUnread    = inv.read === false;
+  const isUnread    = inv.read === false; // NOSONAR — distingue false de undefined (non synchronisé)
   const isExpired   = status === "pending" && inv.expiresAt && new Date() > new Date(inv.expiresAt);
   const canAct      = status === "pending" && !isExpired;
   const hasImage    = !!inv.trip?.coverImage;

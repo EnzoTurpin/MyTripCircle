@@ -16,7 +16,9 @@ export function useInvitationLink(tripId: string) {
       const exp = new Date();
       exp.setDate(exp.getDate() + 7);
       setLinkExpiry(exp);
-    } catch { /* non-bloquant */ }
+    } catch (e) {
+      if (__DEV__) console.warn("[useInvitationLink] Erreur chargement lien:", e);
+    }
   }, [tripId]);
 
   const handleShareLink = async () => {
@@ -26,7 +28,9 @@ export function useInvitationLink(tripId: string) {
         message: t("inviteFriends.shareMsg", { link: invitationLink }),
         url: invitationLink,
       });
-    } catch { /* user cancelled */ }
+    } catch (e) {
+      if (__DEV__) console.warn("[useInvitationLink] Partage annulé ou échoué:", e);
+    }
   };
 
   const handleRenewLink = () => {
@@ -42,7 +46,8 @@ export function useInvitationLink(tripId: string) {
             exp.setDate(exp.getDate() + 7);
             setLinkExpiry(exp);
             Alert.alert(t("inviteFriends.renewSuccess"), t("inviteFriends.renewSuccessMsg"));
-          } catch {
+          } catch (e) {
+            if (__DEV__) console.warn("[useInvitationLink] Erreur renouvellement:", e);
             Alert.alert(t("common.error"), t("inviteFriends.renewError"));
           }
         },

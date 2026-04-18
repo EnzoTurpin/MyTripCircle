@@ -43,7 +43,8 @@ export function useFriendProfileActions() {
             try {
               await removeFriend(friendId);
               navigation.goBack();
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[useFriendProfileActions] Erreur suppression ami:", e);
               Alert.alert(t("common.error"), t("friendProfile.removeError"));
             }
           },
@@ -72,7 +73,8 @@ export function useFriendProfileActions() {
     try {
       await moderationApi.reportUser(friendId, reason);
       Alert.alert(t("friends.success"), t("friendProfile.reportedSuccess"));
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useFriendProfileActions] Erreur signalement:", e);
       Alert.alert(t("common.error"), t("friendProfile.reportError"));
     }
   };
@@ -93,7 +95,8 @@ export function useFriendProfileActions() {
               Alert.alert(t("friends.success"), t("friendProfile.blockedSuccess", { name }), [
                 { text: t("common.ok"), onPress: () => navigation.goBack() },
               ]);
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[useFriendProfileActions] Erreur blocage:", e);
               Alert.alert(t("common.error"), t("friendProfile.blockError"));
             }
           },

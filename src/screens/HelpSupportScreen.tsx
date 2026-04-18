@@ -110,7 +110,7 @@ const HelpSupportScreen: React.FC = () => {
                     activeOpacity={0.7}
                   >
                     <View style={[styles.faqIconBg, { backgroundColor: item.iconBg }]}>
-                      <Ionicons name={item.icon as any} size={18} color={item.iconColor} />
+                      <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={item.iconColor} />
                     </View>
                     <Text style={[styles.faqTitle, { color: colors.text }]}>{item.title}</Text>
                     <Ionicons

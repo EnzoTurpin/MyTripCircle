@@ -104,7 +104,8 @@ const BookingDetailsScreen: React.FC = () => {
     if (!isUri) { Alert.alert(t("common.error"), t("bookings.details.fileNotAccessible")); return; }
     try {
       await Linking.openURL(attachment);
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[BookingDetailsScreen] Erreur ouverture fichier:", e);
       Alert.alert(t("common.error"), t("bookings.details.fileOpenError"));
     }
   };

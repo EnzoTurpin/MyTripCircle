@@ -107,7 +107,9 @@ export function useIdeaDetail() {
         placePhotoUrl = placeResult.photoUrl;
         placeName = placeResult.name;
       }
-    } catch { /* échec silencieux */ }
+    } catch (e) {
+      if (__DEV__) console.warn("[useIdeaDetail] Erreur recherche lieu:", e);
+    }
 
     const addressType = ADDRESS_TYPE_MAP[b.type] ?? "activity";
     try {
@@ -116,13 +118,17 @@ export function useIdeaDetail() {
         date: bookingDate, endDate: b.type === "hotel" ? tripEnd : undefined,
         price: b.estimatedPrice, currency: b.currency || "€", status: "pending",
       });
-    } catch { /* échec silencieux */ }
+    } catch (e) {
+      if (__DEV__) console.warn("[useIdeaDetail] Erreur création réservation:", e);
+    }
 
     if (realAddress && placeName) {
       const { city, country } = parseCityCountry(realAddress, idea!.destinationCity, idea!.destinationCountry);
       try {
         await createAddress({ type: addressType, name: placeName, address: realAddress, city, country, rating: placeRating, photoUrl: placePhotoUrl, tripId });
-      } catch { /* échec silencieux */ }
+      } catch (e) {
+        if (__DEV__) console.warn("[useIdeaDetail] Erreur création adresse:", e);
+      }
     }
   };
 
@@ -167,7 +173,8 @@ export function useIdeaDetail() {
       setModalVisible(false);
       setCreating(false);
       navigation.navigate("TripDetails", { tripId: newTrip.id, showToast: true });
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useIdeaDetail] Erreur création voyage:", e);
       setCreating(false);
       Alert.alert(t("common.error"), t("ideas.addModal.createError"));
     }

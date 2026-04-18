@@ -39,8 +39,8 @@ export async function requestPermissionAndRegisterToken(): Promise<void> {
 
     await userApi.registerPushToken(token);
     await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
-  } catch {
-    // Silently ignore: simulateur, Expo Go sans projectId, ou backend indisponible
+  } catch (e) {
+    if (__DEV__) console.warn("[usePushNotifications] Enregistrement token impossible (simulateur/Expo Go):", e);
   }
 }
 

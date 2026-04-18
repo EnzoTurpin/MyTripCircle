@@ -12,10 +12,12 @@ interface Props {
 
 const TripCoverPhoto: React.FC<Props> = ({ coverImage, onPickPhoto }) => {
   const { t } = useTranslation();
+  const hasCover = Boolean(coverImage);
+  const buttonLabel = hasCover ? t("createTrip.changeCoverPhoto") : t("createTrip.addCoverPhoto");
 
   return (
     <View style={styles.coverWrapper}>
-      {coverImage ? (
+      {hasCover ? (
         <>
           <Image source={{ uri: coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
           <LinearGradient
@@ -34,9 +36,7 @@ const TripCoverPhoto: React.FC<Props> = ({ coverImage, onPickPhoto }) => {
         </LinearGradient>
       )}
       <TouchableOpacity style={styles.coverButton} onPress={onPickPhoto} activeOpacity={0.8}>
-        <Text style={styles.coverButtonText}>
-          {coverImage ? t("createTrip.changeCoverPhoto") : t("createTrip.addCoverPhoto")}
-        </Text>
+        <Text style={styles.coverButtonText}>{buttonLabel}</Text>
       </TouchableOpacity>
     </View>
   );

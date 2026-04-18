@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, StyleProp, ImageStyle, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
@@ -14,14 +14,14 @@ const TripSquare: React.FC<TripSquareProps> = ({ trip, onPress }) => {
   return (
   <TouchableOpacity style={styles.wrap} onPress={onPress} activeOpacity={0.85}>
     {trip.coverImage ? (
-      <Image source={{ uri: trip.coverImage }} style={StyleSheet.absoluteFill as any} resizeMode="cover" />
+      <Image source={{ uri: trip.coverImage }} style={StyleSheet.absoluteFill as StyleProp<ImageStyle>} resizeMode="cover" />
     ) : (
-      <View style={[StyleSheet.absoluteFill as any, { backgroundColor: colors.textMid }]} />
+      <View style={[StyleSheet.absoluteFill as StyleProp<ViewStyle>, { backgroundColor: colors.textMid }]} />
     )}
     <LinearGradient
       colors={["transparent", "rgba(0,0,0,0.68)"]}
       locations={[0.4, 1]}
-      style={StyleSheet.absoluteFill as any}
+      style={StyleSheet.absoluteFill as StyleProp<ViewStyle>}
     />
     <View style={styles.bottom}>
       <Text style={styles.dest} numberOfLines={1}>{trip.destination || trip.title}</Text>

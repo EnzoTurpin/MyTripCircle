@@ -35,8 +35,8 @@ try {
   MapView       = RNMaps.default;
   Marker        = RNMaps.Marker;
   mapsAvailable = true;
-} catch {
-  // Module natif non encore compilé — rebuild nécessaire
+} catch (e) {
+  if (__DEV__) console.warn("[AddressDetailsScreen] react-native-maps non disponible:", e);
 }
 
 type AddressDetailsScreenRouteProp      = RouteProp<RootStackParamList, "AddressDetails">;

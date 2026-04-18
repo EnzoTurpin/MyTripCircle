@@ -31,7 +31,8 @@ export default function useTransportAutocomplete() {
     try {
       const results = await getAddressSuggestions(text.trim(), undefined, undefined, placeType);
       setter(field)({ suggestions: results, show: results.length > 0 });
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useTransportAutocomplete] Erreur autocomplétion transport:", e);
       setter(field)(EMPTY);
     }
   };

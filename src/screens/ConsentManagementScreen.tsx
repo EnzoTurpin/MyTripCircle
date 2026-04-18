@@ -65,7 +65,8 @@ const ConsentManagementScreen: React.FC = () => {
         t("consentManagement.savedMessage"),
         [{ text: t("common.ok"), onPress: () => navigation.goBack() }]
       );
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[ConsentManagementScreen] Erreur sauvegarde consentements:", e);
       Alert.alert(t("common.error"), t("consentManagement.saveError"));
     } finally {
       setSaving(false);

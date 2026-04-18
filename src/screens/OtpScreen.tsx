@@ -97,7 +97,8 @@ const OtpScreen: React.FC = () => {
             : t("otp.invalidCodeError"),
         );
       }
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[OtpScreen] Erreur vérification OTP:", e);
       setOtpError(t("otp.genericVerifyError"));
     } finally {
       setLoading(false);

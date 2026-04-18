@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, CommonActions } from "@react-navigation/native";
 import BackButton from "../components/ui/BackButton";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types";
@@ -76,7 +76,7 @@ const TripActionsScreen: React.FC = () => {
           onPress: async () => {
             try {
               await deleteTrip(tripId);
-              (navigation as any).reset({ index: 0, routes: [{ name: "Main" }] });
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Main" }] }));
             } catch (error) {
               Alert.alert(
                 t("common.error"),

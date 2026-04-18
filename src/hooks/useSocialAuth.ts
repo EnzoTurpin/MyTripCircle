@@ -26,7 +26,8 @@ const useSocialAuth = (): UseSocialAuthReturn => {
           result.error ? parseApiError(new Error(result.error)) : t("common.unexpectedError"),
         );
       }
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useSocialAuth] Erreur authentification sociale:", e);
       Alert.alert(t("common.error"), t("common.unexpectedError"));
     } finally {
       setIsSocialSubmitting(false);

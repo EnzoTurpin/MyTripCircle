@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, ViewStyle } from "react-native";
+import { Animated, ViewStyle, DimensionValue } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface SkeletonBoxProps {
-  width?: number | string;
+  width?: DimensionValue;
   height?: number;
   borderRadius?: number;
   style?: ViewStyle;
@@ -41,7 +41,7 @@ const SkeletonBox: React.FC<SkeletonBoxProps> = ({
     <Animated.View
       style={[
         {
-          width: width as any,
+          width,
           height,
           borderRadius,
           backgroundColor: colors.bgMid,

@@ -39,7 +39,9 @@ export async function getCachedDestinationPhoto(destination: string): Promise<st
       memCache.set(key, stored);
       return stored;
     }
-  } catch {}
+  } catch (e) {
+    if (__DEV__) console.warn("[destinationPhoto] Erreur lecture cache:", e);
+  }
 
   // 3. Fetch
   const url = await fetchDestinationPhotoUrl(destination);
@@ -47,7 +49,9 @@ export async function getCachedDestinationPhoto(destination: string): Promise<st
     memCache.set(key, url);
     try {
       await AsyncStorage.setItem(STORAGE_PREFIX + key, url);
-    } catch {}
+    } catch (e) {
+      if (__DEV__) console.warn("[destinationPhoto] Erreur écriture cache:", e);
+    }
   }
   return url;
 }
@@ -71,7 +75,8 @@ export async function fetchDestinationPhotoUrl(destination: string): Promise<str
 
     // photoUrl est déjà une URL proxifiée (/places/photo?ref=...) retournée par le backend
     return `${API_BASE_URL}${photoUrl}`;
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[destinationPhoto] Erreur fetchDestinationPhotoUrl:", e);
     return null;
   }
 }

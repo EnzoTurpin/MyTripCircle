@@ -76,7 +76,7 @@ const TripContentTabs: React.FC<Props> = ({
               >
                 <View style={[styles.itemIcon, { backgroundColor: getBookingTypeColors(b.type)?.bg ?? colors.terraLight }]}>
                   <Ionicons
-                    name={getBookingTypeIcon(b.type) as any}
+                    name={getBookingTypeIcon(b.type) as keyof typeof Ionicons.glyphMap}
                     size={18}
                     color={getBookingTypeColors(b.type)?.stripe ?? colors.terra}
                   />

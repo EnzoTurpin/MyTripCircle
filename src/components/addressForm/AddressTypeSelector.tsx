@@ -37,7 +37,7 @@ const AddressTypeSelector: React.FC<Props> = ({ selectedType, onSelect }) => {
               selected && styles.iconContainerSelected,
             ]}>
               <Ionicons
-                name={getTypeIcon(type) as any}
+                name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap}
                 size={22}
                 color={selected ? "#FFFFFF" : colors.terra}
               />

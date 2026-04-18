@@ -31,7 +31,7 @@ const SubscriptionFeaturesCard: React.FC<SubscriptionFeaturesCardProps> = ({ col
         {features.map((feature) => (
           <View key={feature.icon} style={styles.item}>
             <View style={[styles.iconWrap, { backgroundColor: isDark ? "#1F2E1A" : "#E2EDD9" }]}>
-              <Ionicons name={feature.icon as any} size={20} color="#6B8C5A" />
+              <Ionicons name={feature.icon as keyof typeof Ionicons.glyphMap} size={20} color="#6B8C5A" />
             </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{feature.text}</Text>
           </View>

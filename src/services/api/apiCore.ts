@@ -88,7 +88,8 @@ async function tryRefreshToken(): Promise<string | null> {
         return data.token;
       }
       return null;
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[apiCore] Erreur refresh token:", e);
       return null;
     } finally {
       refreshPromise = null;
@@ -108,7 +109,7 @@ async function parseErrorAndThrow(res: Response, statusCode: number): Promise<ne
   let parsed: string;
   try {
     parsed = JSON.stringify(JSON.parse(errText));
-  } catch {
+  } catch (_e) {
     parsed = errText || `HTTP ${statusCode}`;
   }
   throw new Error(parsed);

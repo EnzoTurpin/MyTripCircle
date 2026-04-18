@@ -8,6 +8,9 @@ import {
   ScrollView,
   StatusBar,
   Image,
+  StyleProp,
+  ImageStyle,
+  ViewStyle,
 } from "react-native";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { Ionicons } from "@expo/vector-icons";
@@ -97,12 +100,12 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.cover}>
             <Image
               source={{ uri: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80&fit=crop" }}
-              style={StyleSheet.absoluteFill as any}
+              style={StyleSheet.absoluteFill as StyleProp<ImageStyle>}
               resizeMode="cover"
             />
             <LinearGradient
               colors={["rgba(8,4,0,0.2)", "rgba(8,4,0,0.58)"]}
-              style={StyleSheet.absoluteFill as any}
+              style={StyleSheet.absoluteFill as StyleProp<ViewStyle>}
             />
 
             <View style={styles.coverContent}>
