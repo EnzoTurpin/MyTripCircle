@@ -57,6 +57,18 @@ const errors = {
     unmappedFallback:
       "Une erreur s'est produite. Réessaie. Si le problème continue, contacte le support.",
   },
+  notFound: {
+    title: "Page introuvable",
+    description: "La page que tu cherches n'existe pas ou a été déplacée.",
+    goHome: "Retour à l'accueil",
+    goBack: "Revenir en arrière",
+  },
+  errorScreen: {
+    title: "Une erreur est survenue",
+    defaultMessage: "Quelque chose s'est mal passé. Réessaie ou reviens à l'accueil.",
+    goHome: "Retour à l'accueil",
+    goBack: "Revenir en arrière",
+  },
 };
 
 export default errors;

@@ -7,6 +7,8 @@ import TermsScreen from "../screens/TermsScreen";
 import PrivacyScreen from "../screens/PrivacyScreen";
 import LegalNoticeScreen from "../screens/LegalNoticeScreen";
 import ConsentScreen, { CONSENT_KEY } from "../screens/ConsentScreen";
+import NotFoundScreen from "../screens/NotFoundScreen";
+import ErrorScreen from "../screens/ErrorScreen";
 import AuthStack from "./stacks/AuthStack";
 import MainStack from "./stacks/MainStack";
 import { RootStack } from "./rootStack";
@@ -57,6 +59,8 @@ const AppNavigator: React.FC = () => {
         <RootStack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
         <RootStack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
         <RootStack.Screen name="LegalNotice" component={LegalNoticeScreen} options={{ headerShown: false }} />
+        <RootStack.Screen name="NotFound" component={NotFoundScreen} options={{ headerShown: false }} />
+        <RootStack.Screen name="Error" component={ErrorScreen} options={{ headerShown: false }} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

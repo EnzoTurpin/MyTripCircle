@@ -1,0 +1,138 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  Platform,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "../contexts/ThemeContext";
+import { F } from "../theme/fonts";
+
+interface ErrorScreenParams {
+  message?: string;
+  canGoBack?: boolean;
+}
+
+const ErrorScreen: React.FC = () => {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const params = (route.params ?? {}) as ErrorScreenParams;
+  const { message, canGoBack = true } = params;
+
+  return (
+    <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+
+      <View style={styles.content}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.dangerLight ?? "#FDEAEA" }]}>
+          <Ionicons name="alert-circle-outline" size={56} color={colors.danger ?? "#C04040"} />
+        </View>
+
+        <Text style={[styles.title, { color: colors.text }]}>
+          {t("errorScreen.title")}
+        </Text>
+        <Text style={[styles.description, { color: colors.textMid }]}>
+          {message ?? t("errorScreen.defaultMessage")}
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.terra }]}
+          onPress={() => navigation.navigate("Main" as never)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="home-outline" size={18} color="#FFFFFF" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>{t("errorScreen.goHome")}</Text>
+        </TouchableOpacity>
+
+        {canGoBack && (
+          <TouchableOpacity
+            style={[styles.secondaryButton, { borderColor: colors.border }]}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.secondaryButtonText, { color: colors.textMid }]}>
+              {t("errorScreen.goBack")}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    paddingBottom: 48,
+  },
+  iconContainer: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: F.sans700,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  description: {
+    fontSize: 16,
+    fontFamily: F.sans400,
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 40,
+  },
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginBottom: 12,
+    shadowColor: "#A35830",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: F.sans700,
+  },
+  secondaryButton: {
+    width: "100%",
+    paddingVertical: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    fontSize: 17,
+    fontFamily: F.sans600,
+  },
+});
+
+export default ErrorScreen;
