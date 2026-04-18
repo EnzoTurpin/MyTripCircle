@@ -1,4 +1,40 @@
 const profile = {
+  calendar: {
+    title: "iCal Calendar",
+    premiumBadge: "Premium",
+    description:
+      "Subscribe to your MyTripCircle calendar from your phone's Calendar app. Your bookings sync automatically.",
+    generateBtn: "Generate my iCal link",
+    copyBtn: "Copy link",
+    regenerateBtn: "Revoke & regenerate",
+    generating: "Generating…",
+    regenerateTitle: "Regenerate link?",
+    regenerateWarning:
+      "Your old link will stop working. You'll need to set up your calendar again with the new link.",
+    regenerateConfirm: "Regenerate",
+    copiedTitle: "Link copied",
+    copiedMessage: "Paste it into your phone's Calendar app.",
+    errorTitle: "Error",
+    errorGenerate: "Could not generate the link. Please try again later.",
+    iosTitle: "iPhone / iPad (Apple Calendar)",
+    iosSteps: [
+      "Copy the link above",
+      "Open Settings → Calendar → Accounts",
+      'Tap "Add Account" → "Other"',
+      'Select "Add Subscribed Calendar"',
+      "Paste the link and tap Next",
+    ],
+    androidTitle: "Android (Google Calendar)",
+    androidSteps: [
+      "Copy the link above",
+      "Open Google Calendar in your browser",
+      'Click \u2699\uFE0F Settings → "Add calendar"',
+      'Choose "From URL" and paste the link',
+      'Click "Add calendar"',
+    ],
+    securityNote:
+      "This link is personal and secret. Do not share it. You can revoke it at any time from this screen.",
+  },
   profile: {
     logoutTitle: "Logout",
     logoutMessage: "Are you sure you want to logout?",

@@ -14,6 +14,7 @@ import { friendsApi }       from "./api/friendsApi";
 import { userApi }          from "./api/userApi";
 import { subscriptionsApi } from "./api/subscriptionsApi";
 import { itineraryApi }     from "./api/itineraryApi";
+import { calendarApi }      from "./api/calendarApi";
 
 export const ApiService = {
   ...authApi,
@@ -25,6 +26,7 @@ export const ApiService = {
   ...userApi,
   ...subscriptionsApi,
   ...itineraryApi,
+  ...calendarApi,
 };
 
 export default ApiService;

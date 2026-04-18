@@ -24,6 +24,7 @@ import { useNavigation } from "@react-navigation/native";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import SkeletonBox from "../components/SkeletonBox";
 
 const COVER_H = 210;
@@ -36,6 +37,7 @@ const ProfileScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
+  const { isPremium } = useSubscription();
 
   const handleLogout = () => {
     Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
@@ -203,6 +205,18 @@ const ProfileScreen: React.FC = () => {
                 label={t("common.helpSupport")}
                 onPress={() => navigation.navigate("HelpSupport")}
               />
+              <Divider />
+              {isPremium() && (
+                <>
+                  <Divider />
+                  <Row
+                    icon="calendar-outline"
+                    label={t("calendar.title")}
+                    tinted
+                    onPress={() => navigation.navigate("CalendarExport")}
+                  />
+                </>
+              )}
               <Divider />
               <Row
                 icon="card-outline"
