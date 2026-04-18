@@ -95,6 +95,9 @@ const legal = {
     savedTitle: "Préférences enregistrées",
     savedMessage: "Vos préférences de confidentialité ont bien été mises à jour.",
     saveError: "Impossible d'enregistrer vos préférences. Réessayez plus tard.",
+    locationDeniedTitle: "Permission refusée",
+    locationDeniedMessage: "L'accès à la localisation a été refusé. Vous pouvez l'autoriser dans les réglages de l'application.",
+    openSettings: "Ouvrir les réglages",
   },
   legalNotice: {
     title: "Mentions légales",
