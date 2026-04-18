@@ -1,4 +1,40 @@
 const profile = {
+  calendar: {
+    title: "Calendrier iCal",
+    premiumBadge: "Premium",
+    description:
+      "Abonnez-vous à votre calendrier MyTripCircle depuis l'app Calendrier de votre téléphone. Vos réservations se synchronisent automatiquement.",
+    generateBtn: "Générer mon lien iCal",
+    copyBtn: "Copier le lien",
+    regenerateBtn: "Révoquer et régénérer",
+    generating: "Génération en cours…",
+    regenerateTitle: "Régénérer le lien ?",
+    regenerateWarning:
+      "Votre ancien lien ne fonctionnera plus. Vous devrez reconfigurer votre calendrier avec le nouveau lien.",
+    regenerateConfirm: "Régénérer",
+    copiedTitle: "Lien copié",
+    copiedMessage: "Collez-le dans l'app Calendrier de votre téléphone.",
+    errorTitle: "Erreur",
+    errorGenerate: "Impossible de générer le lien. Réessayez plus tard.",
+    iosTitle: "iPhone / iPad (Calendrier Apple)",
+    iosSteps: [
+      "Copiez le lien ci-dessus",
+      "Ouvrez Réglages → Calendrier → Comptes",
+      "Appuyez sur « Ajouter un compte » → « Autre »",
+      "Sélectionnez « Ajouter un cal. avec abonnement »",
+      "Collez le lien et appuyez sur Suivant",
+    ],
+    androidTitle: "Android (Google Agenda)",
+    androidSteps: [
+      "Copiez le lien ci-dessus",
+      "Ouvrez Google Agenda sur votre navigateur",
+      "Cliquez sur ⚙️ Paramètres → « Ajouter un agenda »",
+      "Choisissez « À partir d'une URL » et collez le lien",
+      "Appuyez sur « Ajouter un agenda »",
+    ],
+    securityNote:
+      "Ce lien est personnel et secret. Ne le partagez pas. Vous pouvez le révoquer à tout moment depuis cet écran.",
+  },
   profile: {
     logoutTitle: "Se déconnecter",
     logoutMessage: "Voulez-vous vraiment vous déconnecter ?",
