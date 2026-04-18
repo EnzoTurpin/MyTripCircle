@@ -196,7 +196,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
     const featureValue = subscription.features[feature];
 
-    // Boolean features (canExport, hasAds inverted, prioritySupport)
+    // Boolean features (canExport, prioritySupport)
     if (typeof featureValue === "boolean") {
       return featureValue;
     }
