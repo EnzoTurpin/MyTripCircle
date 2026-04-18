@@ -37,7 +37,7 @@ const useTripAddresses = ({
   const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(null);
 
   const editingAddress =
-    editingAddressIndex !== null ? addresses[editingAddressIndex] : undefined;
+    editingAddressIndex === null ? undefined : addresses[editingAddressIndex];
 
   const handleAddAddress = () => {
     setEditingAddressIndex(null);

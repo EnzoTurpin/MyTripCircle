@@ -24,7 +24,7 @@ interface Props {
 
 const AddressHeroCover: React.FC<Props> = ({ address, gradient, badge, insetTop, onBack }) => {
   const { colors } = useTheme();
-  const fallbackPhoto = FALLBACK_PHOTOS[address.id.charCodeAt(0) % FALLBACK_PHOTOS.length];
+  const fallbackPhoto = FALLBACK_PHOTOS[(address.id.codePointAt(0) ?? 0) % FALLBACK_PHOTOS.length];
   const syncQuery = address.name || `${address.city} ${address.country}`;
   const [coverUri, setCoverUri] = useState<string>(
     address.photoUrl || getSyncCachedPhoto(syncQuery) || fallbackPhoto

@@ -28,7 +28,7 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
   const { t } = useTranslation();
   const typeC   = getBookingTypeColorsDetail(booking.type);
   const statusC = getBookingStatusColorsDetail(booking.status);
-  const fallbackPhoto = FALLBACK_PHOTOS[booking.id.charCodeAt(0) % FALLBACK_PHOTOS.length];
+  const fallbackPhoto = FALLBACK_PHOTOS[(booking.id.codePointAt(0) ?? 0) % FALLBACK_PHOTOS.length];
   const syncQuery = booking.address || booking.title;
   const [coverUri, setCoverUri] = useState<string>(
     getSyncCachedPhoto(syncQuery) || fallbackPhoto

@@ -38,6 +38,20 @@ import {
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getDateFieldLabel(t: (k: string) => string, type: Booking["type"], direction: string | undefined): string {
+  if (needsEndDate(type, direction)) {
+    return type === "hotel" ? t("bookings.startDate") : t("bookings.departureDate");
+  }
+  return isTransport(type) ? t("bookings.departureDate") : t("bookings.date");
+}
+
+function getDatePickerTitle(t: (k: string) => string, type: Booking["type"], direction: string | undefined): string {
+  if (isTransport(type)) return t("bookings.departureDate");
+  return needsEndDate(type, direction) ? t("bookings.startDate") : t("bookings.date");
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BookingFormProps {
@@ -245,14 +259,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               activeOpacity={0.7}
             >
               <Text style={[styles.fieldLabel, { color: colors.textLight }]}>
-                {(() => {
-                  const type = form.formData.type;
-                  const dir = form.formData.tripDirection;
-                  if (needsEndDate(type, dir)) {
-                    return type === "hotel" ? t("bookings.startDate") : t("bookings.departureDate");
-                  }
-                  return isTransport(type) ? t("bookings.departureDate") : t("bookings.date");
-                })()}
+                {getDateFieldLabel(t, form.formData.type, form.formData.tripDirection)}
               </Text>
               <Text style={[styles.fieldValue, { color: colors.text }]}>{formatDate(form.formData.date)}</Text>
             </TouchableOpacity>
@@ -273,7 +280,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
           {/* iOS pickers */}
           {Platform.OS === "ios" && (
             <>
-              <PickerModal visible={form.showDatePicker} title={(() => { const type = form.formData.type; const dir = form.formData.tripDirection; if (isTransport(type)) return t("bookings.departureDate"); return needsEndDate(type, dir) ? t("bookings.startDate") : t("bookings.date"); })()} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
+              <PickerModal visible={form.showDatePicker} title={getDatePickerTitle(t, form.formData.type, form.formData.tripDirection)} onClose={() => form.setShowDatePicker(false)} colors={colors} t={t}>
                 <DateTimePicker value={safeDate} mode="date" display="spinner" onChange={(e, d) => form.handleDateChange(e, d, "start")} textColor={colors.text} locale={locale} />
               </PickerModal>
               <PickerModal visible={form.showTimePicker} title={isTransport(form.formData.type) ? t("bookings.departureTime") : t("bookings.time")} onClose={() => form.setShowTimePicker(false)} colors={colors} t={t}>

@@ -34,6 +34,27 @@ export const isTransport = (type: Booking["type"]): boolean => type === "flight"
 export const needsEndDate = (type: Booking["type"], direction?: string): boolean =>
   type === "hotel" || (isTransport(type) && direction === "roundtrip");
 
+function applyTypeChange(next: any, prev: any, newType: Booking["type"]): void {
+  if (isTransport(newType)) {
+    if (!next.tripDirection) next.tripDirection = "outbound";
+  } else {
+    next.tripDirection = undefined;
+  }
+  if (!needsEndDate(newType, next.tripDirection)) {
+    next.endDate = undefined;
+  } else if (!prev.endDate) {
+    next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
+  }
+}
+
+function applyDirectionChange(next: any, prev: any, value: string): void {
+  if (!needsEndDate(prev.type, value)) {
+    next.endDate = undefined;
+  } else if (!prev.endDate) {
+    next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
+  }
+}
+
 export function useBookingForm({
   visible,
   initialBooking,
@@ -111,20 +132,8 @@ export function useBookingForm({
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => {
       const next: any = { ...prev, [field]: value };
-      if (field === "type") {
-        const newType = value as Booking["type"];
-        if (isTransport(newType)) {
-          if (!next.tripDirection) next.tripDirection = "outbound";
-        } else {
-          next.tripDirection = undefined;
-        }
-        if (!needsEndDate(newType, next.tripDirection)) next.endDate = undefined;
-        else if (!prev.endDate) next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
-      }
-      if (field === "tripDirection") {
-        if (!needsEndDate(prev.type, value)) next.endDate = undefined;
-        else if (!prev.endDate) next.endDate = new Date(prev.date.getTime() + ONE_DAY_MS);
-      }
+      if (field === "type") applyTypeChange(next, prev, value as Booking["type"]);
+      if (field === "tripDirection") applyDirectionChange(next, prev, value);
       if (next.type === "flight" && ["origin", "destination", "tripDirection", "type"].includes(field)) {
         next.title = buildFlightTitle(next.tripDirection, next.origin ?? "", next.destination ?? "");
       }
