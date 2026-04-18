@@ -202,7 +202,9 @@ export const useIdeas = () => {
 
     try {
       await createHotelEntry(tripId, city, tripStart, tripEnd);
-    } catch { /* échec silencieux */ }
+    } catch (e) {
+      if (__DEV__) console.warn("[useIdeas] Erreur création hôtel:", e);
+    }
 
     for (const day of days) {
       const dayDate = new Date(tripStart.getTime() + (day.day - 1) * 24 * 60 * 60 * 1000);

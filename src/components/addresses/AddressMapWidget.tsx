@@ -41,7 +41,7 @@ const MarkerPin: React.FC<{ type: Address["type"]; size: "sm" | "md" }> = ({ typ
         { backgroundColor: getMarkerColor(type) },
       ]}
     >
-      <Ionicons name={getTypeIcon(type) as any} size={s} color="white" />
+      <Ionicons name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap} size={s} color="white" />
     </View>
   );
 };

@@ -50,7 +50,7 @@ const AuthScreen: React.FC<{ route?: { params?: { initialMode?: "login" | "regis
   }, [googleResponse]);
 
   const handleOtpRedirect = (userId: string, email: string) => {
-    (navigation as any).navigate("Otp", { userId, email });
+    navigation.navigate("Otp", { userId, email });
   };
 
   const handleSwitchMode = () => {
@@ -74,7 +74,7 @@ const AuthScreen: React.FC<{ route?: { params?: { initialMode?: "login" | "regis
         busy={form.busy}
         onSubmit={() => form.handleSubmit(true, handleOtpRedirect)}
         onSwitchToRegister={handleSwitchMode}
-        onForgotPassword={() => (navigation as any).navigate("ForgotPassword", {})}
+        onForgotPassword={() => navigation.navigate("ForgotPassword", {})}
         onGooglePress={() => googlePromptAsync()}
         onApplePress={form.handleAppleSignIn}
         googleDisabled={!googleRequest}
@@ -115,9 +115,9 @@ const AuthScreen: React.FC<{ route?: { params?: { initialMode?: "login" | "regis
       busy={form.busy}
       onSubmit={() => form.handleSubmit(false, handleOtpRedirect)}
       onSwitchToLogin={handleSwitchMode}
-      onBackToWelcome={() => (navigation as any).navigate("Welcome")}
-      onNavigateTerms={() => (navigation as any).navigate("Terms")}
-      onNavigatePrivacy={() => (navigation as any).navigate("Privacy")}
+      onBackToWelcome={() => navigation.navigate("Welcome")}
+      onNavigateTerms={() => navigation.navigate("Terms")}
+      onNavigatePrivacy={() => navigation.navigate("Privacy")}
       onGooglePress={() => googlePromptAsync()}
       onApplePress={form.handleAppleSignIn}
       googleDisabled={!googleRequest}

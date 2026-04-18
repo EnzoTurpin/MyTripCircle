@@ -94,7 +94,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
       const message = parsed.error || parsed.message || defaultMessage;
       return { message, field: parsed.field, requiresOtp: parsed.requiresOtp, userId: parsed.userId };
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[AuthContext] parseError JSON invalide:", e);
       return { message: raw || defaultMessage };
     }
   };

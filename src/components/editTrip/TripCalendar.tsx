@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, DimensionValue } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { F } from "../../theme/fonts";
 
@@ -191,7 +191,7 @@ const s = StyleSheet.create({
   },
   calGrid: { flexDirection: "row", flexWrap: "wrap" },
   calCell: {
-    width: `${100 / 7}%` as any,
+    width: `${100 / 7}%` as DimensionValue,
     paddingVertical: 6,
     justifyContent: "center",
     alignItems: "center",

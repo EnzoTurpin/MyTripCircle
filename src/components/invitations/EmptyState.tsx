@@ -38,7 +38,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ tab }) => {
   return (
     <View style={styles.emptyWrap}>
       <View style={[styles.emptyCircle, { backgroundColor: colors.bgMid }]}>
-        <Ionicons name={icon as any} size={46} color={colors.textLight} />
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={46} color={colors.textLight} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.emptySub, { color: colors.textMid }]}>{sub}</Text>

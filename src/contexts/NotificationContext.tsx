@@ -72,8 +72,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       if (prefs.notifications) {
         await requestPermissionAndRegisterToken();
       }
-    } catch {
-      // ignore
+    } catch (e) {
+      if (__DEV__) console.warn("[NotificationContext] Erreur chargement préférences notifications:", e);
     }
   };
 
@@ -84,8 +84,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       if (stored) {
         setReadIds(new Set(JSON.parse(stored)));
       }
-    } catch {
-      // ignore storage errors
+    } catch (e) {
+      if (__DEV__) console.warn("[NotificationContext] Erreur lecture readIds:", e);
     }
   };
 
@@ -96,8 +96,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         readStorageKey(user.id),
         JSON.stringify(Array.from(ids))
       );
-    } catch {
-      // ignore storage errors
+    } catch (e) {
+      if (__DEV__) console.warn("[NotificationContext] Erreur persistance readIds:", e);
     }
   };
 

@@ -57,7 +57,7 @@ const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNav
       <TouchableOpacity style={styles.popup} activeOpacity={1} onPress={() => {}}>
         <View style={styles.popupRow}>
           <View style={[styles.popupIcon, { backgroundColor: ic.bg }]}>
-            <Ionicons name={getTypeIcon(address.type) as any} size={16} color={ic.icon} />
+            <Ionicons name={getTypeIcon(address.type) as keyof typeof Ionicons.glyphMap} size={16} color={ic.icon} />
           </View>
           <View style={{ flex: 1, marginRight: 6 }}>
             <Text style={[styles.popupName, { color: colors.text }]} numberOfLines={1}>{address.name}</Text>

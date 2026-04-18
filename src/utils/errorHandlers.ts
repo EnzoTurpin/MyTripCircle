@@ -117,7 +117,8 @@ export const parseApiError = (error: unknown): string => {
     let parsedError: any;
     try {
       parsedError = JSON.parse(errorMessage);
-    } catch {
+    } catch (parseErr) {
+      if (__DEV__) console.warn("[errorHandlers] parseApiError: JSON invalide:", parseErr);
       parsedError = { error: errorMessage };
     }
 
@@ -135,7 +136,8 @@ export const parseApiError = (error: unknown): string => {
     }
 
     return resolveLocalizedMessage(trimmed);
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[errorHandlers] parseApiError: erreur inattendue:", e);
     const raw = error instanceof Error ? error.message : "";
     return resolveLocalizedMessage(raw);
   }

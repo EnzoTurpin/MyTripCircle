@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, StyleProp, ViewStyle } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, StyleProp, ViewStyle, ImageStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../ui/BackButton";
 import { LinearGradient } from "expo-linear-gradient";
@@ -43,7 +43,7 @@ const TripCoverHero: React.FC<Props> = ({
       {trip.coverImage ? (
         <Image
           source={{ uri: trip.coverImage }}
-          style={StyleSheet.absoluteFill as any}
+          style={StyleSheet.absoluteFill as StyleProp<ImageStyle>}
           resizeMode="cover"
         />
       ) : (

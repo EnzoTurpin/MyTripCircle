@@ -113,8 +113,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       try {
         RNIap = require("react-native-iap");
         isIapAvailable = true;
-      } catch {
-        // IAP not available (Expo Go or not installed)
+      } catch (e) {
+        if (__DEV__) console.warn("[SubscriptionContext] IAP non disponible (Expo Go ou non installé):", e);
       }
 
       if (!isIapAvailable || !RNIap) {

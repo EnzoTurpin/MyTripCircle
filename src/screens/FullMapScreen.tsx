@@ -19,8 +19,8 @@ try {
   const RNMaps = require("react-native-maps");
   MapView = RNMaps.default;
   Marker = RNMaps.Marker;
-} catch {
-  // Module natif non encore compilé
+} catch (e) {
+  if (__DEV__) console.warn("[FullMapScreen] react-native-maps non disponible:", e);
 }
 
 import { RootStackParamList, Address } from "../types";
@@ -139,7 +139,7 @@ const FullMapScreen: React.FC = () => {
 
   const renderMarkerPin = (type: Address["type"]) => (
     <View style={[styles.markerPin, { backgroundColor: getMarkerColor(type) }]}>
-      <Ionicons name={getTypeIcon(type) as any} size={13} color="white" />
+      <Ionicons name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap} size={13} color="white" />
     </View>
   );
 

@@ -93,7 +93,7 @@ const IdeaItinerary: React.FC<Props> = ({ idea, lang, customDays, colors }) => {
               style={[s.bookingRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <View style={[s.bookingIconBg, { backgroundColor: colors.terraLight }]}>
-                <Ionicons name={BOOKING_ICONS[b.type] as any} size={16} color={colors.terra} />
+                <Ionicons name={BOOKING_ICONS[b.type] as keyof typeof Ionicons.glyphMap} size={16} color={colors.terra} />
               </View>
               <Text style={[s.bookingTitle, { color: colors.text }]} numberOfLines={1}>
                 {title}

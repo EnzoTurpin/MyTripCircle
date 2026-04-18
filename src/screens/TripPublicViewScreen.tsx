@@ -60,8 +60,8 @@ const TripPublicViewScreen: React.FC = () => {
         setTrip(t);
         setBookings(b);
         setAddresses(a);
-      } catch {
-        // voyage inaccessible
+      } catch (e) {
+        if (__DEV__) console.warn("[TripPublicViewScreen] Chargement voyage inaccessible:", e);
       } finally {
         setLoading(false);
       }
@@ -176,7 +176,7 @@ const TripPublicViewScreen: React.FC = () => {
             { icon: "location-outline", value: String(addresses.length),label: t("tripPublicView.statAddresses") },
           ].map((s) => (
             <View key={s.label} style={[styles.statBox, { backgroundColor: colors.bgMid }]}>
-              <Ionicons name={s.icon as any} size={16} color={colors.terra} />
+              <Ionicons name={s.icon as keyof typeof Ionicons.glyphMap} size={16} color={colors.terra} />
               <Text style={[styles.statValue, { color: colors.terra }]}>{s.value}</Text>
               <Text style={[styles.statLabel, { color: colors.textLight }]}>{s.label}</Text>
             </View>
@@ -216,7 +216,8 @@ const TripPublicViewScreen: React.FC = () => {
           try {
             await moderationApi.reportTrip(tripId, reason);
             Alert.alert(t("common.ok"), t("tripPublicView.reportedSuccess"));
-          } catch {
+          } catch (e) {
+            if (__DEV__) console.warn("[TripPublicViewScreen] Erreur signalement:", e);
             Alert.alert(t("common.error"), t("tripPublicView.reportError"));
           }
         }}

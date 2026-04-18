@@ -92,7 +92,7 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
               <View style={s.content}>
                 <View style={[s.iconWrap, { backgroundColor: bookingIconBg(booking.type, isDark) }]}>
                   <Ionicons
-                    name={(BOOKING_ICON[booking.type] ?? "receipt") as any}
+                    name={(BOOKING_ICON[booking.type] ?? "receipt") as keyof typeof Ionicons.glyphMap}
                     size={20}
                     color={BOOKING_STRIPE_COLOR[booking.type] ?? "#C4714A"}
                   />

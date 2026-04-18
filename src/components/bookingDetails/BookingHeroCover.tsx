@@ -65,7 +65,7 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
       <View style={styles.heroBottom}>
         <View style={styles.heroBadgeRow}>
           <View style={[styles.heroBadge, { backgroundColor: typeC.bg }]}>
-            <Ionicons name={getBookingTypeIcon(booking.type) as any} size={13} color={typeC.stripe} />
+            <Ionicons name={getBookingTypeIcon(booking.type) as keyof typeof Ionicons.glyphMap} size={13} color={typeC.stripe} />
             <Text style={[styles.heroBadgeText, { color: typeC.stripe }]}>
               {t(`bookings.filters.${booking.type}`)}
             </Text>

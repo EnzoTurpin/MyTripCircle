@@ -61,13 +61,13 @@ const SettingsScreen: React.FC = () => {
     setFriendInvitations(value);
     AsyncStorage.setItem(NOTIF_KEYS.friends, String(value));
   };
-  const [publicProfile, setPublicProfile] = useState(user?.isPublicProfile === true);
+  const [publicProfile, setPublicProfile] = useState(Boolean(user?.isPublicProfile));
   const handlePublicProfileToggle = async (value: boolean) => {
     setPublicProfile(value);
     try {
       await updateSettings({ isPublicProfile: value });
-    } catch {
-      // Rollback en cas d'erreur réseau
+    } catch (e) {
+      if (__DEV__) console.warn("[SettingsScreen] Erreur mise à jour profil public:", e);
       setPublicProfile(!value);
     }
   };

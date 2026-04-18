@@ -49,7 +49,8 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
         }));
         appendAttachments(newItems);
       }
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useAttachmentManager] Erreur sélection image:", e);
       Alert.alert(t("common.error"), t("bookings.imagePickerError"));
     }
   };
@@ -65,7 +66,8 @@ const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerR
         }));
         appendAttachments(newItems);
       }
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.warn("[useAttachmentManager] Erreur sélection document:", e);
       Alert.alert(t("common.error"), t("bookings.documentPickerError"));
     }
   };

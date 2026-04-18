@@ -79,7 +79,7 @@ const ReportSheet: React.FC<Props> = ({ visible, targetType, onClose, onSubmit }
               onPress={() => onSubmit(key)}
             >
               <View style={[styles.reasonIcon, { backgroundColor: colors.bgMid }]}>
-                <Ionicons name={icon as any} size={18} color={colors.terra} />
+                <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={colors.terra} />
               </View>
               <Text style={[styles.reasonLabel, { color: colors.text }]}>
                 {t(`moderation.reasons.${key}`)}

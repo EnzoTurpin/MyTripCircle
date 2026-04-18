@@ -26,7 +26,9 @@ export function useTripMembersActions(tripId: string, onSuccess: () => Promise<v
         message: t("tripMembers.shareMsg", { link: inviteLink }),
         url: inviteLink,
       });
-    } catch { /* user cancelled */ }
+    } catch (e) {
+      if (__DEV__) console.warn("[useTripMembersActions] Partage annulé ou échoué:", e);
+    }
   };
 
   const handleRenewLink = (setters: LinkSetters) => {
@@ -45,7 +47,8 @@ export function useTripMembersActions(tripId: string, onSuccess: () => Promise<v
               exp.setDate(exp.getDate() + 7);
               setters.setLinkExpiry(exp);
               Alert.alert(t("tripMembers.renewSuccess"), t("tripMembers.renewSuccessMsg"));
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[useTripMembersActions] Erreur renouvellement lien:", e);
               Alert.alert(t("common.error"), t("tripMembers.renewError"));
             }
           },
@@ -68,7 +71,8 @@ export function useTripMembersActions(tripId: string, onSuccess: () => Promise<v
               setActionLoading(true);
               await ApiService.cancelInvitation(inv.invitationId!);
               await onSuccess();
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[useTripMembersActions] Erreur annulation invitation:", e);
               Alert.alert(t("common.error"), t("tripMembers.cancelInviteError"));
             } finally {
               setActionLoading(false);
@@ -95,7 +99,8 @@ export function useTripMembersActions(tripId: string, onSuccess: () => Promise<v
               setActionLoading(true);
               await ApiService.removeTripCollaborator(tripId, selectedMember.userId);
               await onSuccess();
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[useTripMembersActions] Erreur retrait membre:", e);
               Alert.alert(t("common.error"), t("tripMembers.removeError"));
             } finally {
               setActionLoading(false);
@@ -122,7 +127,8 @@ export function useTripMembersActions(tripId: string, onSuccess: () => Promise<v
               setActionLoading(true);
               await ApiService.transferTripOwnership(tripId, selectedMember.userId);
               await onSuccess();
-            } catch {
+            } catch (e) {
+              if (__DEV__) console.warn("[useTripMembersActions] Erreur transfert propriété:", e);
               Alert.alert(t("common.error"), t("tripMembers.transferError"));
             } finally {
               setActionLoading(false);

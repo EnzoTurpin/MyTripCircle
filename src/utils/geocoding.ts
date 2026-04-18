@@ -43,7 +43,8 @@ const _fetchNominatim = async (query: string): Promise<GeoCoords | null> => {
       latitude: Number.parseFloat(data[0].lat),
       longitude: Number.parseFloat(data[0].lon),
     };
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[geocoding] Erreur géocodage:", e);
     return null;
   }
 };

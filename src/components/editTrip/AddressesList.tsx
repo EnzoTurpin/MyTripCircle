@@ -95,7 +95,7 @@ const AddressesList: React.FC<Props> = ({ addresses, colors, onAdd, onEdit, onDe
                 <View style={s.content}>
                   <View style={[s.iconWrap, { backgroundColor: addressIconBg(address.type, isDark) }]}>
                     <Ionicons
-                      name={(ADDRESS_ICON[address.type] ?? "location") as any}
+                      name={(ADDRESS_ICON[address.type] ?? "location") as keyof typeof Ionicons.glyphMap}
                       size={20}
                       color={stripe}
                     />

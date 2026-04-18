@@ -64,7 +64,8 @@ export const getAddressSuggestions = async (
       placeId: p.place_id,
       description: p.description,
     }));
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[PlacesService] Erreur getAddressSuggestions:", e);
     return [];
   }
 };
@@ -95,7 +96,8 @@ export const getPlaceDetails = async (placeId: string): Promise<PlaceDetailsResu
       rating:  typeof result.rating === "number" ? result.rating : undefined,
       photoUrl,
     };
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[PlacesService] Erreur getPlaceDetails:", e);
     return {};
   }
 };
@@ -117,7 +119,8 @@ export const searchPlaceByText = async (query: string): Promise<TextSearchResult
       rating: typeof place.rating === "number" ? place.rating : undefined,
       photoUrl,
     };
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[PlacesService] Erreur searchPlaceByText:", e);
     return null;
   }
 };

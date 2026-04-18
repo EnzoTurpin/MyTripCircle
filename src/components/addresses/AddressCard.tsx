@@ -27,7 +27,7 @@ const AddressCard: React.FC<AddressCardProps> = ({ item, colors, t, onPress }) =
       activeOpacity={0.85}
     >
       <View style={[styles.addressIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={getTypeIcon(item.type) as any} size={26} color={iconColor} />
+        <Ionicons name={getTypeIcon(item.type) as keyof typeof Ionicons.glyphMap} size={26} color={iconColor} />
       </View>
       <View style={styles.addressInfo}>
         <Text style={[styles.addressName, { color: colors.text }]} numberOfLines={1}>

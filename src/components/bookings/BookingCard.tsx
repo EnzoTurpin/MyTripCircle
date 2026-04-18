@@ -37,7 +37,7 @@ const BookingCard: React.FC<Props> = ({ booking: item, onPress }) => {
       <View style={styles.cardBody}>
         <View style={styles.cardTopRow}>
           <View style={[styles.typeIconCircle, { backgroundColor: typeBg }]}>
-            <Ionicons name={getBookingTypeIcon(item.type) as any} size={24} color={stripeColor} />
+            <Ionicons name={getBookingTypeIcon(item.type) as keyof typeof Ionicons.glyphMap} size={24} color={stripeColor} />
           </View>
 
           <View style={styles.cardInfo}>

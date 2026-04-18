@@ -45,7 +45,9 @@ export function useTripMembersData(tripId: string, userId: string | undefined) {
         try {
           const usersData = await ApiService.getUsersByIds(uniqueIds);
           usersData.forEach((u: any) => { usersMap[u._id || u.id] = u; });
-        } catch { /* non-bloquant */ }
+        } catch (e) {
+          if (__DEV__) console.warn("[useTripMembersData] Erreur chargement utilisateurs:", e);
+        }
       }
 
       const ownerData = usersMap[tripData.ownerId];
@@ -91,7 +93,9 @@ export function useTripMembersData(tripId: string, userId: string | undefined) {
         const exp = new Date();
         exp.setDate(exp.getDate() + 7);
         setLinkExpiry(exp);
-      } catch { /* non-bloquant */ }
+      } catch (e) {
+        if (__DEV__) console.warn("[useTripMembersData] Erreur chargement lien invitation:", e);
+      }
     } catch (e) {
       console.error("useTripMembersData loadData:", e);
     } finally {

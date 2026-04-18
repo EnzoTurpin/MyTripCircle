@@ -88,7 +88,7 @@ const FriendProfileScreen: React.FC = () => {
           {(() => {
             if (loading) return <ProfileSkeleton />;
 
-            if (profile?.isPublicProfile === false) return (
+            if (profile?.isPublicProfile === false) return ( // NOSONAR — distingue false de undefined (profil non chargé)
               <>
                 <View style={[styles.privateCard, { backgroundColor: colors.bgMid, borderColor: colors.border }]}>
                   <Ionicons name="lock-closed" size={32} color={colors.textLight} />

@@ -16,8 +16,8 @@ try {
   _MapView = RNMaps.default;
   _Marker = RNMaps.Marker;
   _mapsAvailable = true;
-} catch {
-  // Module natif non encore compilé — rebuild nécessaire
+} catch (e) {
+  if (__DEV__) console.warn("[useAddresses] react-native-maps non disponible:", e);
 }
 
 export const MapView: any = _MapView;
