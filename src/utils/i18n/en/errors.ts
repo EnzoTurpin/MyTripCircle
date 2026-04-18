@@ -57,6 +57,18 @@ const errors = {
     unmappedFallback:
       "Something went wrong. Please try again. If the problem continues, contact support.",
   },
+  notFound: {
+    title: "Page not found",
+    description: "The page you're looking for doesn't exist or has been moved.",
+    goHome: "Back to home",
+    goBack: "Go back",
+  },
+  errorScreen: {
+    title: "Something went wrong",
+    defaultMessage: "Something went wrong. Please try again or go back to the home screen.",
+    goHome: "Back to home",
+    goBack: "Go back",
+  },
 };
 
 export default errors;

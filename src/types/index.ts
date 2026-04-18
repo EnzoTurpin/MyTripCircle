@@ -233,6 +233,8 @@ export type RootStackParamList = {
   FriendRequestConfirmation: { recipientName: string; recipientEmail?: string; autoAccepted?: boolean };
   FriendInvitation: { token: string };
   IdeaDetail: { ideaId: string };
+  NotFound: undefined;
+  Error: { message?: string; canGoBack?: boolean } | undefined;
 };
 
 export type MainTabParamList = {
