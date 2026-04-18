@@ -59,7 +59,7 @@ function getLocale(language: string): string {
 type FormHandle = ReturnType<typeof useBookingForm>;
 type ThemeColors = ReturnType<typeof useTheme>["colors"];
 
-function AndroidDatePickers({ form, safeDate, safeEndDate }: { form: FormHandle; safeDate: Date; safeEndDate: Date }) {
+function AndroidDatePickers({ form, safeDate, safeEndDate }: Readonly<{ form: FormHandle; safeDate: Date; safeEndDate: Date }>) {
   if (Platform.OS !== "android") return null;
   return (
     <>
@@ -71,9 +71,9 @@ function AndroidDatePickers({ form, safeDate, safeEndDate }: { form: FormHandle;
   );
 }
 
-function IosPickersBlock({ form, safeDate, safeEndDate, colors, t, locale }: {
+function IosPickersBlock({ form, safeDate, safeEndDate, colors, t, locale }: Readonly<{
   form: FormHandle; safeDate: Date; safeEndDate: Date; colors: ThemeColors; t: (k: string) => string; locale: string;
-}) {
+}>) {
   if (Platform.OS !== "ios") return null;
   return (
     <>
@@ -90,6 +90,97 @@ function IosPickersBlock({ form, safeDate, safeEndDate, colors, t, locale }: {
         <DateTimePicker value={form.getReturnTimePickerValue()} mode="time" display="spinner" onChange={form.handleReturnTimeChange} textColor={colors.text} />
       </PickerModal>
     </>
+  );
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function OriginDestinationSection({ form, colors, t }: Readonly<{ form: FormHandle; colors: ThemeColors; t: (k: string) => string }>) {
+  const icon = form.formData.type === "flight" ? "airplane-outline" : "train-outline";
+  return (
+    <>
+      <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.origin ? styles.fieldBoxError : null]}>
+        <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.origin")} *</Text>
+        <TextInput
+          style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.origin ? styles.fieldInputError : null]}
+          value={form.formData.origin}
+          onChangeText={(v) => { form.handleOriginChange(v); if (form.fieldErrors.origin) form.setFieldErrors((e) => ({ ...e, origin: undefined })); }}
+          placeholder={t("bookings.originPlaceholder")}
+          placeholderTextColor={colors.textLight}
+        />
+        {form.fieldErrors.origin ? <Text style={styles.inlineError}>{form.fieldErrors.origin}</Text> : null}
+        {form.showOriginSuggestions && form.originSuggestions.length > 0 && (
+          <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <FlatList
+              data={form.originSuggestions}
+              keyExtractor={(item) => item.placeId}
+              scrollEnabled={false}
+              style={styles.suggestionsList}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectOrigin(item)}>
+                  <Ionicons name={icon} size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                  <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
+      </View>
+
+      <View style={styles.transportArrowRow}>
+        <Ionicons name="arrow-down" size={18} color={colors.textLight} />
+      </View>
+
+      <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.destination ? styles.fieldBoxError : null]}>
+        <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.destination")} *</Text>
+        <TextInput
+          style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.destination ? styles.fieldInputError : null]}
+          value={form.formData.destination}
+          onChangeText={(v) => { form.handleDestinationChange(v); if (form.fieldErrors.destination) form.setFieldErrors((e) => ({ ...e, destination: undefined })); }}
+          placeholder={t("bookings.destinationPlaceholder")}
+          placeholderTextColor={colors.textLight}
+        />
+        {form.fieldErrors.destination ? <Text style={styles.inlineError}>{form.fieldErrors.destination}</Text> : null}
+        {form.showDestinationSuggestions && form.destinationSuggestions.length > 0 && (
+          <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <FlatList
+              data={form.destinationSuggestions}
+              keyExtractor={(item) => item.placeId}
+              scrollEnabled={false}
+              style={styles.suggestionsList}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectDestination(item)}>
+                  <Ionicons name={icon} size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                  <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
+      </View>
+    </>
+  );
+}
+
+function TitleField({ form, colors, t }: Readonly<{ form: FormHandle; colors: ThemeColors; t: (k: string) => string }>) {
+  return (
+    <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.title ? styles.fieldBoxError : null]}>
+      <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.title")} *</Text>
+      {form.formData.type === "flight" ? (
+        <Text style={[styles.fieldValue, { color: form.formData.title ? colors.text : colors.textLight }]}>
+          {form.formData.title || t("bookings.flightTitlePlaceholder")}
+        </Text>
+      ) : (
+        <TextInput
+          style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.title ? styles.fieldInputError : null]}
+          value={form.formData.title}
+          onChangeText={(v) => { form.handleInputChange("title", v); if (form.fieldErrors.title) form.setFieldErrors((e) => ({ ...e, title: undefined })); }}
+          placeholder={t("bookings.titlePlaceholder")}
+          placeholderTextColor={colors.textLight}
+        />
+      )}
+      {form.fieldErrors.title ? <Text style={styles.inlineError}>{form.fieldErrors.title}</Text> : null}
+    </View>
   );
 }
 
@@ -210,87 +301,11 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
           {/* ── Origine / Destination (vol / train) ── */}
           {isTransport(form.formData.type) && (
-            <>
-              <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.origin ? styles.fieldBoxError : null]}>
-                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.origin")} *</Text>
-                <TextInput
-                  style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.origin ? styles.fieldInputError : null]}
-                  value={form.formData.origin}
-                  onChangeText={(v) => { form.handleOriginChange(v); if (form.fieldErrors.origin) form.setFieldErrors((e) => ({ ...e, origin: undefined })); }}
-                  placeholder={t("bookings.originPlaceholder")}
-                  placeholderTextColor={colors.textLight}
-                />
-                {form.fieldErrors.origin ? <Text style={styles.inlineError}>{form.fieldErrors.origin}</Text> : null}
-                {form.showOriginSuggestions && form.originSuggestions.length > 0 && (
-                  <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                    <FlatList
-                      data={form.originSuggestions}
-                      keyExtractor={(item) => item.placeId}
-                      scrollEnabled={false}
-                      style={styles.suggestionsList}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectOrigin(item)}>
-                          <Ionicons name={form.formData.type === "flight" ? "airplane-outline" : "train-outline"} size={16} color={colors.textMid} style={styles.suggestionIcon} />
-                          <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
-                        </TouchableOpacity>
-                      )}
-                    />
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.transportArrowRow}>
-                <Ionicons name="arrow-down" size={18} color={colors.textLight} />
-              </View>
-
-              <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.destination ? styles.fieldBoxError : null]}>
-                <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.destination")} *</Text>
-                <TextInput
-                  style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.destination ? styles.fieldInputError : null]}
-                  value={form.formData.destination}
-                  onChangeText={(v) => { form.handleDestinationChange(v); if (form.fieldErrors.destination) form.setFieldErrors((e) => ({ ...e, destination: undefined })); }}
-                  placeholder={t("bookings.destinationPlaceholder")}
-                  placeholderTextColor={colors.textLight}
-                />
-                {form.fieldErrors.destination ? <Text style={styles.inlineError}>{form.fieldErrors.destination}</Text> : null}
-                {form.showDestinationSuggestions && form.destinationSuggestions.length > 0 && (
-                  <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                    <FlatList
-                      data={form.destinationSuggestions}
-                      keyExtractor={(item) => item.placeId}
-                      scrollEnabled={false}
-                      style={styles.suggestionsList}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectDestination(item)}>
-                          <Ionicons name={form.formData.type === "flight" ? "airplane-outline" : "train-outline"} size={16} color={colors.textMid} style={styles.suggestionIcon} />
-                          <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
-                        </TouchableOpacity>
-                      )}
-                    />
-                  </View>
-                )}
-              </View>
-            </>
+            <OriginDestinationSection form={form} colors={colors} t={t} />
           )}
 
           {/* ── Titre ── */}
-          <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.title ? styles.fieldBoxError : null]}>
-            <Text style={[styles.fieldLabel, { color: colors.textLight }]}>{t("bookings.title")} *</Text>
-            {form.formData.type === "flight" ? (
-              <Text style={[styles.fieldValue, { color: form.formData.title ? colors.text : colors.textLight }]}>
-                {form.formData.title || t("bookings.flightTitlePlaceholder")}
-              </Text>
-            ) : (
-              <TextInput
-                style={[styles.fieldInput, { color: colors.text }, form.fieldErrors.title ? styles.fieldInputError : null]}
-                value={form.formData.title}
-                onChangeText={(v) => { form.handleInputChange("title", v); if (form.fieldErrors.title) form.setFieldErrors((e) => ({ ...e, title: undefined })); }}
-                placeholder={t("bookings.titlePlaceholder")}
-                placeholderTextColor={colors.textLight}
-              />
-            )}
-            {form.fieldErrors.title ? <Text style={styles.inlineError}>{form.fieldErrors.title}</Text> : null}
-          </View>
+          <TitleField form={form} colors={colors} t={t} />
 
           {/* ── Date + Heure de départ ── */}
           <View style={styles.dateRow}>
