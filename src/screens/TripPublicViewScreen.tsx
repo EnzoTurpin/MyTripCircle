@@ -164,7 +164,7 @@ const TripPublicViewScreen: React.FC = () => {
           statusBg={statusBg}
           insetTop={insets.top}
           onBack={() => navigation.goBack()}
-          onReport={trip.ownerId !== user?.id ? () => setReportSheetVisible(true) : undefined}
+          onReport={trip.ownerId === user?.id ? undefined : () => setReportSheetVisible(true)}
         />
 
         {/* Stats */}

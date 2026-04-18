@@ -49,7 +49,7 @@ const TripHero: React.FC<Props> = ({
   const navigation = useNavigation<NavigationProp>();
   const { top: insetTop } = useSafeAreaInsets();
   const gradientColors = heroColors(trip.status);
-  const fallbackPhoto = FALLBACK_PHOTOS[tripId.charCodeAt(0) % FALLBACK_PHOTOS.length];
+  const fallbackPhoto = FALLBACK_PHOTOS[(tripId.codePointAt(0) ?? 0) % FALLBACK_PHOTOS.length];
   const [fetchedCover, setFetchedCover] = useState<string>(
     trip.coverImage || getSyncCachedPhoto(trip.destination) || fallbackPhoto
   );
