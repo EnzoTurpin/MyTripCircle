@@ -13,6 +13,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { formatDate } from "../utils/i18n";
 
 type IdeaDetailRouteProp = RouteProp<RootStackParamList, "IdeaDetail">;
+
+function devWarn(msg: string, e: unknown): void {
+  if (__DEV__) console.warn(msg, e);
+}
 type IdeaDetailNavigationProp = StackNavigationProp<RootStackParamList, "IdeaDetail">;
 
 const SCREEN_H = Dimensions.get("window").height;
@@ -108,7 +112,7 @@ export function useIdeaDetail() {
         placeName = placeResult.name;
       }
     } catch (e) {
-      if (__DEV__) console.warn("[useIdeaDetail] Erreur recherche lieu:", e);
+      devWarn("[useIdeaDetail] Erreur recherche lieu:", e);
     }
 
     const addressType = ADDRESS_TYPE_MAP[b.type] ?? "activity";
@@ -119,7 +123,7 @@ export function useIdeaDetail() {
         price: b.estimatedPrice, currency: b.currency || "€", status: "pending",
       });
     } catch (e) {
-      if (__DEV__) console.warn("[useIdeaDetail] Erreur création réservation:", e);
+      devWarn("[useIdeaDetail] Erreur création réservation:", e);
     }
 
     if (realAddress && placeName) {
@@ -127,7 +131,7 @@ export function useIdeaDetail() {
       try {
         await createAddress({ type: addressType, name: placeName, address: realAddress, city, country, rating: placeRating, photoUrl: placePhotoUrl, tripId });
       } catch (e) {
-        if (__DEV__) console.warn("[useIdeaDetail] Erreur création adresse:", e);
+        devWarn("[useIdeaDetail] Erreur création adresse:", e);
       }
     }
   };
