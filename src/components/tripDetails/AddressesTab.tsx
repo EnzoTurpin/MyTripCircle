@@ -1,11 +1,12 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { Address } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
+import ItemActionSheet from "../ItemActionSheet";
 
 const addressStripeColor = (type: string): string => {
   switch (type) {
@@ -47,11 +48,39 @@ interface Props {
   onEditAddress: (address: Address) => void;
   onAddAddress?: () => void;
   canAdd?: boolean;
+  onDeleteAddress?: (addressId: string) => Promise<void>;
 }
 
-const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress, canAdd }) => {
+const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress, canAdd, onDeleteAddress }) => {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+
+  const [actionAddress, setActionAddress] = useState<Address | null>(null);
+
+  const handleDeletePress = () => {
+    if (!actionAddress || !onDeleteAddress) return;
+    const id = actionAddress.id;
+    setActionAddress(null);
+    Alert.alert(
+      t("addresses.details.deleteTitle"),
+      t("addresses.details.deleteConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => onDeleteAddress(id),
+        },
+      ]
+    );
+  };
+
+  const handleEditPress = () => {
+    if (!actionAddress) return;
+    const address = actionAddress;
+    setActionAddress(null);
+    onEditAddress(address);
+  };
 
   if (addresses.length === 0) {
     return (
@@ -84,7 +113,7 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
           <TouchableOpacity
             key={address.id}
             style={[s.listItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => onEditAddress(address)}
+            onPress={() => setActionAddress(address)}
             activeOpacity={0.75}
           >
             <View style={[s.listStripe, { backgroundColor: stripe }]} />
@@ -99,6 +128,17 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
           </TouchableOpacity>
         );
       })}
+
+      <ItemActionSheet
+        visible={!!actionAddress}
+        title={actionAddress?.name ?? ""}
+        subtitle={actionAddress?.city ? `${actionAddress.city}, ${actionAddress.country}` : undefined}
+        onClose={() => setActionAddress(null)}
+        onEdit={handleEditPress}
+        onDelete={handleDeletePress}
+        canEdit={canAdd}
+        canDelete={canAdd && !!onDeleteAddress}
+      />
     </View>
   );
 };

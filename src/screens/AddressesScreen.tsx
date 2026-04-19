@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +15,7 @@ import { useAddresses } from "../hooks/useAddresses";
 import AddressCard from "../components/addresses/AddressCard";
 import AddressFilterBar from "../components/addresses/AddressFilterBar";
 import AddressMapWidget from "../components/addresses/AddressMapWidget";
+import ItemActionSheet from "../components/ItemActionSheet";
 import { styles } from "../components/addresses/addressStyles";
 import SkeletonBox from "../components/SkeletonBox";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
@@ -31,10 +33,32 @@ const AddressesScreen: React.FC = () => {
     widgetRegion,
     filteredAddresses,
     eyebrow,
+    actionAddress,
+    setActionAddress,
     handleAddressPress,
+    handleEditAddress,
+    handleDeleteAddress,
     handleAddAddress,
     handleOpenFullMap,
   } = useAddresses();
+
+  const handleDeletePress = () => {
+    if (!actionAddress) return;
+    const id = actionAddress.id;
+    setActionAddress(null);
+    Alert.alert(
+      t("addresses.details.deleteTitle"),
+      t("addresses.details.deleteConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => handleDeleteAddress(id),
+        },
+      ]
+    );
+  };
   const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   if (loading) {
@@ -180,6 +204,15 @@ const AddressesScreen: React.FC = () => {
             />
           )}
         </View>
+
+        <ItemActionSheet
+          visible={!!actionAddress}
+          title={actionAddress?.name ?? ""}
+          subtitle={actionAddress ? `${actionAddress.city}, ${actionAddress.country}` : undefined}
+          onClose={() => setActionAddress(null)}
+          onEdit={handleEditAddress}
+          onDelete={handleDeletePress}
+        />
       </SafeAreaView>
     </SwipeToNavigate>
   );

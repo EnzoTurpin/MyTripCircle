@@ -70,6 +70,9 @@ const TripDetailsScreen: React.FC = () => {
     handleCopyBooking,
     handleCopyAddress,
     handleEditAddress,
+    handleUpdateBooking,
+    handleDeleteBooking,
+    handleDeleteAddress,
     handleValidateTrip,
     otherBookings,
     otherAddresses,
@@ -200,6 +203,8 @@ const TripDetailsScreen: React.FC = () => {
             isOwner={isOwner}
             canEdit={userCollaborator?.permissions?.canEdit}
             onAddBooking={handleAddBookingPress}
+            onUpdateBooking={handleUpdateBooking}
+            onDeleteBooking={handleDeleteBooking}
           />
         )}
 
@@ -209,6 +214,7 @@ const TripDetailsScreen: React.FC = () => {
             onEditAddress={handleEditAddress}
             onAddAddress={handleAddAddressPress}
             canAdd={canEdit}
+            onDeleteAddress={handleDeleteAddress}
           />
         )}
 
