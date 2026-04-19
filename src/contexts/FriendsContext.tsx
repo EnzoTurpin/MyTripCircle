@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from "react";
 import { FriendRequest, Friend, FriendSuggestion } from "../types";
 import { ApiService } from "../services/ApiService";
 import { useAuth } from "./AuthContext";
+import { CacheManager, CACHE_KEYS, CACHE_TTL } from "../utils/cacheManager";
 
 interface FriendsContextType {
   friends: Friend[];
@@ -25,6 +26,23 @@ export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoadedOnceRef = useRef(false);
+
+  // Sync state mutations to cache automatically after any operation
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) return;
+    CacheManager.set(CACHE_KEYS.FRIENDS, friends, CACHE_TTL.FRIENDS).catch(() => {});
+  }, [friends]);
+
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) return;
+    CacheManager.set(CACHE_KEYS.FRIEND_REQUESTS, friendRequests, CACHE_TTL.FRIEND_REQUESTS).catch(() => {});
+  }, [friendRequests]);
+
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) return;
+    CacheManager.set(CACHE_KEYS.FRIEND_SUGGESTIONS, suggestions, CACHE_TTL.FRIEND_SUGGESTIONS).catch(() => {});
+  }, [suggestions]);
 
   const refreshFriends = async () => {
     if (!user) return;
@@ -63,22 +81,57 @@ export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   useEffect(() => {
-    if (user) {
-      setLoading(true);
-      Promise.all([refreshFriends(), refreshFriendRequests(), refreshSuggestions()]).finally(() => {
-        setLoading(false);
-      });
+    if (!user) {
+      setFriends([]);
+      setFriendRequests([]);
+      setSuggestions([]);
+      setLoading(false);
+      hasLoadedOnceRef.current = false;
+      // Clear cache on logout to prevent cross-user data leaks
+      Promise.all([
+        CacheManager.invalidate(CACHE_KEYS.FRIENDS),
+        CacheManager.invalidate(CACHE_KEYS.FRIEND_REQUESTS),
+        CacheManager.invalidate(CACHE_KEYS.FRIEND_SUGGESTIONS),
+      ]).catch(() => {});
+      return;
     }
-  }, [user]);
+
+    const init = async () => {
+      // Hydrate from cache instantly before network responds
+      const [cachedFriends, cachedRequests, cachedSuggestions] = await Promise.all([
+        CacheManager.getStale<Friend[]>(CACHE_KEYS.FRIENDS),
+        CacheManager.getStale<FriendRequest[]>(CACHE_KEYS.FRIEND_REQUESTS),
+        CacheManager.getStale<FriendSuggestion[]>(CACHE_KEYS.FRIEND_SUGGESTIONS),
+      ]);
+
+      const hasCachedData = !!(cachedFriends || cachedRequests || cachedSuggestions);
+      if (cachedFriends) setFriends(cachedFriends);
+      if (cachedRequests) setFriendRequests(cachedRequests);
+      if (cachedSuggestions) setSuggestions(cachedSuggestions);
+
+      if (!hasCachedData) setLoading(true);
+
+      // Mark loaded before setters so cache-sync useEffects fire on network data
+      hasLoadedOnceRef.current = true;
+
+      await Promise.all([
+        refreshFriends(),
+        refreshFriendRequests(),
+        refreshSuggestions(),
+      ]).catch(() => {});
+
+      setLoading(false);
+    };
+
+    init();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendFriendRequest = async (data: { recipientEmail?: string; recipientPhone?: string }): Promise<{ autoAccepted?: boolean }> => {
     try {
       const result = await ApiService.sendFriendRequest(data);
-      // Optimistically remove from suggestions immediately
       if (data.recipientEmail) {
         setSuggestions((prev) => prev.filter((s) => s.email !== data.recipientEmail));
       }
-      // Refresh en arrière-plan — ne pas bloquer la navigation
       if (result?.autoAccepted) {
         Promise.all([refreshFriends(), refreshFriendRequests(), refreshSuggestions()]).catch(() => {});
       } else {
