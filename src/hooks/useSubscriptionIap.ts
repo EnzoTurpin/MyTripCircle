@@ -53,7 +53,12 @@ export function useSubscriptionIap() {
       try {
         await RNIap.initConnection();
         const subs = await RNIap.fetchProducts({ skus: productIds, type: "subs" });
-        setProducts(subs);
+        const normalized: MockProduct[] = subs.map((p: any) => ({
+          productId: p.productId ?? p.id,
+          title: p.title,
+          localizedPrice: p.localizedPrice ?? p.displayPrice,
+        }));
+        setProducts(normalized);
       } catch (err) {
         logger.warn("IAP init error", err);
         setProducts(mockProducts);
