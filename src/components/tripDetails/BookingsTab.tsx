@@ -1,16 +1,14 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { useTranslation } from "react-i18next";
-import { RootStackParamList, Booking } from "../../types";
+import { Booking } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
-
-type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
+import ItemActionSheet from "../ItemActionSheet";
+import BookingForm from "../BookingForm";
 
 const bookingStripeColor = (type: string): string => {
   switch (type) {
@@ -61,14 +59,48 @@ interface Props {
   isOwner: boolean;
   canEdit?: boolean;
   onAddBooking?: () => void;
+  onUpdateBooking?: (bookingId: string, updates: Omit<Booking, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  onDeleteBooking?: (bookingId: string) => Promise<void>;
 }
 
-const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking }) => {
-  const navigation = useNavigation<NavigationProp>();
+const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking, onUpdateBooking, onDeleteBooking }) => {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
 
+  const [actionBooking, setActionBooking] = useState<Booking | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+
   const canAdd = isOwner || canEdit;
+  const canModify = isOwner || canEdit;
+
+  const handleDeletePress = () => {
+    if (!actionBooking || !onDeleteBooking) return;
+    const id = actionBooking.id;
+    setActionBooking(null);
+    Alert.alert(
+      t("common.delete"),
+      t("bookings.deleteConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => onDeleteBooking(id),
+        },
+      ]
+    );
+  };
+
+  const handleEditPress = () => {
+    setShowEditForm(true);
+  };
+
+  const handleSaveEdit = async (updates: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
+    if (!actionBooking || !onUpdateBooking) return;
+    await onUpdateBooking(actionBooking.id, updates);
+    setShowEditForm(false);
+    setActionBooking(null);
+  };
 
   if (bookings.length === 0) {
     return (
@@ -102,12 +134,7 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking
           <TouchableOpacity
             key={booking.id}
             style={[s.listItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() =>
-              navigation.navigate("BookingDetails", {
-                bookingId: booking.id,
-                readOnly: !isOwner && !canEdit,
-              })
-            }
+            onPress={() => setActionBooking(booking)}
             activeOpacity={0.8}
           >
             <View style={[s.listStripe, { backgroundColor: stripe }]} />
@@ -138,6 +165,24 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking
           </TouchableOpacity>
         );
       })}
+
+      <ItemActionSheet
+        visible={!!actionBooking && !showEditForm}
+        title={actionBooking?.title ?? ""}
+        subtitle={actionBooking ? formatDate(actionBooking.date) : undefined}
+        onClose={() => setActionBooking(null)}
+        onEdit={handleEditPress}
+        onDelete={handleDeletePress}
+        canEdit={canModify && !!onUpdateBooking}
+        canDelete={isOwner && !!onDeleteBooking}
+      />
+
+      <BookingForm
+        visible={showEditForm}
+        onClose={() => { setShowEditForm(false); setActionBooking(null); }}
+        onSave={handleSaveEdit}
+        initialBooking={actionBooking ?? undefined}
+      />
     </View>
   );
 };

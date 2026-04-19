@@ -13,7 +13,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 export function useTripData(tripId: string) {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { validateTrip, createBooking, createAddress, bookings: allBookings, addresses: allAddresses, getTripById } = useTrips();
+  const { validateTrip, createBooking, updateBooking, deleteBooking, createAddress, deleteAddress, bookings: allBookings, addresses: allAddresses, getTripById } = useTrips();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -143,7 +143,34 @@ export function useTripData(tripId: string) {
   };
 
   const handleEditAddress = (address: Address) => {
-    navigation.navigate("AddressDetails", { addressId: address.id });
+    navigation.navigate("AddressForm", { addressId: address.id });
+  };
+
+  const handleUpdateBooking = async (bookingId: string, updates: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      const updated = await updateBooking(bookingId, updates);
+      if (updated) setBookings((prev) => prev.map((b) => b.id === bookingId ? updated : b));
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error) || t("bookings.details.errorUpdateBooking"));
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    try {
+      await deleteBooking(bookingId);
+      setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error) || t("bookings.details.errorDeleteBooking"));
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    try {
+      await deleteAddress(addressId);
+      setAddresses((prev) => prev.filter((a) => a.id !== addressId));
+    } catch (error) {
+      Alert.alert(t("common.error"), parseApiError(error) || t("addresses.details.deleteConfirm"));
+    }
   };
 
   const handleCopyBooking = async (booking: Booking) => {
@@ -220,6 +247,9 @@ export function useTripData(tripId: string) {
     handleCopyAddress,
     handleAddAddress,
     handleEditAddress,
+    handleUpdateBooking,
+    handleDeleteBooking,
+    handleDeleteAddress,
     handleValidateTrip,
     otherBookings,
     otherAddresses,

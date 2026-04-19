@@ -44,11 +44,12 @@ type AddressesNavigationProp = StackNavigationProp<RootStackParamList, "Main">;
 
 export function useAddresses() {
   const navigation = useNavigation<AddressesNavigationProp>();
-  const { addresses, trips, loading, refreshData } = useTrips();
+  const { addresses, trips, loading, deleteAddress, refreshData } = useTrips();
   const { t } = useTranslation();
   const { colors } = useTheme();
 
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
+  const [actionAddress, setActionAddress] = useState<Address | null>(null);
   const currentLocation = useCurrentLocation();
 
   const [mapCoords, setMapCoords] = useState<Record<string, GeoCoords>>({});
@@ -152,7 +153,19 @@ export function useAddresses() {
   const eyebrow = trips && trips.length > 0 ? trips[0].title : undefined;
 
   const handleAddressPress = (address: Address) => {
-    navigation.navigate("AddressDetails", { addressId: address.id });
+    setActionAddress(address);
+  };
+
+  const handleEditAddress = () => {
+    if (!actionAddress) return;
+    const id = actionAddress.id;
+    setActionAddress(null);
+    navigation.navigate("AddressForm", { addressId: id });
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    await deleteAddress(addressId);
+    await refreshData();
   };
 
   const handleAddAddress = () => navigation.navigate("AddressForm", {});
@@ -172,7 +185,11 @@ export function useAddresses() {
     filteredAddresses,
     filteredWithCoords,
     eyebrow,
+    actionAddress,
+    setActionAddress,
     handleAddressPress,
+    handleEditAddress,
+    handleDeleteAddress,
     handleAddAddress,
     handleOpenFullMap,
   };
