@@ -12,6 +12,7 @@ import ApiService from "../services/ApiService";
 import { useAuth } from "./AuthContext";
 import { useTripsApi } from "../hooks/useTripsApi";
 import { mapTrip, mapBooking, mapAddress } from "../utils/tripMappers";
+import { CacheManager, CACHE_KEYS, CACHE_TTL } from "../utils/cacheManager";
 
 type NewEntityFields = "id" | "createdAt" | "updatedAt";
 
@@ -103,6 +104,22 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
   const isLoadingRef = React.useRef(false);
   const hasLoadedOnceRef = React.useRef(false);
 
+  // Sync state mutations to cache automatically after any CRUD operation
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) return;
+    CacheManager.set(CACHE_KEYS.TRIPS, trips, CACHE_TTL.TRIPS).catch(() => {});
+  }, [trips]);
+
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) return;
+    CacheManager.set(CACHE_KEYS.BOOKINGS, bookings, CACHE_TTL.BOOKINGS).catch(() => {});
+  }, [bookings]);
+
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) return;
+    CacheManager.set(CACHE_KEYS.ADDRESSES, addresses, CACHE_TTL.ADDRESSES).catch(() => {});
+  }, [addresses]);
+
   const loadData = useCallback(async () => {
     if (!user || isLoadingRef.current) {
       setLoading(false);
@@ -111,21 +128,41 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
 
     isLoadingRef.current = true;
 
-    try {
-      setLoading(true);
+    // On first load: hydrate from cache instantly so the UI renders immediately
+    if (!hasLoadedOnceRef.current) {
+      const [cachedTrips, cachedBookings, cachedAddresses] = await Promise.all([
+        CacheManager.getStale<Trip[]>(CACHE_KEYS.TRIPS),
+        CacheManager.getStale<Booking[]>(CACHE_KEYS.BOOKINGS),
+        CacheManager.getStale<Address[]>(CACHE_KEYS.ADDRESSES),
+      ]);
 
+      const hasCachedData = !!(cachedTrips || cachedBookings || cachedAddresses);
+      if (cachedTrips) setTrips(cachedTrips);
+      if (cachedBookings) setBookings(cachedBookings);
+      if (cachedAddresses) setAddresses(cachedAddresses);
+
+      // Skip the loading spinner if we already have data to show
+      if (!hasCachedData) setLoading(true);
+    }
+
+    try {
       const [tripsData, bookingsData, addressesData] = await Promise.all([
         ApiService.getTrips(),
         ApiService.getBookings(),
         ApiService.getAddresses(),
       ]);
 
+      // Mark as loaded BEFORE state updates so the cache-sync useEffects fire correctly
+      hasLoadedOnceRef.current = true;
       setTrips(tripsData.map(mapTrip));
       setBookings(bookingsData.map(mapBooking));
       setAddresses(addressesData.map(mapAddress));
-      hasLoadedOnceRef.current = true;
     } catch (error) {
       console.error("Error loading data:", error);
+      // Keep showing whatever cached data was set above — user stays functional offline
+      if (!hasLoadedOnceRef.current) {
+        hasLoadedOnceRef.current = true;
+      }
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -150,6 +187,12 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
       setInvitations([]);
       setLoading(false);
       hasLoadedOnceRef.current = false;
+      // Clear cache on logout to prevent cross-user data leaks
+      Promise.all([
+        CacheManager.invalidate(CACHE_KEYS.TRIPS),
+        CacheManager.invalidate(CACHE_KEYS.BOOKINGS),
+        CacheManager.invalidate(CACHE_KEYS.ADDRESSES),
+      ]).catch(() => {});
     }
   }, [user, loadData]);
 
