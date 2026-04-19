@@ -52,7 +52,7 @@ export function useSubscriptionIap() {
     async function init() {
       try {
         await RNIap.initConnection();
-        const subs = await RNIap.getSubscriptions(productIds);
+        const subs = await RNIap.fetchProducts({ skus: productIds, type: "subs" });
         setProducts(subs);
       } catch (err) {
         logger.warn("IAP init error", err);
@@ -117,7 +117,13 @@ export function useSubscriptionIap() {
     }
     try {
       setLoadingId(productId);
-      await RNIap.requestSubscription(productId);
+      await RNIap.requestPurchase({
+        type: "subs",
+        request: {
+          apple: { sku: productId },
+          google: { skus: [productId] },
+        },
+      });
     } catch (err) {
       logger.warn("requestSubscription err", err);
       Alert.alert(t("subscription.purchaseErrorTitle"), t("subscription.purchaseErrorMessage"), [{ text: t("common.ok") }]);

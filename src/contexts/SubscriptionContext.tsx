@@ -122,8 +122,13 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         return false;
       }
 
-      // Request subscription from platform
-      const purchase = await RNIap.requestSubscription(productId);
+      const purchase = await RNIap.requestPurchase({
+        type: "subs",
+        request: {
+          apple: { sku: productId },
+          google: { skus: [productId] },
+        },
+      });
 
       // Get receipt data
       const receiptData = purchase.transactionReceipt || purchase.purchaseToken;
