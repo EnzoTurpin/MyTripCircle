@@ -22,6 +22,7 @@ import PendingRow from "../components/inviteFriends/PendingRow";
 import MemberActionSheet from "../components/inviteFriends/MemberActionSheet";
 import InvitePanelSheet from "../components/inviteFriends/InvitePanelSheet";
 import { F } from "../theme/fonts";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 const daysUntil = (date: Date) =>
   Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86400000));
@@ -35,6 +36,7 @@ const InviteFriendsScreen: React.FC = () => {
   const { tripId } = route.params;
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const {
     trip,
@@ -126,7 +128,7 @@ const InviteFriendsScreen: React.FC = () => {
             {t("inviteFriends.manageMembers")}
           </Text>
         </View>
-        <TouchableOpacity style={[s.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={openInvitePanel}>
+        <TouchableOpacity style={[s.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, offlineStyle]} onPress={openInvitePanel} disabled={offlineDisabled}>
           <Text style={s.inviteBtnTxt}>{t("inviteFriends.inviteBtn")}</Text>
         </TouchableOpacity>
       </View>
@@ -149,9 +151,9 @@ const InviteFriendsScreen: React.FC = () => {
               {invitationLink || t("inviteFriends.linkGenerating")}
             </Text>
             <TouchableOpacity
-              style={[s.copyBtn, { backgroundColor: colors.terra }]}
+              style={[s.copyBtn, { backgroundColor: colors.terra }, offlineStyle]}
               onPress={handleShareLink}
-              disabled={!invitationLink}
+              disabled={!invitationLink || offlineDisabled}
             >
               <Text style={s.copyBtnTxt}>{t("inviteFriends.linkShare")}</Text>
             </TouchableOpacity>
@@ -161,7 +163,7 @@ const InviteFriendsScreen: React.FC = () => {
               <Text style={[s.expiryTxt, { color: colors.terra }]}>
                 {t("inviteFriends.linkExpiry", { count: daysUntil(linkExpiry) })}
               </Text>
-              <TouchableOpacity onPress={handleRenewLink}>
+              <TouchableOpacity onPress={handleRenewLink} disabled={offlineDisabled} style={offlineStyle}>
                 <Text
                   style={[
                     s.expiryTxt,

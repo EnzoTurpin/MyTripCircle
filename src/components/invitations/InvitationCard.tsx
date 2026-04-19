@@ -91,6 +91,7 @@ interface CardProps {
   invitation: any;
   expanded: boolean;
   accepting: boolean;
+  disabled?: boolean;
   onAccept: () => void;
   onDecline: () => void;
   onDetail: () => void;
@@ -98,7 +99,7 @@ interface CardProps {
 }
 
 const InvitationCard: React.FC<CardProps> = ({
-  invitation: inv, expanded, accepting, onAccept, onDecline, onDetail, onViewTrip,
+  invitation: inv, expanded, accepting, disabled, onAccept, onDecline, onDetail, onViewTrip,
 }) => {
   const { t }      = useTranslation();
   const { colors } = useTheme();
@@ -191,17 +192,17 @@ const InvitationCard: React.FC<CardProps> = ({
         {canAct && (
           <View style={[cardStyles.actions, expandedActionsStyle]}>
             <TouchableOpacity
-              style={[cardStyles.btnAccept, expandedBtnStyle, { backgroundColor: colors.terra, shadowColor: colors.terra }]}
+              style={[cardStyles.btnAccept, expandedBtnStyle, { backgroundColor: colors.terra, shadowColor: colors.terra }, (accepting || disabled) && { opacity: 0.4 }]}
               onPress={onAccept}
-              disabled={accepting}
+              disabled={accepting || disabled}
               activeOpacity={0.85}
             >
               {acceptContentEl}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[cardStyles.btnDecline, { backgroundColor: colors.bgMid }]}
+              style={[cardStyles.btnDecline, { backgroundColor: colors.bgMid }, (accepting || disabled) && { opacity: 0.4 }]}
               onPress={onDecline}
-              disabled={accepting}
+              disabled={accepting || disabled}
               activeOpacity={0.8}
             >
               <Ionicons name="close" size={16} color={colors.textMid} />

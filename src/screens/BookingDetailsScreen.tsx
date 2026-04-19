@@ -24,6 +24,7 @@ import { F } from "../theme/fonts";
 import { RADIUS } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { getBookingHeroGradient } from "../utils/bookingHelpers";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type BookingDetailsScreenRouteProp = RouteProp<RootStackParamList, "BookingDetails">;
 type BookingDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, "BookingDetails">;
@@ -36,6 +37,7 @@ const BookingDetailsScreen: React.FC = () => {
   const insets     = useSafeAreaInsets();
   const { bookings, updateBooking, deleteBooking } = useTrips();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const [booking, setBooking]     = useState<Booking | null>(null);
   const [loading, setLoading]     = useState(true);
@@ -218,15 +220,17 @@ const BookingDetailsScreen: React.FC = () => {
         {!readOnly && (
           <View style={styles.actionsRow}>
             <TouchableOpacity
-              style={[styles.actionEdit, { backgroundColor: colors.bgMid }]}
+              style={[styles.actionEdit, { backgroundColor: colors.bgMid }, offlineStyle]}
               onPress={() => setShowEditForm(true)}
+              disabled={offlineDisabled}
               activeOpacity={0.8}
             >
               <Text style={[styles.actionEditText, { color: colors.textMid }]}>{t("bookings.details.editButton")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionDelete, { backgroundColor: colors.dangerLight }]}
+              style={[styles.actionDelete, { backgroundColor: colors.dangerLight }, offlineStyle]}
               onPress={handleCancelBooking}
+              disabled={offlineDisabled}
               activeOpacity={0.8}
             >
               <Text style={[styles.actionDeleteText, { color: colors.danger }]}>{t("bookings.details.deleteButton")}</Text>

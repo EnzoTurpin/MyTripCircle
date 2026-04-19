@@ -31,7 +31,10 @@ async function findWorkingUrl(): Promise<string> {
     for (const url of API_URLS) {
       try {
         logger.debug(`[ApiService] Trying ${url}...`);
-        const response = await fetch(`${url}/health`, { method: "GET" });
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 5000);
+        const response = await fetch(`${url}/health`, { method: "GET", signal: ctrl.signal });
+        clearTimeout(timer);
         if (response.ok) {
           workingUrl = url;
           logger.debug(`[ApiService] ✅ Success! Using URL: ${url}`);

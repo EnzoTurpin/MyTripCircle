@@ -6,16 +6,18 @@ import { F } from "../../theme/fonts";
 
 interface Props {
   onPress: () => void;
+  disabled?: boolean;
 }
 
-const TripNewCard: React.FC<Props> = ({ onPress }) => {
+const TripNewCard: React.FC<Props> = ({ onPress, disabled }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
   return (
     <TouchableOpacity
-      style={[styles.dashedCard, { borderColor: colors.bgDark, backgroundColor: colors.bg }]}
+      style={[styles.dashedCard, { borderColor: colors.bgDark, backgroundColor: colors.bg }, disabled && { opacity: 0.4 }]}
       onPress={onPress}
+      disabled={disabled}
       activeOpacity={0.8}
     >
       <View style={[styles.dashedAddCircle, { backgroundColor: colors.terraLight }]}>

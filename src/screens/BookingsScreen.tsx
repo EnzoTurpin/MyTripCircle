@@ -23,6 +23,7 @@ import BookingsScreenSkeleton from "../components/bookings/BookingsScreenSkeleto
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type BookingsScreenNavigationProp = StackNavigationProp<RootStackParamList, "Main">;
 type FilterType = "all" | "flight" | "train" | "hotel" | "restaurant" | "activity";
@@ -32,6 +33,7 @@ const BookingsScreen: React.FC = () => {
   const { bookings, loading, createBooking, refreshData } = useTrips();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
   const [showBookingForm, setShowBookingForm] = useState(false);
 
@@ -84,8 +86,9 @@ const BookingsScreen: React.FC = () => {
               <Text style={[styles.headerTitle, { color: colors.text }]}>{t("bookings.header")}</Text>
             </View>
             <TouchableOpacity
-              style={[styles.filterIconBtn, { backgroundColor: colors.terraLight }]}
+              style={[styles.filterIconBtn, { backgroundColor: colors.terraLight }, offlineStyle]}
               onPress={() => setShowBookingForm(true)}
+              disabled={offlineDisabled}
               activeOpacity={0.75}
             >
               <Ionicons name="add" size={24} color={colors.terra} />
@@ -114,7 +117,7 @@ const BookingsScreen: React.FC = () => {
                   ? t("bookings.emptyAll")
                   : t("bookings.emptyFiltered", { type: t(`bookings.filters.${selectedFilter}`) })}
               </Text>
-              <TouchableOpacity style={[styles.emptyAddButton, { backgroundColor: colors.terra }]} onPress={() => setShowBookingForm(true)} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.emptyAddButton, { backgroundColor: colors.terra }, offlineStyle]} onPress={() => setShowBookingForm(true)} disabled={offlineDisabled} activeOpacity={0.8}>
                 <Ionicons name="add-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
                 <Text style={styles.emptyAddButtonText}>{t("bookings.addBooking")}</Text>
               </TouchableOpacity>

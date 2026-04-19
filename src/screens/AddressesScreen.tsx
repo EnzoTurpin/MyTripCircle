@@ -16,6 +16,7 @@ import AddressFilterBar from "../components/addresses/AddressFilterBar";
 import AddressMapWidget from "../components/addresses/AddressMapWidget";
 import { styles } from "../components/addresses/addressStyles";
 import SkeletonBox from "../components/SkeletonBox";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 const AddressesScreen: React.FC = () => {
   const {
@@ -34,6 +35,7 @@ const AddressesScreen: React.FC = () => {
     handleAddAddress,
     handleOpenFullMap,
   } = useAddresses();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   if (loading) {
     return (
@@ -105,8 +107,9 @@ const AddressesScreen: React.FC = () => {
               </Text>
             </View>
             <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: colors.terra }]}
+              style={[styles.addButton, { backgroundColor: colors.terra }, offlineStyle]}
               onPress={handleAddAddress}
+              disabled={offlineDisabled}
               activeOpacity={0.8}
             >
               <Ionicons name="add" size={24} color="#FFFFFF" />
@@ -144,8 +147,9 @@ const AddressesScreen: React.FC = () => {
                     })}
               </Text>
               <TouchableOpacity
-                style={[styles.createButton, { backgroundColor: colors.terra }]}
+                style={[styles.createButton, { backgroundColor: colors.terra }, offlineStyle]}
                 onPress={handleAddAddress}
+                disabled={offlineDisabled}
                 activeOpacity={0.85}
               >
                 <Ionicons

@@ -24,11 +24,13 @@ import DeclineModal from "../components/invitations/DeclineModal";
 import AcceptedToast from "../components/invitations/AcceptedToast";
 import InvitationDetailView from "../components/invitations/InvitationDetailView";
 import BackButton from "../components/ui/BackButton";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 const InvitationScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { t }      = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled } = useOfflineDisabled();
 
   const {
     invitation, loading, currentToken, setCurrentToken, initialToken, responding,
@@ -134,6 +136,7 @@ const InvitationScreen: React.FC = () => {
               <SentCard
                 key={inv._id ?? inv.token ?? inv.id}
                 invitation={inv}
+                disabled={offlineDisabled}
                 onViewTrip={() => {
                   const id = inv.tripId ?? inv.trip?._id;
                   if (id) navigation.navigate("TripDetails", { tripId: id });
@@ -147,6 +150,7 @@ const InvitationScreen: React.FC = () => {
                 invitation={inv}
                 expanded={tab === "pending"}
                 accepting={acceptingId === inv.token}
+                disabled={offlineDisabled}
                 onAccept={() => handleAccept(inv)}
                 onDecline={() => openDecline(inv)}
                 onDetail={() => {

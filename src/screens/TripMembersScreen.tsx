@@ -28,6 +28,7 @@ import BackButton from "../components/ui/BackButton";
 import { useTripMembersActions } from "../hooks/useTripMembersActions";
 import { useBottomSheet } from "../hooks/useBottomSheet";
 import { s } from "./TripMembersScreen.styles";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type TripMembersScreenRouteProp = RouteProp<RootStackParamList, "TripMembers">;
 type TripMembersScreenNavProp   = StackNavigationProp<RootStackParamList, "TripMembers">;
@@ -44,6 +45,7 @@ const TripMembersScreen: React.FC = () => {
   const { user }   = useAuth();
   const { t }      = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const [selectedMember, setSelectedMember] = useState<MemberInfo | null>(null);
 
@@ -138,7 +140,7 @@ const TripMembersScreen: React.FC = () => {
           </Text>
         </View>
         {isOwner && (
-          <TouchableOpacity onPress={() => handleCancelInvitation(inv)}>
+          <TouchableOpacity onPress={() => handleCancelInvitation(inv)} disabled={offlineDisabled} style={offlineStyle}>
             <Text style={s.cancelTxt}>{t("tripMembers.cancelInviteTitle")}</Text>
           </TouchableOpacity>
         )}
@@ -188,7 +190,7 @@ const TripMembersScreen: React.FC = () => {
           <Text style={[s.headerSub, { color: colors.textLight }]} numberOfLines={1}>{tripTitle}</Text>
           <Text style={[s.headerTitle, { color: colors.text }]}>{t("tripMembers.title")}</Text>
         </View>
-        <TouchableOpacity style={s.inviteBtn} onPress={() => navigation.navigate("InviteFriends", { tripId })}>
+        <TouchableOpacity style={[s.inviteBtn, offlineStyle]} onPress={() => navigation.navigate("InviteFriends", { tripId })} disabled={offlineDisabled}>
           <Text style={s.inviteBtnTxt}>{t("tripMembers.invite")}</Text>
         </TouchableOpacity>
       </View>
@@ -206,14 +208,14 @@ const TripMembersScreen: React.FC = () => {
             <Text style={[s.linkTitle, { color: colors.terra }]}>{t("tripMembers.linkTitle")}</Text>
             <View style={s.linkRow}>
               <Text style={[s.linkUrl, { color: colors.textMid, backgroundColor: colors.surface }]} numberOfLines={1}>{inviteLink}</Text>
-              <TouchableOpacity style={s.copyBtn} onPress={() => handleShareLink(inviteLink)}>
+              <TouchableOpacity style={[s.copyBtn, offlineStyle]} onPress={() => handleShareLink(inviteLink)} disabled={offlineDisabled}>
                 <Text style={s.copyBtnTxt}>{t("tripMembers.linkShare")}</Text>
               </TouchableOpacity>
             </View>
             {linkExpiry && (
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
                 <Text style={[s.expiryTxt, { color: colors.terra }]}>{t("tripMembers.linkExpiry", { count: daysUntil(linkExpiry) })}</Text>
-                <TouchableOpacity onPress={() => handleRenewLink({ setInviteLink, setLinkExpiry })}>
+                <TouchableOpacity onPress={() => handleRenewLink({ setInviteLink, setLinkExpiry })} disabled={offlineDisabled} style={offlineStyle}>
                   <Text style={[s.expiryTxt, { color: colors.terra, fontFamily: F.sans600, textDecorationLine: "underline" }]}>
                     {t("tripMembers.linkRenew")}
                   </Text>
@@ -291,7 +293,7 @@ const TripMembersScreen: React.FC = () => {
               </TouchableOpacity>
 
               {isOwner && (
-                <TouchableOpacity style={[s.sheetRow, { backgroundColor: colors.bgMid }]} onPress={() => handleTransferOwnership(selectedMember, closeSheet)} activeOpacity={0.75}>
+                <TouchableOpacity style={[s.sheetRow, { backgroundColor: colors.bgMid }, offlineStyle]} onPress={() => handleTransferOwnership(selectedMember, closeSheet)} disabled={offlineDisabled} activeOpacity={0.75}>
                   <View style={[s.sheetIcon, { backgroundColor: colors.terraLight }]}>
                     <Text style={{ fontSize: 14 }}>👑</Text>
                   </View>
@@ -303,7 +305,7 @@ const TripMembersScreen: React.FC = () => {
               )}
 
               {isOwner && (
-                <TouchableOpacity style={[s.sheetRow, s.sheetRowDanger]} onPress={() => handleRemoveMember(selectedMember, closeSheet)} activeOpacity={0.75}>
+                <TouchableOpacity style={[s.sheetRow, s.sheetRowDanger, offlineStyle]} onPress={() => handleRemoveMember(selectedMember, closeSheet)} disabled={offlineDisabled} activeOpacity={0.75}>
                   <View style={[s.sheetIcon, { backgroundColor: "rgba(192,64,64,0.12)" }]}>
                     <Text style={{ fontSize: 14 }}>🚪</Text>
                   </View>

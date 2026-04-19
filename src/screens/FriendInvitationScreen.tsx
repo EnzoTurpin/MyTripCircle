@@ -21,6 +21,7 @@ import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { useTheme } from "../contexts/ThemeContext";
 import SkeletonBox from "../components/SkeletonBox";
 import BackButton from "../components/ui/BackButton";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 
 type RouteT = RouteProp<RootStackParamList, "FriendInvitation">;
@@ -40,6 +41,7 @@ const FriendInvitationScreen: React.FC = () => {
   const { token } = route.params;
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const [state, setState] = useState<State>({ status: "loading" });
   const { t } = useTranslation();
@@ -200,7 +202,7 @@ const FriendInvitationScreen: React.FC = () => {
             <Text style={[styles.subtitleText, { color: colors.textMid }]}>{t("friendInvitation.readySubtitle")}</Text>
 
             {user ? (
-              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={handleAccept} activeOpacity={0.85}>
+              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, offlineStyle]} onPress={handleAccept} disabled={offlineDisabled} activeOpacity={0.85}>
                 <Ionicons name="person-add-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
                 <Text style={styles.primaryBtnText}>{t("friendInvitation.addAsFriend")}</Text>
               </TouchableOpacity>
