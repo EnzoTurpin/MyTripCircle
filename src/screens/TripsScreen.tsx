@@ -25,6 +25,7 @@ import TripMiniCard from "../components/trips/TripMiniCard";
 import TripAllRow from "../components/trips/TripAllRow";
 import TripNewCard from "../components/trips/TripNewCard";
 import { getCachedDestinationPhoto } from "../utils/destinationPhoto";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 const HERO_PHOTOS = [
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
@@ -49,6 +50,7 @@ const TripsScreen: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const [showAllTrips, setShowAllTrips] = useState(false);
   // Photos auto-fetchées pour les voyages sans coverImage : tripId → URL
@@ -110,7 +112,7 @@ const TripsScreen: React.FC = () => {
                 <Text style={[styles.headerTitle, { color: colors.text }]}>{t("trips.header")}</Text>
               </View>
             </View>
-            <TouchableOpacity style={[styles.addTripBtn, { backgroundColor: colors.terra }]} onPress={handleCreateTrip} activeOpacity={0.85}>
+            <TouchableOpacity style={[styles.addTripBtn, { backgroundColor: colors.terra }, offlineStyle]} onPress={handleCreateTrip} disabled={offlineDisabled} activeOpacity={0.85}>
               <Ionicons name="add" size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -125,7 +127,7 @@ const TripsScreen: React.FC = () => {
                 <Text style={[styles.emptySubtitle, { color: colors.textMid }]}>{t("trips.emptySubtitle")}</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.miniScroll}>
-                <TripNewCard onPress={handleCreateTrip} />
+                <TripNewCard onPress={handleCreateTrip} disabled={offlineDisabled} />
               </ScrollView>
             </>
           ) : (
@@ -158,7 +160,7 @@ const TripsScreen: React.FC = () => {
                       onPress={() => handleTripPress(trip)}
                     />
                   ))}
-                  <TripNewCard onPress={handleCreateTrip} />
+                  <TripNewCard onPress={handleCreateTrip} disabled={offlineDisabled} />
                 </View>
               ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.miniScroll}>
@@ -170,7 +172,7 @@ const TripsScreen: React.FC = () => {
                       onPress={() => handleTripPress(trip)}
                     />
                   ))}
-                  <TripNewCard onPress={handleCreateTrip} />
+                  <TripNewCard onPress={handleCreateTrip} disabled={offlineDisabled} />
                 </ScrollView>
               )}
             </>

@@ -17,6 +17,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { F } from "../theme/fonts";
 import { useTheme, AppColors } from "../contexts/ThemeContext";
 import BackButton from "../components/ui/BackButton";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 // ─── Labelled password input ──────────────────────────────────────────────────
 interface PasswordInputProps {
@@ -96,6 +97,7 @@ const ChangePasswordScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { changePassword } = useAuth();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const handleSubmit = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -189,9 +191,9 @@ const ChangePasswordScreen: React.FC = () => {
 
           {/* Save button */}
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }, loading && styles.primaryButtonDisabled]}
+            style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }, (loading || offlineDisabled) && styles.primaryButtonDisabled, offlineStyle]}
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={loading || offlineDisabled}
             activeOpacity={0.85}
           >
             <Ionicons

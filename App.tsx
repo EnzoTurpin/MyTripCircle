@@ -6,6 +6,8 @@ import { TripsProvider } from "./src/contexts/TripsContext";
 import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { FriendsProvider } from "./src/contexts/FriendsContext";
 import { ThemeProvider } from "./src/contexts/ThemeContext";
+import { SubscriptionProvider } from "./src/contexts/SubscriptionContext";
+import { NetworkProvider } from "./src/contexts/NetworkContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { initLanguage } from "./src/utils/i18n";
 import { useFonts, Sora_300Light, Sora_400Regular, Sora_500Medium, Sora_600SemiBold, Sora_700Bold } from "@expo-google-fonts/sora";
@@ -29,17 +31,21 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
+      <NetworkProvider>
       <ThemeProvider>
         <AuthProvider>
           <TripsProvider>
             <NotificationProvider>
               <FriendsProvider>
-                <AppNavigator />
+                <SubscriptionProvider>
+                  <AppNavigator />
+                </SubscriptionProvider>
               </FriendsProvider>
             </NotificationProvider>
           </TripsProvider>
         </AuthProvider>
       </ThemeProvider>
+      </NetworkProvider>
     </SafeAreaProvider>
   );
 }

@@ -7,18 +7,20 @@ import { F } from "../../theme/fonts";
 interface EditTripDangerZoneProps {
   dangerLight: string;
   sectionLabelColor: string;
+  disabled?: boolean;
   onDelete: () => void;
 }
 
-const EditTripDangerZone: React.FC<EditTripDangerZoneProps> = ({ dangerLight, sectionLabelColor, onDelete }) => {
+const EditTripDangerZone: React.FC<EditTripDangerZoneProps> = ({ dangerLight, sectionLabelColor, disabled, onDelete }) => {
   const { t } = useTranslation();
 
   return (
     <>
       <Text style={[styles.sectionLbl, { color: sectionLabelColor }]}>{t("editTrip.dangerZone")}</Text>
       <TouchableOpacity
-        style={[styles.dangerRow, { backgroundColor: dangerLight }]}
+        style={[styles.dangerRow, { backgroundColor: dangerLight }, disabled && { opacity: 0.4 }]}
         onPress={onDelete}
+        disabled={disabled}
         activeOpacity={0.8}
       >
         <View style={styles.dangerIcon}>

@@ -24,10 +24,12 @@ import {
 } from "../components/createTrip/TripDatePicker";
 import TripVisibilityPicker from "../components/createTrip/TripVisibilityPicker";
 import styles from "../components/createTrip/createTripStyles";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 const CreateTripScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const {
     formData,
@@ -246,9 +248,9 @@ const CreateTripScreen: React.FC = () => {
 
           {/* ── Bouton principal ── */}
           <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+            style={[styles.primaryButton, (loading || offlineDisabled) && styles.primaryButtonDisabled, offlineStyle]}
             onPress={handleCreate}
-            disabled={loading}
+            disabled={loading || offlineDisabled}
             activeOpacity={0.85}
           >
             <Text style={styles.primaryButtonText}>

@@ -20,10 +20,12 @@ import AddressTypeSelector from "../components/addressForm/AddressTypeSelector";
 import AddressAutocompleteField from "../components/addressForm/AddressAutocompleteField";
 import FormField from "../components/addressForm/FormField";
 import styles from "../components/addressForm/addressFormStyles";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 const AddressFormScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
   const {
     form,
     googleRating,
@@ -221,9 +223,9 @@ const AddressFormScreen: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: colors.terra }, (submitting || fetchingPlaceDetails) && { opacity: DISABLED_OPACITY }]}
+          style={[styles.primaryButton, { backgroundColor: colors.terra }, (submitting || fetchingPlaceDetails || offlineDisabled) && { opacity: DISABLED_OPACITY }]}
           onPress={handleSubmit}
-          disabled={submitting || fetchingPlaceDetails}
+          disabled={submitting || fetchingPlaceDetails || offlineDisabled}
           activeOpacity={0.85}
         >
           {submitting || fetchingPlaceDetails ? (

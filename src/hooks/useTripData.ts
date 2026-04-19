@@ -13,7 +13,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 export function useTripData(tripId: string) {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { validateTrip, createBooking, createAddress, bookings: allBookings, addresses: allAddresses } = useTrips();
+  const { validateTrip, createBooking, createAddress, bookings: allBookings, addresses: allAddresses, getTripById } = useTrips();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -22,6 +22,17 @@ export function useTripData(tripId: string) {
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   const loadTripData = async () => {
+    // Affiche immédiatement les données du cache pendant la requête réseau
+    const cachedTrip = getTripById(tripId);
+    if (cachedTrip && !trip) {
+      setTrip(cachedTrip);
+      const cachedBookings = allBookings.filter((b) => b.tripId === tripId);
+      const cachedAddresses = allAddresses.filter((a) => a.tripId === tripId);
+      if (cachedBookings.length) setBookings(cachedBookings);
+      if (cachedAddresses.length) setAddresses(cachedAddresses);
+      setLoading(false);
+    }
+
     try {
       setLoading(true);
       const [tripData, bookingsData, addressesData] = await Promise.all([
@@ -105,6 +116,7 @@ export function useTripData(tripId: string) {
       setAddresses(mappedAddresses);
     } catch (error) {
       console.error("Error loading trip data:", error);
+      // API injoignable : les données du cache sont déjà affichées, rien à faire
     } finally {
       setLoading(false);
     }

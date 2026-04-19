@@ -26,6 +26,7 @@ import FriendsTab from "../components/friends/FriendsTab";
 import RequestsTab from "../components/friends/RequestsTab";
 import SuggestionsTab from "../components/friends/SuggestionsTab";
 import BackButton from "../components/ui/BackButton";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type Tab = "friends" | "requests" | "suggestions";
 
@@ -34,6 +35,7 @@ const FriendsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
   const {
     friends,
     friendRequests,
@@ -237,7 +239,7 @@ const FriendsScreen: React.FC = () => {
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("friends.title")}</Text>
         </View>
-        <TouchableOpacity style={[styles.addCircleBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} onPress={() => navigation.navigate("AddFriend" as never)} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.addCircleBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, offlineStyle]} onPress={() => navigation.navigate("AddFriend" as never)} disabled={offlineDisabled} activeOpacity={0.8}>
           <Text style={styles.addCirclePlus}>+</Text>
         </TouchableOpacity>
       </View>

@@ -21,7 +21,7 @@ interface FriendsContextType {
 const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
 
 export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
@@ -81,13 +81,16 @@ export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   useEffect(() => {
+    // Auth still resolving from storage — don't touch the cache yet
+    if (authLoading) return;
+
     if (!user) {
+      // Auth is resolved and user is null → confirmed logout, safe to clear
       setFriends([]);
       setFriendRequests([]);
       setSuggestions([]);
       setLoading(false);
       hasLoadedOnceRef.current = false;
-      // Clear cache on logout to prevent cross-user data leaks
       Promise.all([
         CacheManager.invalidate(CACHE_KEYS.FRIENDS),
         CacheManager.invalidate(CACHE_KEYS.FRIEND_REQUESTS),
@@ -109,7 +112,8 @@ export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children })
       if (cachedRequests) setFriendRequests(cachedRequests);
       if (cachedSuggestions) setSuggestions(cachedSuggestions);
 
-      if (!hasCachedData) setLoading(true);
+      // Show cached data immediately; keep spinner only if nothing in cache
+      setLoading(!hasCachedData);
 
       // Mark loaded before setters so cache-sync useEffects fire on network data
       hasLoadedOnceRef.current = true;
@@ -124,7 +128,7 @@ export const FriendsProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     init();
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendFriendRequest = async (data: { recipientEmail?: string; recipientPhone?: string }): Promise<{ autoAccepted?: boolean }> => {
     try {

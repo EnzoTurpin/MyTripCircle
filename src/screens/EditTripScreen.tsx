@@ -39,6 +39,7 @@ import DatePickerField from "../components/editTrip/DatePickerField";
 import EditTripSkeleton from "../components/editTrip/EditTripSkeleton";
 import EditTripDangerZone from "../components/editTrip/EditTripDangerZone";
 import EditTripMembersBtn from "../components/editTrip/EditTripMembersBtn";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type EditTripRouteProp      = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
@@ -48,6 +49,7 @@ const EditTripScreen: React.FC = () => {
   const route      = useRoute<EditTripRouteProp>();
   const { t }      = useTranslation();
   const { colors, isDark } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const {
     formData, setFormData,
@@ -111,7 +113,7 @@ const EditTripScreen: React.FC = () => {
         <View style={[s.header, { backgroundColor: colors.bgLight, borderBottomColor: colors.border }]}>
           <BackButton onPress={handleCancel} />
           <Text style={[s.headerTitle, { color: colors.text }]}>{t("editTrip.screenTitle")}</Text>
-          <TouchableOpacity style={[s.savePill, { backgroundColor: loading ? colors.textLight : colors.terra, shadowColor: loading ? undefined : colors.terra }, loading && { shadowOpacity: 0, elevation: 0 }]} onPress={handleUpdateTrip} disabled={loading} activeOpacity={0.85}>
+          <TouchableOpacity style={[s.savePill, { backgroundColor: (loading || offlineDisabled) ? colors.textLight : colors.terra, shadowColor: (loading || offlineDisabled) ? undefined : colors.terra }, (loading || offlineDisabled) && { shadowOpacity: 0, elevation: 0 }, offlineStyle]} onPress={handleUpdateTrip} disabled={loading || offlineDisabled} activeOpacity={0.85}>
             <Text style={s.savePillText}>{loading ? "…" : t("editTrip.saveButton")}</Text>
           </TouchableOpacity>
         </View>
@@ -120,7 +122,7 @@ const EditTripScreen: React.FC = () => {
           <ScrollView style={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
             {/* ── Photo de couverture ── */}
-            <TouchableOpacity style={s.cover} onPress={handlePickCoverPhoto} activeOpacity={0.9}>
+            <TouchableOpacity style={[s.cover, offlineStyle]} onPress={handlePickCoverPhoto} disabled={offlineDisabled} activeOpacity={0.9}>
               {formData.coverImage ? (
                 <>
                   <Image source={{ uri: formData.coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
@@ -293,6 +295,7 @@ const EditTripScreen: React.FC = () => {
                 <EditTripDangerZone
                   dangerLight={colors.dangerLight}
                   sectionLabelColor={colors.textLight}
+                  disabled={offlineDisabled}
                   onDelete={handleDeleteTrip}
                 />
               )}

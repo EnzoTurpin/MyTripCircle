@@ -10,11 +10,12 @@ import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
 
 interface SentProps {
   invitation: any;
+  disabled?: boolean;
   onViewTrip: () => void;
   onCancel: () => void;
 }
 
-const SentCard: React.FC<SentProps> = ({ invitation: inv, onViewTrip, onCancel }) => {
+const SentCard: React.FC<SentProps> = ({ invitation: inv, disabled, onViewTrip, onCancel }) => {
   const { t }      = useTranslation();
   const { colors } = useTheme();
 
@@ -57,7 +58,7 @@ const SentCard: React.FC<SentProps> = ({ invitation: inv, onViewTrip, onCancel }
     );
   } else if (status === "pending") {
     actionEl = (
-      <TouchableOpacity style={[cardStyles.cancelInviteBtn, { backgroundColor: colors.dangerLight }]} onPress={onCancel} activeOpacity={0.85}>
+      <TouchableOpacity style={[cardStyles.cancelInviteBtn, { backgroundColor: colors.dangerLight }, disabled && { opacity: 0.4 }]} onPress={onCancel} disabled={disabled} activeOpacity={0.85}>
         <Ionicons name="close-outline" size={18} color={colors.danger} />
         <Text style={[cardStyles.cancelInviteText, { color: colors.danger }]}>{t("invitation.cancelInviteBtn")}</Text>
       </TouchableOpacity>

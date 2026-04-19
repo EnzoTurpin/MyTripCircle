@@ -22,6 +22,7 @@ import { formatDate, parseApiError } from "../utils/i18n";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type TripActionsRouteProp = RouteProp<RootStackParamList, "TripActions">;
 type TripActionsNavProp = StackNavigationProp<RootStackParamList, "TripActions">;
@@ -44,6 +45,7 @@ const TripActionsScreen: React.FC = () => {
   const { deleteTrip } = useTrips();
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const startDateObj = new Date(startDate);
   const endDateObj = new Date(endDate);
@@ -178,7 +180,7 @@ const TripActionsScreen: React.FC = () => {
         {isOwner && (
           <>
             <View style={[s.menuDivider, { backgroundColor: colors.bg }]} />
-            <TouchableOpacity style={s.menuItem} onPress={handleDelete} activeOpacity={0.75}>
+            <TouchableOpacity style={[s.menuItem, offlineStyle]} onPress={handleDelete} disabled={offlineDisabled} activeOpacity={0.75}>
               <View style={[s.menuIcon, { backgroundColor: colors.dangerLight }]}>
                 <Text style={s.menuEmoji}>🗑</Text>
               </View>

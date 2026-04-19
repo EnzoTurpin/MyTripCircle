@@ -93,7 +93,7 @@ interface TripsProviderProps {
 }
 
 export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -141,8 +141,8 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
       if (cachedBookings) setBookings(cachedBookings);
       if (cachedAddresses) setAddresses(cachedAddresses);
 
-      // Skip the loading spinner if we already have data to show
-      if (!hasCachedData) setLoading(true);
+      // Show cached data immediately; keep spinner only if nothing in cache
+      setLoading(!hasCachedData);
     }
 
     try {
@@ -170,6 +170,9 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
   }, [user]);
 
   useEffect(() => {
+    // Auth still resolving from storage — don't touch the cache yet
+    if (authLoading) return;
+
     const userId = user?.id || null;
 
     if (hasLoadedOnceRef.current && currentUserIdRef.current === userId) {
@@ -181,20 +184,20 @@ export const TripsProvider: React.FC<TripsProviderProps> = ({ children }) => {
     if (user && !isLoadingRef.current) {
       loadData();
     } else {
+      // Auth is resolved and user is null → confirmed logout, safe to clear
       setTrips([]);
       setBookings([]);
       setAddresses([]);
       setInvitations([]);
       setLoading(false);
       hasLoadedOnceRef.current = false;
-      // Clear cache on logout to prevent cross-user data leaks
       Promise.all([
         CacheManager.invalidate(CACHE_KEYS.TRIPS),
         CacheManager.invalidate(CACHE_KEYS.BOOKINGS),
         CacheManager.invalidate(CACHE_KEYS.ADDRESSES),
       ]).catch(() => {});
     }
-  }, [user, loadData]);
+  }, [user, loadData, authLoading]);
 
   const refreshData = useCallback(async (): Promise<void> => {
     await loadData();

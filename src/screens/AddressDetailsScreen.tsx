@@ -25,6 +25,7 @@ import { geocodeAddress, getCached, GeoCoords } from "../utils/geocoding";
 import { getAddressHeroGradient, getAddressTypeBadge } from "../utils/addressHelpers";
 import AddressDetailsSkeleton from "../components/addressDetails/AddressDetailsSkeleton";
 import AddressHeroCover from "../components/addressDetails/AddressHeroCover";
+import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 // Chargement conditionnel : react-native-maps nécessite un rebuild du dev client
 let MapView: any = null;
@@ -51,6 +52,7 @@ const AddressDetailsScreen: React.FC = () => {
   const { addresses, loading, deleteAddress } = useTrips();
   const { user }   = useAuth();
   const { colors, satelliteMap } = useTheme();
+  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
 
   const [address, setAddress] = useState<Address | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -240,8 +242,9 @@ const AddressDetailsScreen: React.FC = () => {
         {isOwner && (
           <View style={styles.actionsRow}>
             <TouchableOpacity
-              style={[styles.actionEdit, { backgroundColor: colors.bgMid }]}
+              style={[styles.actionEdit, { backgroundColor: colors.bgMid }, offlineStyle]}
               onPress={handleEditAddress}
+              disabled={offlineDisabled}
               activeOpacity={0.8}
             >
               <Text style={[styles.actionEditText, { color: colors.textMid }]}>
@@ -249,8 +252,9 @@ const AddressDetailsScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionDelete, { backgroundColor: colors.dangerLight }]}
+              style={[styles.actionDelete, { backgroundColor: colors.dangerLight }, offlineStyle]}
               onPress={handleDeleteAddress}
+              disabled={offlineDisabled}
               activeOpacity={0.8}
             >
               <Text style={[styles.actionDeleteText, { color: colors.danger }]}>
