@@ -25,7 +25,7 @@ import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 const AddressFormScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
+  const { disabled: offlineDisabled } = useOfflineDisabled();
   const {
     form,
     googleRating,

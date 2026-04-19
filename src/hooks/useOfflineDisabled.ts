@@ -6,6 +6,6 @@ export function useOfflineDisabled() {
   const { isConnected } = useNetwork();
   return {
     disabled: !isConnected,
-    style: !isConnected ? { opacity: OFFLINE_OPACITY } : {},
+    style: isConnected ? {} : { opacity: OFFLINE_OPACITY },
   };
 }
