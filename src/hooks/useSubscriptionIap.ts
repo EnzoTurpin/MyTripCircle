@@ -53,6 +53,10 @@ export function useSubscriptionIap() {
       try {
         await RNIap.initConnection();
         const subs = await RNIap.fetchProducts({ skus: productIds, type: "subs" });
+        if (!subs || subs.length === 0) {
+          setProducts(mockProducts);
+          return;
+        }
         const normalized: MockProduct[] = subs.map((p: any) => ({
           productId: p.productId ?? p.id,
           title: p.title,
