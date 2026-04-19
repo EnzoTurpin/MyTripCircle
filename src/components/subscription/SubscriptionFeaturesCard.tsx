@@ -3,21 +3,14 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
+import { RADIUS, SPACING, SHADOW } from "../../theme";
 import { useTheme } from "../../contexts/ThemeContext";
 
-interface SubscriptionFeaturesCardProps {
-  colors: {
-    surface: string;
-    border: string;
-    text: string;
-  };
-}
-
-const SubscriptionFeaturesCard: React.FC<SubscriptionFeaturesCardProps> = ({ colors }) => {
+const SubscriptionFeaturesCard: React.FC = () => {
   const { t } = useTranslation();
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
-  const features = [
+  const features: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
     { icon: "cloud-upload-outline",     text: t("subscription.featureCloud") },
     { icon: "shield-checkmark-outline", text: t("subscription.featureSecure") },
     { icon: "people-outline",           text: t("subscription.featureTeam") },
@@ -25,15 +18,23 @@ const SubscriptionFeaturesCard: React.FC<SubscriptionFeaturesCardProps> = ({ col
   ];
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={[styles.title, { color: colors.text }]}>{t("subscription.includedInAllPlans")}</Text>
-      <View style={styles.list}>
-        {features.map((feature) => (
-          <View key={feature.icon} style={styles.item}>
-            <View style={[styles.iconWrap, { backgroundColor: isDark ? "#1F2E1A" : "#E2EDD9" }]}>
-              <Ionicons name={feature.icon as keyof typeof Ionicons.glyphMap} size={20} color="#6B8C5A" />
+    <View
+      style={[
+        styles.card,
+        SHADOW.light,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.title, { color: colors.text }]}>
+        {t("subscription.includedInAllPlans")}
+      </Text>
+      <View style={styles.grid}>
+        {features.map((f) => (
+          <View key={f.icon} style={styles.item}>
+            <View style={[styles.iconWrap, { backgroundColor: colors.terraLight }]}>
+              <Ionicons name={f.icon} size={18} color={colors.terra} />
             </View>
-            <Text style={[styles.featureText, { color: colors.text }]}>{feature.text}</Text>
+            <Text style={[styles.featureText, { color: colors.text }]}>{f.text}</Text>
           </View>
         ))}
       </View>
@@ -43,45 +44,40 @@ const SubscriptionFeaturesCard: React.FC<SubscriptionFeaturesCardProps> = ({ col
 
 const styles = StyleSheet.create({
   card: {
-    marginTop: 32,
-    borderRadius: 16,
-    padding: 24,
+    marginTop: SPACING.xxl,
+    borderRadius: RADIUS.card,
+    padding: SPACING.xl,
     borderWidth: 1,
-    shadowColor: "#2A2318",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
   },
   title: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: F.sans700,
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
     textAlign: "center",
   },
-  list: {
+  grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: SPACING.md,
   },
   item: {
-    width: "48%",
+    width: "47%",
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    gap: SPACING.xs,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: RADIUS.pill,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
   },
   featureText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: F.sans400,
+    lineHeight: 18,
   },
 });
 

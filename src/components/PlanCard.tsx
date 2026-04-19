@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ModernButton } from "./ModernButton";
 import { F } from "../theme/fonts";
+import { RADIUS, SPACING, SHADOW } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
 
 type Props = {
@@ -28,28 +28,33 @@ const PlanCard: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
+
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: recommended ? "#2891FF" : colors.border }, recommended && styles.recommendedCard]}>
+    <View
+      style={[
+        styles.card,
+        SHADOW.light,
+        {
+          backgroundColor: recommended ? colors.terraLight : colors.surface,
+          borderColor: recommended ? colors.terra : colors.border,
+        },
+      ]}
+    >
       {recommended && (
-        <View style={styles.badge}>
-          <LinearGradient
-            colors={['#2891FF', '#8869FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.badgeGradient}
-          >
-            <Ionicons name="star" size={12} color="white" />
-            <Text style={styles.badgeText}>{t("subscription.recommended")}</Text>
-          </LinearGradient>
+        <View style={[styles.badge, { backgroundColor: colors.terra }]}>
+          <Ionicons name="star" size={11} color={colors.white} />
+          <Text style={styles.badgeText}>{t("subscription.recommended")}</Text>
         </View>
       )}
-      
+
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         {price && (
-          <View style={styles.priceContainer}>
-            <Text style={styles.price}>{price}</Text>
-            <Text style={[styles.priceUnit, { color: colors.textMid }]}>{t("subscription.perMonth")}</Text>
+          <View style={styles.priceRow}>
+            <Text style={[styles.price, { color: colors.terra }]}>{price}</Text>
+            <Text style={[styles.priceUnit, { color: colors.textMid }]}>
+              {t("subscription.perMonth")}
+            </Text>
           </View>
         )}
       </View>
@@ -57,8 +62,8 @@ const PlanCard: React.FC<Props> = ({
       <View style={styles.advantagesList}>
         {advantages.map((advantage) => (
           <View key={advantage} style={styles.advantageItem}>
-            <View style={styles.checkIcon}>
-              <Ionicons name="checkmark" size={16} color="#4CAF50" />
+            <View style={[styles.checkWrap, { backgroundColor: colors.terraLight }]}>
+              <Ionicons name="checkmark" size={14} color={colors.terra} />
             </View>
             <Text style={[styles.advantageText, { color: colors.text }]}>{advantage}</Text>
           </View>
@@ -69,7 +74,6 @@ const PlanCard: React.FC<Props> = ({
         title={loading ? t("common.loading") : t("subscription.subscribe")}
         onPress={() => onSubscribe(id)}
         variant={recommended ? "primary" : "outline"}
-        gradient={recommended}
         size="large"
         fullWidth
         disabled={loading}
@@ -82,86 +86,70 @@ const PlanCard: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 2,
-  },
-  recommendedCard: {
-    borderWidth: 2,
+    borderRadius: RADIUS.card,
+    padding: SPACING.xl,
+    marginBottom: SPACING.md,
+    borderWidth: 1.5,
   },
   badge: {
     position: "absolute",
-    top: -12,
-    right: 24,
-    zIndex: 10,
-  },
-  badgeGradient: {
+    top: -13,
+    right: SPACING.xl,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
     gap: 4,
   },
   badgeText: {
-    color: "white",
+    color: "#FFFFFF",
     fontSize: 12,
     fontFamily: F.sans700,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
-  title: { 
-    fontSize: 24,
+  title: {
+    fontSize: 22,
     fontFamily: F.sans700,
-    color: "#212121",
-    marginBottom: 12,
+    marginBottom: SPACING.xs,
   },
-  priceContainer: {
+  priceRow: {
     flexDirection: "row",
     alignItems: "baseline",
+    gap: 4,
   },
-  price: { 
-    fontSize: 32,
+  price: {
+    fontSize: 30,
     fontFamily: F.sans700,
-    color: "#2891FF",
   },
   priceUnit: {
-    fontSize: 16,
-    color: "#616161",
-    marginLeft: 4,
+    fontSize: 15,
     fontFamily: F.sans400,
-},
+  },
   advantagesList: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
   },
   advantageItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 12,
+    alignItems: "center",
   },
-  checkIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#4CAF50" + "15",
+  checkWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: RADIUS.pill,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: SPACING.sm,
   },
   advantageText: {
     flex: 1,
-    fontSize: 15,
-    color: "#212121",
-    lineHeight: 24,
+    fontSize: 14,
     fontFamily: F.sans400,
-},
+    lineHeight: 22,
+  },
 });
 
 export default PlanCard;
