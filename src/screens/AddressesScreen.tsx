@@ -24,6 +24,7 @@ const AddressesScreen: React.FC = () => {
   const {
     t,
     colors,
+    isDark,
     addresses,
     loading,
     selectedFilter,
@@ -194,6 +195,7 @@ const AddressesScreen: React.FC = () => {
                 <AddressCard
                   item={item}
                   colors={colors}
+                  isDark={isDark}
                   t={t}
                   onPress={handleAddressPress}
                 />

@@ -18,10 +18,21 @@ export const getBookingTypeIcon = (type: Booking["type"]): string => {
   }
 };
 
-// ─── Couleurs carte/liste (fond clair) ────────────────────────────────────────
+// ─── Couleurs carte/liste (adaptées light/dark) ───────────────────────────────
 export const getBookingTypeColors = (
-  type: Booking["type"]
+  type: Booking["type"],
+  isDark = false,
 ): { stripe: string; bg: string } | null => {
+  if (isDark) {
+    switch (type) {
+      case "flight":     return { stripe: SKY,       bg: 'rgba(90,143,170,0.22)' };
+      case "hotel":      return { stripe: MOSS,      bg: 'rgba(107,140,90,0.22)' };
+      case "train":      return { stripe: '#C4714A', bg: 'rgba(196,113,74,0.22)' };
+      case "restaurant": return { stripe: '#C4714A', bg: 'rgba(196,113,74,0.22)' };
+      case "activity":   return { stripe: '#8B70C0', bg: 'rgba(139,112,192,0.22)' };
+      default:           return null;
+    }
+  }
   switch (type) {
     case "flight":     return { stripe: SKY,       bg: SKY_LIGHT };
     case "hotel":      return { stripe: MOSS,      bg: MOSS_LIGHT };
@@ -33,8 +44,17 @@ export const getBookingTypeColors = (
 };
 
 export const getBookingStatusColors = (
-  status: Booking["status"]
+  status: Booking["status"],
+  isDark = false,
 ): { color: string; bg: string } | null => {
+  if (isDark) {
+    switch (status) {
+      case "confirmed": return { color: '#7BC88A', bg: 'rgba(107,200,138,0.22)' };
+      case "pending":   return { color: '#E8B870', bg: 'rgba(232,184,112,0.22)' };
+      case "cancelled": return { color: '#E08080', bg: 'rgba(224,128,128,0.22)' };
+      default:          return null;
+    }
+  }
   switch (status) {
     case "confirmed": return { color: MOSS,      bg: MOSS_LIGHT };
     case "pending":   return { color: '#C4714A', bg: '#F5E5DC' };

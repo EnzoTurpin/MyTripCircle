@@ -17,10 +17,10 @@ interface Props {
 
 const BookingCard: React.FC<Props> = ({ booking: item, onPress }) => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
-  const typeC   = getBookingTypeColors(item.type);
-  const statusC = getBookingStatusColors(item.status);
+  const typeC   = getBookingTypeColors(item.type, isDark);
+  const statusC = getBookingStatusColors(item.status, isDark);
   const stripeColor    = typeC?.stripe ?? colors.textMid;
   const typeBg         = typeC?.bg ?? colors.bgMid;
   const statusBgColor  = statusC?.bg ?? colors.bgMid;

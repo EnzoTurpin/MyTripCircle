@@ -29,7 +29,7 @@ const TripContentTabs: React.FC<Props> = ({
   onBookingPress,
 }) => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <>
@@ -74,11 +74,11 @@ const TripContentTabs: React.FC<Props> = ({
                 activeOpacity={0.75}
                 onPress={() => onBookingPress(b._id ?? b.id)}
               >
-                <View style={[styles.itemIcon, { backgroundColor: getBookingTypeColors(b.type)?.bg ?? colors.terraLight }]}>
+                <View style={[styles.itemIcon, { backgroundColor: getBookingTypeColors(b.type, isDark)?.bg ?? colors.terraLight }]}>
                   <Ionicons
                     name={getBookingTypeIcon(b.type) as keyof typeof Ionicons.glyphMap}
                     size={18}
-                    color={getBookingTypeColors(b.type)?.stripe ?? colors.terra}
+                    color={getBookingTypeColors(b.type, isDark)?.stripe ?? colors.terra}
                   />
                 </View>
                 <View style={styles.itemInfo}>
