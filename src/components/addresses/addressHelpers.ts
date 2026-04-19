@@ -18,7 +18,15 @@ export const getTypeIcon = (type: Address["type"]) => {
   }
 };
 
-export const getIconColors = (type: Address["type"]) => {
+export const getIconColors = (type: Address["type"], isDark = false) => {
+  if (isDark) {
+    switch (type) {
+      case "hotel":      return { bg: 'rgba(90,143,170,0.22)',  icon: SKY };
+      case "restaurant": return { bg: 'rgba(196,113,74,0.22)',  icon: '#D08070' };
+      case "activity":   return { bg: 'rgba(107,140,90,0.22)',  icon: MOSS };
+      default:           return { bg: null, icon: null };
+    }
+  }
   switch (type) {
     case "hotel":      return { bg: SKY_LIGHT,   icon: SKY };
     case "restaurant": return { bg: "#F5E5DC", icon: "#C4714A" };
@@ -27,7 +35,15 @@ export const getIconColors = (type: Address["type"]) => {
   }
 };
 
-export const getTagColors = (type: Address["type"]) => {
+export const getTagColors = (type: Address["type"], isDark = false) => {
+  if (isDark) {
+    switch (type) {
+      case "hotel":      return { bg: 'rgba(90,143,170,0.22)',  text: SKY };
+      case "restaurant": return { bg: 'rgba(196,113,74,0.22)',  text: '#D08070' };
+      case "activity":   return { bg: 'rgba(107,140,90,0.22)',  text: MOSS };
+      default:           return { bg: null, text: null };
+    }
+  }
   switch (type) {
     case "hotel":      return { bg: SKY_LIGHT,   text: SKY };
     case "restaurant": return { bg: "#F5E5DC", text: "#A35830" };

@@ -8,13 +8,14 @@ import { styles } from "./addressStyles";
 interface AddressCardProps {
   item: Address;
   colors: any;
+  isDark?: boolean;
   t: (k: string) => string;
   onPress: (address: Address) => void;
 }
 
-const AddressCard: React.FC<AddressCardProps> = ({ item, colors, t, onPress }) => {
-  const ic = getIconColors(item.type);
-  const tag = getTagColors(item.type);
+const AddressCard: React.FC<AddressCardProps> = ({ item, colors, isDark = false, t, onPress }) => {
+  const ic = getIconColors(item.type, isDark);
+  const tag = getTagColors(item.type, isDark);
   const iconBg = ic.bg ?? colors.bgDark;
   const iconColor = ic.icon ?? colors.textMid;
   const tagBg = tag.bg ?? colors.bgDark;

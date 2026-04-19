@@ -46,7 +46,7 @@ export function useAddresses() {
   const navigation = useNavigation<AddressesNavigationProp>();
   const { addresses, trips, loading, deleteAddress, refreshData } = useTrips();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
   const [actionAddress, setActionAddress] = useState<Address | null>(null);
@@ -175,6 +175,7 @@ export function useAddresses() {
   return {
     t,
     colors,
+    isDark,
     addresses,
     loading,
     selectedFilter,
