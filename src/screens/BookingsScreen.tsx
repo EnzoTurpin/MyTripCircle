@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { RootStackParamList, Booking } from "../types";
+import { Booking } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useTranslation } from "react-i18next";
 import { parseApiError } from "../utils/i18n";
