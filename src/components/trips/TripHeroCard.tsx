@@ -1,11 +1,13 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Trip } from "../../types";
 import { F } from "../../theme/fonts";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 const formatShortDate = (date: Date, monthsShort: string[]): string => {
   const d = new Date(date);
@@ -27,7 +29,7 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
   return (
     <>
       <TouchableOpacity style={styles.heroCard} onPress={onPress} activeOpacity={0.88}>
-        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+        <Image source={{ uri: photoUri }} style={styles.heroImage} resizeMode="cover" />
         <LinearGradient
           colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.72)"]}
           start={{ x: 0, y: 0 }}
@@ -70,12 +72,22 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
 
 const styles = StyleSheet.create({
   heroCard: {
+    width: SCREEN_WIDTH - 28,
     aspectRatio: 202 / 128,
     borderRadius: 18,
-    marginHorizontal: 14,
+    alignSelf: "center",
     marginBottom: 8,
     overflow: "hidden",
     justifyContent: "flex-end",
+  },
+  heroImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100%",
   },
   heroStatusBadge: {
     position: "absolute",
