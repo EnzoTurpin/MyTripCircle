@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types";
 import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { parseApiError } from "../utils/i18n";
 import { fetchDestinationPhotoUrl } from "../utils/destinationPhoto";
 
@@ -40,8 +41,9 @@ const buildInitialFormData = (): TripFormData => {
 
 export const useCreateTrip = () => {
   const navigation = useNavigation<CreateTripNavigationProp>();
-  const { createTrip } = useTrips();
+  const { createTrip, trips } = useTrips();
   const { user } = useAuth();
+  const { canCreateTrip } = useSubscription();
   const { t } = useTranslation();
 
   const [formData, setFormData] = useState<TripFormData>(buildInitialFormData);
@@ -160,6 +162,19 @@ export const useCreateTrip = () => {
 
   const handleCreate = async () => {
     if (!validateForm() || !user) return;
+
+    const ownedCount = trips.filter((trip) => trip.ownerId === user.id).length;
+    if (!canCreateTrip(ownedCount)) {
+      Alert.alert(
+        t("subscription.tripLimitTitle"),
+        t("subscription.tripLimitBody"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("subscription.upgradeButton"), onPress: () => navigation.navigate("Subscription") },
+        ],
+      );
+      return;
+    }
 
     try {
       setLoading(true);

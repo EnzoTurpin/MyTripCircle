@@ -22,8 +22,8 @@ interface SubscriptionContextType {
   cancelSubscription: () => Promise<boolean>;
 
   // Vérifications de fonctionnalités
-  canCreateTrip: () => boolean;
-  canAddCollaborator: () => boolean;
+  canCreateTrip: (currentCount?: number) => boolean;
+  canAddCollaborator: (currentCount?: number) => boolean;
   canExportData: () => boolean;
   hasFeatureAccess: (feature: keyof SubscriptionFeatures) => boolean;
   isPremium: () => boolean;
@@ -189,34 +189,38 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     }
   }, [refreshSubscription]);
 
-  const checkFeatureAccess = useCallback((feature: keyof SubscriptionFeatures): boolean => {
+  const isSubscriptionActive = useCallback((): boolean => {
     if (!subscription) return false;
-
-    const isActive = subscription.status === "active" ||
+    return subscription.status === "active" ||
       (subscription.status === "cancelled" &&
-       subscription.endDate &&
+       subscription.endDate != null &&
        new Date() < new Date(subscription.endDate));
+  }, [subscription]);
 
-    if (!isActive) return false;
+  const checkFeatureAccess = useCallback((feature: keyof SubscriptionFeatures): boolean => {
+    if (!isSubscriptionActive()) return false;
 
-    const featureValue = subscription.features[feature];
+    const featureValue = subscription!.features[feature];
 
-    // Boolean features (canExport, prioritySupport)
-    if (typeof featureValue === "boolean") {
-      return featureValue;
-    }
+    if (typeof featureValue === "boolean") return featureValue;
 
     // Numeric features (-1 means unlimited)
     return featureValue === -1;
-  }, [subscription]);
+  }, [subscription, isSubscriptionActive]);
 
-  const canCreateTrip = useCallback((): boolean => {
-    return checkFeatureAccess("maxTrips");
-  }, [checkFeatureAccess]);
+  const canCreateTrip = useCallback((currentCount: number = 0): boolean => {
+    const FREE_MAX = 3;
+    if (!isSubscriptionActive()) return currentCount < FREE_MAX;
+    const max = subscription!.features.maxTrips;
+    return max === -1 || currentCount < max;
+  }, [subscription, isSubscriptionActive]);
 
-  const canAddCollaborator = useCallback((): boolean => {
-    return checkFeatureAccess("maxCollaborators");
-  }, [checkFeatureAccess]);
+  const canAddCollaborator = useCallback((currentCount: number = 0): boolean => {
+    const FREE_MAX = 2;
+    if (!isSubscriptionActive()) return currentCount < FREE_MAX;
+    const max = subscription!.features.maxCollaborators;
+    return max === -1 || currentCount < max;
+  }, [subscription, isSubscriptionActive]);
 
   const canExportData = useCallback((): boolean => {
     return checkFeatureAccess("canExport");

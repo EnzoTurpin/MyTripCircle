@@ -175,6 +175,11 @@ const profile = {
     recommended: "Recommended",
     perMonth: "/mo",
     subscribe: "Subscribe",
+    upgradeButton: "Upgrade to Premium",
+    tripLimitTitle: "Limit reached",
+    tripLimitBody: "You have reached the 3-trip limit on the free plan. Upgrade to Premium to create unlimited trips.",
+    collaboratorLimitTitle: "Limit reached",
+    collaboratorLimitBody: "You have reached the 2-collaborator limit on the free plan. Upgrade to Premium to invite as many people as you want.",
   },
 };
 

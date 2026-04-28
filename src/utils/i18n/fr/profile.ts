@@ -177,6 +177,11 @@ const profile = {
     recommended: "Recommandé",
     perMonth: "/mois",
     subscribe: "S'abonner",
+    upgradeButton: "Passer à Premium",
+    tripLimitTitle: "Limite atteinte",
+    tripLimitBody: "Vous avez atteint la limite de 3 voyages du plan gratuit. Passez à Premium pour créer des voyages illimités.",
+    collaboratorLimitTitle: "Limite atteinte",
+    collaboratorLimitBody: "Vous avez atteint la limite de 2 collaborateurs du plan gratuit. Passez à Premium pour inviter autant de personnes que vous voulez.",
   },
 };
 
