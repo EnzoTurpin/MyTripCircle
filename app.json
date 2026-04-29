@@ -106,7 +106,26 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.panda_sauvage.MyTripCircle"
+      "package": "com.panda_sauvage.MyTripCircle",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "mytripcircle-api.enzo-turpin.fr",
+              "pathPrefix": "/invitation"
+            },
+            {
+              "scheme": "https",
+              "host": "mytripcircle-api.enzo-turpin.fr",
+              "pathPrefix": "/reset-password"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
