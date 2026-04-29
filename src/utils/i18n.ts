@@ -3,13 +3,13 @@ import * as Localization from "expo-localization";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { ApiService } from "../services/ApiService";
+import * as secureStorage from "./secureStorage";
 import { resources } from "./i18n/index";
 
 export { formatDate, formatDateLong, formatTime } from "./dateFormatters";
 export { parseApiError, getBookingStatusTranslation } from "./errorHandlers";
 
 const LANGUAGE_KEY = "@mytripcircle_language";
-const AUTH_STORAGE_KEY = "token"; // NOSONAR — clé AsyncStorage, pas un secret hardcodé
 
 export const changeLanguage = async (language: "en" | "fr") => {
   i18n.changeLanguage(language);
@@ -21,7 +21,7 @@ export const changeLanguage = async (language: "en" | "fr") => {
   }
   // Sync to server so emails are sent in the user's preferred language
   try {
-    const token = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+    const token = await secureStorage.getItem("token");
     if (token) {
       await ApiService.updateLanguage(language);
     }
@@ -40,7 +40,7 @@ export const initLanguage = async () => {
     if (saved === "en" || saved === "fr") {
       i18n.changeLanguage(saved);
       // Sync the stored preference to the server for existing users who haven't yet
-      const token = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+      const token = await secureStorage.getItem("token");
       if (token) {
         ApiService.updateLanguage(saved).catch(() => {
           // Silent — offline or not logged in yet

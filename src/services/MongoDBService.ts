@@ -52,7 +52,7 @@ class MongoDBService {
       this.notifications = this.db.collection<Notification>("notifications");
       this.tripTemplates = this.db.collection<TripTemplate>("trip_templates");
 
-      console.log("MongoDB connecté avec succès");
+      if (__DEV__) console.log("MongoDB connecté avec succès");
     } catch (error) {
       console.error("Erreur de connexion MongoDB:", error);
       throw error;
@@ -63,7 +63,7 @@ class MongoDBService {
     if (this.client) {
       await this.client.close();
       this.isConnected = false;
-      console.log("MongoDB déconnecté");
+      if (__DEV__) console.log("MongoDB déconnecté");
     }
   }
 
